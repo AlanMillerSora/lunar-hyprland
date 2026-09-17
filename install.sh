@@ -23,9 +23,15 @@ cp -r "$DOTDIR/wallpapers/." "$WALL/"
 cp "$DOTDIR/hypr/hyprland.lua" "$CONF/hypr/"
 cp "$DOTDIR/hypr/scripts/eclipse-walls.sh" "$CONF/hypr/scripts/"
 cp "$DOTDIR/hypr/scripts/eclipse-walls.sh" "$BIN/"
+chmod +x "$CONF/hypr/scripts/eclipse-walls.sh"
 chmod +x "$BIN/eclipse-walls.sh"
 cp "$DOTDIR/hypr/scripts/eclipse-pbar.sh" "$CONF/hypr/scripts/"
 chmod +x "$CONF/hypr/scripts/eclipse-pbar.sh"
+
+# Зачистка от старых раскладок: с 0.55 конфиг — hyprland.lua,
+# а hypridle.conf лежит в hypr/, а не в hypridle/
+rm -f "$CONF/hypr/hyprland.conf"
+rm -f "$CONF/hypridle/hypridle.conf"
 
 cp "$DOTDIR/waybar/config.jsonc" "$DOTDIR/waybar/style.css" "$CONF/waybar/"
 cp "$DOTDIR/wofi/config" "$DOTDIR/wofi/style.css" "$CONF/wofi/"
