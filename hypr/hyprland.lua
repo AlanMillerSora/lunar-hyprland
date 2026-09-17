@@ -1,5 +1,8 @@
 -- ════════════════════════════════════════════════════════════════
---  Hyprland — "Lunar Eclipse"  (конфиг на Lua)
+--  Hyprland — "Lunar Eclipse"  (КОНФИГ НА LUA)
+--
+--  ВАЖНО: начиная с Hyprland 0.55 конфиг грузится ТОЛЬКО из
+--  ~/.config/hypr/hyprland.lua. hyprland.conf игнорируется.
 --
 --  Палитра — из превью D:\test\hyperland-preview (style.css):
 --    фон        #000000        текст      #e6e6e6
@@ -21,6 +24,10 @@ local COL = {
   accentDim = "0xb7ccffff",
 }
 
+-- ─────────────────────────────── Окружение ────────────────────
+hl.env("XCURSOR_SIZE", "24")
+hl.env("HYPRCURSOR_SIZE", "24")
+
 hl.config({
   general = {
     border_size = 2,
@@ -31,7 +38,7 @@ hl.config({
     allow_tearing = false,
     col = {
       -- лунное свечение у активного окна
-      active_border   = COL.glow .. " " .. COL.accent,
+      active_border   = { colors = { COL.glow, COL.accent }, angle = 45 },
       inactive_border = COL.border,
     },
   },
@@ -109,9 +116,9 @@ hl.animation({ leaf = "windows",     enabled = true, speed = 9,  bezier = "moon"
 hl.animation({ leaf = "windowsIn",   enabled = true, speed = 11, bezier = "moon", style = "popin" })
 hl.animation({ leaf = "fade",        enabled = true, speed = 9,  bezier = "moon" })
 hl.animation({ leaf = "fadeSwitch",  enabled = true, speed = 8,  bezier = "moon" })
-hl.animation({ leaf = "border",      enabled = true, speed = 7 })
+hl.animation({ leaf = "border",      enabled = true, speed = 7, bezier = "moon" })
 -- Медленно текущее свечение рамки активного окна
-hl.animation({ leaf = "borderangle", enabled = true, speed = 20, style = "loop" })
+hl.animation({ leaf = "borderangle", enabled = true, speed = 20, bezier = "moon", style = "loop" })
 
 -- ─────────────────────────── Рабочие столы = фазы ──────────────────
 -- 8 фаз затмения. Имя = луна: тёмная часть = покрытие (как в превью).
@@ -172,7 +179,7 @@ hl.bind(M .. " + SHIFT + DOWN",  dsp.window.move({ direction = "down" }))
 -- стеки = фазы
 for ws = 1, 8 do
   hl.bind(M .. " + " .. ws,
-    dsp.workspace.change_id({ id = ws }))
+    dsp.focus({ workspace = ws }))
   hl.bind(M .. " + SHIFT + " .. ws,
     function() hl.dispatch(dsp.window.move({ workspace = tostring(ws) })) end)
 end
@@ -190,12 +197,12 @@ hl.bind(M .. " + SHIFT + S", dsp.window.move({ workspace = "special:scratchpad" 
 hl.bind(M .. " + SHIFT + L", dsp.exec_cmd("hyprlock"))
 hl.bind("PRINT",           dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
 hl.bind(M .. " + PRINT",   dsp.exec_cmd("grim - | wl-copy"))
-hl.bind(M .. " + R",       dsp.reload_config())
+hl.bind(M .. " + R",       dsp.exec_cmd("hyprctl reload"))
 hl.bind(M .. " + C",       dsp.exit())
 
 -- ─────────────────────────────── Автозапуск ─────────────────────────
 hl.on("hyprland.start", function()
-  hl.exec_cmd("swww-daemon")
+  hl.exec_cmd("awww-daemon")
   hl.exec_cmd("waybar")
   hl.exec_cmd("mako")
   hl.exec_cmd("hypridle")
@@ -204,4 +211,4 @@ end)
 
 -- Проверка:  hyprctl configerrors
 -- Применение на лету:  hyprctl eval 'hl.config({ ... })'
--- Сменить обои вручную:  hyprctl dispatch exec "swww img ~/Pictures/EclipseWalls/eclipse_04.png"
+-- Сменить обои вручную:  hyprctl dispatch exec "awww img ~/Pictures/EclipseWalls/eclipse_04.png"

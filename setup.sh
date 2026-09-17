@@ -18,8 +18,8 @@
 #    3.  Ставит base-devel, git, pciutils
 #    4.  Ставит AUR-хелпер yay
 #    5.  Ставит драйверы GPU (по VID:NVIDIA, AMD, Intel)
-#    6.  Ставит все пакеты: hyprland-git, waybar, wofi, kitty, mako,
-#        swww, hyprlock, hypridle, grim, slurp, wl-clipboard, socat,
+#    6.  Ставит все пакеты: hyprland, waybar, wofi, kitty, mako,
+#        awww, hyprlock, hypridle, grim, slurp, wl-clipboard, socat,
 #        pipewire, networkmanager, bluez, xdg-desktop-portal-hyprland,
 #        шрифты (JetBrains Mono, Inter, Noto), thunar, firefox
 #    7.  Бэкапит старые конфиги и копирует райс (install.sh)
@@ -90,7 +90,7 @@ if [ "$GPU" -eq 1 ]; then
   case "$VGA" in
     *NVIDIA*|*nvidia*) GPU_PKGS=(nvidia nvidia-utils nvidia-settings) ;;
     *Advanced\ Micro\ Devices*|*AMD*|*ATI*|*Radeon*) GPU_PKGS=(mesa libva-mesa-driver vulkan-radeon) ;;
-    *Intel*|*Intel Corporation*) GPU_PKGS=(mesa libva-intel-driver vulkan-intel) ;;
+    *Intel*) GPU_PKGS=(mesa libva-intel-driver vulkan-intel) ;;
     *) ok "GPU не определён ($VGA) — пропускаю" ;;
   esac
   [ ${#GPU_PKGS[@]} -gt 0 ] && yay -S --noconfirm --needed "${GPU_PKGS[@]}"
@@ -99,13 +99,13 @@ fi
 # ── 6. пакеты райса ─────────────────────────────────────────────
 say "Шаг 5/8 — пакеты Hyprland-райса"
 yay -S --noconfirm --needed \
-  hyprland-git waybar wofi kitty mako swww hyprlock hypridle \
+  hyprland waybar wofi kitty mako awww hyprlock hypridle \
   grim slurp wl-clipboard socat \
   pipewire pipewire-pulse wireplumber pavucontrol \
   networkmanager network-manager-applet \
   bluez bluez-utils blueman \
   xdg-desktop-portal-hyprland xdg-desktop-portal-gtk \
-  ttf-jetbrains-mono ttf-inter noto-fonts noto-fonts-emoji \
+  ttf-jetbrains-mono inter-font noto-fonts noto-fonts-emoji \
   thunar firefox
 
 # ── 7. бэкап + копирование конфигов ─────────────────────────────

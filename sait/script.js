@@ -1230,7 +1230,7 @@ document.addEventListener('wheel', (e) => {
   }
 }, { passive: true });
 
-// ═══════════════ EXPORT ECLIPSE WALLPAPERS (Hyprland + swww) ═══════════════
+// ═══════════════ EXPORT ECLIPSE WALLPAPERS (Hyprland + awww) ═══════════════
 
 const EX_W = 1920, EX_H = 1080;
 const EX_CX = 960, EX_CY = 475;
@@ -1253,7 +1253,7 @@ function makeStarRng(seed) {
   return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
 }
 
-// Deterministic star field — idem on every phase, smooth swww crossfades
+// Deterministic star field — idem on every phase, smooth awww crossfades
 const EXPORT_STARS = (() => {
   const rnd = makeStarRng(42);
   let out = '';
@@ -1361,41 +1361,47 @@ function downloadHyprlandScript() {
   const script = `#!/usr/bin/env bash
 # ════════════════════════════════════════════════════════════
 #  Hyperland "Lunar Eclipse" — обои по фазам на каждом столе
-#  Нужно: swww, socat
+#  Нужно: awww, python3, socat
 #
 #  Установка:
 #    1. Кидай 8 картинок в  ~/Pictures/EclipseWalls/  (eclipse_01..08.jpg)
 #    2. mkdir -p ~/.local/bin
 #    3. Сохрани этот файл как ~/.local/bin/eclipse-walls.sh && chmod +x
-#    4. В hyprland.conf добавь:
-#         exec-once = swww-daemon
-#         exec-once = ~/.local/bin/eclipse-walls.sh
+#    4. В hyprland.lua (конфиг Hyprland 0.55+ грузится именно оттуда) добавь:
+#         hl.on("hyprland.start", function() hl.exec_cmd("~/.local/bin/eclipse-walls.sh") end)
 # ════════════════════════════════════════════════════════════
 
 WALLDIR="\${1:-$HOME/Pictures/EclipseWalls}"
 SOCK="$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"
 
 # Поднимаем демон, если ещё не запущен
-pgrep -x swww-daemon >/dev/null || { swww-daemon; sleep 1; }
+pgrep -x awww-daemon >/dev/null || { awww-daemon >/dev/null 2>&1 & sleep 1; }
+
+active_ws() {
+  hyprctl activeworkspace -j 2>/dev/null | python3 -c 'import sys, json
+try:
+    print(json.load(sys.stdin)["id"])
+except Exception:
+    pass'
+}
 
 set_wallpaper() {
-  local ws="$1"
-  local file="$WALLDIR/eclipse_\$(printf '%02d' "\$ws").jpg"
-  [[ -f "\$file" ]] && swww img "\$file" \\
+  local ws="\$1"
+  [[ "\$ws" =~ ^[0-9]+$ ]] || return
+  local file="\$WALLDIR/eclipse_\$(printf '%02d' "\$ws").jpg"
+  [[ -f "\$file" ]] && awww img "\$file" \\
     --transition-type=wipe \\
     --transition-duration=0.7 \\
-    --transition-bezier=0.4,0,0.2,1 \\
-    --transition-fps=60
+    --transition-bezier=0.4,0,0.2,1
 }
 
 # Сразу ставим обои активного стола
-cur="\$(hyprctl activeworkspace -j | sed -n 's/.*"id":\\(-\\?[0-9][0-9]*\\).*/\\1/p' | head -n1)"
-[[ -n "\$cur" ]] && set_wallpaper "\$cur"
+set_wallpaper "\$(active_ws)"
 
 # ...и меняем при каждом переключении стола
 while IFS= read -r line; do
-  [[ "\$line" == workspace\\>\\>* ]] || continue
-  ws="\${line#workspace\\>\\>}"
+  [[ "\$line" == 'workspace>>'* ]] || continue
+  ws="\${line#workspace>>}"
   set_wallpaper "\$ws"
 done < <(socat -U - UNIX-CONNECT:"$SOCK")
 `;
@@ -1458,7 +1464,7 @@ document.addEventListener('contextmenu', (e) => {
     { label: null },
     { label: '▾ Экспорт обоев (8 фаз)', action: exportEclipsePhases },
     { label: '▾ Скачать wallpaper-switch.sh', action: downloadHyprlandScript },
-    { label: '▸ Настройки', action: () => showNotification('Настройки', 'Hyprland конфигурация: ~/.config/hypr/hyprland.conf') },
+    { label: '▸ Настройки', action: () => showNotification('Настройки', 'Hyprland конфигурация: ~/.config/hypr/hyprland.lua') },
     { label: null },
     { label: '⬇ Тестовая загрузка', action: simulateDownload },
   ];

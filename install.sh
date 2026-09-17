@@ -13,14 +13,14 @@ CONF="$HOME/.config"
 WALL="$HOME/Pictures/EclipseWalls"
 BIN="$HOME/.local/bin"
 
-mkdir -p "$CONF"/{hypr/scripts,waybar,wofi,kitty,mako,hyprlock,hypridle}
+mkdir -p "$CONF"/{hypr/scripts,waybar,wofi,kitty,mako,hyprlock}
 mkdir -p "$WALL" "$BIN"
 
 echo "== Lunar Eclipse rice: установка конфигов =="
 
 cp -r "$DOTDIR/wallpapers/." "$WALL/"
 
-cp "$DOTDIR/hypr/hyprland.conf" "$CONF/hypr/"
+cp "$DOTDIR/hypr/hyprland.lua" "$CONF/hypr/"
 cp "$DOTDIR/hypr/scripts/eclipse-walls.sh" "$CONF/hypr/scripts/"
 cp "$DOTDIR/hypr/scripts/eclipse-walls.sh" "$BIN/"
 chmod +x "$BIN/eclipse-walls.sh"
@@ -31,7 +31,8 @@ cp "$DOTDIR/waybar/config.jsonc" "$DOTDIR/waybar/style.css" "$CONF/waybar/"
 cp "$DOTDIR/wofi/config" "$DOTDIR/wofi/style.css" "$CONF/wofi/"
 cp "$DOTDIR/kitty/kitty.conf" "$CONF/kitty/"
 cp "$DOTDIR/mako/config" "$CONF/mako/"
-cp "$DOTDIR/hypridle/hypridle.conf" "$CONF/hypridle/"
+# hypridle 0.1.8 ищет конфиг в ~/.config/hypr/, а не в ~/.config/hypridle/!
+cp "$DOTDIR/hypridle/hypridle.conf" "$CONF/hypr/hypridle.conf"
 
 sed "s|{ECLIPSE_DIR}|$WALL|g" "$DOTDIR/hyprlock/hyprlock.conf" > "$CONF/hyprlock/hyprlock.conf"
 
@@ -39,4 +40,4 @@ echo
 echo "Готово."
 echo "  1. Проверка конфига:  hyprctl configerrors"
 echo "  2. Перезапуск:        hyprctl reload"
-echo "  3. Путь до демона:    swww-daemon запустится сам при входе"
+echo "  3. Путь до демона:    awww-daemon запустится сам при входе"

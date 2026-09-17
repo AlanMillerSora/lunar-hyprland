@@ -1,103 +1,110 @@
-# 🌘 Lunar Eclipse — Hyprland rice
+# Lunar Eclipse · Hyprland rice
 
-Перенос веб-превью `hyperland-preview` в реальный Hyprland.
-Все конфиги — в папках под `~/.config`, обои — 8 фаз затмения.
+Тёмный райс про луну. Восемь рабочих столов — восемь фаз затмения,
+обои меняются вместе с ними, waybar в центре показывает «покрытие» фазы.
+Сделано с нуля под Hyprland (Lua-конфиг), в репе лежит и веб-превью
+в папке `sait/` — оттуда же и тащились цвета.
 
-## Что устанавливают
+## Что внутри
 
-| Компонент | Конфиг |
-|---|---|
-| Hyprland (Lua) | `hypr/hyprland.conf` + `hypr/scripts/eclipse-walls.sh` |
-| Waybar | `waybar/config.jsonc` + `waybar/style.css` |
-| wofi (лаунчер) | `wofi/config` + `wofi/style.css` |
-| kitty | `kitty/kitty.conf` (палитра Lunar Eclipse) |
-| mako (уведомления) | `mako/config` |
-| hyprlock | `hyprlock/hyprlock.conf` (экран Blood Moon) |
-| hypridle | `hypridle/hypridle.conf` |
-| Обои | `wallpapers/eclipse_01..08.png` |
+- `hypr/hyprland.lua` — сам конфиг. Собирался под Hyprland 0.56, Lua API.
+- `hypr/scripts/` — скрипты: `eclipse-walls.sh` (обои по фазам, слушает
+  сокет hyprland через socat) и `eclipse-pbar.sh` (прогресс-бар для waybar).
+- `waybar/`, `wofi/`, `kitty/`, `mako/`, `hyprlock/`, `hypridle/` — остальная обвязка.
+- `wallpapers/` — 8 картинок, фазы луны.
 
-## Важно: версия Hyprland
+Цвета: чёрный фон, поверхности `rgba(10,10,10,.72)`, акцент `#7ea6ff` —
+в общем, всё крутится вокруг лунного света. Скругления 14px, лёгкий blur,
+рамка активного окна медленно «дышит» градиентом.
 
-Конфиг написан под **новый Lua API** (вики от 12.09.2026):
-`hl.config({...})`, `hl.bind`, `hl.on("hyprland.start", ...)`.
-Нужна git-сборка: `pacman -S hyprland-git` (релизы могут ещё не нести Lua).
+## На что обратить внимание
 
-Проверка версии: `hyprctl version` — конфиг загрузится, если Lua актуален.
+С Hyprland 0.55 hyprlang упразднили, конфиг теперь только `.lua`.
+То есть `~/.config/hypr/hyprland.conf` он **не читает** — весь смысл
+в `hyprland.lua`. Долго ловил это сам: ставишь значения в `.conf`,
+а Hyprland их молча игнорирует и живёт на дефолтах.
 
-## Пакеты
+Ещё пара граблей, с которыми уже разобрался в конфигах:
 
-```bash
-pacman -S hyprland-git waybar wofi kitty mako swww hyprlock hypridle \
-          grim slurp wl-clipboard wireplumber socat ttf-jetbrains-mono ttf-inter
-```
-
-## Автоустановка с нуля (после чистой Arch)
-
-```bash
-git clone https://github.com/AlanMillerSora/lunar-hyprland.git ~/rice
-cd ~/rice
-./setup.sh                   # поставит всё: пакеты, драйверы GPU, конфиги, службы
-sudo reboot                  # после — Hyprland стартует сам
-```
-
-Хочешь автовход в Hyprland (без пароля) и русскую локаль — добавь флаги при
-**первом** же запуске (не запускай setup.sh дважды):
-
-```bash
-git clone https://github.com/AlanMillerSora/lunar-hyprland.git ~/rice
-cd ~/rice
-./setup.sh --autologin --ru
-sudo reboot
-```
-
-`setup.sh` сам: обновит систему, поставит `yay` и `hyprland-git`, драйверы
-видеокарты (NVIDIA/AMD/Intel по автоопределению), все пакеты из списка ниже,
-сделает бэкап старых конфигов, скопирует райс и включит автозапуск Hyprland
-на tty1. Флаги этапа установки: `--autologin`, `--no-gpu`, `--ru` (`setup.sh --help`).
+- hypridle с версии 0.1.8 ищет конфиг в `~/.config/hypr/`, а не в
+  `~/.config/hypridle/`. И опции у него в listener пишутся через дефис —
+  `on-timeout`, а не `on_timeout`. На старых названиях он просто молча
+  не выполняет команды.
+- Демон обоев — `awww`, не `swww`. swww тут ни при чём.
 
 ## Установка
 
+Если Arch чистый, с нуля:
+
 ```bash
-chmod +x install.sh
+git clone https://github.com/AlanMillerSora/lunar-hyprland.git ~/rice
+cd ~/rice
+./setup.sh
+sudo reboot
+```
+
+`setup.sh` сам ставит пакеты, драйверы GPU (определяет по lspci), кидает
+конфиги и добавляет автозапуск Hyprland на tty1. Хочешь автовход без
+пароля и русскую локаль — `./setup.sh --autologin --ru`. Запускать один
+раз, при повторном запуске флаги не нужны.
+
+Если Hyprland уже стоит — просто:
+
+```bash
+cd ~/rice
 ./install.sh
-hyprctl configerrors
+hyprctl configerrors   # должно быть пусто
 hyprctl reload
 ```
 
-Скрипт копирует всё в `~/.config/...`, обои — в
-`~/Pictures/EclipseWalls/`, а `eclipse-walls.sh` — в `~/.local/bin/`
-и подставляет полный путь в `hyprlock.conf`.
+`install.sh` раскладывает всё по `~/.config/`, обои в
+`~/Pictures/EclipseWalls/`, `eclipse-walls.sh` — в `~/.local/bin/`.
 
-## Как это устроено
+Нужны пакеты: `hyprland waybar wofi kitty mako awww hyprlock hypridle`
+плюс `grim slurp wl-clipboard wireplumber socat` и шрифты
+`ttf-jetbrains-mono ttf-inter`.
 
-- **8 рабочих столов = 8 фаз затмения.** Имена в waybar:
-  `☾  Phase 1..8`. При переключении стола скрипт `eclipse-walls.sh`
-  ставит соответствующую картинку фона через `swww img`
-  (переход `wipe`).
-- **Общий стиль:** чёрный фон, поверхность `rgba(10,10,10,.72)`,
-  рамки `rgba(255,255,255,.10)`, акцент `#7ea6ff` (лунное свечение).
-  Скруглённые углы 14px, blur, тени — всё в тему превью.
-- **Анимации:** кривые `moon`/`eclipse`, заезд досок `slidefade`,
-  окна входят `popin`, рамка активного окна медленно "дышит"
-  градиентом (`borderangle loop`).
-- **Hotkeys:** `SUPER`+`RETURN` kitty, `SUPER`+`D` меню, `SUPER`+`1..8`
-  фазы, `SUPER`+`SHIFT`+`1..8` перенос окна, `SUPER`+`S` скретчпад,
-  `PRINT` скриншот области, `SUPER`+`SHIFT`+`L` блокировка.
+## Клавиши
 
-## Ручная настройка под себя
+| Хоткей | Что делает |
+|---|---|
+| `SUPER` + `RETURN` | терминал (kitty) |
+| `SUPER` + `D` / `A` | меню (wofi: drun / run) |
+| `SUPER` + `1..8` | перейти на фазу |
+| `SUPER` + `SHIFT` + `1..8` | утащить окно на фазу |
+| `SUPER` + `Q` | закрыть окно |
+| `SUPER` + `W` | максимизировать |
+| `SUPER` + `SHIFT` + `W` | фуллскрин |
+| `SUPER` + `F` / `P` | float / псевдотайлинг |
+| `SUPER` + `S` | скретчпад |
+| `SUPER` + `SHIFT` + `L` | блокировка (hyprlock) |
+| `PRINT` | скриншот области |
+| `SUPER` + `R` | перечитать конфиг |
 
-- Монитор: раскомментируй `hl.monitor({...})` в `hypr/hyprland.conf`.
-- Раскладка: `grp:lalt_lshift_toggle` = Alt+Shift; смени на
-  `grp:ctrl_shift_toggle` или `grp:win_space_toggle`.
-- Задержки блокировки: `hypridle/hypridle.conf`.
-- Если шрифтов `Inter` / `JetBrains Mono` нет — замени в
-  `waybar/style.css`, `wofi/style.css`, `kitty/kitty.conf`, `hyprlock/hyprlock.conf`.
+## Подстройка под себя
 
-## Отладка
+- Монитор: раскомментируй `hl.monitor({...})` в `hypr/hyprland.lua`
+  и пропиши свой.
+- Раскладка: по умолчанию `us,ru`, переключение Alt+Shift
+  (`grp:lalt_lshift_toggle`). Привычнее `Ctrl+Shift` — поменяй в input.
+- Задержки блокировки — `hypridle/hypridle.conf` (10 мин до лока,
+  15 мин до гашения экрана).
+- Долго ли, коротко ли, но scrollback у kitty 10000 строк и прозрачность
+  0.94 — сквозь неё видно blur. Если не нужен полупрозрачный фон —
+  убери `background_opacity` в `kitty/kitty.conf`.
+
+## Если что-то не так
 
 ```bash
-hyprctl configerrors     # ошибки конфига
-hyprctl activeworkspace -j   # текущий стол
-swww query               # активные обои
+hyprctl configerrors           # ошибки конфига
+hyprctl activeworkspace -j     # какой стол активен
+awww query                     # что сейчас на фоне
 journalctl --user -u hyprland -f
 ```
+
+Известный косяк: если на машине уже живёт другой демон уведомлений
+(dunst и т.п.), mako не стартует — `Failed to acquire service name`.
+Выключи чужой сервис (`systemctl --user disable --now dunst.service`).
+
+Всё раскладывается в `~/.config/` обычными копиями, без симлинков и
+стеллажей — удобно править руками, не задумываясь.

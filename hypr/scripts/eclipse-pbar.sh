@@ -6,14 +6,19 @@
 #    text / class(total → красный на полном затмении) / tooltip
 # ════════════════════════════════════════════════════════════
 
-COV=(0 8 40 75 100 68 35 12 0)
+COV=(8 40 75 100 68 35 12 0)
 
-cur="$(hyprctl activeworkspace -j 2>/dev/null | sed -n 's/.*"id":\(-\?[0-9][0-9]*\).*/\1/p' | head -n1)"
+cur="$(hyprctl activeworkspace -j 2>/dev/null | python3 -c 'import sys, json
+try:
+    print(json.load(sys.stdin)["id"])
+except Exception:
+    pass')"
+
 if ! [[ "$cur" =~ ^[0-9]+$ ]] || (( cur < 1 || cur > 8 )); then
   cur=1
 fi
 
-pct="${COV[$cur]}"
+pct="${COV[$((cur - 1))]}"
 filled=$(( (pct + 5) / 10 ))
 empty=$(( 10 - filled ))
 
