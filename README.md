@@ -8,8 +8,10 @@
 ## Что внутри
 
 - `hypr/hyprland.lua` — сам конфиг. Собирался под Hyprland 0.56, Lua API.
-- `hypr/scripts/` — скрипты: `eclipse-walls.sh` (обои по фазам, слушает
-  сокет hyprland через socat) и `eclipse-pbar.sh` (прогресс-бар для waybar).
+- `hypr/scripts/` — скрипты: `eclipse-walls.sh` (обои по фазам, опрашивает
+  активный стол через `hyprctl activeworkspace` — socket2-events в Hyprland
+  0.56 сломаны, поэтому socat не нужен) и `eclipse-pbar.sh` (прогресс-бар
+  для waybar).
 - `waybar/`, `wofi/`, `kitty/`, `mako/`, `hyprlock/`, `hypridle/` — остальная обвязка.
 - `wallpapers/` — 8 картинок, фазы луны.
 
@@ -61,7 +63,7 @@ hyprctl reload
 `~/Pictures/EclipseWalls/`, `eclipse-walls.sh` — в `~/.local/bin/`.
 
 Нужны пакеты: `hyprland waybar wofi kitty mako awww hyprlock hypridle`
-плюс `grim slurp wl-clipboard wireplumber socat` и шрифты
+плюс `grim slurp wl-clipboard wireplumber python` и шрифты
 `ttf-jetbrains-mono ttf-inter`.
 
 ## Клавиши

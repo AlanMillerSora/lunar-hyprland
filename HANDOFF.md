@@ -29,7 +29,9 @@ JetBrains Mono, фазы затмения с покрытием `[8,40,75,100,68
 - **Скрипты** `eclipse-walls.sh` / `eclipse-pbar.sh`: парсинг JSON через
   python3 (jq не ставим; python добавлен в пакеты setup.sh — в Arch base его
   нет). Дубли в `~/.local/bin` и `hypr/scripts/` синхронизированы.
-  Обои слушаются через socat по сокету hyprland.
+  Обои меняются опросом `hyprctl activeworkspace -j` каждые 0.3с: socket2-
+  events в Hyprland 0.56.2 сломаны (postEvent не делает retry write при
+  EAGAIN), socat из скрипта и пакетов убран.
 - **`setup.sh` переписан** (был «хуита»): под `set -euo pipefail` умирал на
   свежей машине — `[ -e ] && cp` падал, когда конфигов ещё нет; `getent group
   network` тоже нет на Arch; GPU-детект не видел NVIDIA «3D controller»

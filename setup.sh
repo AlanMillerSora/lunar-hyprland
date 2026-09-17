@@ -119,7 +119,7 @@ fi
 say "Шаг 5: пакеты Hyprland-райса"
 yay -S --noconfirm --needed \
   hyprland waybar wofi kitty mako awww hyprlock hypridle \
-  grim slurp wl-clipboard socat python \
+  grim slurp wl-clipboard python \
   pipewire pipewire-pulse wireplumber pavucontrol \
   networkmanager network-manager-applet \
   bluez bluez-utils blueman \

@@ -9,14 +9,16 @@
 #      hl.on("hyprland.start", ...) — hl.exec_cmd("~/.local/bin/eclipse-walls.sh")
 #
 #  Обои: ~/Pictures/EclipseWalls/eclipse_01..08.{png,jpg}
+#
+#  NOTE: В Hyprland 0.56.2 socket2 events сломаны (postEvent не
+#  перезаписывает буфер при EAGAIN — callback-и перепутаны).
+#  Используем опрос hyprctl activeworkspace — работает стабильно.
 # ════════════════════════════════════════════════════════════
 
 WALLDIR="${1:-$HOME/Pictures/EclipseWalls}"
-SOCK="$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"
 
 pgrep -x awww-daemon >/dev/null || { awww-daemon >/dev/null 2>&1 & sleep 1; }
 
-# ID активного воркспейса (пустая строка, если не удалось распарсить)
 active_ws() {
   hyprctl activeworkspace -j 2>/dev/null | python3 -c 'import sys, json
 try:
@@ -27,7 +29,7 @@ except Exception:
 
 set_wallpaper() {
   local ws="$1"
-  [[ "$ws" =~ ^[0-9]+$ ]] || return   # спец-воркспейсы (special:) пропускаем
+  [[ "$ws" =~ ^[0-9]+$ ]] || return
   local file
   file="$(ls "$WALLDIR"/eclipse_$(printf '%02d' "$ws").{jpg,png} 2>/dev/null | head -n1)"
   [[ -n "$file" ]] && awww img "$file" \
@@ -36,23 +38,14 @@ set_wallpaper() {
     --transition-bezier=0.4,0,0.2,1
 }
 
-# Ставим обои активного стола сразу,
-# затем слушаем сокет Hyprland (через socat, если он есть)
-if command -v socat >/dev/null && [[ -S "$SOCK" ]]; then
-  set_wallpaper "$(active_ws)"
-  while IFS= read -r line; do
-    [[ "$line" == 'workspace>>'* ]] || continue
-    set_wallpaper "${line#workspace>>}"
-  done < <(socat -U - UNIX-CONNECT:"$SOCK")
-else
-  # Без socat: медленный опрос активного стола
-  prev=""
-  while true; do
-    cur="$(active_ws)"
-    if [[ -n "$cur" && "$cur" != "$prev" ]]; then
-      set_wallpaper "$cur"
-      prev="$cur"
-    fi
-    sleep 1.5
-  done
-fi
+# Ставим обои активного стола сразу, затем опрашиваем каждые 0.3с
+set_wallpaper "$(active_ws)"
+prev=""
+while true; do
+  cur="$(active_ws)"
+  if [[ -n "$cur" && "$cur" != "$prev" ]]; then
+    set_wallpaper "$cur"
+    prev="$cur"
+  fi
+  sleep 0.3
+done

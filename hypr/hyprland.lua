@@ -211,4 +211,5 @@ end)
 
 -- Проверка:  hyprctl configerrors
 -- Применение на лету:  hyprctl eval 'hl.config({ ... })'
--- Сменить обои вручную:  hyprctl dispatch exec "awww img ~/Pictures/EclipseWalls/eclipse_04.png"
+-- Сменить обои вручную:  hyprctl eval 'hl.dispatch(hl.dsp.exec_cmd("awww img ~/Pictures/EclipseWalls/eclipse_04.png"))'
+-- (в Hyprland 0.56 hyprctl dispatch/exec парсятся как Lua, поэтому eval)
