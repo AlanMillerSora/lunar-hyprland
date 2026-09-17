@@ -34,7 +34,9 @@ for a in "$@"; do
     --autologin) AUTOLOGIN=1 ;;
     --no-gpu)    GPU=0      ;;
     --ru)        RU=1       ;;
-    *) echo "Неизвестный флаг: $a"; exit 1 ;;
+    -h|--help)
+      sed -n '2,27p' "$0"; exit 0 ;;
+    *) echo "Неизвестный флаг: $a (посмотри $0 --help)"; exit 1 ;;
   esac
 done
 

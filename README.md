@@ -34,17 +34,26 @@ pacman -S hyprland-git waybar wofi kitty mako swww hyprlock hypridle \
 ## Автоустановка с нуля (после чистой Arch)
 
 ```bash
-git clone <этот репозиторий> ~/rice
+git clone https://github.com/AlanMillerSora/lunar-hyprland.git ~/rice
 cd ~/rice
-./setup.sh                  # поставит всё: пакеты, драйверы GPU, конфиги, службы
-./setup.sh --autologin --ru # + автовход в Hyprland и русская локаль
+./setup.sh                   # поставит всё: пакеты, драйверы GPU, конфиги, службы
+sudo reboot                  # после — Hyprland стартует сам
+```
+
+Хочешь автовход в Hyprland (без пароля) и русскую локаль — добавь флаги при
+**первом** же запуске (не запускай setup.sh дважды):
+
+```bash
+git clone https://github.com/AlanMillerSora/lunar-hyprland.git ~/rice
+cd ~/rice
+./setup.sh --autologin --ru
 sudo reboot
 ```
 
 `setup.sh` сам: обновит систему, поставит `yay` и `hyprland-git`, драйверы
 видеокарты (NVIDIA/AMD/Intel по автоопределению), все пакеты из списка ниже,
 сделает бэкап старых конфигов, скопирует райс и включит автозапуск Hyprland
-на tty1. Флаги: `--autologin`, `--no-gpu`, `--ru`.
+на tty1. Флаги этапа установки: `--autologin`, `--no-gpu`, `--ru` (`setup.sh --help`).
 
 ## Установка
 
