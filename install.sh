@@ -20,6 +20,45 @@ echo "== Lunar Eclipse rice: установка конфигов =="
 
 cp -r "$DOTDIR/wallpapers/." "$WALL/"
 
+# Живые обои: animated GIF из фаз (нужны rsvg-convert + ffmpeg).
+# ECLIPSE_ANIM=0 — пропустить, останутся статичные PNG.
+# ECLIPSE_VIDEO=1 — видео 60fps для mpvpaper (нужен mpvpaper).
+# ECLIPSE_LIVE=1  — видео СНЯТЬ с живой CSS-сцены сайта (вид 1-в-1, нужен chromium).
+if [ "${ECLIPSE_ANIM:-1}" = "1" ] && command -v ffmpeg >/dev/null 2>&1; then
+  if [ "${ECLIPSE_VIDEO:-0}" = "1" ]; then
+    if [ "${ECLIPSE_LIVE:-0}" = "1" ] && command -v chromium >/dev/null 2>&1; then
+      echo "== Живые обои 1-в-1 с сайтом (съёмка CSS через chromium) — ~15 минут =="
+      if "$DOTDIR/hypr/scripts/eclipse-live-gen.py" --out "$WALL" \
+           --jobs "$(nproc 2>/dev/null || echo 4)"; then
+        echo "   видео готово: $WALL/eclipse_01..08.webm (вид как на сайте)"
+      else
+        echo "   генерация не удалась — eclipse-walls.sh возьмёт GIF/PNG"
+      fi
+    elif command -v rsvg-convert >/dev/null 2>&1; then
+      echo "== Генерация живых обоев (видео 60fps для mpvpaper) — ~15 минут =="
+      if "$DOTDIR/hypr/scripts/eclipse-anim-gen.py" --out "$WALL" \
+           --jobs "$(nproc 2>/dev/null || echo 4)" --fps 60 --no-gif --video; then
+        echo "   видео готово: $WALL/eclipse_01..08.webm"
+      else
+        echo "   генерация не удалась — eclipse-walls.sh возьмёт GIF/PNG"
+      fi
+    else
+      echo "   chromium/rsvg-convert не найдены — видео пропущено (останутся PNG)"
+    fi
+  elif command -v rsvg-convert >/dev/null 2>&1; then
+    echo "== Генерация живых обоев (animated GIF, ~5s петля) — пара минут =="
+    if "$DOTDIR/hypr/scripts/eclipse-anim-gen.py" --out "$WALL" --jobs "$(nproc 2>/dev/null || echo 4)"; then
+      echo "   живые обои готовы: $WALL/eclipse_01..08.gif"
+    else
+      echo "   генерация не удалась — eclipse-walls.sh возьмёт статичные PNG"
+    fi
+  else
+    echo "   rsvg-convert не найден — живые обои пропущены (останутся PNG)"
+  fi
+elif [ "${ECLIPSE_ANIM:-1}" = "1" ]; then
+  echo "   ffmpeg не найден — живые обои пропущены (останутся PNG)"
+fi
+
 cp "$DOTDIR/hypr/hyprland.lua" "$CONF/hypr/"
 cp "$DOTDIR/hypr/scripts/eclipse-walls.sh" "$CONF/hypr/scripts/"
 cp "$DOTDIR/hypr/scripts/eclipse-walls.sh" "$BIN/"
@@ -27,6 +66,14 @@ chmod +x "$CONF/hypr/scripts/eclipse-walls.sh"
 chmod +x "$BIN/eclipse-walls.sh"
 cp "$DOTDIR/hypr/scripts/eclipse-pbar.sh" "$CONF/hypr/scripts/"
 chmod +x "$CONF/hypr/scripts/eclipse-pbar.sh"
+cp "$DOTDIR/hypr/scripts/eclipse-anim-gen.py" "$CONF/hypr/scripts/"
+cp "$DOTDIR/hypr/scripts/eclipse-anim-gen.py" "$BIN/"
+cp "$DOTDIR/hypr/scripts/eclipse-live-gen.py" "$CONF/hypr/scripts/"
+cp "$DOTDIR/hypr/scripts/eclipse-live-gen.py" "$BIN/"
+chmod +x "$CONF/hypr/scripts/eclipse-anim-gen.py"
+chmod +x "$BIN/eclipse-anim-gen.py"
+chmod +x "$CONF/hypr/scripts/eclipse-live-gen.py"
+chmod +x "$BIN/eclipse-live-gen.py"
 
 # Зачистка от старых раскладок: с 0.55 конфиг — hyprland.lua,
 # а hypridle.conf лежит в hypr/, а не в hypridle/

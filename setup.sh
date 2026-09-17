@@ -125,6 +125,7 @@ yay -S --noconfirm --needed \
   bluez bluez-utils blueman \
   xdg-desktop-portal-hyprland xdg-desktop-portal-gtk \
   ttf-jetbrains-mono inter-font noto-fonts noto-fonts-emoji \
+  librsvg ffmpeg \
   thunar firefox
 
 # dunst конфликтует с mako за org.freedesktop.Notifications — выносим
@@ -143,6 +144,7 @@ for d in hypr waybar wofi kitty mako hyprlock hypridle; do
 done
 chmod +x "$SRC/install.sh"
 chmod +x "$SRC"/hypr/scripts/*.sh
+chmod +x "$SRC"/hypr/scripts/*.py
 ( cd "$SRC" && ./install.sh )
 ok "Конфиги скопированы"
 
@@ -206,4 +208,8 @@ echo "  Горячие клавиши:"
 echo "    SUPER+RETURN  терминал      SUPER+D   меню (wofi)"
 echo "    SUPER+1..8    фазы          SUPER+SHIFT+1..8  перенос окна"
 echo "    SUPER+SHIFT+L блокировка    PRINT     скриншот области"
+echo "  Обои без зерна/полос (видео 60fps): yay -S mpvpaper"
+echo "    затем: ECLIPSE_VIDEO=1 ./install.sh                      # SVG-порт"
+echo "           ECLIPSE_VIDEO=1 ECLIPSE_LIVE=1 ./install.sh      # 1-в-1 с сайтом (нужен chromium)"
+echo "    и перезапуск eclipse-walls.sh"
 echo "  Если sudo перестало работать — проверь /etc/sudoers.d/wheel."
