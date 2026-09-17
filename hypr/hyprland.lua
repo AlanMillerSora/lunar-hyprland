@@ -37,8 +37,8 @@ hl.config({
     resize_on_border = true,
     allow_tearing = false,
     col = {
-      -- лунное свечение у активного окна
-      active_border   = { colors = { COL.glow, COL.accent }, angle = 45 },
+      -- спокойная однотонная рамка (без RGB-градиента)
+      active_border   = COL.glow,
       inactive_border = COL.border,
     },
   },
@@ -117,20 +117,18 @@ hl.animation({ leaf = "windowsIn",   enabled = true, speed = 11, bezier = "moon"
 hl.animation({ leaf = "fade",        enabled = true, speed = 9,  bezier = "moon" })
 hl.animation({ leaf = "fadeSwitch",  enabled = true, speed = 8,  bezier = "moon" })
 hl.animation({ leaf = "border",      enabled = true, speed = 7, bezier = "moon" })
--- Медленно текущее свечение рамки активного окна
-hl.animation({ leaf = "borderangle", enabled = true, speed = 20, bezier = "moon", style = "loop" })
 
 -- ─────────────────────────── Рабочие столы = фазы ──────────────────
--- 8 фаз затмения. Имя = луна: тёмная часть = покрытие (как в превью).
--- waybar показывает имя через {name}; id 1..8 — триггер для скрипта.
-hl.workspace_rule({ workspace = "1", default_name = "🌔" })
-hl.workspace_rule({ workspace = "2", default_name = "🌗" })
-hl.workspace_rule({ workspace = "3", default_name = "🌘" })
-hl.workspace_rule({ workspace = "4", default_name = "🌑" })
-hl.workspace_rule({ workspace = "5", default_name = "🌘" })
-hl.workspace_rule({ workspace = "6", default_name = "🌗" })
-hl.workspace_rule({ workspace = "7", default_name = "🌖" })
-hl.workspace_rule({ workspace = "8", default_name = "🌕" })
+-- 8 фаз затмения. Имена I..VIII (римские, как в превью); иконки-луны
+-- рисует waybar; id 1..8 — триггер для скрипта обоев.
+hl.workspace_rule({ workspace = "1", default_name = "I" })
+hl.workspace_rule({ workspace = "2", default_name = "II" })
+hl.workspace_rule({ workspace = "3", default_name = "III" })
+hl.workspace_rule({ workspace = "4", default_name = "IV" })
+hl.workspace_rule({ workspace = "5", default_name = "V" })
+hl.workspace_rule({ workspace = "6", default_name = "VI" })
+hl.workspace_rule({ workspace = "7", default_name = "VII" })
+hl.workspace_rule({ workspace = "8", default_name = "VIII" })
 
 -- ─────────────────────────────────── Окна ──────────────────────────
 -- Плавающие окна утилит по центру, со скруглением темы

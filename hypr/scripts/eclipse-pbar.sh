@@ -26,8 +26,11 @@ bar=""
 for ((i = 0; i < filled; i++)); do bar+="█"; done
 for ((i = 0; i < empty; i++)); do bar+="░"; done
 
+# Иконка луны из JetBrainsMono Nerd Font (mdi-moon-waning-crescent)
+moon="$(printf '\U000f0f65')"
+
 cls="normal"
 (( pct == 100 )) && cls="total"
 
-printf '{"text":"☾ %3d%%  %s", "class":"%s", "tooltip":"Phase %d — покрытие %d%%", "percentage":%d}' \
-  "$pct" "$bar" "$cls" "$cur" "$pct" "$pct"
+printf '{"text":"%s %3d%%  %s", "class":"%s", "tooltip":"Phase %d — покрытие %d%%", "percentage":%d}' \
+  "$moon" "$pct" "$bar" "$cls" "$cur" "$pct" "$pct"

@@ -3,78 +3,118 @@
     "position": "top",
     "height": 36,
     "spacing": 10,
-
-    "modules-left": ["hyprland/workspaces", "hyprland/window"],
-    "modules-center": ["custom/eclipse-pbar", "clock"],
-    "modules-right": ["tray", "pulseaudio", "network", "cpu", "memory", "battery", "custom/date"],
-
+    "modules-left": [
+        "custom/logo",
+        "hyprland/workspaces"
+    ],
+    "modules-center": [
+        "custom/eclipse-pbar",
+        "clock"
+    ],
+    "modules-right": [
+        "tray",
+        "pulseaudio",
+        "network",
+        "cpu",
+        "memory",
+        "battery",
+        "custom/date"
+    ],
+    "custom/logo": {
+        "format": "󰖔",
+        "tooltip": false
+    },
     "hyprland/workspaces": {
-        "format": "{name}",
+        "format": "{icon}",
+        "format-icons": {
+            "1": "󰽨",
+            "I": "󰽨",
+            "2": "󰽡",
+            "II": "󰽡",
+            "3": "󰽥",
+            "III": "󰽥",
+            "4": "󰽤",
+            "IV": "󰽤",
+            "5": "󰽧",
+            "V": "󰽧",
+            "6": "󰽣",
+            "VI": "󰽣",
+            "7": "󰽦",
+            "VII": "󰽦",
+            "8": "󰽢",
+            "VIII": "󰽢"
+        },
         "on-click": "activate",
-        "on-scroll-up": "hyprctl dispatch workspace e+1",
-        "on-scroll-down": "hyprctl dispatch workspace e-1",
-        "sort-by-number": true,
+        "on-scroll-up": "hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace = \"e+1\"}))'",
+        "on-scroll-down": "hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace = \"e-1\"}))'",
+        "sort-by": "id",
         "active-only": false,
+        "persistent-workspaces": {
+            "*": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8
+            ]
+        },
         "separate-outputs": true
     },
-
-    "hyprland/window": {
-        "format": "{title}",
-        "max-length": 40,
-        "separate-outputs": true
-    },
-
     "custom/eclipse-pbar": {
         "exec": "~/.config/hypr/scripts/eclipse-pbar.sh",
         "return-type": "json",
         "interval": 1,
         "tooltip": true
     },
-
     "clock": {
         "format": "{:%H:%M:%S}",
         "tooltip-format": "{:%A, %d %B %Y}",
         "interval": 1
     },
-
     "custom/date": {
         "exec": "date '+%a %d %b'",
         "interval": 60,
-        "format": "{}"
+        "format": "󰃭 {}"
     },
-
     "pulseaudio": {
-        "format": "{volume}%",
-        "format-muted": "MUTED",
+        "format": "{icon} {volume}%",
+        "format-muted": "󰝟 {volume}%",
+        "format-icons": [
+            "󰕿",
+            "󰖀",
+            "󰕾"
+        ],
         "on-click": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
         "on-scroll-up": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+",
         "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
     },
-
     "network": {
-        "format-wifi": "{signalStrength}%",
-        "format-ethernet": "ETH",
-        "format-disconnected": "off",
+        "format-wifi": "󰖩 {signalStrength}%",
+        "format-ethernet": "󰈀 {ifname}",
+        "format-disconnected": "󰖪",
         "interval": 10
     },
-
     "cpu": {
-        "format": "CPU {usage}%",
+        "format": "󰻠 {usage}%",
         "interval": 2
     },
-
     "memory": {
-        "format": "RAM {}%",
+        "format": "󰍛 {}%",
         "interval": 5
     },
-
     "battery": {
-        "format-charging": "{capacity}%+",
-        "format-plugged": "{capacity}%",
-        "format": "{capacity}%",
+        "format": "{icon} {capacity}%",
+        "format-icons": {
+            "charging": "󰂄",
+            "warning": "󰂃",
+            "critical": "󰂃",
+            "default": "󰁹"
+        },
         "tooltip-format": "{timeTo} {power}"
     },
-
     "tray": {
         "spacing": 10
     }

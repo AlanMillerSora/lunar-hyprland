@@ -1,6 +1,6 @@
 * {
-    font-family: "Inter", "JetBrains Mono", "Fira Code", "DejaVu Sans Mono", sans-serif;
-    font-size: 12px;
+    font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", "Inter", "Noto Sans Symbols", sans-serif;
+    font-size: 13px;
     border: none;
     border-radius: 0;
     min-height: 0;
@@ -15,24 +15,33 @@ window#waybar {
 
 window#waybar.hidden { opacity: 0.2; }
 
-/* ── Рабочие столы = фазы (иконки-луны) ──────────── */
+/* ── Логотип (луна) ─────────────────────────────── */
+#custom-logo {
+    font-size: 17px;
+    color: #8a8a8a;
+    margin-right: 10px;
+    padding-bottom: 1px;
+}
+
+/* ── Рабочие столы = фазы луны ──────────────────── */
 #workspaces {
     background: transparent;
 }
 #workspaces button {
-    padding: 0 6px;
-    margin: 4px 2px;
-    min-width: 28px;
+    min-width: 30px;
+    padding: 0;
+    margin: 4px 3px;
     background: transparent;
-    color: #8a8a8a;
-    border-radius: 6px;
-    font-size: 13px;
+    color: #757575;
+    border-radius: 7px;
+    font-size: 15px;
     transition: background-color 0.2s ease, color 0.2s ease;
 }
 #workspaces button:hover {
     background: rgba(255, 255, 255, 0.08);
     color: #ffffff;
 }
+#workspaces button.active,
 #workspaces button.focused {
     background: rgba(255, 255, 255, 0.10);
     color: #ffffff;
@@ -43,16 +52,9 @@ window#waybar.hidden { opacity: 0.2; }
     color: #ffa3a3;
 }
 
-/* ── Заголовок окна ──────────────────────────────── */
-#window {
-    color: #6f6f6f;
-    font-size: 11px;
-    margin-left: 8px;
-}
-
-/* ── Центр: часы + прогресс затмения ─────────────── */
+/* ── Центр: часы + прогресс затмения ────────────── */
 #clock {
-    font-family: "JetBrains Mono", monospace;
+    font-family: "JetBrains Mono Nerd Font", monospace;
     font-size: 13px;
     font-weight: 600;
     color: #ffffff;
@@ -61,16 +63,16 @@ window#waybar.hidden { opacity: 0.2; }
 }
 
 #custom-eclipse-pbar {
-    font-family: "JetBrains Mono", monospace;
+    font-family: "JetBrains Mono Nerd Font", monospace;
     font-size: 11px;
     letter-spacing: 0.5px;
     color: #7ea6ff;
     padding: 0 10px;
-    min-width: 110px;
+    min-width: 118px;
 }
 #custom-eclipse-pbar.total { color: #f2657a; }
 
-/* ── Правая часть ────────────────────────────────── */
+/* ── Правая часть ───────────────────────────────── */
 #pulseaudio,
 #network,
 #cpu,
@@ -79,10 +81,11 @@ window#waybar.hidden { opacity: 0.2; }
 #custom-date,
 #tray {
     color: #cdcdcd;
-    padding: 0 4px;
+    padding: 0 5px;
+    font-size: 12px;
 }
 #custom-date {
-    font-family: "JetBrains Mono", monospace;
+    font-family: "JetBrains Mono Nerd Font", monospace;
     font-size: 11px;
     color: #9f9f9f;
     padding-left: 6px;
