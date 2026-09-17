@@ -1,0 +1,13 @@
+width=45%
+height=40%
+orientation=vertical
+location=center
+halign=center
+valign=center
+prompt=Search
+show=drun
+drun-display-format={name}
+matching=fuzzy
+allow_images=true
+gtk_dark=true
+insensitive=true

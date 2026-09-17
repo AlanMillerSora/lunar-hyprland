@@ -1,0 +1,366 @@
+﻿?<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hyperland Arch Linux — Lunar Eclipse Preview</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Boot screen -->
+<div id="boot-screen">
+  <div class="boot-text">
+    <span class="boot-line" data-delay="0">[ OK ] Started Network Manager.</span>
+    <span class="boot-line" data-delay="200">[ OK ] Reached target Graphical Interface.</span>
+    <span class="boot-line" data-delay="400">[ OK ] Started Hyperland Session.</span>
+    <span class="boot-line" data-delay="700">[ OK ] Loaded Lunar Eclipse Theme.</span>
+    <span class="boot-line" data-delay="1000">[ OK ] Initializing Waybar...</span>
+    <span class="boot-line" data-delay="1300">[ OK ] Starting Desktop Environment.</span>
+    <span class="boot-cursor">_</span>
+  </div>
+</div>
+
+<!-- Main desktop -->
+<div id="desktop" class="hidden">
+
+  <!-- Eclipse background -->
+  <div id="eclipse-bg">
+    <div class="eclipse-container">
+      <div class="sun"></div>
+      <div class="sun-glow-outer"></div>
+      <div class="moon">
+        <div class="moon-glow"></div>
+        <div class="penumbra"></div>
+        <div class="beads"></div>
+      </div>
+      <div class="corona"></div>
+      <div class="corona-glow"></div>
+      <div class="nightfall" id="nightfall"></div>
+    </div>
+    <div class="space-dust" id="space-dust"></div>
+    <div class="stars" id="stars"></div>
+    <div class="meteors" id="meteors"></div>
+    <div class="horizon-glow"></div>
+  </div>
+
+  <!-- Waybar -->
+  <div id="waybar">
+    <div class="waybar-left">
+      <div class="waybar-logo">&#9790;</div>
+      <div class="waybar-workspaces" id="workspaces">
+        <!-- 9 desktops with moon phases -->
+      </div>
+    </div>
+    <div class="waybar-center">
+      <div class="waybar-clock" id="clock"></div>
+      <div class="waybar-module eclipse-pbar" id="eclipse-pbar" title="Покрытие затмения">
+        <div class="ep-label">
+          <span id="ep-ico">&#9790;</span>
+          <span id="ep-pct">100%</span>
+        </div>
+        <div class="ep-track"><div class="ep-fill" id="ep-fill"></div></div>
+      </div>
+    </div>
+    <div class="waybar-right">
+      <div class="waybar-module tray-icons" id="tray-icons" title="Открытые окна"></div>
+      <div class="waybar-module auto-cycle" id="auto-cycle" title="Автоцикл фаз (демо)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 12a8 8 0 1 1-2.34-5.66"/>
+          <polyline points="20 4 20 8 16 8"/>
+        </svg>
+      </div>
+      <div class="waybar-module" id="battery">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="1" y="6" width="18" height="12" rx="2"/>
+          <line x1="23" y1="10" x2="23" y2="14"/>
+          <rect x="3" y="8" width="10" height="8" rx="1" fill="currentColor" opacity="0.6"/>
+        </svg>
+        <span>87%</span>
+      </div>
+      <div class="waybar-module" id="volume">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+        </svg>
+        <span>72%</span>
+      </div>
+      <div class="waybar-module" id="network">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/>
+        </svg>
+      </div>
+      <div class="waybar-module" id="cpu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="6" y="6" width="12" height="12" rx="2"/>
+          <rect x="9" y="9" width="6" height="6" rx="1"/>
+          <path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/>
+        </svg>
+        <span id="cpu-val">3%</span>
+      </div>
+      <div class="waybar-module" id="memory">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="8" width="20" height="9" rx="2"/>
+          <line x1="6" y1="11" x2="6" y2="14"/>
+          <line x1="10" y1="11" x2="10" y2="14"/>
+          <line x1="14" y1="11" x2="14" y2="14"/>
+          <line x1="18" y1="11" x2="18" y2="14"/>
+        </svg>
+        <span id="memory-val">4.2G</span>
+      </div>
+      <div class="waybar-module" id="date-display"></div>
+    </div>
+  </div>
+
+  <!-- Desktop icons -->
+  <div id="desktop-icons">
+    <div class="desktop-icon" data-action="terminal">
+      <div class="icon-img terminal-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="2" y="3" width="20" height="18" rx="2"/>
+          <polyline points="6 9 10 13 6 17"/>
+          <line x1="12" y1="17" x2="18" y2="17"/>
+        </svg>
+      </div>
+      <span>Терминал</span>
+    </div>
+    <div class="desktop-icon" data-action="files">
+      <div class="icon-img files-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+        </svg>
+      </div>
+      <span>Файлы</span>
+    </div>
+    <div class="desktop-icon" data-action="browser">
+      <div class="icon-img browser-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="2" y1="12" x2="22" y2="12"/>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        </svg>
+      </div>
+      <span>Браузер</span>
+    </div>
+  </div>
+
+  <!-- Terminal window -->
+  <div id="terminal-window" class="app-window hidden">
+    <div class="window-bar">
+      <div class="window-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <span class="window-title">kitty — bash</span>
+      <div class="window-controls">
+        <button class="win-btn minimize" title="Свернуть">—</button>
+        <button class="win-btn maximize" title="Развернуть">□</button>
+        <button class="win-btn close" title="Закрыть">×</button>
+      </div>
+    </div>
+    <div class="terminal-body" id="terminal-body">
+      <div class="terminal-output" id="terminal-output"></div>
+      <div class="terminal-input-line">
+        <span class="terminal-prompt"><span class="user">lunar</span>@<span class="host">arch</span>:<span class="dir">~</span>$ </span>
+        <input type="text" id="terminal-input" class="terminal-input" spellcheck="false" autofocus>
+      </div>
+    </div>
+  </div>
+
+  <!-- File manager window -->
+  <div id="files-window" class="app-window hidden">
+    <div class="window-bar">
+      <div class="window-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <span class="window-title">Thunar — Домашняя папка</span>
+      <div class="window-controls">
+        <button class="win-btn minimize">—</button>
+        <button class="win-btn maximize">□</button>
+        <button class="win-btn close">×</button>
+      </div>
+    </div>
+    <div class="file-body">
+      <div class="file-sidebar">
+        <div class="file-sidebar-item active">&#127968; Домашняя</div>
+        <div class="file-sidebar-item">&#128193; Документы</div>
+        <div class="file-sidebar-item">&#127912; Рабочий стол</div>
+        <div class="file-sidebar-item">&#127911; Загрузки</div>
+        <div class="file-sidebar-item">&#127925; Музыка</div>
+        <div class="file-sidebar-item">&#127909; Видео</div>
+      </div>
+      <div class="file-main">
+        <div class="file-item folder">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="#ffffff" stroke="none">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+          </svg>
+          <span>.config</span>
+        </div>
+        <div class="file-item folder">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="#ffffff" stroke="none">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+          </svg>
+          <span>.local</span>
+        </div>
+        <div class="file-item folder">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="#ffffff" stroke="none">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+          </svg>
+          <span>Documents</span>
+        </div>
+        <div class="file-item folder">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="#ffffff" stroke="none">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+          </svg>
+          <span>Pictures</span>
+        </div>
+        <div class="file-item folder">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="#ffffff" stroke="none">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+          </svg>
+          <span>Downloads</span>
+        </div>
+        <div class="file-item file">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#e6e6e6" stroke-width="1.5">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          <span>.bashrc</span>
+        </div>
+        <div class="file-item file">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#e6e6e6" stroke-width="1.5">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          <span>.zshrc</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Browser window -->
+  <div id="browser-window" class="app-window hidden">
+    <div class="window-bar">
+      <div class="window-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="browser-url-bar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        <span>https://archlinux.org</span>
+      </div>
+      <div class="window-controls">
+        <button class="win-btn minimize">—</button>
+        <button class="win-btn maximize">□</button>
+        <button class="win-btn close">×</button>
+      </div>
+    </div>
+    <div class="browser-body">
+      <div class="browser-page">
+        <div class="browser-header">
+          <h1>&#9790; Arch Linux</h1>
+          <p>Keep it simple, stupid.</p>
+        </div>
+        <div class="browser-nav">
+          <a href="#">Установка</a>
+          <a href="#">Документация</a>
+          <a href="#">Сообщество</a>
+          <a href="#">AUR</a>
+        </div>
+        <div class="browser-content">
+          <p>Добро пожаловать в Arch Linux — простой, элегантный, современный дистрибутив Linux.</p>
+          <div class="browser-card">
+            <h3>Hyprland</h3>
+            <p>Dynamic tiling Wayland compositor</p>
+          </div>
+          <div class="browser-card">
+            <h3>Waybar</h3>
+            <p>Highly customizable Wayland bar</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Wofi / App launcher -->
+  <div id="wofi-overlay" class="hidden">
+    <div id="wofi">
+      <div class="wofi-search">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" id="wofi-input" placeholder="Найти приложение..." spellcheck="false">
+      </div>
+      <div class="wofi-apps" id="wofi-apps"></div>
+    </div>
+  </div>
+
+  <!-- Notification stack -->
+  <div id="notification-stack"></div>
+
+  <!-- Calculator widget -->
+  <div id="calculator-window" class="app-window hidden">
+    <div class="window-bar">
+      <div class="window-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <span class="window-title">Калькулятор</span>
+      <div class="window-controls">
+        <button class="win-btn close" title="Закрыть">×</button>
+      </div>
+    </div>
+    <div class="calc-body">
+      <div class="calc-display" id="calc-display">0</div>
+      <div class="calc-grid">
+        <button class="calc-btn calc-ops" data-calc="C">C</button>
+        <button class="calc-btn calc-ops" data-calc="±">±</button>
+        <button class="calc-btn calc-ops" data-calc="%">%</button>
+        <button class="calc-btn calc-ops" data-calc="/">÷</button>
+        <button class="calc-btn calc-num" data-calc="7">7</button>
+        <button class="calc-btn calc-num" data-calc="8">8</button>
+        <button class="calc-btn calc-num" data-calc="9">9</button>
+        <button class="calc-btn calc-ops" data-calc="*">×</button>
+        <button class="calc-btn calc-num" data-calc="4">4</button>
+        <button class="calc-btn calc-num" data-calc="5">5</button>
+        <button class="calc-btn calc-num" data-calc="6">6</button>
+        <button class="calc-btn calc-ops" data-calc="-">−</button>
+        <button class="calc-btn calc-num" data-calc="1">1</button>
+        <button class="calc-btn calc-num" data-calc="2">2</button>
+        <button class="calc-btn calc-num" data-calc="3">3</button>
+        <button class="calc-btn calc-ops" data-calc="+">+</button>
+        <button class="calc-btn calc-num calc-zero" data-calc="0">0</button>
+        <button class="calc-btn calc-num" data-calc=".">.</button>
+        <button class="calc-btn calc-eq" data-calc="=">=</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Wallpaper text -->
+  <div id="wallpaper-text">
+    <div class="wp-title">HYPERLAND</div>
+    <div class="wp-subtitle">Arch Linux • Lunar Eclipse Edition</div>
+  </div>
+
+</div>
+
+<!-- Drag state for windows -->
+<style>
+  .app-window.dragging { opacity: 0.95; }
+  .app-window { cursor: default; }
+  .window-bar { cursor: grab; }
+  .window-bar:active { cursor: grabbing; }
+</style>
+
+<script src="script.js"></script>
+</body>
+</html>
