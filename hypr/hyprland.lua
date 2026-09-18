@@ -140,6 +140,12 @@ hl.window_rule({ match = { class = "org.pulseaudio.pavucontrol" }, float = true,
 -- Терминал: чуть прозрачнее неактивного, чтобы "пустота" ночи сквозила
 hl.window_rule({ match = { class = "^(kitty)$" }, opacity = "1.0 override 0.92 override" })
 
+-- Попапы райса: календарь, шпаргалка хоткеев, ввод пароля — по центру, без рамок
+hl.window_rule({ match = { class = "eclipse-calendar" },   float = true, center = true, rounding = 16, border_size = 0 })
+hl.window_rule({ match = { class = "eclipse-cheatsheet" }, float = true, center = true, rounding = 18, border_size = 0 })
+hl.window_rule({ match = { class = "eclipse-askpass" },    float = true, center = true, rounding = 16, border_size = 0 })
+
+
 -- Запрет blur окон под полноэкранной игрой/видео
 hl.window_rule({ match = { fullscreen = true }, no_blur = true })
 
@@ -150,6 +156,8 @@ local M = "SUPER"
 hl.bind(M .. " + RETURN",  dsp.exec_cmd("kitty"))
 hl.bind(M .. " + D",       dsp.exec_cmd("wofi --show drun"))
 hl.bind(M .. " + A",       dsp.exec_cmd("wofi --show run"))
+hl.bind(M .. " + E",       dsp.exec_cmd("dolphin"))
+hl.bind(M .. " + SLASH",   dsp.exec_cmd("~/.config/hypr/scripts/eclipse-cheatsheet.py"))
 hl.bind(M .. " + Q",       dsp.window.close())
 hl.bind(M .. " + W",       dsp.window.fullscreen({ mode = "maximized" }))
 hl.bind(M .. " + SHIFT + W", dsp.window.fullscreen({ mode = "fullscreen" }))
@@ -197,6 +205,12 @@ hl.bind("PRINT",           dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
 hl.bind(M .. " + PRINT",   dsp.exec_cmd("grim - | wl-copy"))
 hl.bind(M .. " + R",       dsp.exec_cmd("hyprctl reload"))
 hl.bind(M .. " + C",       dsp.exit())
+
+-- медиа-клавиши (громкость через PipeWire/wpctl)
+hl.bind("XF86AudioRaiseVolume", dsp.exec_cmd("wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+"))
+hl.bind("XF86AudioLowerVolume", dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"))
+hl.bind("XF86AudioMute",        dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"))
+hl.bind("XF86AudioMicMute",     dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"))
 
 -- ─────────────────────────────── Автозапуск ─────────────────────────
 hl.on("hyprland.start", function()

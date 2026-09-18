@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="#7ea6ff" stop-opacity="0.55"/>
+      <stop offset="45%" stop-color="#7ea6ff" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#7ea6ff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="sun" cx="38%" cy="34%" r="72%">
+      <stop offset="0%"  stop-color="#ffffff"/>
+      <stop offset="38%" stop-color="#e9efff"/>
+      <stop offset="72%" stop-color="#b7ccff"/>
+      <stop offset="100%" stop-color="#7ea6ff"/>
+    </radialGradient>
+  </defs>
+
+  <!-- внешнее гало -->
+  <circle cx="256" cy="256" r="210" fill="url(#glow)"/>
+
+  <!-- солнце -->
+  <circle cx="256" cy="256" r="118" fill="url(#sun)"/>
+
+  <!-- тонкое кольцо короны по краю -->
+  <circle cx="256" cy="256" r="119" fill="none"
+          stroke="#b7ccff" stroke-opacity="0.45" stroke-width="2"/>
+
+  <!-- луна: прикрывает ~60%, остаётся серп -->
+  <circle cx="344" cy="246" r="118" fill="#05060a"/>
+  <circle cx="344" cy="246" r="118" fill="none"
+          stroke="#7ea6ff" stroke-opacity="0.18" stroke-width="2"/>
+</svg>

@@ -13,8 +13,8 @@ CONF="$HOME/.config"
 WALL="$HOME/Pictures/EclipseWalls"
 BIN="$HOME/.local/bin"
 
-mkdir -p "$CONF"/{hypr/scripts,waybar,wofi,kitty,mako,hyprlock}
-mkdir -p "$WALL" "$BIN"
+mkdir -p "$CONF"/{hypr/scripts,waybar,wofi,kitty,mako,hyprlock,fastfetch,lunar}
+mkdir -p "$WALL" "$BIN" "$HOME/.local/share/color-schemes"
 
 echo "== Lunar Eclipse rice: установка конфигов =="
 
@@ -75,6 +75,12 @@ chmod +x "$BIN/eclipse-anim-gen.py"
 chmod +x "$CONF/hypr/scripts/eclipse-live-gen.py"
 chmod +x "$BIN/eclipse-live-gen.py"
 
+# Панель-попапы: Wi-Fi меню, календарь, шпаргалка хоткеев, ввод пароля
+for s in eclipse-network.sh eclipse-calendar.py eclipse-cheatsheet.py eclipse-askpass.py; do
+  cp "$DOTDIR/hypr/scripts/$s" "$CONF/hypr/scripts/"
+  chmod +x "$CONF/hypr/scripts/$s"
+done
+
 # Зачистка от старых раскладок: с 0.55 конфиг — hyprland.lua,
 # а hypridle.conf лежит в hypr/, а не в hypridle/
 rm -f "$CONF/hypr/hyprland.conf"
@@ -84,6 +90,19 @@ cp "$DOTDIR/waybar/config.jsonc" "$DOTDIR/waybar/style.css" "$CONF/waybar/"
 cp "$DOTDIR/wofi/config" "$DOTDIR/wofi/style.css" "$CONF/wofi/"
 cp "$DOTDIR/kitty/kitty.conf" "$CONF/kitty/"
 cp "$DOTDIR/mako/config" "$CONF/mako/"
+cp "$DOTDIR/fastfetch/config.jsonc" "$DOTDIR/fastfetch/eclipse.png" "$CONF/fastfetch/"
+cp "$DOTDIR/kde/kdeglobals" "$DOTDIR/kde/dolphinrc" "$CONF/"
+cp "$DOTDIR/kde/color-schemes/LunarEclipse.colors" "$HOME/.local/share/color-schemes/"
+cp "$DOTDIR/shell/lunar.bash" "$CONF/lunar/lunar.bash"
+
+# Интерактивная оболочка (fastfetch + PS1): подключаем из ~/.bashrc
+LUNAR_LINE='[ -f ~/.config/lunar/lunar.bash ] && . ~/.config/lunar/lunar.bash'
+if [ -f "$HOME/.bashrc" ]; then
+  grep -qF "$LUNAR_LINE" "$HOME/.bashrc" || printf '\n%s\n' "$LUNAR_LINE" >> "$HOME/.bashrc"
+else
+  printf '%s\n' "$LUNAR_LINE" > "$HOME/.bashrc"
+fi
+
 # hypridle 0.1.8 ищет конфиг в ~/.config/hypr/, а не в ~/.config/hypridle/!
 cp "$DOTDIR/hypridle/hypridle.conf" "$CONF/hypr/hypridle.conf"
 

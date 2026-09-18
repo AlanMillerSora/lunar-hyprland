@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
 # ════════════════════════════════════════════════════════════
-#  Waybar: прогресс-бар затмения (покрытие по фазам 1..8)
+#  Waybar: заполнение затмения (фазы 1..8)
 #  Покрытия — из превью (script.js): 8, 40, 75, 100, 68, 35, 12, 0
-#  Возвращает JSON для return-type=json:
-#    text / class(total → красный на полном затмении) / tooltip
+#  JSON для return-type=json:  text / class(total) / tooltip
 # ════════════════════════════════════════════════════════════
 
 COV=(8 40 75 100 68 35 12 0)
+ROMAN=(I II III IV V VI VII VIII)
+# лунные глифы фаз (mdi, как в иконках рабочих столов), индекс = фаза-1
+MOON=("󰽨" "󰽡" "󰽥" "󰽤" "󰽧" "󰽣" "󰽦" "󰽢")
+# человеческое имя фазы
+NAME=("тонкий серп" "молодая луна" "прибывающая" "полное затмение" \
+      "убывающая" "последняя четверть" "старый серп" "новолуние")
 
 cur="$(hyprctl activeworkspace -j 2>/dev/null | python3 -c 'import sys, json
 try:
@@ -18,19 +23,19 @@ if ! [[ "$cur" =~ ^[0-9]+$ ]] || (( cur < 1 || cur > 8 )); then
   cur=1
 fi
 
-pct="${COV[$((cur - 1))]}"
+i=$(( cur - 1 ))
+pct="${COV[$i]}"
+moon="${MOON[$i]}"
+
+# Тонкая полоса заполнения: 10 делений, «━» заполнено, «─» пусто.
 filled=$(( (pct + 5) / 10 ))
-empty=$(( 10 - filled ))
-
 bar=""
-for ((i = 0; i < filled; i++)); do bar+="█"; done
-for ((i = 0; i < empty; i++)); do bar+="░"; done
-
-# Иконка луны из JetBrainsMono Nerd Font (mdi-moon-waning-crescent)
-moon="$(printf '\U000f0f65')"
+for ((c = 0; c < 10; c++)); do
+  if (( c < filled )); then bar+="━"; else bar+="─"; fi
+done
 
 cls="normal"
 (( pct == 100 )) && cls="total"
 
-printf '{"text":"%s %3d%%  %s", "class":"%s", "tooltip":"Phase %d — покрытие %d%%", "percentage":%d}' \
-  "$moon" "$pct" "$bar" "$cls" "$cur" "$pct" "$pct"
+printf '{"text":"%s  %s  %d%%", "class":"%s", "tooltip":"Фаза %s · покрытие %d%% · %s", "percentage":%d}' \
+  "$moon" "$bar" "$pct" "$cls" "${ROMAN[$i]}" "$pct" "${NAME[$i]}" "$pct"

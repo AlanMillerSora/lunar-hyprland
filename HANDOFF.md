@@ -5,6 +5,29 @@
 / `rgba(255,255,255,.10)` / `#7ea6ff` / `#b7ccff` / `#f2657a`, шрифты Inter +
 JetBrains Mono, фазы затмения с покрытием `[8,40,75,100,68,35,12,0]%`.
 
+## Состояние на 18.09.2026 — update 0.1.3
+
+- **Полировка системы (0.1.3).** Waybar: индикатор затмения переделан на
+  тонкую полосу `━/─` + глиф фазы + %, на фазе 4 — красный; клики рабочие —
+  громкость → `pavucontrol`, Wi-Fi → `eclipse-network.sh` (wofi+nmcli, пароль
+  через `eclipse-askpass.py`), часы → `eclipse-calendar.py` (клик по дню
+  копирует ISO-дату). `SUPER` + `/` → `eclipse-cheatsheet.py`.
+- **kitty** — курсор-beam с трейлом, паддинги, вкладки при ≥2. **fastfetch**
+  с логотипом-полузатмением (`fastfetch/eclipse.svg` → `.png`, тип `kitty`);
+  запускается из `shell/lunar.bash`, который `install.sh` подключает к
+  `~/.bashrc` (там же алиасы и цветной PS1). **wofi** и **Dolphin/KDE**
+  (`kde/kdeglobals`, `dolphinrc`, схема `Lunar Eclipse`) — в палитре райса.
+- **Грабли GTK3 на python:** обязательно `gi.require_version("Gdk", "3.0")`
+  рядом с `Gtk 3.0`, иначе Gdk подтягивается 4.0 и импорт падает.
+- **`fastfetch` не установлен** — `sudo -n` недоступен; поставить
+  `sudo pacman -S fastfetch`. Конфиг уже разложен.
+- Все попапы зарегистрированы оконными правилами (`eclipse-calendar`,
+  `eclipse-cheatsheet`, `eclipse-askpass`) — float/center/без рамок.
+
+Отдельный скрипт для правки: `~/.config/hypr/scripts/eclipse-pbar.sh`,
+`eclipse-network.sh`, `eclipse-calendar.py`, `eclipse-cheatsheet.py`,
+`eclipse-askpass.py`.
+
 ## Состояние на 18.09.2026 — update 0.1.2
 
 - **Живые обои — видео 1-в-1 с сайтом, вошло в 0.1.2.** На каждом столе

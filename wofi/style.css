@@ -1,52 +1,55 @@
-@define-color bg     rgba(10, 10, 10, 0.92);
+@define-color bg     rgba(10, 10, 10, 0.94);
 @define-color fg     #e6e6e6;
 @define-color dim    #6f6f6f;
 @define-color accent #7ea6ff;
 @define-color accent-light #b7ccff;
 
 #window {
-    font-family: "Inter", sans-serif;
+    font-family: "Inter", "JetBrainsMono Nerd Font", sans-serif;
     background: @bg;
     border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: 16px;
+    border-radius: 18px;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
 }
 
 #outer-box {
-    padding: 12px;
+    padding: 14px;
 }
 
 #input {
+    font-family: "Inter", "JetBrainsMono Nerd Font", sans-serif;
+    font-size: 13px;
     background: rgba(255, 255, 255, 0.06);
     color: @fg;
     border: none;
-    border-radius: 10px;
-    padding: 8px 12px;
+    border-radius: 11px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
 }
 
 #input:focus {
-    box-shadow: inset 0 0 0 1px rgba(126, 166, 255, 0.4);
+    box-shadow: inset 0 0 0 1px rgba(126, 166, 255, 0.45);
 }
 
 #scroll {
-    margin-top: 8px;
-}
-
-#inner-box {
+    margin-top: 0;
 }
 
 #entry {
-    padding: 8px 12px;
+    padding: 9px 12px;
     border-radius: 10px;
     color: @fg;
+    font-size: 13px;
+    transition: background-color 0.12s ease;
 }
 
 #entry:selected {
-    background: rgba(126, 166, 255, 0.18);
+    background: rgba(126, 166, 255, 0.16);
     color: #ffffff;
 }
 
 #img {
-    margin-right: 10px;
+    margin-right: 12px;
 }
 
 #text {
@@ -55,4 +58,15 @@
 
 #entry:selected #text {
     color: @accent-light;
+}
+
+/* тонкий скроллбар, не отвлекает */
+scrollbar {
+    background: transparent;
+    width: 4px;
+}
+scrollbar slider {
+    background: rgba(255, 255, 255, 0.14);
+    border-radius: 4px;
+    min-width: 4px;
 }

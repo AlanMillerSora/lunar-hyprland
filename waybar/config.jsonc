@@ -1,8 +1,8 @@
 {
     "layer": "top",
     "position": "top",
-    "height": 36,
-    "spacing": 10,
+    "height": 34,
+    "spacing": 8,
     "modules-left": [
         "custom/logo",
         "hyprland/workspaces"
@@ -17,8 +17,7 @@
         "network",
         "cpu",
         "memory",
-        "battery",
-        "custom/date"
+        "battery"
     ],
     "custom/logo": {
         "format": "󰖔",
@@ -70,14 +69,10 @@
         "tooltip": true
     },
     "clock": {
-        "format": "{:%H:%M:%S}",
-        "tooltip-format": "{:%A, %d %B %Y}",
-        "interval": 1
-    },
-    "custom/date": {
-        "exec": "date '+%a %d %b'",
-        "interval": 60,
-        "format": "󰃭 {}"
+        "format": "{:%H:%M}",
+        "tooltip-format": "{:%A, %d %B %Y}\nнажми — календарь",
+        "on-click": "~/.config/hypr/scripts/eclipse-calendar.py",
+        "interval": 10
     },
     "pulseaudio": {
         "format": "{icon} {volume}%",
@@ -87,7 +82,9 @@
             "󰖀",
             "󰕾"
         ],
-        "on-click": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+        "tooltip-format": "{desc}",
+        "on-click": "pavucontrol",
+        "on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
         "on-scroll-up": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+",
         "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
     },
@@ -95,11 +92,17 @@
         "format-wifi": "󰖩 {signalStrength}%",
         "format-ethernet": "󰈀 {ifname}",
         "format-disconnected": "󰖪",
-        "interval": 10
+        "format-linked": "󰖪 {essid}",
+        "tooltip-format-wifi": "{essid}\n{signalStrength}%\nнажми — выбрать сеть",
+        "tooltip-format-disconnected": "Wi-Fi отключён\nнажми — включить",
+        "interval": 10,
+        "on-click": "~/.config/hypr/scripts/eclipse-network.sh menu",
+        "on-click-right": "nm-connection-editor"
     },
     "cpu": {
         "format": "󰻠 {usage}%",
-        "interval": 2
+        "interval": 2,
+        "on-click": "kitty -e htop"
     },
     "memory": {
         "format": "󰍛 {}%",
@@ -116,6 +119,7 @@
         "tooltip-format": "{timeTo} {power}"
     },
     "tray": {
-        "spacing": 10
+        "spacing": 10,
+        "icon-size": 16
     }
 }

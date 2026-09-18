@@ -125,7 +125,7 @@ yay -S --noconfirm --needed \
   bluez bluez-utils blueman \
   xdg-desktop-portal-hyprland xdg-desktop-portal-gtk \
   ttf-jetbrains-mono inter-font noto-fonts noto-fonts-emoji \
-  librsvg ffmpeg \
+  librsvg ffmpeg fastfetch \
   thunar firefox
 
 # dunst конфликтует с mako за org.freedesktop.Notifications — выносим

@@ -31,6 +31,18 @@
   ЖИВОЙ CSS-сцены сайта через headless Chromium: вид 1-в-1 с превью (радиус
   солнца 125, на фазе 4 — чёрная луна с тонким кольцом), 12 с петля, 60 fps.
   Нужен `chromium`.
+- `hypr/scripts/eclipse-network.sh` — Wi-Fi меню для waybar (wofi + `nmcli`):
+  список сетей, подключение с запросом пароля, отключение, вкл/выкл радио,
+  «Настройки сети…». Пароль спрашивает `eclipse-askpass.py`.
+- `hypr/scripts/eclipse-calendar.py` — календарь-попап в стиле райса
+  (клик по часам): навигация стрелками/PgUp-PgDn, клик по дню копирует дату.
+- `hypr/scripts/eclipse-cheatsheet.py` — оверлей горячих клавиш (`SUPER` + `/`).
+- `fastfetch/` — конфиг fastfetch + логотип-полузатмение `eclipse.png`
+  (рендерится из `eclipse.svg`), показывается при старте kitty.
+- `shell/lunar.bash` — приветствие fastfetch, удобные алиасы, PS1 в палитре;
+  подключается из `~/.bashrc` (это делает `install.sh`).
+- `kde/` — тема Dolphin/KDE `Lunar Eclipse` (`kdeglobals`, `dolphinrc`,
+  `color-schemes/LunarEclipse.colors`).
 - `waybar/`, `wofi/`, `kitty/`, `mako/`, `hyprlock/`, `hypridle/` остальная обвязка.
 - `wallpapers/` 8 статичных картинок, фазы луны (fallback, если GIF нет).
 
@@ -84,7 +96,7 @@ hyprctl reload
 `ECLIPSE_ANIM=0 ./install.sh`. Для видео добавь `ECLIPSE_VIDEO=1`, а для
 вида 1-в-1 с сайтом (съёмка CSS, нужен `chromium`) — ещё и `ECLIPSE_LIVE=1`.
 
-Нужны пакеты: `hyprland waybar wofi kitty mako awww hyprlock hypridle`
+Нужны пакеты: `hyprland waybar wofi kitty mako awww hyprlock hypridle fastfetch`
 плюс `grim slurp wl-clipboard wireplumber python` и шрифты
 `ttf-jetbrains-mono ttf-inter`. Для живых обоев ещё `librsvg` (rsvg-convert)
 и `ffmpeg`.
@@ -155,6 +167,8 @@ yay -S mpvpaper      # mpvpaper подтянет mpv сам
 |---|---|
 | `SUPER` + `RETURN` | терминал (kitty) |
 | `SUPER` + `D` / `A` | меню (wofi: drun / run) |
+| `SUPER` + `E` | файловый менеджер (Dolphin) |
+| `SUPER` + `/` | оверлей горячих клавиш |
 | `SUPER` + `1..8` | перейти на фазу |
 | `SUPER` + `SHIFT` + `1..8` | утащить окно на фазу |
 | `SUPER` + `Q` | закрыть окно |
