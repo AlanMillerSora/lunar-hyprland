@@ -16,10 +16,15 @@ from gi.repository import Gdk, GLib, Gtk  # noqa: E402
 GLib.set_prgname("eclipse-askpass")
 
 CSS = b"""
-window {
+window.background {
     background: rgba(10, 10, 10, 0.97);
     border: 1px solid rgba(255, 255, 255, 0.10);
     border-radius: 16px;
+}
+button, button:hover, button:active, button:focus {
+    background-image: none;
+    box-shadow: none;
+    text-shadow: none;
 }
 label.prompt {
     font-family: "Inter", sans-serif;

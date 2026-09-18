@@ -18,6 +18,7 @@ SECTIONS = [
         ("SUPER + RETURN", "терминал"),
         ("SUPER + D", "лаунчер"),
         ("SUPER + A", "запуск команды"),
+        ("SUPER + E", "файлы (Dolphin)"),
         ("SUPER + /", "горячие клавиши"),
         ("SUPER + SHIFT + L", "блокировка"),
     ]),
@@ -47,19 +48,26 @@ SECTIONS = [
         ("PRINT", "скриншот области"),
         ("SUPER + PRINT", "скриншот экрана"),
     ]),
-    ("Звук", [
-        ("XF86 Vol ±", "громкость"),
-        ("XF86 Mute", "без звука"),
+    ("Мышь и звук", [
         ("клик по 󰕾", "микшер (pavucontrol)"),
-        ("правый клик 󰕾", "mute"),
+        ("правый клик 󰕾", "без звука"),
+        ("клик по 󰻠", "btop (монитор)"),
+        ("клик по 󰖩", "список Wi-Fi"),
+        ("клик по часам", "календарь"),
+        ("XF86 Audio ±", "громкость"),
     ]),
 ]
 
 CSS = b"""
-window {
+window.background {
     background: rgba(10, 10, 10, 0.97);
     border: 1px solid rgba(255, 255, 255, 0.10);
     border-radius: 18px;
+}
+button, button:hover, button:active, button:focus {
+    background-image: none;
+    box-shadow: none;
+    text-shadow: none;
 }
 .title {
     font-family: "Inter", sans-serif;
@@ -109,6 +117,10 @@ class Cheatsheet(Gtk.Window):
         self.set_skip_taskbar_hint(True)
         self.set_keep_above(True)
         self.set_position(Gtk.WindowPosition.CENTER)
+
+        settings = Gtk.Settings.get_default()
+        if settings is not None:
+            settings.set_property("gtk-application-prefer-dark-theme", True)
 
         provider = Gtk.CssProvider()
         provider.load_from_data(CSS)
