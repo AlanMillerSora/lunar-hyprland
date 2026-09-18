@@ -183,6 +183,10 @@ hl.bind(M .. " + SHIFT + UP",    dsp.window.move({ direction = "up" }))
 hl.bind(M .. " + SHIFT + DOWN",  dsp.window.move({ direction = "down" }))
 -- SHIFT+HJKL не нужны: перенос окон уже покрыт стрелками выше
 
+-- мышь: тянуть/ресайзить окно (рамок нет — тянем за содержимое)
+hl.bind(M .. " + mouse:272", dsp.window.drag(),   { mouse = true })  -- SUPER + ЛКМ
+hl.bind(M .. " + mouse:273", dsp.window.resize(), { mouse = true })  -- SUPER + ПКМ
+
 -- стеки = фазы
 for ws = 1, 8 do
   hl.bind(M .. " + " .. ws,
