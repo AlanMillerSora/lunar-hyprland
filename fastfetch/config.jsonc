@@ -3,11 +3,11 @@
     "logo": {
         "source": "~/.config/fastfetch/eclipse.png",
         "type": "kitty",
-        "width": 24,
+        "width": 22,
         "padding": {
-            "top": 2,
-            "left": 3,
-            "right": 3
+            "top": 1,
+            "left": 2,
+            "right": 2
         }
     },
     "display": {
@@ -17,8 +17,17 @@
             "color": "blue"
         },
         "percent": {
-            "type": "num",
-            "color": "blue"
+            "type": [
+                "num"
+            ]
+        },
+        "bar": {
+            "char": {
+                "elapsed": "━",
+                "total": "─"
+            },
+            "width": 12,
+            "border": null
         }
     },
     "modules": [
