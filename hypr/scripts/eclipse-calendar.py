@@ -21,57 +21,90 @@ GLib.set_prgname("eclipse-calendar")
 
 RU_MONTHS = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
              "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"]
-RU_WEEK = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
+RU_WEEK = ["пн", "вт", "ср", "чт", "пт", "сб", "вс"]
 
-CSS = b"""
-window {
+CSS = """
+/* Никаких градиентов и светлых подложек Adwaita */
+window.background {
     background: rgba(10, 10, 10, 0.97);
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 18px;
 }
+button, button:hover, button:active, button:focus {
+    background-image: none;
+    box-shadow: none;
+    text-shadow: none;
+}
+
 .month {
     font-family: "Inter", sans-serif;
     font-size: 15px;
     font-weight: 600;
     color: #ffffff;
-    letter-spacing: 0.4px;
+    letter-spacing: 0.3px;
 }
-.week {
+.year {
     font-family: "JetBrains Mono", monospace;
     font-size: 10px;
-    color: #6f6f6f;
+    color: #7ea6ff;
+    letter-spacing: 2px;
 }
 .nav {
     background: transparent;
     border: none;
-    color: #9f9f9f;
-    font-size: 15px;
-    padding: 2px 9px;
-    border-radius: 9px;
+    color: #8a8a8a;
+    font-size: 16px;
+    padding: 2px 10px;
+    border-radius: 10px;
     min-height: 0;
+    min-width: 0;
 }
-.nav:hover { background: rgba(255, 255, 255, 0.08); color: #ffffff; }
+.nav:hover { background: rgba(255, 255, 255, 0.07); color: #ffffff; }
+
+.week {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: #5f5f5f;
+    padding: 2px 0 6px 0;
+}
+
 .day {
     background: transparent;
     border: none;
-    color: #cdcdcd;
+    color: #cfcfcf;
     font-family: "JetBrains Mono", monospace;
     font-size: 12px;
-    border-radius: 9px;
-    padding: 5px 0;
-    min-width: 36px;
+    border-radius: 10px;
+    padding: 7px 0;
+    min-width: 40px;
     min-height: 0;
 }
 .day:hover { background: rgba(255, 255, 255, 0.08); color: #ffffff; }
-.day.weekend { color: #8a8a8a; }
-.day.other   { color: #454545; }
-.day.today   { color: #7ea6ff; box-shadow: inset 0 0 0 1px rgba(126, 166, 255, 0.55); }
-.day.sel     { background: rgba(126, 166, 255, 0.20); color: #ffffff; }
-.hint {
+.day.weekend { color: #909090; }
+.day.other   { color: #4a4a4a; }
+.day.other:hover { color: #8a8a8a; }
+.day.today {
+    color: #7ea6ff;
+    box-shadow: inset 0 0 0 1.5px rgba(126, 166, 255, 0.65);
+}
+.day.sel {
+    background: #7ea6ff;
+    color: #05060a;
+    font-weight: 700;
+}
+.day.sel:hover { background: #9fbcff; color: #05060a; }
+
+.footer {
     font-family: "Inter", sans-serif;
     font-size: 10px;
     color: #6f6f6f;
-    padding: 4px 4px 2px 4px;
+    padding: 10px 2px 2px 2px;
+}
+.footer-day {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: #b7ccff;
+    padding: 10px 2px 2px 2px;
 }
 """
 
@@ -83,78 +116,106 @@ class CalendarWindow(Gtk.Window):
         self.sel = self.today
         self.view = self.today.replace(day=1)
 
+        settings = Gtk.Settings.get_default()
+        if settings is not None:
+            settings.set_property("gtk-application-prefer-dark-theme", True)
+
         self.set_decorated(False)
         self.set_resizable(False)
         self.set_skip_taskbar_hint(True)
         self.set_keep_above(True)
         self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_name("eclipse-calendar")
 
         provider = Gtk.CssProvider()
-        provider.load_from_data(CSS)
+        provider.load_from_data(CSS.encode("utf-8"))
         Gtk.StyleContext.add_provider_for_screen(
             Gdk.Screen.get_default(), provider,
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
         )
 
-        self.box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
-        self.add(self.box)
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        box.set_margin_top(14)
+        box.set_margin_bottom(10)
+        box.set_margin_start(16)
+        box.set_margin_end(16)
+        self.add(box)
 
-        self._build_header()
-        self.grid = Gtk.Grid(row_spacing=1, column_spacing=1)
-        self.grid.set_margin_start(12)
-        self.grid.set_margin_end(12)
-        self.grid.set_margin_bottom(8)
-        self.box.pack_start(self.grid, False, False, 0)
-
-        hint = Gtk.Label(label="клик — скопировать дату · Esc — закрыть")
-        hint.get_style_context().add_class("hint")
-        self.box.pack_start(hint, False, False, 0)
+        self._build_header(box)
+        self._build_weekdays(box)
+        self.days = Gtk.Grid(column_homogeneous=True, row_spacing=1, column_spacing=1)
+        self.days.set_margin_top(2)
+        box.pack_start(self.days, False, False, 0)
+        self._build_footer(box)
 
         self.connect("key-press-event", self._on_key)
         self.connect("focus-out-event", lambda *_: Gtk.main_quit())
         self._render()
 
     # ── шапка ────────────────────────────────────────────────
-    def _build_header(self) -> None:
-        head = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=2)
-        head.set_margin_top(12)
-        head.set_margin_bottom(6)
-        head.set_margin_start(12)
-        head.set_margin_end(12)
+    def _build_header(self, box: Gtk.Box) -> None:
+        head = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+        head.set_margin_bottom(10)
 
-        prev = self._nav_btn("‹", lambda *_: self._shift_month(-1))
+        prev = self._nav("‹", lambda *_: self._shift_month(-1))
+        center = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
+        center.set_hexpand(True)
         self.month_label = Gtk.Label()
         self.month_label.get_style_context().add_class("month")
-        nxt = self._nav_btn("›", lambda *_: self._shift_month(1))
+        self.year_label = Gtk.Label()
+        self.year_label.get_style_context().add_class("year")
+        center.pack_start(self.month_label, False, False, 0)
+        center.pack_start(self.year_label, False, False, 0)
+        nxt = self._nav("›", lambda *_: self._shift_month(1))
 
         head.pack_start(prev, False, False, 0)
-        head.pack_start(self.month_label, True, True, 0)
+        head.pack_start(center, True, True, 0)
         head.pack_start(nxt, False, False, 0)
-        self.box.pack_start(head, False, False, 0)
+        box.pack_start(head, False, False, 0)
 
-    def _nav_btn(self, label: str, cb) -> Gtk.Button:
+    def _nav(self, label: str, cb) -> Gtk.Button:
         b = Gtk.Button(label=label)
         b.get_style_context().add_class("nav")
         b.connect("clicked", cb)
         return b
 
-    # ── отрисовка ────────────────────────────────────────────
-    def _render(self) -> None:
-        for child in self.grid.get_children():
-            self.grid.remove(child)
-
-        self.month_label.set_text(f"{RU_MONTHS[self.view.month - 1]} {self.view.year}")
-
+    def _build_weekdays(self, box: Gtk.Box) -> None:
+        grid = Gtk.Grid(column_homogeneous=True)
         for col, name in enumerate(RU_WEEK):
             lbl = Gtk.Label(label=name)
+            lbl.set_size_request(40, -1)
             lbl.get_style_context().add_class("week")
-            self.grid.attach(lbl, col, 0, 1, 1)
+            grid.attach(lbl, col, 0, 1, 1)
+        box.pack_start(grid, False, False, 0)
+
+    def _build_footer(self, box: Gtk.Box) -> None:
+        foot = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        self.footer_day = Gtk.Label(label=self.sel.isoformat())
+        self.footer_day.get_style_context().add_class("footer-day")
+        self.footer_day.set_xalign(0.0)
+        hint = Gtk.Label(label="клик — копировать · Esc — закрыть")
+        hint.get_style_context().add_class("footer")
+        hint.set_xalign(1.0)
+        hint.set_hexpand(True)
+        foot.pack_start(self.footer_day, False, False, 0)
+        foot.pack_start(hint, True, True, 0)
+        box.pack_start(foot, False, False, 0)
+
+    # ── отрисовка ────────────────────────────────────────────
+    def _render(self) -> None:
+        for child in self.days.get_children():
+            self.days.remove(child)
+
+        self.month_label.set_text(RU_MONTHS[self.view.month - 1])
+        self.year_label.set_text(str(self.view.year))
+        self.footer_day.set_text(self.sel.isoformat())
 
         weeks = calendar.Calendar(firstweekday=0).monthdatescalendar(
             self.view.year, self.view.month)
-        for r, week in enumerate(weeks, start=1):
+        for r, week in enumerate(weeks):
             for c, day in enumerate(week):
                 btn = Gtk.Button(label=str(day.day))
+                btn.set_size_request(40, 34)
                 ctx = btn.get_style_context()
                 ctx.add_class("day")
                 if day.month != self.view.month:
@@ -166,7 +227,7 @@ class CalendarWindow(Gtk.Window):
                 if day == self.sel:
                     ctx.add_class("sel")
                 btn.connect("clicked", lambda _b, d=day: self._pick(d))
-                self.grid.attach(btn, c, r, 1, 1)
+                self.days.attach(btn, c, r, 1, 1)
 
         self.show_all()
 
