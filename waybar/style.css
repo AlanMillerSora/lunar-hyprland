@@ -1,25 +1,27 @@
 * {
     font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", "Inter", "Noto Sans Symbols", sans-serif;
-    font-size: 13px;
+    font-size: 12.5px;
     border: none;
     border-radius: 0;
     min-height: 0;
 }
 
+/* ── Плавающая минималистичная панель ───────────── */
 window#waybar {
-    background-color: rgba(10, 10, 10, 0.72);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
-    color: #e6e6e6;
-    padding: 0 12px;
+    background: rgba(10, 10, 10, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 14px;
+    color: #cdcdcd;
+    padding: 0 10px;
 }
 
 window#waybar.hidden { opacity: 0.2; }
 
-/* ── Логотип (луна) ─────────────────────────────── */
+/* ── Логотип ─────────────────────────────────────── */
 #custom-logo {
-    font-size: 17px;
-    color: #8a8a8a;
-    margin-right: 10px;
+    font-size: 15px;
+    color: #6f6f6f;
+    margin: 0 12px 0 4px;
     padding-bottom: 1px;
 }
 
@@ -28,97 +30,82 @@ window#waybar.hidden { opacity: 0.2; }
     background: transparent;
 }
 #workspaces button {
-    min-width: 30px;
+    min-width: 26px;
     padding: 0;
-    margin: 4px 3px;
+    margin: 3px 1px;
     background: transparent;
-    color: #757575;
-    border-radius: 7px;
-    font-size: 15px;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    color: #6f6f6f;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: color 0.18s ease, background-color 0.18s ease;
 }
 #workspaces button:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: #ffffff;
+    background: rgba(255, 255, 255, 0.06);
+    color: #d8d8d8;
 }
 #workspaces button.active,
 #workspaces button.focused {
-    background: rgba(255, 255, 255, 0.10);
     color: #ffffff;
-    box-shadow: inset 0 -2px 0 rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.08);
 }
 #workspaces button.urgent {
-    background: rgba(255, 90, 90, 0.20);
-    color: #ffa3a3;
+    color: #ff8585;
+    background: rgba(255, 90, 90, 0.14);
 }
 
-/* ── Центр: заполнение затмения + часы ──────────── */
-#custom-eclipse-pbar {
-    font-family: "JetBrains Mono", "JetBrainsMono Nerd Font", monospace;
-    font-size: 11px;
-    letter-spacing: 1px;
-    color: #7ea6ff;
-    padding: 0 12px;
-    margin: 0 2px;
-    transition: color 0.25s ease;
-}
-#custom-eclipse-pbar.total {
-    color: #f2657a;
-    text-shadow: 0 0 10px rgba(242, 101, 122, 0.45);
-}
-
+/* ── Часы (клик — календарь) ────────────────────── */
 #clock {
     font-family: "JetBrains Mono", "JetBrainsMono Nerd Font", monospace;
     font-size: 13px;
     font-weight: 600;
     color: #ffffff;
-    letter-spacing: 1px;
-    padding: 0 10px;
+    letter-spacing: 1.5px;
+    padding: 0 12px;
     border-radius: 8px;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.18s ease;
 }
 #clock:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.06);
 }
 
 /* ── Правая часть ───────────────────────────────── */
-#pulseaudio,
-#network,
 #cpu,
 #memory,
-#battery,
-#tray {
-    color: #cdcdcd;
-    padding: 0 6px;
+#pulseaudio,
+#network,
+#battery {
+    color: #9a9a9a;
+    padding: 0 8px;
     margin: 0 1px;
-    font-size: 12px;
     border-radius: 8px;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition: color 0.18s ease, background-color 0.18s ease;
 }
-#pulseaudio:hover,
-#network:hover,
 #cpu:hover,
 #memory:hover,
+#pulseaudio:hover,
+#network:hover,
 #battery:hover {
-    background: rgba(255, 255, 255, 0.08);
     color: #ffffff;
+    background: rgba(255, 255, 255, 0.06);
 }
 
-#pulseaudio.muted { color: #6f6f6f; }
-#network.disconnected { color: #6f6f6f; }
+#pulseaudio.muted { color: #5c5c5c; }
+#network.disconnected { color: #5c5c5c; }
+#battery.charging { color: #7fce9d; }
 #battery.warning { color: #ffd166; }
 #battery.critical { color: #ff5a5a; }
 
 #tray {
-    padding: 0 2px;
+    padding: 0 4px;
+    margin-left: 4px;
 }
 #tray > .passive { color: #6f6f6f; }
 #tray > .active { color: #b7ccff; }
 
 /* ── Tooltip ─────────────────────────────────────── */
 tooltip {
-    background-color: rgba(10, 10, 10, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.10);
+    background: rgba(10, 10, 10, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.09);
     border-radius: 10px;
     color: #e6e6e6;
 }

@@ -1,23 +1,25 @@
 {
     "layer": "top",
     "position": "top",
-    "height": 34,
-    "spacing": 8,
+    "height": 32,
+    "spacing": 7,
+    "margin-top": 8,
+    "margin-left": 10,
+    "margin-right": 10,
     "modules-left": [
         "custom/logo",
         "hyprland/workspaces"
     ],
     "modules-center": [
-        "custom/eclipse-pbar",
         "clock"
     ],
     "modules-right": [
-        "tray",
-        "pulseaudio",
-        "network",
         "cpu",
         "memory",
-        "battery"
+        "pulseaudio",
+        "network",
+        "battery",
+        "tray"
     ],
     "custom/logo": {
         "format": "󰖔",
@@ -62,17 +64,20 @@
         },
         "separate-outputs": true
     },
-    "custom/eclipse-pbar": {
-        "exec": "~/.config/hypr/scripts/eclipse-pbar.sh",
-        "return-type": "json",
-        "interval": 1,
-        "tooltip": true
-    },
     "clock": {
         "format": "{:%H:%M}",
         "tooltip-format": "{:%A, %d %B %Y}\nнажми — календарь",
         "on-click": "~/.config/hypr/scripts/eclipse-calendar.py",
         "interval": 10
+    },
+    "cpu": {
+        "format": "󰻠 {usage}%",
+        "interval": 2,
+        "on-click": "kitty -e btop"
+    },
+    "memory": {
+        "format": "󰍛 {percentage}%",
+        "interval": 5
     },
     "pulseaudio": {
         "format": "{icon} {volume}%",
@@ -99,15 +104,6 @@
         "on-click": "~/.config/hypr/scripts/eclipse-network.sh menu",
         "on-click-right": "nm-connection-editor"
     },
-    "cpu": {
-        "format": "󰻠 {usage}%",
-        "interval": 2,
-        "on-click": "kitty -e htop"
-    },
-    "memory": {
-        "format": "󰍛 {}%",
-        "interval": 5
-    },
     "battery": {
         "format": "{icon} {capacity}%",
         "format-icons": {
@@ -119,7 +115,7 @@
         "tooltip-format": "{timeTo} {power}"
     },
     "tray": {
-        "spacing": 10,
-        "icon-size": 16
+        "spacing": 8,
+        "icon-size": 15
     }
 }
