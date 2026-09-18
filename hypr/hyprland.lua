@@ -10,18 +10,19 @@
 --    рамка      rgba(255,255,255,.10)      свет     rgba(255,255,255,.35)
 --    акцент     #7ea6ff        светлее    #b7ccff
 --
---  Цвета в формате 0xRRGGBBAA (альфа последним байтом).
+--  Цвета в формате 0xAARRGGBB (альфа — ПЕРВЫЙ байт).
 -- ════════════════════════════════════════════════════════════════
 
 local COL = {
-  bg        = "0x000000ff",
-  surface   = "0x0a0a0ab7",  -- rgba(10,10,10,0.72)
-  border    = "0xffffff19",  -- rgba(255,255,255,0.10)
-  glow      = "0xffffff59",  -- rgba(255,255,255,0.35)
-  text      = "0xe6e6e6ff",
-  dim       = "0x6f6f6fff",
-  accent    = "0x7ea6ffff",
-  accentDim = "0xb7ccffff",
+  -- Hyprland Lua: цвета в формате 0xAARRGGBB (альфа — ПЕРВЫЙ байт!)
+  bg        = "0xff000000",
+  surface   = "0xb70a0a0a",  -- rgba(10,10,10,0.72)
+  border    = "0x19ffffff",  -- rgba(255,255,255,0.10)
+  glow      = "0x59ffffff",  -- rgba(255,255,255,0.35)
+  text      = "0xffe6e6e6",
+  dim       = "0xff6f6f6f",
+  accent    = "0xff7ea6ff",
+  accentDim = "0xffb7ccff",
 }
 
 -- ─────────────────────────────── Окружение ────────────────────
@@ -30,14 +31,14 @@ hl.env("HYPRCURSOR_SIZE", "24")
 
 hl.config({
   general = {
-    border_size = 2,
+    border_size = 0,          -- без рамок у окон (минимализм)
     gaps_in    = 12,
     gaps_out   = 20,
     layout     = "dwindle",
-    resize_on_border = true,
+    resize_on_border = false,
     allow_tearing = false,
     col = {
-      -- спокойная однотонная рамка (без RGB-градиента)
+      -- рамок нет; цвета на случай, если включишь border_size обратно
       active_border   = COL.glow,
       inactive_border = COL.border,
     },
@@ -56,8 +57,8 @@ hl.config({
       range          = 18,
       render_power   = 2,
       offset         = { 0, 4 },
-      color          = "0x000000ff",
-      color_inactive = "0x00000066",
+      color          = "0xff000000",   -- 0xAARRGGBB
+      color_inactive = "0x66000000",
     },
 
     blur = {
