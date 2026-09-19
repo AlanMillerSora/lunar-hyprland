@@ -171,7 +171,7 @@ local M = "SUPER"
 hl.bind(M .. " + RETURN",  dsp.exec_cmd("kitty"))
 hl.bind(M .. " + D",       dsp.exec_cmd("wofi --show drun"))
 hl.bind(M .. " + A",       dsp.exec_cmd("wofi --show run"))
-hl.bind(M .. " + G",       dsp.exec_cmd("lunar-launcher.sh toggle"))  -- Lunar Launcher
+hl.bind(M .. " + G",       dsp.exec_cmd("~/.local/bin/lunar-launcher.sh toggle"))  -- Lunar Launcher
 hl.bind(M .. " + E",       dsp.exec_cmd("dolphin"))
 hl.bind(M .. " + SLASH",   dsp.exec_cmd("~/.config/hypr/scripts/eclipse-cheatsheet.py"))
 hl.bind(M .. " + Q",       dsp.window.close())
