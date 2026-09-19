@@ -157,7 +157,8 @@ hl.window_rule({ match = { class = "eclipse-askpass" },    float = true, center 
 -- (initialClass chromium-app = "chrome-127.0.0.1__-Default" на wayland)
 hl.window_rule({ match = { class = "chrome-127.0.0.1__-Default" }, float = true, center = true,
                  rounding = 16, border_size = 0,
-                 opacity = "0.96 override 0.96 override" })
+                 opacity = "0.96 override 0.96 override",
+                 no_initial_focus = true })
 
 
 -- Запрет blur окон под полноэкранной игрой/видео
