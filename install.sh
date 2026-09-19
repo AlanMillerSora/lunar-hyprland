@@ -79,6 +79,24 @@ for s in eclipse-network.sh eclipse-calendar.py eclipse-cheatsheet.py eclipse-as
   chmod +x "$CONF/hypr/scripts/$s"
 done
 
+# Прозрачность окон (ползунок лаунчера) и сторож Wi-Fi
+cp "$DOTDIR/hypr/scripts/eclipse-transparency.sh" "$CONF/hypr/scripts/"
+chmod +x "$CONF/hypr/scripts/eclipse-transparency.sh"
+cp "$DOTDIR/hypr/scripts/eclipse-wifi-guard.py" "$BIN/"
+chmod +x "$BIN/eclipse-wifi-guard.py"
+mkdir -p "$HOME/.config/systemd/user"
+cp "$DOTDIR/systemd/lunar-wifi-guard.service" "$HOME/.config/systemd/user/"
+systemctl --user daemon-reload >/dev/null 2>&1 || true
+systemctl --user enable --now lunar-wifi-guard.service >/dev/null 2>&1 || true
+
+# Lunar Launcher: сервер + веб-интерфейс + скрипт управления
+LAUNCHER="$HOME/.local/share/lunar-launcher"
+mkdir -p "$LAUNCHER"
+cp -r "$DOTDIR/lunar-launcher/server.py" "$LAUNCHER/"
+cp -r "$DOTDIR/lunar-launcher/web/." "$LAUNCHER/web/"
+cp "$DOTDIR/lunar-launcher/lunar-launcher.sh" "$BIN/"
+chmod +x "$BIN/lunar-launcher.sh"
+
 # Зачистка от старых раскладок: с 0.55 конфиг — hyprland.lua,
 # а hypridle.conf лежит в hypr/, а не в hypridle/
 rm -f "$CONF/hypr/hyprland.conf"

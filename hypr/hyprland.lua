@@ -90,6 +90,13 @@ hl.config({
       middle_button_emulation = false,
     },
   },
+
+  -- Плавность: без логотипа, окна тянутся/ресайзятся анимированно
+  misc = {
+    disable_hyprland_logo = true,
+    animate_manual_resizes = true,
+    animate_mouse_windowdragging = true,
+  },
 })
 
 -- ──────────────────────────────────── Мониторы ─────────────────────
@@ -112,11 +119,11 @@ hl.curve("eclipse", {
 })
 
 -- Доска: фазы затмения заезжают поверх друг друга
-hl.animation({ leaf = "workspaces",  enabled = true, speed = 7,  bezier = "eclipse", style = "slidefade" })
-hl.animation({ leaf = "windows",     enabled = true, speed = 9,  bezier = "moon" })
-hl.animation({ leaf = "windowsIn",   enabled = true, speed = 11, bezier = "moon", style = "popin" })
-hl.animation({ leaf = "fade",        enabled = true, speed = 9,  bezier = "moon" })
-hl.animation({ leaf = "fadeSwitch",  enabled = true, speed = 8,  bezier = "moon" })
+hl.animation({ leaf = "workspaces",  enabled = true, speed = 6,  bezier = "eclipse", style = "slidefadediagonal" })
+hl.animation({ leaf = "windows",     enabled = true, speed = 8,  bezier = "moon" })
+hl.animation({ leaf = "windowsIn",   enabled = true, speed = 10, bezier = "moon", style = "popin" })
+hl.animation({ leaf = "fade",        enabled = true, speed = 8,  bezier = "moon" })
+hl.animation({ leaf = "fadeSwitch",  enabled = true, speed = 7,  bezier = "moon" })
 hl.animation({ leaf = "border",      enabled = true, speed = 7, bezier = "moon" })
 
 -- ─────────────────────────── Рабочие столы = фазы ──────────────────
@@ -146,6 +153,12 @@ hl.window_rule({ match = { class = "eclipse-calendar" },   float = true, center 
 hl.window_rule({ match = { class = "eclipse-cheatsheet" }, float = true, center = true, rounding = 18, border_size = 0 })
 hl.window_rule({ match = { class = "eclipse-askpass" },    float = true, center = true, rounding = 16, border_size = 0 })
 
+-- Lunar Launcher: плавающий «стеклянный» оверлей по центру
+-- (initialClass chromium-app = "chrome-127.0.0.1__-Default" на wayland)
+hl.window_rule({ match = { class = "chrome-127.0.0.1__-Default" }, float = true, center = true,
+                 rounding = 16, border_size = 0,
+                 opacity = "0.96 override 0.96 override" })
+
 
 -- Запрет blur окон под полноэкранной игрой/видео
 hl.window_rule({ match = { fullscreen = true }, no_blur = true })
@@ -157,6 +170,7 @@ local M = "SUPER"
 hl.bind(M .. " + RETURN",  dsp.exec_cmd("kitty"))
 hl.bind(M .. " + D",       dsp.exec_cmd("wofi --show drun"))
 hl.bind(M .. " + A",       dsp.exec_cmd("wofi --show run"))
+hl.bind(M .. " + G",       dsp.exec_cmd("lunar-launcher.sh toggle"))  -- Lunar Launcher
 hl.bind(M .. " + E",       dsp.exec_cmd("dolphin"))
 hl.bind(M .. " + SLASH",   dsp.exec_cmd("~/.config/hypr/scripts/eclipse-cheatsheet.py"))
 hl.bind(M .. " + Q",       dsp.window.close())
@@ -224,6 +238,10 @@ hl.on("hyprland.start", function()
   hl.exec_cmd("mako")
   hl.exec_cmd("hypridle")
   hl.exec_cmd("~/.local/bin/eclipse-walls.sh")
+  hl.exec_cmd("/usr/lib/polkit-kde-authentication-agent-1")
+  hl.exec_cmd("~/.config/hypr/scripts/eclipse-transparency.sh")
+  -- Lunar Launcher: на 1-м рабочем столе при старте системы
+  hl.exec_cmd("~/.local/bin/lunar-launcher.sh open")
 end)
 
 -- Проверка:  hyprctl configerrors

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lunar Launcher</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="shell">
+
+  <header class="bar">
+    <div class="brand">
+      <span class="moon">&#127761;</span>
+      <span class="brand-name">LUNAR&nbsp;<em>LAUNCHER</em></span>
+    </div>
+    <div class="clock">
+      <b id="time">--:--</b>
+      <span id="date"></span>
+    </div>
+    <button class="btn-close" id="close" title="Скрыть (Super+G)">&times;</button>
+  </header>
+
+  <main>
+    <section class="apps" id="apps"></section>
+
+    <section class="controls">
+      <div class="ctl">
+        <div class="ctl-head"><span>Громкость</span><b id="vol-val">—</b></div>
+        <input type="range" id="vol" min="0" max="100" value="0">
+      </div>
+      <div class="ctl">
+        <div class="ctl-head"><span>Яркость</span><b id="brt-val">—</b></div>
+        <input type="range" id="brt" min="1" max="100" value="50" disabled>
+      </div>
+      <div class="ctl">
+        <div class="ctl-head"><span>Прозрачность окон</span><b id="opc-val">100%</b></div>
+        <input type="range" id="opc" min="40" max="100" value="100">
+      </div>
+    </section>
+
+    <section class="row">
+      <button class="btn toggle" id="wifi" title="Вкл/выкл Wi-Fi">&#128225;&nbsp;<span id="wifi-lbl">—</span></button>
+      <button class="btn" id="net">Сети&hellip;</button>
+
+      <div class="media">
+        <button class="btn" id="prev" title="Предыдущий">&#9198;</button>
+        <button class="btn play" id="play" title="Play/Pause">&#9654;</button>
+        <button class="btn" id="next" title="Следующий">&#9197;</button>
+      </div>
+
+      <div class="power">
+        <button class="btn" data-power="lock" title="Заблокировать">&#128274;</button>
+        <button class="btn" data-power="suspend" title="Сон">&#128164;</button>
+        <button class="btn" data-power="reboot" title="Перезагрузка">&#128260;</button>
+        <button class="btn danger" data-power="shutdown" title="Выключить">&#128267;</button>
+        <button class="btn" data-power="logout" title="Выйти">&#128682;</button>
+      </div>
+    </section>
+
+    <footer class="hint">сделано под затмением &middot; сервер 127.0.0.1</footer>
+  </main>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

@@ -37,6 +37,16 @@
 - `hypr/scripts/eclipse-calendar.py` — календарь-попап в стиле райса
   (клик по часам): навигация стрелками/PgUp-PgDn, клик по дню копирует дату.
 - `hypr/scripts/eclipse-cheatsheet.py` — оверлей горячих клавиш (`SUPER` + `/`).
+- `lunar-launcher/` — **Lunar Launcher**: общий лаунчер системы. Локальный
+  Python-сервер (только stdlib, 127.0.0.1) отдаёт веб-интерфейс, который
+  показывает chromium в режиме приложения (`SUPER+G`). Внутри: сетка программ,
+  громкость/яркость, прозрачность окон одним ползунком, Wi-Fi, медиа, питание.
+  Скрипт управления — `lunar-launcher/lunar-launcher.sh`.
+- `hypr/scripts/eclipse-transparency.sh` — применяет сохранённую прозрачность
+  окон при старте сессии (значение из `~/.config/lunar/transparency`).
+- `hypr/scripts/eclipse-wifi-guard.py` + `systemd/lunar-wifi-guard.service` —
+  сторож Wi-Fi (systemd --user): если сетевое соединение отвалилось — поднимет
+  его заново (страховка поверх сохранённого профиля NM с постоянным MAC).
 - `fastfetch/` — конфиг fastfetch + логотип-полузатмение `eclipse.png`
   (рендерится из `eclipse.svg`), показывается при старте kitty.
 - `shell/lunar.bash` — приветствие fastfetch, удобные алиасы, PS1 в палитре;
