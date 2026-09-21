@@ -74,7 +74,7 @@ PanelWindow {
         { name: "Network",    icon: "\uf1eb", page: "NetworkPage" },
         { name: "Bluetooth",  icon: "󰂯", page: "BluetoothPage" },
         { name: "Interface",  icon: "\uf085", page: "InterfacePage" },
-        { name: "Memory",     icon: "\uf538", page: "MemoryPage" }
+        { name: "Memory",     icon: "󰍛", page: "MemoryPage" }
     ]
 
     property int selectedIndex: 0

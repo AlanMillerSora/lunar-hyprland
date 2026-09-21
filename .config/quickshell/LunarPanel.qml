@@ -214,7 +214,7 @@ PanelWindow {
     Item {
         anchors.fill: parent
 
-        // ── LEFT pill: workspaces + stats ──
+        // ── LEFT pill: workspaces ──
         Rectangle {
             id: leftPill
             anchors.left: parent.left
@@ -280,88 +280,7 @@ PanelWindow {
                     }
                 }
 
-                Rectangle {
-                    width: 1
-                    height: 18
-                    color: Theme.border
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                Row {
-                    height: 26
-                    spacing: 14
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    Text {
-                        text: "CPU " + (root.cpuPct < 0 ? "--" : root.cpuPct + "%")
-                        color: Theme.textDim
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize(12)
-                        height: 26
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    Text {
-                        text: "RAM " + (root.ramPct < 0 ? "--" : root.ramPct + "%")
-                        color: Theme.textDim
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize(12)
-                        height: 26
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    // индикатор заполнения памяти
-                    Rectangle {
-                        width: 40
-                        height: 6
-                        radius: 3
-                        anchors.verticalCenter: parent.verticalCenter
-                        color: Theme.trackBg
-                        border.width: 1
-                        border.color: Theme.border
-
-                        Rectangle {
-                            width: parent.width * (root.ramPct < 0 ? 0 : Math.min(1, root.ramPct / 100))
-                            height: parent.height
-                            radius: 3
-                            color: root.ramPct > 90 ? Theme.danger : Theme.accent
-                            Behavior on width { NumberAnimation { duration: 200 } }
-                        }
-                    }
-                    // память «в целом» (RAM + swap)
-                    Text {
-                        text: "MEM " + (root.memPct < 0 ? "--" : root.memPct + "%")
-                        color: Theme.textDim
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize(12)
-                        height: 26
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    Rectangle {
-                        width: 40
-                        height: 6
-                        radius: 3
-                        anchors.verticalCenter: parent.verticalCenter
-                        color: Theme.trackBg
-                        border.width: 1
-                        border.color: Theme.border
-
-                        Rectangle {
-                            width: parent.width * (root.memPct < 0 ? 0 : Math.min(1, root.memPct / 100))
-                            height: parent.height
-                            radius: 3
-                            color: root.memPct > 90 ? Theme.danger : Theme.accent2
-                            Behavior on width { NumberAnimation { duration: 200 } }
-                        }
-                    }
-                    Text {
-                        visible: root.tempC > 0
-                        text: root.tempC + "°C"
-                        color: Theme.textDim
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize(12)
-                        height: 26
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                }
+                // статистика системы переехала в правый бок (statsPill)
             }
         }
 
@@ -386,6 +305,97 @@ PanelWindow {
                 font.pixelSize: Theme.fontSize(15)
                 font.bold: true
                 font.letterSpacing: 1
+            }
+        }
+
+        // ── RIGHT-STATS pill: CPU / RAM / MEM / °C (переехало из левого бока) ──
+        Rectangle {
+            id: statsPill
+            anchors.right: rightPill.left
+            anchors.rightMargin: 6
+            anchors.verticalCenter: parent.verticalCenter
+            height: 32
+            radius: Theme.radiusL
+            color: root.pillBg
+            border.color: root.pillBorder
+            border.width: 1
+            width: statsRow.implicitWidth + 18
+
+            Row {
+                id: statsRow
+                anchors.centerIn: parent
+                height: 26
+                spacing: 14
+
+                Text {
+                    text: "CPU " + (root.cpuPct < 0 ? "--" : root.cpuPct + "%")
+                    color: Theme.textDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(12)
+                    height: 26
+                    verticalAlignment: Text.AlignVCenter
+                }
+                Text {
+                    text: "RAM " + (root.ramPct < 0 ? "--" : root.ramPct + "%")
+                    color: Theme.textDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(12)
+                    height: 26
+                    verticalAlignment: Text.AlignVCenter
+                }
+                // индикатор заполнения RAM
+                Rectangle {
+                    width: 40
+                    height: 6
+                    radius: 3
+                    anchors.verticalCenter: parent.verticalCenter
+                    color: Theme.trackBg
+                    border.width: 1
+                    border.color: Theme.border
+
+                    Rectangle {
+                        width: parent.width * (root.ramPct < 0 ? 0 : Math.min(1, root.ramPct / 100))
+                        height: parent.height
+                        radius: 3
+                        color: root.ramPct > 90 ? Theme.danger : Theme.accent
+                        Behavior on width { NumberAnimation { duration: 200 } }
+                    }
+                }
+                // память «в целом» (RAM + swap)
+                Text {
+                    text: "MEM " + (root.memPct < 0 ? "--" : root.memPct + "%")
+                    color: Theme.textDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(12)
+                    height: 26
+                    verticalAlignment: Text.AlignVCenter
+                }
+                Rectangle {
+                    width: 40
+                    height: 6
+                    radius: 3
+                    anchors.verticalCenter: parent.verticalCenter
+                    color: Theme.trackBg
+                    border.width: 1
+                    border.color: Theme.border
+
+                    Rectangle {
+                        width: parent.width * (root.memPct < 0 ? 0 : Math.min(1, root.memPct / 100))
+                        height: parent.height
+                        radius: 3
+                        color: root.memPct > 90 ? Theme.danger : Theme.accent2
+                        Behavior on width { NumberAnimation { duration: 200 } }
+                    }
+                }
+                Text {
+                    visible: root.tempC > 0
+                    text: root.tempC + "°C"
+                    color: Theme.textDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(12)
+                    height: 26
+                    verticalAlignment: Text.AlignVCenter
+                }
             }
         }
 

@@ -23,6 +23,10 @@ Item {
 
     readonly property real memPct: memTotal > 0 ? memUsed / memTotal : 0
     readonly property real swapPct: swapTotal > 0 ? swapUsed / swapTotal : 0
+    // память «в целом» = RAM + swap
+    readonly property real memAllPct: (memTotal + swapTotal) > 0
+        ? (memUsed + swapUsed) / (memTotal + swapTotal)
+        : 0
 
     function gb(kb) { return (kb / 1048576).toFixed(1) }
 
@@ -137,7 +141,7 @@ Item {
         // ── индикатор заполнения памяти ──
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 84
+            Layout.preferredHeight: 112
             color: Theme.bgCard
             radius: Theme.radius
             border.width: 1
@@ -190,6 +194,39 @@ Item {
                         radius: 5
                         color: page.memPct > 0.9 ? Theme.danger : Theme.accent
                         Behavior on width { NumberAnimation { duration: 200 } }
+                    }
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    Text {
+                        text: "MEM"
+                        color: Theme.textDim
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 9
+                        font.letterSpacing: 1
+                    }
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 8
+                        radius: 4
+                        color: Theme.trackBg
+                        border.width: 1
+                        border.color: Theme.border
+                        Rectangle {
+                            width: parent.width * page.memAllPct
+                            height: parent.height
+                            radius: 4
+                            color: page.memAllPct > 0.9 ? Theme.danger : Theme.accent2
+                            Behavior on width { NumberAnimation { duration: 200 } }
+                        }
+                    }
+                    Text {
+                        text: Math.round(page.memAllPct * 100) + "%"
+                        color: Theme.text
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 10
+                        font.bold: true
                     }
                 }
 
