@@ -118,6 +118,7 @@ cd ~/rice
 | `SUPER + G` / `SUPER + C` | Hub: лаунчер + настройки |
 | `SUPER + D` / `SUPER + A` | wofi: приложения / команды |
 | `SUPER + E` | Файлы (dolphin) |
+| `SUPER + V` | Буфер обмена (cliphist) |
 | `SUPER + SHIFT + E` | Боковая панель |
 | `SUPER + /` | Шпаргалка по хоткеям |
 | `SUPER + Q` | Закрыть окно |
