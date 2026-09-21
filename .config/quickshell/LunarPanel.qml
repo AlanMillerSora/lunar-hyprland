@@ -1,0 +1,446 @@
+import Quickshell
+import Quickshell.Io
+import Quickshell.Wayland
+import Quickshell.Hyprland
+import Quickshell.Services.Pipewire
+import Quickshell.Services.Mpris
+import QtQuick
+import QtQuick.Layouts
+
+// ────────────────────────────────────────────────────────────────
+//  Lunar top bar — монохромный HUD (скруглённые "таблетки")
+//    слева   : рабочие столы 01–08 + CPU/RAM/темп
+//    центр   : часы
+//    справа  : mpris-маркиза, громкость, питание
+//  Панель резервирует место (exclusiveZone), окна не заходят под неё.
+// ────────────────────────────────────────────────────────────────
+PanelWindow {
+    id: root
+
+    anchors { top: true; left: true; right: true }
+    implicitHeight: 42
+    color: "transparent"
+
+    WlrLayershell.layer: WlrLayer.Top
+    WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+    WlrLayershell.exclusiveZone: implicitHeight
+    WlrLayershell.anchors.top: true
+    WlrLayershell.anchors.left: true
+    WlrLayershell.anchors.right: true
+    exclusionMode: ExclusionMode.Normal
+
+    // Палитра из системной темы (Hub / лаунчер / настройки):
+    //   фон «таблеток» — как у оверлеев (Theme.bg, реагирует на ползунок
+    //   «прозрачность интерфейса»), рамки — Theme.border,
+    //   акценты — Theme.accent через Theme.alpha().
+    readonly property color pillBg: Theme.bg
+    readonly property color pillHover: Theme.alpha(Theme.accent, 0.08)
+    readonly property color pillBorder: Theme.border
+
+    // ─────────────── workspaces (Hyprland) ───────────────
+    readonly property var wsList: Hyprland.workspaces.values
+    readonly property var focusedWs: Hyprland.focusedWorkspace
+
+    function wsFor(id) {
+        var ws = root.wsList
+        for (var i = 0; i < ws.length; i++)
+            if (ws[i].id === id)
+                return ws[i]
+        return null
+    }
+
+    // Hyprland 0.55+ умеет Lua-конфиг: старый "workspace N" там не парсится,
+    // нужен Lua-диспетчер hl.dsp.focus({workspace=N}).
+    // Hyprland.usingLua в Quickshell 0.3.1 это не определяет, поэтому смотрим
+    // configProvider в `hyprctl -j status`.
+    property bool luaMode: false
+
+    Process {
+        id: luaCheck
+        running: true
+        command: ["bash", "-c",
+            "hyprctl -j status 2>/dev/null | grep -q '\"configProvider\": \"lua\"' && echo lua || echo legacy"]
+        stdout: StdioCollector { onStreamFinished: root.luaMode = (text.trim() === "lua") }
+    }
+
+    function focusWs(id) {
+        if (root.luaMode || Hyprland.usingLua)
+            Hyprland.dispatch("hl.dsp.focus({workspace=" + id + "})")
+        else
+            Hyprland.dispatch("workspace " + id)
+    }
+
+    // ─────────────── system stats ───────────────
+    property int cpuPct: -1
+    property int ramPct: -1
+    property int tempC: -1
+    property real _prevIdle: -1
+    property real _prevTotal: -1
+
+    function applySys(t) {
+        var lines = t.trim().split("\n")
+        var i
+        if (lines.length > 0 && lines[0].indexOf("cpu") === 0) {
+            var parts = lines[0].trim().split(/\s+/).slice(1).map(Number)
+            var idle = (parts[3] || 0) + (parts[4] || 0)
+            var total = 0
+            for (i = 0; i < parts.length; i++)
+                total += parts[i]
+            if (root._prevTotal >= 0 && total > root._prevTotal)
+                root.cpuPct = Math.max(0, Math.min(100,
+                    Math.round(100 * (1 - (idle - root._prevIdle) / (total - root._prevTotal)))))
+            root._prevIdle = idle
+            root._prevTotal = total
+        }
+        var memTotal = 0, memAvail = 0, temp = -1
+        for (i = 0; i < lines.length; i++) {
+            var l = lines[i]
+            if (l.indexOf("MemTotal:") === 0)
+                memTotal = parseInt(l.split(/\s+/)[1])
+            else if (l.indexOf("MemAvailable:") === 0)
+                memAvail = parseInt(l.split(/\s+/)[1])
+            else if (/^\d+$/.test(l.trim()))
+                temp = Math.round(parseInt(l.trim()) / 1000)
+        }
+        if (memTotal > 0)
+            root.ramPct = Math.round(100 * (memTotal - memAvail) / memTotal)
+        if (temp > 0)
+            root.tempC = temp
+    }
+
+    Process {
+        id: sysProc
+        running: false
+        command: ["bash", "-c",
+            "head -1 /proc/stat; " +
+            "grep -E '^MemTotal:|^MemAvailable:' /proc/meminfo; " +
+            "for h in /sys/class/hwmon/hwmon*; do " +
+            "n=$(cat \"$h/name\" 2>/dev/null); " +
+            "[ \"$n\" = k10temp ] && cat \"$h/temp1_input\"; done"]
+        stdout: StdioCollector { onStreamFinished: root.applySys(text) }
+    }
+    Timer {
+        interval: 1000
+        running: true
+        repeat: true
+        onTriggered: sysProc.running = true
+    }
+
+    // ─────────────── clock ───────────────
+    property string clockText: Qt.formatTime(new Date(), "HH:mm")
+    Timer {
+        interval: 1000
+        running: true
+        repeat: true
+        onTriggered: root.clockText = Qt.formatTime(new Date(), "HH:mm")
+    }
+
+    // ─────────────── audio (PipeWire) ───────────────
+    PwObjectTracker { objects: [Pipewire.defaultAudioSink] }
+    readonly property var sink: Pipewire.defaultAudioSink
+    readonly property real vol: (sink && sink.audio) ? sink.audio.volume : 0
+    readonly property bool muted: (sink && sink.audio) ? sink.audio.muted : false
+
+    function bumpVol(d) {
+        if (!sink || !sink.audio)
+            return
+        sink.audio.volume = Math.max(0, Math.min(1, sink.audio.volume + d))
+    }
+
+    // ─────────────── mpris ───────────────
+    readonly property var player: {
+        var ps = Mpris.players.values
+        for (var i = 0; i < ps.length; i++)
+            if (ps[i].isPlaying)
+                return ps[i]
+        return ps.length > 0 ? ps[0] : null
+    }
+    readonly property bool playing: player !== null && player.isPlaying
+    readonly property string track: player
+        ? ((player.trackTitle || "") + (player.trackArtist ? "  —  " + player.trackArtist : ""))
+        : ""
+
+    property int mqPos: 0
+    onTrackChanged: mqPos = 0
+
+    Timer {
+        interval: 180
+        running: root.playing && root.track.length > 0
+        repeat: true
+        onTriggered: root.mqPos = (root.mqPos + 1) % (root.track.length + 6)
+    }
+
+    function marqueeText() {
+        if (!root.track)
+            return ""
+        if (!root.playing)
+            return root.track.length > 30 ? root.track.substring(0, 30) + "…" : root.track
+        var s = root.track + "      "
+        var doubled = s + s
+        var o = root.mqPos % s.length
+        return doubled.substring(o, o + 30)
+    }
+
+    // ─────────────── power ───────────────
+    Process { id: powerProc; running: false }
+    function openPower() {
+        powerProc.command = ["bash", "-c", "pgrep -x wlogout >/dev/null || setsid wlogout >/dev/null 2>&1 &"]
+        powerProc.running = true
+    }
+
+    Process { id: pavuProc; running: false }
+    function openMixer() {
+        pavuProc.command = ["bash", "-c", "setsid pavucontrol >/dev/null 2>&1 &"]
+        pavuProc.running = true
+    }
+
+    // ───────────────────────────── layout ─────────────────────────────
+    Item {
+        anchors.fill: parent
+
+        // ── LEFT pill: workspaces + stats ──
+        Rectangle {
+            id: leftPill
+            anchors.left: parent.left
+            anchors.leftMargin: 8
+            anchors.verticalCenter: parent.verticalCenter
+            height: 32
+            radius: Theme.radiusL
+            color: root.pillBg
+            border.color: root.pillBorder
+            border.width: 1
+            width: leftRow.implicitWidth + 18
+
+            Row {
+                id: leftRow
+                anchors.centerIn: parent
+                height: 26
+                spacing: 3
+
+                Repeater {
+                    model: 8
+
+                    delegate: Rectangle {
+                        id: wsPill
+                        required property int index
+                        readonly property int wsId: index + 1
+                        readonly property var ws: root.wsFor(wsId)
+                        readonly property bool isFocused: root.focusedWs !== null && root.focusedWs.id === wsId
+                        readonly property bool isOccupied: ws !== null && ws.toplevels.values.length > 0
+
+                        width: 34
+                        height: 26
+                        radius: Theme.radiusM
+                        // состояния как в настройках/лаунчере:
+                        // выбрано — accent 0.12 + рамка accent, hover — accent 0.08
+                        color: isFocused
+                            ? Theme.alpha(Theme.accent, 0.12)
+                            : (wsMouse.containsMouse
+                                ? Theme.alpha(Theme.accent, 0.08)
+                                : (isOccupied ? Theme.alpha(Theme.accent, 0.05) : "transparent"))
+                        border.width: isFocused ? 1 : 0
+                        border.color: Theme.accent
+
+                        Behavior on color { ColorAnimation { duration: 120 } }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: ("0" + (index + 1)).slice(-2)
+                            color: wsPill.isFocused
+                                ? Theme.text
+                                : (wsPill.isOccupied ? Theme.textDim : Theme.textFaint)
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize(12)
+                            font.bold: wsPill.isFocused
+                        }
+
+                        MouseArea {
+                            id: wsMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            acceptedButtons: Qt.LeftButton
+                            onClicked: root.focusWs(wsPill.wsId)
+                        }
+                    }
+                }
+
+                Rectangle {
+                    width: 1
+                    height: 18
+                    color: Theme.border
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                Row {
+                    height: 26
+                    spacing: 14
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Text {
+                        text: "CPU " + (root.cpuPct < 0 ? "--" : root.cpuPct + "%")
+                        color: Theme.textDim
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(12)
+                        height: 26
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    Text {
+                        text: "RAM " + (root.ramPct < 0 ? "--" : root.ramPct + "%")
+                        color: Theme.textDim
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(12)
+                        height: 26
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    Text {
+                        visible: root.tempC > 0
+                        text: root.tempC + "°C"
+                        color: Theme.textDim
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(12)
+                        height: 26
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                }
+            }
+        }
+
+        // ── CENTER pill: clock ──
+        Rectangle {
+            id: centerPill
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.verticalCenter: parent.verticalCenter
+            height: 32
+            radius: Theme.radiusL
+            color: root.pillBg
+            border.color: root.pillBorder
+            border.width: 1
+            width: clockLabel.implicitWidth + 36
+
+            Text {
+                id: clockLabel
+                anchors.centerIn: parent
+                text: root.clockText
+                color: Theme.text
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize(15)
+                font.bold: true
+                font.letterSpacing: 1
+            }
+        }
+
+        // ── RIGHT pill: mpris + volume + power ──
+        Rectangle {
+            id: rightPill
+            anchors.right: parent.right
+            anchors.rightMargin: 8
+            anchors.verticalCenter: parent.verticalCenter
+            height: 32
+            radius: Theme.radiusL
+            color: root.pillBg
+            border.color: root.pillBorder
+            border.width: 1
+            width: rightRow.implicitWidth + 20
+
+            Row {
+                id: rightRow
+                anchors.centerIn: parent
+                height: 26
+                spacing: 10
+
+                // mpris marquee
+                Text {
+                    visible: root.track.length > 0
+                    width: visible ? 240 : 0
+                    height: 26
+                    verticalAlignment: Text.AlignVCenter
+                    clip: true
+                    text: "♪  " + root.marqueeText()
+                    color: root.playing ? Theme.text : Theme.textDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(12)
+
+                    MouseArea {
+                        anchors.fill: parent
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+                        onClicked: function (mouse) {
+                            if (!root.player)
+                                return
+                            if (mouse.button === Qt.RightButton)
+                                root.player.next()
+                            else if (mouse.button === Qt.MiddleButton)
+                                root.player.previous()
+                            else
+                                root.player.togglePlaying()
+                        }
+                    }
+                }
+
+                // volume
+                Item {
+                    width: volRow.implicitWidth
+                    height: 26
+
+                    Row {
+                        id: volRow
+                        anchors.centerIn: parent
+                        height: 26
+                        spacing: 6
+
+                        Text {
+                            text: root.muted
+                                ? "󰖁"
+                                : (root.vol < 0.34 ? "󰕿" : (root.vol < 0.67 ? "󰖀" : "󰕾"))
+                            color: root.muted ? Theme.textFaint : Theme.text
+                            font.family: Theme.iconFont
+                            font.pixelSize: Theme.fontSize(16)
+                            height: 26
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        Text {
+                            text: root.muted ? "mute" : Math.round(root.vol * 100) + "%"
+                            color: Theme.textDim
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize(12)
+                            height: 26
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton
+                        onClicked: function (mouse) {
+                            if (!root.sink || !root.sink.audio)
+                                return
+                            if (mouse.button === Qt.RightButton)
+                                root.openMixer()
+                            else
+                                root.sink.audio.muted = !root.sink.audio.muted
+                        }
+                        onWheel: function (wheel) {
+                            root.bumpVol(wheel.angleDelta.y > 0 ? 0.05 : -0.05)
+                        }
+                    }
+                }
+
+                // power
+                Text {
+                    text: "\uf011"
+                    color: Theme.text
+                    font.family: Theme.iconFont
+                    font.pixelSize: Theme.fontSize(17)
+                    height: 26
+                    verticalAlignment: Text.AlignVCenter
+
+                    MouseArea {
+                        anchors.fill: parent
+                        acceptedButtons: Qt.LeftButton
+                        onClicked: root.openPower()
+                    }
+                }
+            }
+        }
+    }
+}

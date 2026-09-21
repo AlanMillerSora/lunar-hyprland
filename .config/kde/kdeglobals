@@ -1,0 +1,22 @@
+[General]
+ColorScheme=Lunar Eclipse
+Name=Lunar Eclipse
+TerminalApplication=kitty
+TerminalService=kitty.desktop
+BrowserApplication=firefox
+fixed=Fira Code
+font=Inter,10,-1,5,50,0,0,0,0,0,Regular
+menuFont=Inter,10,-1,5,50,0,0,0,0,0,Regular
+toolBarFont=Inter,10,-1,5,50,0,0,0,0,0,Regular
+smallestReadableFont=Inter,8,-1,5,50,0,0,0,0,0,Regular
+
+[Icons]
+Theme=breeze-dark
+
+[KDE]
+SingleClick=false
+WidgetStyle=Breeze
+AnimationDurationFactor=0.8
+
+[UiSettings]
+ColorScheme=Lunar Eclipse
