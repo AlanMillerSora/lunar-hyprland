@@ -62,8 +62,8 @@ PanelWindow {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
         anchors.topMargin: 54
-        width: 160
-        height: 44
+        width: 320
+        height: 56
         radius: Theme.radius
         color: Theme.bg
         border.color: Theme.border
@@ -83,35 +83,36 @@ PanelWindow {
 
         RowLayout {
             anchors.fill: parent
-            anchors.margins: 12
-            spacing: 10
+            anchors.margins: 14
+            spacing: 12
 
             Text {
-                text: root.muted ? "󰖁" : "󰕾"
+                text: root.muted ? "󰖁" : (root.volume < 34 ? "󰕿" : (root.volume < 67 ? "󰖀" : "󰕾"))
                 color: root.muted ? Theme.textDim : Theme.accent
                 font.family: Theme.iconFont
-                font.pixelSize: 12
+                font.pixelSize: 17
             }
 
             Rectangle {
                 Layout.fillWidth: true
-                height: 4
-                radius: 1
+                height: 10
+                radius: 5
                 color: Theme.trackBg
                 Rectangle {
                     width: parent.width * (root.muted ? 0 : Math.min(root.volume / 100, 1))
                     height: parent.height
-                    radius: 1
+                    radius: 5
                     color: root.muted ? Theme.textDim : Theme.accent
                     Behavior on width { NumberAnimation { duration: 120 } }
                 }
             }
 
             Text {
-                text: root.volume + "%"
+                text: root.muted ? "mute" : root.volume + "%"
                 color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: 10
+                font.pixelSize: 13
+                font.bold: true
             }
         }
     }

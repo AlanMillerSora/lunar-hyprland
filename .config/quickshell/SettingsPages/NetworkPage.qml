@@ -96,6 +96,26 @@ Item {
         pConnect.running = true
     }
 
+    Process {
+        id: pRescan
+        stdout: StdioCollector {}
+        stderr: StdioCollector {}
+        onExited: pList.running = true
+    }
+
+    function rescan() {
+        pRescan.command = ["bash", "-c", "nmcli device wifi rescan 2>/dev/null; sleep 1"]
+        pRescan.running = true
+    }
+
+    // Автообновление списка, пока страница открыта и радио включено.
+    Timer {
+        interval: 8000
+        repeat: true
+        running: page.visible && page.wifiEnabled
+        onTriggered: pList.running = true
+    }
+
     Component.onCompleted: {
         pRadioGet.running = true
         pList.running = true
@@ -109,7 +129,7 @@ Item {
         anchors.bottomMargin: page.contentBottomMargin
         spacing: 9
 
-        Row {
+        Item {
             id: header
             width: parent.width
             height: 36
@@ -121,32 +141,67 @@ Item {
                 font.family: Theme.fontFamily
                 font.pixelSize: 18
                 font.letterSpacing: 3
+                anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
             }
 
-            Rectangle {
-                id: wifiToggle
+            Row {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                width: 70
-                height: 36
-                radius: Theme.radius
-                color: page.wifiEnabled ? Theme.alpha(Theme.accent, 0.1) : Theme.alpha("#A0A0A0", 0.15)
-                border.width: 1
-                border.color: page.wifiEnabled ? Theme.accent : "#A0A0A0"
+                spacing: 8
 
-                Text {
-                    anchors.centerIn: parent
-                    text: page.wifiEnabled ? "ON" : "OFF"
-                    color: page.wifiEnabled ? Theme.accent : "#A0A0A0"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 10
-                    font.bold: true
+                // обновить список сетей (иначе он «замерзал» после первого скана)
+                Rectangle {
+                    id: scanBtn
+                    width: 70
+                    height: 36
+                    radius: Theme.radius
+                    color: scanMouse.containsMouse
+                        ? Theme.alpha(Theme.accent, 0.08)
+                        : Theme.alpha(Theme.text, 0.03)
+                    border.width: 1
+                    border.color: scanMouse.containsMouse ? Theme.borderAccent : Theme.border
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "СКАН"
+                        color: Theme.textDim
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 10
+                    }
+
+                    MouseArea {
+                        id: scanMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: page.rescan()
+                    }
                 }
 
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: page.setWifiEnabled(!page.wifiEnabled)
+                Rectangle {
+                    id: wifiToggle
+                    width: 70
+                    height: 36
+                    radius: Theme.radius
+                    color: page.wifiEnabled ? Theme.alpha(Theme.accent, 0.1) : Theme.alpha("#A0A0A0", 0.15)
+                    border.width: 1
+                    border.color: page.wifiEnabled ? Theme.accent : "#A0A0A0"
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: page.wifiEnabled ? "ON" : "OFF"
+                        color: page.wifiEnabled ? Theme.accent : "#A0A0A0"
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 10
+                        font.bold: true
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: page.setWifiEnabled(!page.wifiEnabled)
+                    }
                 }
             }
         }

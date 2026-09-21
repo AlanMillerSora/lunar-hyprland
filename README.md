@@ -64,9 +64,12 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 | Компонент | Файл | Что делает |
 |---|---|---|
 | **Панель** | `quickshell/LunarPanel.qml` | 42px сверху, резервирует место. Столы `01–08`, CPU/RAM/°C, часы, mpris, громкость, питание |
-| **Hub** | `quickshell/LunarHub.qml` | Лаунчер + настройки (Launch, System, Sound, Monitors, Network, Bluetooth, Interface) |
-| **Sidebar** | `quickshell/LunarSidebar.qml` | Выдвигается от левого края: чат, буфер (cliphist), заметки |
+| **Hub** | `quickshell/LunarHub.qml` | Лаунчер + настройки (980×640, как у 43PR): Launch, System, Sound, Monitors, Network, Bluetooth, Interface |
+| **Sidebar** | `quickshell/LunarSidebar.qml` | Выдвигается от левого края (480px): чат, буфер (cliphist), заметки |
+| **Буфер** | `quickshell/LunarClipboard.qml` | История cliphist с поиском: `SUPER + V` |
+| **Громкость** | `quickshell/LunarVolume.qml` | Попап с крупным ползунком (клик по значку громкости на панели) |
 | **OSD** | `quickshell/LunarVolumeOsd.qml` | Индикатор громкости с HUD-скобками |
+| **Ползунок** | `quickshell/Slider.qml` | Общий слайдер темы (настройки, попап громкости) |
 | **Тема** | `quickshell/Theme.qml` | Единая палитра, радиусы, шрифты, ползунки прозрачности и масштаба |
 | **btop** | `btop/themes/lunar.theme` | Монитор системы в теме `lunar`, автозапуск на столе 08 |
 

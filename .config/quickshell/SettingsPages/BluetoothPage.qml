@@ -126,7 +126,7 @@ Item {
         anchors.topMargin: page.contentTopMargin
         anchors.bottomMargin: page.contentBottomMargin
         spacing: 8
-        Row {
+        Item {
             id: header
             width: parent.width
             height: 36
@@ -136,6 +136,7 @@ Item {
                 font.family: Theme.fontFamily
                 font.pixelSize: 18
                 font.letterSpacing: 3
+                anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
             }
             Rectangle {

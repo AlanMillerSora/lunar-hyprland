@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import Quickshell.Io
 import "../"
 import QtQuick.Layouts
@@ -98,8 +99,27 @@ Item {
                         border.color: Theme.borderAccent
                         border.width: 1
                         anchors.horizontalCenter: parent.horizontalCenter
+
+                        // настоящая иконка приложения из темы значков (Adwaita),
+                        // а «инициалы» — только запасной вариант, если иконки нет
+                        Image {
+                            id: appIcon
+                            anchors.centerIn: parent
+                            width: 32
+                            height: 32
+                            sourceSize: Qt.size(64, 64)
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            asynchronous: true
+                            source: modelData.icon
+                                ? Quickshell.iconPath(modelData.icon, true)
+                                : ""
+                            visible: status === Image.Ready
+                        }
+
                         Text {
                             anchors.centerIn: parent
+                            visible: appIcon.status !== Image.Ready
                             text: appModel.initials(modelData.name)
                             color: Theme.text
                             font.family: Theme.fontFamily
@@ -126,7 +146,7 @@ Item {
                     onEntered: grid.currentIndex = index
                     onClicked: {
                         appModel.launch(modelData)
-                        root.hide()
+                        root.closePanel()
                     }
                 }
             }
@@ -211,7 +231,7 @@ print(json.dumps(apps))
         function launchAt(idx) {
             if (idx >= 0 && idx < apps.length) {
                 launch(apps[idx])
-                root.hide()
+                root.closePanel()
             }
         }
 

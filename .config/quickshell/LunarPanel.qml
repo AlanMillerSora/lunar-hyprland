@@ -194,6 +194,13 @@ PanelWindow {
         pavuProc.running = true
     }
 
+    // Клик по значку громкости открывает попап с крупным ползунком (LunarVolume)
+    Process { id: volPanelProc; running: false }
+    function openVolumePanel() {
+        volPanelProc.command = ["bash", "-c", "qs ipc call volume toggle"]
+        volPanelProc.running = true
+    }
+
     // ───────────────────────────── layout ─────────────────────────────
     Item {
         anchors.fill: parent
@@ -411,13 +418,12 @@ PanelWindow {
                         anchors.fill: parent
                         hoverEnabled: true
                         acceptedButtons: Qt.LeftButton | Qt.RightButton
+                        cursorShape: Qt.PointingHandCursor
                         onClicked: function (mouse) {
-                            if (!root.sink || !root.sink.audio)
-                                return
                             if (mouse.button === Qt.RightButton)
                                 root.openMixer()
                             else
-                                root.sink.audio.muted = !root.sink.audio.muted
+                                root.openVolumePanel()
                         }
                         onWheel: function (wheel) {
                             root.bumpVol(wheel.angleDelta.y > 0 ? 0.05 : -0.05)

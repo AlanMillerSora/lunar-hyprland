@@ -9,18 +9,19 @@ PanelWindow {
     id: root
 
     anchors { top: true; left: true; bottom: true }
-    implicitWidth: 380
+    implicitWidth: 500
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore
 
     WlrLayershell.layer: WlrLayer.Top
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+    // клавиатуру берём только когда панель выдвинута (нужна для заметок)
+    WlrLayershell.keyboardFocus: root.collapsed ? WlrKeyboardFocus.None : WlrKeyboardFocus.OnDemand
 
     property bool collapsed: true
     property int tabIndex: 0
 
-    function show() { collapsed = false }
-    function hide() { collapsed = true }
+    function openPanel() { collapsed = false }
+    function closePanel() { collapsed = true }
     function toggle() { collapsed = !collapsed }
 
     onCollapsedChanged: {
@@ -47,7 +48,7 @@ PanelWindow {
         HoverHandler {
             id: stripHover
             onHoveredChanged: {
-                if (hovered) root.show()
+                if (hovered) root.openPanel()
                 else if (!contentHover.hovered) hideTimer.restart()
             }
         }
@@ -58,7 +59,7 @@ PanelWindow {
         anchors.top: parent.top
         anchors.topMargin: 46
         anchors.bottom: parent.bottom
-        width: 360
+        width: 480
         // при скрытии уводим панель целиком за край (раньше оставалась видимая полоска)
         x: collapsed ? -(width + 4) : 0
         color: Theme.bg
@@ -81,7 +82,7 @@ PanelWindow {
         HoverHandler {
             id: contentHover
             onHoveredChanged: {
-                if (hovered) root.show()
+                if (hovered) root.openPanel()
                 else if (!stripHover.hovered) hideTimer.restart()
             }
         }
@@ -102,6 +103,31 @@ PanelWindow {
                     font.letterSpacing: 3
                 }
                 Item { Layout.fillWidth: true }
+
+                // закрыть панель
+                Rectangle {
+                    width: 28
+                    height: 22
+                    radius: Theme.radius
+                    color: closeMouse.containsMouse ? Theme.alpha(Theme.accent, 0.08) : "transparent"
+                    border.width: closeMouse.containsMouse ? 1 : 0
+                    border.color: Theme.borderAccent
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "✕"
+                        color: Theme.textDim
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 11
+                    }
+                    MouseArea {
+                        id: closeMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.closePanel()
+                    }
+                }
             }
 
             Rectangle {
@@ -204,6 +230,8 @@ PanelWindow {
                         anchors.margins: 10
                         spacing: 8
                         RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 6
                             Text {
                                 text: "буфер обмена"
                                 color: Theme.textDim
@@ -211,16 +239,57 @@ PanelWindow {
                                 font.pixelSize: 10
                             }
                             Item { Layout.fillWidth: true }
-                            MouseArea {
-                                width: 30
-                                height: 18
-                                onClicked: clipModel.load()
+
+                            // очистить всю историю
+                            Rectangle {
+                                Layout.preferredWidth: 30
+                                Layout.preferredHeight: 20
+                                radius: Theme.radius
+                                color: wipeMouse.containsMouse ? Theme.alpha(Theme.danger, 0.12) : "transparent"
+                                border.width: wipeMouse.containsMouse ? 1 : 0
+                                border.color: Theme.danger
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "очистить"
+                                    color: wipeMouse.containsMouse ? Theme.danger : Theme.textFaint
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 8
+                                }
+                                MouseArea {
+                                    id: wipeMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        wipeProc.command = ["bash", "-c", "cliphist wipe"]
+                                        wipeProc.running = true
+                                    }
+                                }
+                            }
+
+                            // обновить список
+                            Rectangle {
+                                Layout.preferredWidth: 24
+                                Layout.preferredHeight: 20
+                                radius: Theme.radius
+                                color: refreshMouse.containsMouse ? Theme.alpha(Theme.accent, 0.08) : "transparent"
+                                border.width: refreshMouse.containsMouse ? 1 : 0
+                                border.color: Theme.borderAccent
+
                                 Text {
                                     anchors.centerIn: parent
                                     text: "↻"
                                     color: Theme.textDim
-                                    font.family: Theme.iconFont
+                                    font.family: Theme.fontFamily
                                     font.pixelSize: 10
+                                }
+                                MouseArea {
+                                    id: refreshMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: clipModel.load()
                                 }
                             }
                         }
@@ -270,11 +339,29 @@ PanelWindow {
                         anchors.fill: parent
                         anchors.margins: 10
                         spacing: 8
-                        Text {
-                            text: "заметки"
-                            color: Theme.textDim
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 10
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 6
+                            Text {
+                                text: "заметки"
+                                color: Theme.textDim
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 10
+                            }
+                            Item { Layout.fillWidth: true }
+                            Text {
+                                text: "сохранить"
+                                color: saveMouse.containsMouse ? Theme.accent : Theme.textFaint
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 9
+                                MouseArea {
+                                    id: saveMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: notesSaveTimer.triggered()
+                                }
+                            }
                         }
                         Rectangle {
                             Layout.fillWidth: true
@@ -291,8 +378,21 @@ PanelWindow {
                                 font.family: Theme.fontFamily
                                 font.pixelSize: 10
                                 wrapMode: TextArea.WordWrap
+                                clip: true
+                                selectByMouse: true
+                                focus: root.tabIndex === 2 && !root.collapsed
                                 background: Rectangle { color: "transparent" }
                                 onTextChanged: notesSaveTimer.restart()
+                            }
+
+                            Text {
+                                anchors.fill: parent
+                                anchors.margins: 8
+                                visible: notesArea.text.length === 0
+                                text: "пиши здесь — сохраняется само"
+                                color: Theme.textFaint
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 10
                             }
                         }
                     }
@@ -318,7 +418,7 @@ PanelWindow {
         id: hideTimer
         interval: 600
         onTriggered: {
-            if (!stripHover.hovered && !contentHover.hovered) root.hide()
+            if (!stripHover.hovered && !contentHover.hovered) root.closePanel()
         }
     }
 
@@ -332,7 +432,16 @@ PanelWindow {
     }
 
     Process { id: termProc; running: false }
-    Process { id: clipSelectProc; running: false }
+    Process {
+        id: clipSelectProc
+        running: false
+        onExited: clipModel.load()
+    }
+    Process {
+        id: wipeProc
+        running: false
+        onExited: clipModel.load()
+    }
     Process { id: notesSaveProc; running: false }
 
     QtObject {

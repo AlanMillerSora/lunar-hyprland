@@ -5,5 +5,6 @@ ShellRoot {
     LunarHub {}
     LunarSidebar {}
     LunarVolumeOsd {}
+    LunarVolume {}
     LunarClipboard {}
 }

@@ -24,17 +24,17 @@ PanelWindow {
 
     property bool showing: false
 
-    function show()   { showing = true }
-    function hide()   { showing = false }
+    function openPanel() { showing = true }
+    function closePanel() { showing = false }
     function toggle() { showing = !showing }
 
     // Bind a Hyprland key to this, e.g. in hyprland.conf:
-    //   bind = SUPER, S, exec, qs ipc call settings toggle
+    //   bind = SUPER, S, exec, qs ipc call hub toggle
     IpcHandler {
         target: "hub"
         function toggle(): void { root.toggle() }
-        function show(): void { root.show() }
-        function hide(): void { root.hide() }
+        function open(): void { root.openPanel() }
+        function close(): void { root.closePanel() }
         function nav(idx: int): void { root.selectedIndex = Math.max(0, Math.min(root.navItems.length - 1, idx)) }
     }
 
@@ -55,11 +55,11 @@ PanelWindow {
         color: "transparent"
 
         focus: root.showing
-        Keys.onEscapePressed: root.hide()
+        Keys.onEscapePressed: root.closePanel()
 
         MouseArea {
             anchors.fill: parent
-            onClicked: root.hide()
+            onClicked: root.closePanel()
         }
     }
 
@@ -84,8 +84,8 @@ PanelWindow {
     PerspectivePanel {
         id: card
         anchors.centerIn: parent
-        width: Math.min(1100, root.width - 80)
-        height: Math.min(720, root.height - 80)
+        width: Math.min(980, root.width - 80)
+        height: Math.min(640, root.height - 80)
         open: root.showing
 
         MouseArea {
