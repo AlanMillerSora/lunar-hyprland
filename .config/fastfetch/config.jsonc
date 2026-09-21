@@ -27,14 +27,14 @@
         "uptime",
         "packages",
         "shell",
-        "wm",
+        { "type": "wm", "key": "WM" },
         "terminal",
         "cpu",
         "gpu",
         "memory",
         { "type": "disk", "folders": "/" },
-        "localip",
-        "battery",
+        { "type": "localip", "key": "IP" },
+        { "type": "battery", "key": "Battery" },
         "break",
         "colors"
     ]

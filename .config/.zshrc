@@ -14,14 +14,14 @@ if [[ -n "$KITTY_WINDOW_ID" ]] && [[ -o interactive ]] && command -v fastfetch >
         {
             printf '\e[38;5;15m  L U N A R   E C L I P S E\e[0m\n'
             printf '\e[38;5;240m  ─────────────────────────\e[0m\n\n'
-            fastfetch --logo none
+            fastfetch --logo none --key-width 36
             printf '\e[38;5;240m  ─────────────────────────\e[0m\n'
         } | sed 's/^/                          /'
     elif command -v chafa >/dev/null 2>&1 && [[ -f "$_lunar_img" ]]; then
         chafa --size 18x9 "$_lunar_img"
         printf '\n\e[38;5;15m  L U N A R   E C L I P S E\e[0m\n'
         printf '\e[38;5;240m  ─────────────────────────\e[0m\n\n'
-        fastfetch --logo none
+        fastfetch --logo none --key-width 10
     else
         fastfetch --logo none
     fi
