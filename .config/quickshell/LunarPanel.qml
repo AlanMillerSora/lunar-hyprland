@@ -73,6 +73,7 @@ PanelWindow {
     // ─────────────── system stats ───────────────
     property int cpuPct: -1
     property int ramPct: -1
+    property int memPct: -1
     property int tempC: -1
     property real _prevIdle: -1
     property real _prevTotal: -1
@@ -92,18 +93,26 @@ PanelWindow {
             root._prevIdle = idle
             root._prevTotal = total
         }
-        var memTotal = 0, memAvail = 0, temp = -1
+        var memTotal = 0, memAvail = 0, swapTotal = 0, swapFree = 0, temp = -1
         for (i = 0; i < lines.length; i++) {
             var l = lines[i]
             if (l.indexOf("MemTotal:") === 0)
                 memTotal = parseInt(l.split(/\s+/)[1])
             else if (l.indexOf("MemAvailable:") === 0)
                 memAvail = parseInt(l.split(/\s+/)[1])
+            else if (l.indexOf("SwapTotal:") === 0)
+                swapTotal = parseInt(l.split(/\s+/)[1])
+            else if (l.indexOf("SwapFree:") === 0)
+                swapFree = parseInt(l.split(/\s+/)[1])
             else if (/^\d+$/.test(l.trim()))
                 temp = Math.round(parseInt(l.trim()) / 1000)
         }
         if (memTotal > 0)
             root.ramPct = Math.round(100 * (memTotal - memAvail) / memTotal)
+        // память «в целом» = RAM + swap
+        var allTotal = memTotal + swapTotal
+        if (allTotal > 0)
+            root.memPct = Math.round(100 * ((memTotal - memAvail) + (swapTotal - swapFree)) / allTotal)
         if (temp > 0)
             root.tempC = temp
     }
@@ -113,7 +122,7 @@ PanelWindow {
         running: false
         command: ["bash", "-c",
             "head -1 /proc/stat; " +
-            "grep -E '^MemTotal:|^MemAvailable:' /proc/meminfo; " +
+            "grep -E '^MemTotal:|^MemAvailable:|^SwapTotal:|^SwapFree:' /proc/meminfo; " +
             "for h in /sys/class/hwmon/hwmon*; do " +
             "n=$(cat \"$h/name\" 2>/dev/null); " +
             "[ \"$n\" = k10temp ] && cat \"$h/temp1_input\"; done"]
@@ -298,6 +307,50 @@ PanelWindow {
                         font.pixelSize: Theme.fontSize(12)
                         height: 26
                         verticalAlignment: Text.AlignVCenter
+                    }
+                    // индикатор заполнения памяти
+                    Rectangle {
+                        width: 40
+                        height: 6
+                        radius: 3
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: Theme.trackBg
+                        border.width: 1
+                        border.color: Theme.border
+
+                        Rectangle {
+                            width: parent.width * (root.ramPct < 0 ? 0 : Math.min(1, root.ramPct / 100))
+                            height: parent.height
+                            radius: 3
+                            color: root.ramPct > 90 ? Theme.danger : Theme.accent
+                            Behavior on width { NumberAnimation { duration: 200 } }
+                        }
+                    }
+                    // память «в целом» (RAM + swap)
+                    Text {
+                        text: "MEM " + (root.memPct < 0 ? "--" : root.memPct + "%")
+                        color: Theme.textDim
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(12)
+                        height: 26
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    Rectangle {
+                        width: 40
+                        height: 6
+                        radius: 3
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: Theme.trackBg
+                        border.width: 1
+                        border.color: Theme.border
+
+                        Rectangle {
+                            width: parent.width * (root.memPct < 0 ? 0 : Math.min(1, root.memPct / 100))
+                            height: parent.height
+                            radius: 3
+                            color: root.memPct > 90 ? Theme.danger : Theme.accent2
+                            Behavior on width { NumberAnimation { duration: 200 } }
+                        }
                     }
                     Text {
                         visible: root.tempC > 0

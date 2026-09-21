@@ -63,8 +63,10 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 
 | Компонент | Файл | Что делает |
 |---|---|---|
-| **Панель** | `quickshell/LunarPanel.qml` | 42px сверху, резервирует место. Столы `01–08`, CPU/RAM/°C, часы, mpris, громкость, питание |
-| **Hub** | `quickshell/LunarHub.qml` | Лаунчер + настройки (980×640, как у 43PR): Launch, System, Sound, Monitors, Network, Bluetooth, Interface |
+| **Панель** | `quickshell/LunarPanel.qml` | 42px сверху, резервирует место. Столы `01–08`, CPU/RAM/MEM (с индикаторами) и °C, часы, mpris, громкость, питание |
+| **Hub** | `quickshell/LunarHub.qml` | Лаунчер + настройки (980×640, как у 43PR): Launch, System, Sound, Monitors, Network, Bluetooth, Interface, Memory |
+| **Memory** | `quickshell/SettingsPages/MemoryPage.qml` | Индикатор заполнения RAM/SWAP + очистка системы (кнопка «ОЧИСТИТЬ») |
+| **Очистка** | `hypr/scripts/eclipse-cleanup.sh` | Сироты, кэш пакетов, журнал, tmpfiles, кэш yay, эскизы; опционально браузеры |
 | **Sidebar** | `quickshell/LunarSidebar.qml` | Выдвигается от левого края (480px): чат, буфер (cliphist), заметки |
 | **Буфер** | `quickshell/LunarClipboard.qml` | История cliphist с поиском: `SUPER + V` |
 | **Громкость** | `quickshell/LunarVolume.qml` | Попап с крупным ползунком (клик по значку громкости на панели) |
