@@ -28,20 +28,36 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 
 ## 📸 Скриншоты
 
+**Рабочий стол — фазы затмения**
+
 <div align="center">
-  <img src="assets/screens/desktop.png" width="92%" alt="Рабочий стол"/>
-  <br/><sub>Рабочий стол — фаза затмения</sub>
+  <img src="assets/screens/desktop.png" width="92%" alt="Рабочий стол, фаза 04"/>
+  <br/><sub>Стол 04 — полное затмение</sub>
 </div>
 
-<br/>
+<div align="center">
+  <img src="assets/screens/desktop-5.png" width="92%" alt="Рабочий стол, фаза 05"/>
+  <br/><sub>Стол 05 — частное затмение</sub>
+</div>
 
-| Настройки (System) | Лаунчер |
+**Hub — настройки и лаунчер**
+
+| System — графики CPU / GPU / RAM | Launch — лаунчер приложений |
 |:---:|:---:|
 | ![System](assets/screens/hub-system.png) | ![Launch](assets/screens/hub-launch.png) |
+| Живые графики загрузки и температуры | Поиск и сетка приложений |
 
-| Терминал (zsh) | Верхняя панель |
+**Терминал и монитор**
+
+| Терминал (zsh + starship) | btop — тема `lunar` |
 |:---:|:---:|
-| ![Terminal](assets/screens/terminal.png) | ![Bar](assets/screens/bar.png) |
+| ![Terminal](assets/screens/terminal.png) | ![btop](assets/screens/btop.png) |
+| Логотип-затмение + инфо системы | Автозапуск на столе 08 |
+
+<div align="center">
+  <img src="assets/screens/bar.png" width="92%" alt="Верхняя панель"/>
+  <br/><sub>Верхняя панель — столы 01–08, CPU/RAM/°C, часы, трек, звук, питание</sub>
+</div>
 
 ## 🧩 Компоненты
 
@@ -52,6 +68,7 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 | **Sidebar** | `quickshell/LunarSidebar.qml` | Выдвигается от левого края: чат, буфер (cliphist), заметки |
 | **OSD** | `quickshell/LunarVolumeOsd.qml` | Индикатор громкости с HUD-скобками |
 | **Тема** | `quickshell/Theme.qml` | Единая палитра, радиусы, шрифты, ползунки прозрачности и масштаба |
+| **btop** | `btop/themes/lunar.theme` | Монитор системы в теме `lunar`, автозапуск на столе 08 |
 
 ## 📂 Структура
 
