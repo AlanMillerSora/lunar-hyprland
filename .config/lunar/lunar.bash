@@ -8,9 +8,15 @@
 if [ -n "${KITTY_WINDOW_ID:-}" ] && [ -t 1 ] && command -v fastfetch >/dev/null 2>&1; then
     # Картинка-затмение (chafa, kitty-графика) + шапка и инфо fastfetch справа.
     if command -v chafa >/dev/null 2>&1 && [ -f "$HOME/.config/fastfetch/eclipse-logo.png" ]; then
-        chafa --size 20x16 "$HOME/.config/fastfetch/eclipse-logo.png"
-        printf '\033[16A'
-        { printf '  L U N A R   E C L I P S E\n\n'; fastfetch --logo none; } | sed 's/^/                       /'
+        chafa --size 24x12 "$HOME/.config/fastfetch/eclipse-logo.png"
+        printf '\033[12A'
+        {
+            printf '\e[38;5;15m  L U N A R   E C L I P S E\e[0m\n'
+            printf '\e[38;5;240m  ─────────────────────────\e[0m\n'
+            printf '\n'
+            fastfetch --logo none
+            printf '\e[38;5;240m  ─────────────────────────\e[0m\n'
+        } | sed 's/^/                          /'
     else
         fastfetch --logo none
     fi

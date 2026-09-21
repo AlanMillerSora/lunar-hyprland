@@ -32,7 +32,7 @@
         "cpu",
         "gpu",
         "memory",
-        "disk",
+        { "type": "disk", "folders": "/" },
         "localip",
         "battery",
         "break",
