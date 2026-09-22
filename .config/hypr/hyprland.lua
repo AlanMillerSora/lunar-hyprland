@@ -65,12 +65,12 @@ hl.config({
 
     blur = {
       enabled = true,
-      size    = 8,               -- крупнее размытие
-      passes  = 4,               -- больше проходов — мягче/качественнее
+      size    = 6,               -- баланс качества и FPS (iGPU слабый)
+      passes  = 3,
       ignore_opacity = false,
       vibrancy = 0.25,
       popups   = true,
-      xray     = true,
+      xray     = true,           -- меньше перерисовки
       new_optimizations = true,
     },
   },
@@ -125,10 +125,11 @@ hl.curve("eclipse", {
 })
 
 -- Доска: фазы затмения заезжают поверх друг друга
-hl.animation({ leaf = "workspaces",  enabled = true, speed = 6,  bezier = "eclipse", style = "slidefadediagonal" })
-hl.animation({ leaf = "windows",     enabled = true, speed = 8,  bezier = "moon" })
-hl.animation({ leaf = "windowsIn",   enabled = true, speed = 10, bezier = "moon", style = "popin" })
-hl.animation({ leaf = "windowsOut",  enabled = true, speed = 8,  bezier = "moon", style = "popin 80%" })
+-- (стили попроще: slidefadediagonal/popin тяжелы для iGPU)
+hl.animation({ leaf = "workspaces",  enabled = true, speed = 5,  bezier = "eclipse", style = "slide" })
+hl.animation({ leaf = "windows",     enabled = true, speed = 7,  bezier = "moon" })
+hl.animation({ leaf = "windowsIn",   enabled = true, speed = 8,  bezier = "moon" })
+hl.animation({ leaf = "windowsOut",  enabled = true, speed = 7,  bezier = "moon" })
 hl.animation({ leaf = "fade",        enabled = true, speed = 8,  bezier = "moon" })
 hl.animation({ leaf = "fadeSwitch",  enabled = true, speed = 7,  bezier = "moon" })
 hl.animation({ leaf = "border",      enabled = true, speed = 7, bezier = "moon" })
