@@ -357,7 +357,7 @@ PanelWindow {
                     text: root.dayText + " " + root.dateText
                     color: Theme.textDim
                     font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(10)
+                    font.pixelSize: Theme.fontSize(13)
                     height: 26
                     verticalAlignment: Text.AlignVCenter
                 }
