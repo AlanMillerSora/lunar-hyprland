@@ -12,6 +12,43 @@ Item {
     property int contentTopMargin: 0
     property int contentBottomMargin: 0
 
+    // ── zapret (обход DPI) ──
+    property bool zapActive: false
+    property string zapDesync: "?"
+    property string zapCommit: ""
+    property string zapUpdated: ""
+    property string zapMsg: ""
+
+    // кнопка блока ZAPRET
+    component ZapBtn: Rectangle {
+        property string label: ""
+        signal clicked()
+
+        width: 104
+        height: 32
+        radius: Theme.radius
+        color: zbtn.containsMouse ? Theme.alpha(Theme.accent, 0.12) : "transparent"
+        border.width: 1
+        border.color: zbtn.containsMouse ? Theme.accent : Theme.border
+
+        Text {
+            anchors.centerIn: parent
+            text: parent.label
+            color: zbtn.containsMouse ? Theme.accent : Theme.textDim
+            font.family: Theme.fontFamily
+            font.pixelSize: 10
+            font.letterSpacing: 1
+        }
+
+        MouseArea {
+            id: zbtn
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: parent.clicked()
+        }
+    }
+
     Process {
         id: pRadioGet
         command: ["nmcli", "radio", "wifi"]
@@ -116,9 +153,62 @@ Item {
         onTriggered: pList.running = true
     }
 
+    // ── zapret: состояние и управление ─────────────────────
+    Process {
+        id: pZap
+        command: ["bash", "-c", "$HOME/.config/hypr/scripts/eclipse-zapret.sh status"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var m = {}
+                var lines = text.trim().split("\n")
+                for (var i = 0; i < lines.length; ++i) {
+                    var p = lines[i].indexOf("=")
+                    if (p > 0) m[lines[i].substring(0, p)] = lines[i].substring(p + 1)
+                }
+                page.zapActive = (m.state === "active")
+                page.zapDesync = m.desync || "?"
+                page.zapCommit = m.commit || ""
+                page.zapUpdated = m.updated || ""
+            }
+        }
+    }
+
+    Process {
+        id: pZapAction
+        stdout: StdioCollector { onStreamFinished: { page.zapMsg = text.trim(); pZap.running = true } }
+        stderr: StdioCollector { onStreamFinished: pZap.running = true }
+    }
+
+    function zapToggle() {
+        page.zapMsg = ""
+        pZapAction.command = ["bash", "-c", "$HOME/.config/hypr/scripts/eclipse-zapret.sh toggle"]
+        pZapAction.running = true
+    }
+
+    // обновление и подбор стратегии — в терминале (там интерактивный sudo и лог)
+    Process {
+        id: pZapUpdate
+        command: ["kitty", "--hold", "-e", "bash", "-c", "$HOME/.config/hypr/scripts/eclipse-zapret.sh update"]
+        onExited: pZap.running = true
+    }
+
+    Process {
+        id: pZapTune
+        command: ["kitty", "--hold", "-e", "bash", "-c", "$HOME/.config/hypr/scripts/eclipse-zapret.sh tune"]
+        onExited: pZap.running = true
+    }
+
+    Timer {
+        interval: 5000
+        repeat: true
+        running: page.visible
+        onTriggered: pZap.running = true
+    }
+
     Component.onCompleted: {
         pRadioGet.running = true
         pList.running = true
+        pZap.running = true
     }
 
     Column {
@@ -226,6 +316,76 @@ Item {
                     id: list
                     width: parent.width
                     spacing: 6
+
+                    // ── ZAPRET: обход DPI (Discord / YouTube) ──
+                    Rectangle {
+                        width: list.width
+                        height: 112
+                        radius: Theme.radius
+                        color: Theme.bgCard
+                        border.width: 1
+                        border.color: page.zapActive ? Theme.alpha(Theme.accent, 0.45) : Theme.border
+
+                        Column {
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.leftMargin: 14
+                            anchors.rightMargin: 14
+                            spacing: 8
+
+                            Row {
+                                spacing: 9
+
+                                Text {
+                                    text: "ZAPRET"
+                                    color: Theme.text
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 12
+                                    font.letterSpacing: 2
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+
+                                Text {
+                                    text: "обход DPI · Discord / YouTube"
+                                    color: Theme.textFaint
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 10
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                            }
+
+                            Text {
+                                width: parent.width
+                                text: (page.zapActive ? "● активен" : "○ выключен")
+                                      + "   ·   " + page.zapDesync
+                                      + (page.zapCommit ? "   ·   " + page.zapCommit : "")
+                                color: page.zapActive ? Theme.text : Theme.textFaint
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 11
+                                elide: Text.ElideRight
+                            }
+
+                            Row {
+                                spacing: 8
+
+                                ZapBtn {
+                                    label: page.zapActive ? "ВЫКЛЮЧИТЬ" : "ВКЛЮЧИТЬ"
+                                    onClicked: page.zapToggle()
+                                }
+
+                                ZapBtn {
+                                    label: "ОБНОВИТЬ"
+                                    onClicked: pZapUpdate.running = true
+                                }
+
+                                ZapBtn {
+                                    label: "ПОДОБРАТЬ"
+                                    onClicked: pZapTune.running = true
+                                }
+                            }
+                        }
+                    }
 
                     Text {
                         visible: !page.wifiEnabled

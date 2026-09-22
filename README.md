@@ -132,6 +132,35 @@ cd ~/rice
 > Требуется **Hyprland 0.55+** (конфиг на Lua — `hyprland.lua`).
 > Обои-видео (mpvpaper) — опционально: `yay -S mpvpaper`.
 
+## 🛡️ Обход DPI (zapret)
+
+Чтобы открывались **Discord** и **YouTube**, рис ставит оригинальный
+[zapret](https://github.com/bol-van/zapret) из исходников в `/opt/zapret`
+и поднимает `zapret.service`. Ставится автоматически из `./install.sh`
+(зависимости — в `./get-deps.sh`). Flowseal-репозиторий Windows-only,
+поэтому используется апстрим bol-van с портированной стратегией.
+
+Управление — **Hub → Network → блок ZAPRET** (включить/выключить,
+обновить, подобрать стратегию) или из терминала:
+
+```bash
+~/.config/hypr/scripts/eclipse-zapret.sh status    # состояние
+~/.config/hypr/scripts/eclipse-zapret.sh toggle    # вкл/выкл (+ автозапуск)
+~/.config/hypr/scripts/eclipse-zapret.sh update    # обновить и пересобрать
+~/.config/hypr/scripts/eclipse-zapret.sh tune      # подобрать стратегию (blockcheck)
+```
+
+**Обновления.** `/opt/zapret` — обычный git-клон апстрима. `update`
+делает `git pull` → `make systemd` → `systemctl restart zapret`.
+`config` и `ipset/` лежат в `.gitignore`, поэтому правки не теряются.
+Если провайдер сменил DPI и обход «отвалился» — запусти `tune`
+(`blockcheck.sh` найдёт новую рабочую стратегию), её параметры
+`--dpi-desync=…` впиши в `NFQWS_OPT` в `/opt/zapret/config`.
+
+> Для переключателя в Hub установщик добавляет узкое NOPASSWD-правило
+> `/etc/sudoers.d/lunar-zapret` (только `systemctl start/stop/restart/enable/disable`
+> для `zapret.service`). Обновление и подбор идут в терминале.
+
 ## 🟩 NVIDIA
 
 Рис рассчитан и на NVIDIA: переменные NVIDIA включаются только если карта

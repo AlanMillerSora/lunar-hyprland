@@ -49,6 +49,13 @@ else
   say "NVIDIA не найдена — драйверы NVIDIA пропущены"
 fi
 
+# ── zapret: обход DPI (Discord / YouTube) ──────────────────────
+# Сам zapret ставится из исходников через ./install.sh (zapret/install-zapret.sh),
+# тут — только зависимости сборки (gcc/make) и работы (netfilter/nftables).
+say "pacman: зависимости zapret (сборка nfqws + netfilter)"
+sudo pacman -S --needed --noconfirm \
+  gcc make zlib libcap libnetfilter_queue libmnl systemd-libs nftables
+
 # ── VS Code (AUR) ──────────────────────────────────────────────
 # В репах есть только code (OSS-сборка). Для официального билда
 # Microsoft с полным маркетплейсом ставим visual-studio-code-bin из AUR.

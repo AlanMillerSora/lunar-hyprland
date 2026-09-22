@@ -1,0 +1,15 @@
+[Unit]
+Description=zapret (обход DPI: Discord/YouTube)
+Documentation=https://github.com/bol-van/zapret
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=forking
+ExecStart=/opt/zapret/init.d/sysv/zapret start
+ExecStop=/opt/zapret/init.d/sysv/zapret stop
+Restart=on-failure
+TimeoutSec=30s
+
+[Install]
+WantedBy=multi-user.target

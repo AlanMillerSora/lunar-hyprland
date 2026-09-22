@@ -1,0 +1,29 @@
+# Пользовательский список доменов для обхода DPI (nfqws/--hostlist)
+# Поддомены учитываются автоматически.
+
+# --- Discord ---
+discord.com
+discordapp.com
+discordapp.net
+discord.gg
+discord.media
+discordstatus.com
+discord.co
+discordcdn.com
+updates.discord.com
+dl.discordapp.net
+cdn.discordapp.com
+media.discordapp.net
+images-ext-1.discordapp.net
+images-ext-2.discordapp.net
+
+# --- YouTube ---
+youtube.com
+youtu.be
+youtube-nocookie.com
+googlevideo.com
+ytimg.com
+yt3.ggpht.com
+yt4.ggpht.com
+youtubei.googleapis.com
+youtubekids.com

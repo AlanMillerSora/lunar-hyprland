@@ -105,6 +105,14 @@ if [ ! -d "$HOME/.local/share/icons/Bibata-Modern-Ice" ]; then
     || say "Bibata не скачался (не критично — будет системный курсор)"
 fi
 
+# ── zapret: обход DPI (Discord / YouTube) ──────────────────────
+# Ставит оригинальный zapret (bol-van) в /opt/zapret и поднимает
+# systemd-юнит zapret.service. Идемпотентно: повторный запуск не ломает.
+if [ -x "$REPO/zapret/install-zapret.sh" ]; then
+  say "zapret → /opt/zapret (обход DPI: Discord/YouTube)"
+  "$REPO/zapret/install-zapret.sh" install || say "zapret не установился — см. вывод выше"
+fi
+
 # ── systemd --user (wifi-guard, локальная страница Firefox) ────
 if [ -d "$REPO/systemd" ]; then
   say "systemd --user → lunar-wifi-guard, lunar-homepage"
