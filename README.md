@@ -69,7 +69,8 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 | **Запись** | `hypr/scripts/eclipse-record.sh` | Запись экрана (wf-recorder) → `~/Videos/lunar-*.mp4` |
 | **Меню питания** | `quickshell/LunarPower.qml` | Меню питания в стиле системы (HUD-скобки, рамка 1px): спящий/гибернация/выход/перезагрузка/выключение, `SUPER + ESC` |
 | **Games** | `quickshell/SettingsPages/GamesPage.qml` | Список игр (desktop-записи с `Categories=Game`) и запуск |
-| **Monitors** | `quickshell/SettingsPages/MonitorsPage.qml` | Режим мониторов, яркость, ночной свет, частота обновления (Гц), VRR (FreeSync/GSync), масштаб, tearing |
+| **Monitors** | `quickshell/SettingsPages/MonitorsPage.qml` | Режим мониторов, яркость (ноут — `brightnessctl`, внешние — `ddcutil`), ночной свет, частота обновления (Гц), VRR (FreeSync/GSync), масштаб, tearing |
+| **Яркость** | `hypr/scripts/eclipse-brightness.sh` | Яркость для Monitors: встроенная панель через `brightnessctl`, внешние мониторы через `ddcutil` (DDC/CI) |
 | **Hub** | `quickshell/LunarHub.qml` | Лаунчер + настройки (980×640, как у 43PR): Launch, System, Sound, Monitors, Network, Bluetooth, Interface, Memory, Games |
 | **Memory** | `quickshell/SettingsPages/MemoryPage.qml` | Индикатор заполнения RAM/SWAP и общей памяти (MEM) + очистка системы (кнопка «ОЧИСТИТЬ») |
 | **Очистка** | `hypr/scripts/eclipse-cleanup.sh` | Сироты, кэш пакетов, журнал, tmpfiles, кэш yay, эскизы; опционально браузеры |
@@ -121,6 +122,65 @@ cd ~/rice
 
 > Требуется **Hyprland 0.55+** (конфиг на Lua — `hyprland.lua`).
 > Обои-видео (mpvpaper) — опционально: `yay -S mpvpaper`.
+
+## 🟩 NVIDIA
+
+Рис рассчитан и на NVIDIA: переменные NVIDIA включаются только если карта
+реально найдена (проверка по sysfs), поэтому один и тот же конфиг работает и
+на NVIDIA-десктопе, и на AMD/Intel-ноуте.
+
+**Драйвер.** В Arch (ветка 615) проприетарного модуля ядра `nvidia`/`nvidia-dkms`
+больше нет — NVIDIA свернула его. Официальная замена — **`nvidia-open-dkms`**
+(открытые модули ядра от самой NVIDIA, это не nouveau), а user-space
+(`nvidia-utils`) остаётся проприетарным. `get-deps.sh` ставит его сам, если
+видит карту NVIDIA:
+
+```
+nvidia-open-dkms  <ядро>-headers  nvidia-utils  nvidia-settings  libva-nvidia-driver
+```
+
+- Turing и новее (GTX 16xx / RTX 20xx+) — `nvidia-open-dkms`, поддерживается.
+- Pascal (GTX 10xx) и старше — только legacy `nvidia-580xx-dkms` из AUR.
+
+**KMS (нужен для Wayland).** С nvidia-utils 560.35.03 DRM-режим включён по
+умолчанию. Проверка:
+
+```bash
+cat /sys/module/nvidia_drm/parameters/modeset   # ожидаем Y
+cat /sys/module/nvidia_drm/parameters/fbdev     # Y — свой framebuffer
+```
+
+Если `N` — добавь kernel-параметр `nvidia_drm.modeset=1`; для раннего KMS
+пропиши в `/etc/mkinitcpio.conf`:
+
+```
+MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)
+```
+
+и пересобери initramfs (`sudo mkinitcpio -P`). Нужен драйвер **555+**, иначе
+Wayland мерцает (нет explicit sync).
+
+**Что уже учтено:**
+
+- Hyprland сам выставляет `LIBVA_DRIVER_NAME=nvidia`, а если монитор подключён
+  к NVIDIA — ещё `__GLX_VENDOR_LIBRARY_NAME`, `GBM_BACKEND=nvidia-drm`,
+  `NVD_BACKEND=direct` (`hyprland.lua`);
+- панель и Hub → System показывают загрузку/температуру GPU через `nvidia-smi`;
+- VRR/G-Sync: `misc.vrr = 2` в `hyprland.lua`;
+- ночной свет — `gammastep` (через `wlr-gamma-control`).
+
+**Гибридная графика** (дискретная NVIDIA + встроенная AMD/Intel) автоматически
+не настраивается: если вывод идёт через iGPU, переменные NVIDIA не включаются.
+Для принудительного вывода через NVIDIA задай `AQ_DRM_DEVICES` (см. Hyprland
+Wiki → Nvidia).
+
+**Яркость.** Встроенная панель — `brightnessctl`, внешние мониторы — `ddcutil`
+(DDC/CI). Для ddcutil нужен `i2c-dev`:
+
+```bash
+echo i2c-dev | sudo tee /etc/modules-load.d/i2c-dev.conf
+sudo usermod -aG i2c "$USER"     # затем перелогиниться
+```
 
 ## ⌨️ Горячие клавиши
 

@@ -31,6 +31,67 @@ hl.env("HYPRCURSOR_SIZE", "24")
 hl.env("XCURSOR_THEME", "Bibata-Modern-Ice")
 hl.env("HYPRCURSOR_THEME", "Bibata-Modern-Ice")
 
+-- ─────────────────────── NVIDIA: окружение ──────────────────────
+-- Ставим переменные ТОЛЬКО если NVIDIA реально есть в системе —
+-- на AMD/Intel ничего не меняется (иначе сломается рендер).
+-- Определяем по sysfs: 0x10de — NVIDIA, 0x1002 — AMD, 0x8086 — Intel.
+-- В Arch 615 модули ядра NVIDIA открытые (nvidia-open-dkms), user-space
+-- проприетарный — для Hyprland это штатный вариант.
+
+-- производители всех GPU в системе
+local function gpu_vendors()
+  local out = {}
+  local p = io.popen("ls -d /sys/class/drm/card*/device/vendor 2>/dev/null")
+  if not p then return out end
+  for path in p:lines() do
+    local f = io.open(path, "r")
+    if f then
+      local v = (f:read("*a") or ""):gsub("%s+", "")
+      f:close()
+      if v ~= "" then out[#out + 1] = v end
+    end
+  end
+  p:close()
+  return out
+end
+
+-- производители GPU, к которым подключён хотя бы один монитор
+local function display_vendors()
+  local out = {}
+  local p = io.popen(
+    "for s in /sys/class/drm/card*-*/status; do " ..
+    "[ \"$(cat \"$s\" 2>/dev/null)\" = connected ] || continue; " ..
+    "c=\"${s#/sys/class/drm/}\"; c=\"${c%%-*}\"; " ..
+    "cat \"/sys/class/drm/$c/device/vendor\" 2>/dev/null; done | sort -u")
+  if not p then return out end
+  for line in p:lines() do
+    local v = line:gsub("%s+", "")
+    if v ~= "" then out[#out + 1] = v end
+  end
+  p:close()
+  return out
+end
+
+local function has_vendor(list, id)
+  for _, v in ipairs(list) do
+    if v == id then return true end
+  end
+  return false
+end
+
+if has_vendor(gpu_vendors(), "0x10de") then
+  -- NVIDIA есть: аппаратное декодирование видео (официальный VA-API)
+  hl.env("LIBVA_DRIVER_NAME", "nvidia")
+
+  -- Если монитор подключён к NVIDIA — она и рисует рабочий стол.
+  -- (на гибридных ноутах с выводом через iGPU эти строки не ставятся)
+  if has_vendor(display_vendors(), "0x10de") then
+    hl.env("__GLX_VENDOR_LIBRARY_NAME", "nvidia")  -- XWayland: GLX через NVIDIA
+    hl.env("GBM_BACKEND", "nvidia-drm")            -- GBM через nvidia-drm
+    hl.env("NVD_BACKEND", "direct")                -- прямой scanout/текстуры
+  end
+end
+
 hl.config({
   general = {
     border_size = 1,          -- тонкая рамка 1px, как у карточки Hub

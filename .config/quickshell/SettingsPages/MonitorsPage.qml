@@ -13,18 +13,17 @@ Item {
     property string monitorSequence: ""
     property int monitorStep: 0
 
+    // Яркость: встроенная панель (brightnessctl) или внешний монитор (ddcutil).
+    // Выбор устройства и DDC/CI — внутри eclipse-brightness.sh.
     Process {
         id: brightnessGet
-        command: ["brightnessctl", "-m"]
+        command: ["sh", "-c", "$HOME/.config/hypr/scripts/eclipse-brightness.sh get"]
 
         stdout: StdioCollector {
             onStreamFinished: {
-                const parts = text.trim().split(",")
-                if (parts.length >= 4) {
-                    const pct = parseInt(parts[3])
-                    if (!isNaN(pct))
-                        page.brightnessValue = pct / 100
-                }
+                const pct = parseInt(text.trim())
+                if (!isNaN(pct))
+                    page.brightnessValue = pct / 100
             }
         }
     }
@@ -33,9 +32,10 @@ Item {
 
     function commitBrightness(value) {
         brightnessSet.command = [
-            "brightnessctl",
-            "set",
-            Math.round(value * 100) + "%"
+            "sh",
+            "-c",
+            "$HOME/.config/hypr/scripts/eclipse-brightness.sh set " +
+            Math.round(value * 100)
         ]
         brightnessSet.running = true
     }
