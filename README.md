@@ -69,6 +69,7 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 | **Memory** | `quickshell/SettingsPages/MemoryPage.qml` | Индикатор заполнения RAM/SWAP и общей памяти (MEM) + очистка системы (кнопка «ОЧИСТИТЬ») |
 | **Очистка** | `hypr/scripts/eclipse-cleanup.sh` | Сироты, кэш пакетов, журнал, tmpfiles, кэш yay, эскизы; опционально браузеры |
 | **Sidebar** | `quickshell/LunarSidebar.qml` | Выдвигается от левого края (480px): чат, буфер (cliphist), заметки |
+| **Sidebar R** | `quickshell/LunarSidebarRight.qml` | Выдвигается от правого края: уведомления (mako), «сейчас играет» (mpris), календарь |
 | **Буфер** | `quickshell/LunarClipboard.qml` | История cliphist с поиском: `SUPER + V` |
 | **Громкость** | `quickshell/LunarVolume.qml` | Попап с крупным ползунком (клик по значку громкости на панели) |
 | **OSD** | `quickshell/LunarVolumeOsd.qml` | Индикатор громкости с HUD-скобками |
@@ -125,7 +126,8 @@ cd ~/rice
 | `SUPER + D` / `SUPER + A` | wofi: приложения / команды |
 | `SUPER + E` | Файлы (dolphin) |
 | `SUPER + V` | Буфер обмена (cliphist) |
-| `SUPER + SHIFT + E` | Боковая панель |
+| `SUPER + SHIFT + E` | Боковая панель (слева) |
+| `SUPER + SHIFT + R` | Панель справа (уведомления/музыка/календарь) |
 | `SUPER + /` | Шпаргалка по хоткеям |
 | `SUPER + Q` | Закрыть окно |
 | `SUPER + W` / `SHIFT+W` | Развернуть / полный экран |
