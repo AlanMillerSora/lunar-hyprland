@@ -68,7 +68,8 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 | **Game Mode** | `hypr/scripts/eclipse-gamemode.sh` | Игровой режим: анимации/blur выкл, DND, пауза hypridle, performance, tearing |
 | **Запись** | `hypr/scripts/eclipse-record.sh` | Запись экрана (wf-recorder) → `~/Videos/lunar-*.mp4` |
 | **Games** | `quickshell/SettingsPages/GamesPage.qml` | Список игр (desktop-записи с `Categories=Game`) и запуск |
-| **Hub** | `quickshell/LunarHub.qml` | Лаунчер + настройки (980×640, как у 43PR): Launch, System, Sound, Monitors, Network, Bluetooth, Interface, Memory |
+| **Monitors** | `quickshell/SettingsPages/MonitorsPage.qml` | Режим мониторов, яркость, ночной свет, частота обновления (Гц), VRR (FreeSync/GSync), масштаб, tearing |
+| **Hub** | `quickshell/LunarHub.qml` | Лаунчер + настройки (980×640, как у 43PR): Launch, System, Sound, Monitors, Network, Bluetooth, Interface, Memory, Games |
 | **Memory** | `quickshell/SettingsPages/MemoryPage.qml` | Индикатор заполнения RAM/SWAP и общей памяти (MEM) + очистка системы (кнопка «ОЧИСТИТЬ») |
 | **Очистка** | `hypr/scripts/eclipse-cleanup.sh` | Сироты, кэш пакетов, журнал, tmpfiles, кэш yay, эскизы; опционально браузеры |
 | **Sidebar** | `quickshell/LunarSidebar.qml` | Выдвигается от левого края (540px): чат (статус Ollama), буфер (cliphist; ПКМ — удалить), заметки |

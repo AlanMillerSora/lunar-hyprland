@@ -121,6 +121,9 @@ Item {
         if (options.scale !== undefined)
             values.push("scale = " + options.scale)
 
+        if (options.vrr !== undefined)
+            values.push("vrr = " + options.vrr)
+
         if (options.disabled !== undefined)
             values.push("disabled = " + options.disabled)
 
@@ -154,7 +157,66 @@ Item {
         pList.running = true
     }
 
-    Process { id: pApply }
+    Process {
+        id: pApply
+        onExited: {
+            refreshTimer.restart()
+            tearingProc.running = true
+        }
+    }
+
+    // доступные частоты для текущего разрешения монитора
+    function ratesFor(mon) {
+        var out = []
+        var res = mon.width + "x" + mon.height
+        var modes = mon.availableModes || []
+        for (var i = 0; i < modes.length; i++) {
+            var m = modes[i]
+            if (m.indexOf(res + "@") === 0) {
+                var hz = m.substring(res.length + 1).replace("Hz", "")
+                if (out.indexOf(hz) < 0)
+                    out.push(hz)
+            }
+        }
+        out.sort(function (a, b) { return parseFloat(a) - parseFloat(b) })
+        return out
+    }
+
+    function applyMonitor(mon, extra) {
+        var opts = {
+            mode: monitorMode(mon),
+            position: mon.x + "x" + mon.y,
+            scale: mon.scale.toFixed(2),
+            vrr: mon.vrr ? 2 : 0
+        }
+        for (var k in extra)
+            opts[k] = extra[k]
+        pApply.command = ["hyprctl", "eval", monitorLua(mon, opts)]
+        pApply.running = true
+    }
+
+    function setRate(mon, hz) {
+        applyMonitor(mon, { mode: mon.width + "x" + mon.height + "@" + hz })
+    }
+
+    function setVrr(mon, on) {
+        applyMonitor(mon, { vrr: on ? 2 : 0 })
+    }
+
+    // tearing — глобально (меньше задержка, но возможны разрывы)
+    property bool tearing: false
+
+    Process {
+        id: tearingProc
+        command: ["bash", "-c", "hyprctl -j getoption general:allow_tearing 2>/dev/null | jq -r .bool"]
+        stdout: StdioCollector { onStreamFinished: page.tearing = (text.trim() === "true") }
+    }
+
+    function toggleTearing() {
+        pApply.command = ["hyprctl", "eval",
+            "hl.config({general = {allow_tearing = " + (page.tearing ? "false" : "true") + "}})"]
+        pApply.running = true
+    }
 
     function setScale(mon, scale) {
         pApply.command = [
@@ -537,10 +599,11 @@ Item {
                 model: page.monitors
 
                 delegate: Rectangle {
+                    id: monCard
                     required property var modelData
 
                     width: parent.width
-                    height: 100
+                    height: 176
                     radius: Theme.radius
                     color: "#00000000"
                     border.width: 1
@@ -551,7 +614,7 @@ Item {
                     Column {
                         anchors.fill: parent
                         anchors.margins: 14
-                        spacing: 8
+                        spacing: 10
 
                         Row {
                             spacing: 10
@@ -588,30 +651,207 @@ Item {
                             }
                         }
 
-                        Slider {
-                            width: parent.width
+                        // частота обновления (FPS монитора)
+                        Row {
+                            spacing: 6
 
-                            label: "SCALE (" +
-                                   modelData.scale.toFixed(2) +
-                                   "x)"
+                            Text {
+                                text: "ЧАСТОТА"
+                                color: Theme.textDim
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 10
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
 
-                            icon: "\uf00e"
+                            Repeater {
+                                model: page.ratesFor(monCard.modelData)
 
-                            value: (
-                                modelData.scale - 0.5
-                            ) / 1.5
-
-                            onCommitted: value =>
-                                page.setScale(
-                                    modelData,
-                                    0.5 + value * 1.5
-                                )
+                                delegate: Rectangle {
+                                    required property var modelData
+                                    readonly property bool active:
+                                        Math.abs(parseFloat(modelData) - monCard.modelData.refreshRate) < 0.6
+                                    width: 62
+                                    height: 26
+                                    radius: Theme.radius
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    color: active
+                                        ? Theme.alpha(Theme.accent, 0.14)
+                                        : (rateMouse.containsMouse ? Theme.alpha(Theme.accent, 0.06) : "transparent")
+                                    border.width: 1
+                                    border.color: active ? Theme.accent : Theme.border
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: Math.round(parseFloat(modelData)) + " Hz"
+                                        color: active ? Theme.accent : Theme.textDim
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: 10
+                                    }
+                                    MouseArea {
+                                        id: rateMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: page.setRate(monCard.modelData, modelData)
+                                    }
+                                }
+                            }
                         }
+
+                        // VRR (FreeSync/GSync)
+                        Row {
+                            spacing: 8
+
+                            Text {
+                                text: "VRR"
+                                color: Theme.textDim
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 10
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+
+                            Rectangle {
+                                width: 54
+                                height: 26
+                                radius: Theme.radius
+                                anchors.verticalCenter: parent.verticalCenter
+                                color: monCard.modelData.vrr
+                                    ? Theme.alpha(Theme.accent, 0.14) : "transparent"
+                                border.width: 1
+                                border.color: monCard.modelData.vrr ? Theme.accent : Theme.border
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: monCard.modelData.vrr ? "ON" : "OFF"
+                                    color: monCard.modelData.vrr ? Theme.accent : Theme.textDim
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 10
+                                    font.bold: true
+                                }
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: page.setVrr(monCard.modelData, !monCard.modelData.vrr)
+                                }
+                            }
+
+                            Text {
+                                text: "FreeSync / GSync"
+                                color: Theme.textFaint
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 10
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                        }
+
+                        // масштаб — кнопками (слайдер работал криво)
+                        Row {
+                            spacing: 6
+
+                            Text {
+                                text: "МАСШТАБ"
+                                color: Theme.textDim
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 10
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+
+                            Repeater {
+                                model: [1.0, 1.25, 1.5, 1.75, 2.0]
+
+                                delegate: Rectangle {
+                                    required property var modelData
+                                    readonly property bool active:
+                                        Math.abs(monCard.modelData.scale - modelData) < 0.01
+                                    width: 58
+                                    height: 26
+                                    radius: Theme.radius
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    color: active
+                                        ? Theme.alpha(Theme.accent, 0.14)
+                                        : (scaleMouse.containsMouse ? Theme.alpha(Theme.accent, 0.06) : "transparent")
+                                    border.width: 1
+                                    border.color: active ? Theme.accent : Theme.border
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: modelData.toFixed(2)
+                                        color: active ? Theme.accent : Theme.textDim
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: 10
+                                    }
+                                    MouseArea {
+                                        id: scaleMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: page.setScale(monCard.modelData, modelData)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // tearing — глобально (меньше задержка, возможны разрывы)
+            Rectangle {
+                width: parent.width
+                height: 46
+                radius: Theme.radius
+                color: "#00000000"
+                border.width: 1
+                border.color: Theme.border
+
+                Row {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 14
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 10
+
+                    Text {
+                        text: "TEARING"
+                        color: Theme.text
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 12
+                        font.bold: true
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Rectangle {
+                        width: 54
+                        height: 26
+                        radius: Theme.radius
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: page.tearing ? Theme.alpha(Theme.accent, 0.14) : "transparent"
+                        border.width: 1
+                        border.color: page.tearing ? Theme.accent : Theme.border
+                        Text {
+                            anchors.centerIn: parent
+                            text: page.tearing ? "ON" : "OFF"
+                            color: page.tearing ? Theme.accent : Theme.textDim
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 10
+                            font.bold: true
+                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: page.toggleTearing()
+                        }
+                    }
+
+                    Text {
+                        text: "меньше задержка (для игр)"
+                        color: Theme.textFaint
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 10
+                        anchors.verticalCenter: parent.verticalCenter
                     }
                 }
             }
         }
     }
 
-    Component.onCompleted: brightnessGet.running = true
+    Component.onCompleted: {
+        brightnessGet.running = true
+        tearingProc.running = true
+    }
 }
