@@ -63,13 +63,13 @@ hl.config({
 
     blur = {
       enabled = true,
-      size    = 6,
-      passes  = 3,
+      size    = 8,               -- крупнее размытие
+      passes  = 4,               -- больше проходов — мягче/качественнее
       ignore_opacity = false,
-      vibrancy = 0.1696,
+      vibrancy = 0.25,
       popups   = true,
       xray     = true,
-      new_optimizations = true,   -- дешёвый blur — держит высокий FPS
+      new_optimizations = true,
     },
   },
 
