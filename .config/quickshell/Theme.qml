@@ -25,6 +25,9 @@ QtObject {
     property real interfaceOpacity: 1.0
     property real fontScale: 1.0
 
+    // попап громкости открыт — центральный OSD не показываем (без дубля)
+    property bool volumePopupOpen: false
+
     // Единый радиус системы — как у карточки Hub
     property int radius: 6
     property int radiusM: 6

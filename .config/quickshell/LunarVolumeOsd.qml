@@ -24,7 +24,23 @@ PanelWindow {
     property bool muted: false
     property bool showing: false
 
-    function showOsd() { showing = true; hideTimer.restart() }
+    function showOsd() {
+        // пока открыт попап громкости — OSD не нужен (иначе дубль по центру)
+        if (Theme.volumePopupOpen) {
+            showing = false
+            return
+        }
+        showing = true
+        hideTimer.restart()
+    }
+
+    Connections {
+        target: Theme
+        function onVolumePopupOpenChanged() {
+            if (Theme.volumePopupOpen)
+                root.showing = false
+        }
+    }
 
     Timer {
         id: hideTimer

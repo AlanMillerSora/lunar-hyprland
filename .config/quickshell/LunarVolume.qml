@@ -27,8 +27,8 @@ PanelWindow {
 
     property bool showing: false
 
-    function openPanel() { showing = true }
-    function closePanel() { showing = false }
+    function openPanel() { showing = true; Theme.volumePopupOpen = true }
+    function closePanel() { showing = false; Theme.volumePopupOpen = false }
     function toggle() { showing ? closePanel() : openPanel() }
 
     IpcHandler {
