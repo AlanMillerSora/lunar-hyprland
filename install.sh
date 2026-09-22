@@ -21,6 +21,16 @@ say "Обои → ~/Pictures/EclipseWalls"
 mkdir -p "$HOME/Pictures/EclipseWalls"
 cp "$REPO"/wallpapers/*.png "$HOME/Pictures/EclipseWalls/" 2>/dev/null || true
 
+# ── курсор Bibata (монохромный, в тему) ────────────────────────
+if [ ! -d "$HOME/.local/share/icons/Bibata-Modern-Ice" ]; then
+  say "Курсор Bibata → ~/.local/share/icons"
+  mkdir -p "$HOME/.local/share/icons"
+  curl -sL "https://github.com/ful1e5/Bibata_Cursor/releases/download/v2.0.7/Bibata-Modern-Ice.tar.xz" \
+    | tar xJ -C "$HOME/.local/share/icons/" 2>/dev/null \
+    && say "Bibata установлен" \
+    || say "Bibata не скачался (не критично — будет системный курсор)"
+fi
+
 # ── systemd --user (wifi-guard) ────────────────────────────────
 if [ -f "$REPO/systemd/lunar-wifi-guard.service" ]; then
   say "systemd --user → lunar-wifi-guard"

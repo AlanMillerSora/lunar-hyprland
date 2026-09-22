@@ -28,6 +28,8 @@ local COL = {
 -- ─────────────────────────────── Окружение ────────────────────
 hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_SIZE", "24")
+hl.env("XCURSOR_THEME", "Bibata-Modern-Ice")
+hl.env("HYPRCURSOR_THEME", "Bibata-Modern-Ice")
 
 hl.config({
   general = {
@@ -252,6 +254,8 @@ hl.on("hyprland.start", function()
   hl.exec_cmd("~/.config/hypr/scripts/eclipse-walls.sh")
   hl.exec_cmd("/usr/lib/polkit-kde-authentication-agent-1")
   hl.exec_cmd("~/.config/hypr/scripts/eclipse-transparency.sh")
+  -- курсор Bibata (тема применяется на лету)
+  hl.exec_cmd("hyprctl setcursor Bibata-Modern-Ice 24")
   -- btop на 8-м столе (фаза затмения), без перехвата фокуса
   hl.exec_cmd("[workspace 8 silent] kitty --class lunar-btop --title btop -e btop")
 end)
