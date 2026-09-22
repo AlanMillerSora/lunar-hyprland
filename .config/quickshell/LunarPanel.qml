@@ -505,7 +505,7 @@ PanelWindow {
         // ── STATUS pill: сеть / раскладка / уведомления ──
         Rectangle {
             id: statusPill
-            anchors.right: statsPill.left
+            anchors.right: actionPill.left
             anchors.rightMargin: 6
             anchors.verticalCenter: parent.verticalCenter
             height: 32
@@ -574,20 +574,6 @@ PanelWindow {
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
-                // Game Mode (клик — переключить)
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "\uf11b"
-                    color: root.gameMode ? Theme.danger : Theme.textDim
-                    font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSize(17)
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.toggleGameMode()
-                    }
-                }
-
                 // профиль питания (клик — переключить performance/balanced/save)
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
@@ -637,16 +623,74 @@ PanelWindow {
                     font.pixelSize: Theme.fontSize(13)
                     font.bold: true
                 }
+            }
+        }
 
-                // запись экрана (клик — начать/остановить)
+        // ── ACTION pill: Game Mode + запись экрана ──
+        Rectangle {
+            id: actionPill
+            anchors.right: statsPill.left
+            anchors.rightMargin: 6
+            anchors.verticalCenter: parent.verticalCenter
+            height: 32
+            radius: Theme.radiusL
+            color: root.pillBg
+            border.color: root.pillBorder
+            border.width: 1
+            width: actionRow.implicitWidth + 18
+
+            Row {
+                id: actionRow
+                anchors.centerIn: parent
+                height: 26
+                spacing: 10
+
+                // Game Mode (клик — переключить)
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "\uf111"
-                    color: root.recording ? Theme.danger : Theme.textFaint
+                    text: "\uf11b"
+                    color: root.gameMode ? Theme.danger : Theme.textDim
                     font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSize(root.recording ? 15 : 10)
+                    font.pixelSize: Theme.fontSize(17)
                     MouseArea {
                         anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.toggleGameMode()
+                    }
+                }
+
+                Rectangle {
+                    width: 1
+                    height: 16
+                    color: Theme.border
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                // запись экрана — с явной подписью, чтобы было понятно
+                Rectangle {
+                    width: recLabel.implicitWidth + 20
+                    height: 24
+                    radius: Theme.radius
+                    anchors.verticalCenter: parent.verticalCenter
+                    color: root.recording
+                        ? Theme.alpha(Theme.danger, 0.16)
+                        : (recMouse.containsMouse ? Theme.alpha(Theme.danger, 0.08) : "transparent")
+                    border.width: 1
+                    border.color: root.recording ? Theme.danger : Theme.borderAccent
+
+                    Text {
+                        id: recLabel
+                        anchors.centerIn: parent
+                        text: root.recording ? "■ СТОП" : "● ЗАПИСЬ"
+                        color: root.recording ? Theme.danger : Theme.textDim
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(11)
+                        font.bold: root.recording
+                    }
+                    MouseArea {
+                        id: recMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: root.toggleRecording()
                     }
