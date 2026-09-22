@@ -574,23 +574,6 @@ PanelWindow {
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
-                // профиль питания (клик — переключить performance/balanced/save)
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root.powerProfile === "performance"
-                        ? "PERF"
-                        : (root.powerProfile === "power-saver" ? "SAVE" : "BAL")
-                    color: root.powerProfile === "performance" ? Theme.accent : Theme.textDim
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(13)
-                    font.bold: true
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.cyclePower()
-                    }
-                }
-
                 Rectangle {
                     width: 1
                     height: 16
@@ -656,6 +639,23 @@ PanelWindow {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
                         onClicked: root.toggleGameMode()
+                    }
+                }
+
+                // профиль питания (клик — переключить performance/balanced/save)
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: root.powerProfile === "performance"
+                        ? "PERF"
+                        : (root.powerProfile === "power-saver" ? "SAVE" : "BAL")
+                    color: root.powerProfile === "performance" ? Theme.accent : Theme.textDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(13)
+                    font.bold: true
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.cyclePower()
                     }
                 }
 
