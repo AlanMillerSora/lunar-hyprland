@@ -17,10 +17,9 @@ user_pref("ui.systemUsesDarkTheme", 1);
 // ── домашняя страница — своя (путь подставит install.sh) ─────────
 user_pref("browser.startup.page", 1);
 user_pref("browser.startup.homepage", "__LUNAR_HOME__");
-user_pref("browser.newtabpage.enabled", false);
+user_pref("browser.newtabpage.enabled", true);
 // без приветственного экрана при первом запуске
-user_pref("browser.aboutwelcome.enabled", false);
-user_pref("browser.startup.homepage_welcome_url", "");
+user_pref("browser.aboutwelcome.enabled", false);user_pref("browser.startup.homepage_welcome_url", "");
 user_pref("browser.startup.homepage_welcome_url.additional", "");
 user_pref("startup.homepage_welcome_url", "");
 user_pref("startup.homepage_welcome_url.additional", "");
@@ -66,6 +65,11 @@ user_pref("browser.bookmarks.addedImportButton", false);
 user_pref("browser.shell.checkDefaultBrowser", false);
 user_pref("extensions.getAddons.showPane", false);
 user_pref("extensions.pocket.enabled", false);
+
+// ── без всплывающего переводчика страниц ────────────────────────
+user_pref("browser.translations.enable", false);
+user_pref("browser.translation.ui.show", false);
+user_pref("browser.translations.automaticallyPopup", false);
 
 // ── New Tab Override (новая вкладка — наша страница) ────────────
 // Само расширение ставит install.sh, а его URL задаётся через

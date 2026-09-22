@@ -78,7 +78,7 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 | **Memory** | `quickshell/SettingsPages/MemoryPage.qml` | Индикатор заполнения RAM/SWAP и общей памяти (MEM) + очистка системы (кнопка «ОЧИСТИТЬ») |
 | **Очистка** | `hypr/scripts/eclipse-cleanup.sh` | Сироты, кэш пакетов, журнал, tmpfiles, кэш yay, эскизы; опционально браузеры |
 | **Файлы** | `yazi/theme.toml`, `yazi/yazi.toml` | Файловый менеджер yazi в монохроме системы (`SUPER + E`); Enter по исходнику открывает его в VS Code |
-| **Firefox** | `firefox/chrome/userChrome.css`, `firefox/user.js` | Тёмный монохром, вертикальные вкладки, без рекламы и телеметрии; своя домашняя страница `lunar/firefox-home.html` (часы, поиск) и иконка Lunar |
+| **Firefox** | `firefox/chrome/userChrome.css`, `firefox/user.js` | Тёмный монохром, вертикальные вкладки, без рекламы и телеметрии; своя страница новой вкладки `lunar/firefox-home.html` (отдаёт локальный сервис `lunar-homepage`) и иконка Lunar |
 | **Sidebar** | `quickshell/LunarSidebar.qml` | Выдвигается от левого края (540px): чат (статус Ollama), буфер (cliphist; ПКМ — удалить), заметки |
 | **Sidebar R** | `quickshell/LunarSidebarRight.qml` | Выдвигается от правого края: уведомления (mako), «сейчас играет» (mpris), календарь (прокручивается, 18 месяцев), запись экрана со списком |
 | **Буфер** | `quickshell/LunarClipboard.qml` | История cliphist с поиском: `SUPER + V` |
@@ -111,7 +111,7 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 │   └── starship.toml       # промпт
 ├── wallpapers/             # 8 фаз затмения
 ├── color-schemes/          # цветовая схема KDE → ~/.local/share/color-schemes
-├── systemd/                # wifi-guard
+├── systemd/                # wifi-guard, lunar-homepage (страница новой вкладки)
 ├── assets/                 # логотип и скриншоты
 ├── install.sh              # установка конфигов
 └── get-deps.sh             # зависимости

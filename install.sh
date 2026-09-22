@@ -67,7 +67,7 @@ if [ -d "$REPO/.config/firefox/chrome" ]; then
   "type": "storage",
   "data": {
     "type": "custom_url",
-    "url": "file://$HOME/.config/lunar/firefox-home.html",
+    "url": "http://127.0.0.1:8787/firefox-home.html",
     "focus_website": true,
     "background_color": "#050505"
   }
@@ -105,13 +105,14 @@ if [ ! -d "$HOME/.local/share/icons/Bibata-Modern-Ice" ]; then
     || say "Bibata не скачался (не критично — будет системный курсор)"
 fi
 
-# ── systemd --user (wifi-guard) ────────────────────────────────
-if [ -f "$REPO/systemd/lunar-wifi-guard.service" ]; then
-  say "systemd --user → lunar-wifi-guard"
+# ── systemd --user (wifi-guard, локальная страница Firefox) ────
+if [ -d "$REPO/systemd" ]; then
+  say "systemd --user → lunar-wifi-guard, lunar-homepage"
   mkdir -p "$HOME/.config/systemd/user"
   cp "$REPO"/systemd/*.service "$HOME/.config/systemd/user/"
   systemctl --user daemon-reload 2>/dev/null || true
   systemctl --user enable --now lunar-wifi-guard.service 2>/dev/null || true
+  systemctl --user enable --now lunar-homepage.service 2>/dev/null || true
 fi
 
 # ── shell по умолчанию ─────────────────────────────────────────
