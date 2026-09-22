@@ -226,7 +226,7 @@ hl.window_rule({ match = { class = "^(code|code-url-handler)$" }, rounding = 0, 
 
 -- Попапы райса: календарь, шпаргалка хоткеев, ввод пароля — по центру, без рамок
 hl.window_rule({ match = { class = "eclipse-calendar" },   float = true, center = true, rounding = 16, border_size = 0 })
-hl.window_rule({ match = { class = "eclipse-cheatsheet" }, float = true, center = true, rounding = 18, border_size = 0 })
+hl.window_rule({ match = { class = "eclipse-cheatsheet" }, float = true, center = true, rounding = 6, border_size = 0 })
 hl.window_rule({ match = { class = "eclipse-askpass" },    float = true, center = true, rounding = 16, border_size = 0 })
 
 -- Quickshell: единая оболочка Lunar Eclipse (панель, лаунчер, sidebar, настройки, OSD)

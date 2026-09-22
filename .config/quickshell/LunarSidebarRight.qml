@@ -41,6 +41,13 @@ PanelWindow {
         function tab(idx: int): void { root.tabIndex = Math.max(0, Math.min(3, idx)) }
     }
 
+    // кнопка «горячие клавиши» в шапке панели
+    Process {
+        id: cheatsheetProc
+        command: ["bash", "-c", "$HOME/.config/hypr/scripts/eclipse-cheatsheet.py"]
+        running: false
+    }
+
     mask: Region {
         item: collapsed ? hoverStrip : contentBox
     }
@@ -111,6 +118,29 @@ PanelWindow {
                     font.letterSpacing: 3
                 }
                 Item { Layout.fillWidth: true }
+
+                Rectangle {
+                    width: 30
+                    height: 22
+                    radius: Theme.radius
+                    color: helpMouse.containsMouse ? Theme.alpha(Theme.accent, 0.08) : "transparent"
+                    border.width: helpMouse.containsMouse ? 1 : 0
+                    border.color: Theme.borderAccent
+                    Text {
+                        anchors.centerIn: parent
+                        text: "\uf11c"
+                        color: helpMouse.containsMouse ? Theme.accent : Theme.textDim
+                        font.family: Theme.iconFont
+                        font.pixelSize: Theme.fontSize(12)
+                    }
+                    MouseArea {
+                        id: helpMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: cheatsheetProc.running = true
+                    }
+                }
 
                 Rectangle {
                     width: 28
