@@ -88,7 +88,7 @@ opt = f'''NFQWS_OPT="
 --filter-tcp=443 --dpi-desync=fake,fakedsplit --dpi-desync-repeats=6 --dpi-desync-fooling=ts --dpi-desync-fakedsplit-pattern=0x00 --dpi-desync-fake-tls={F}/tls_clienthello_www_google_com.bin <HOSTLIST> --new
 --filter-tcp=2053,2083,2087,2096,8443 --hostlist-domains=discord.media --dpi-desync=fake,fakedsplit --dpi-desync-repeats=6 --dpi-desync-fooling=ts --dpi-desync-fakedsplit-pattern=0x00 --dpi-desync-fake-tls={F}/tls_clienthello_www_google_com.bin --new
 --filter-udp=443 --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fake-quic={F}/quic_initial_www_google_com.bin <HOSTLIST_NOAUTO> --new
---filter-udp=19294-19344,50000-50100 --filter-l7=discord,stun --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fake-discord={F}/ACTIVE_DISCORD_UDP.bin --dpi-desync-fake-stun={F}/ACTIVE_DISCORD_UDP.bin
+--filter-udp=19294-19344,50000-50100 --filter-l7=discord,stun --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fooling=badsum --dpi-desync-fake-discord={F}/ACTIVE_DISCORD_UDP.bin --dpi-desync-fake-stun={F}/ACTIVE_DISCORD_UDP.bin
 "'''
 
 s, n = re.subn(r'NFQWS_OPT="\n.*?\n"', opt, s, count=1, flags=re.S)
@@ -166,7 +166,9 @@ case "$MODE" in
     have_bin || build
     write_config
     install_service
-    sudo systemctl enable --now "$UNIT"
+    sudo systemctl enable "$UNIT"
+    # именно restart: конфиг мог измениться, а enable --now уже запущенный не перезапускает
+    sudo systemctl restart "$UNIT"
     say "zapret установлен и включён в автозапуск"
     healthcheck
     ;;
