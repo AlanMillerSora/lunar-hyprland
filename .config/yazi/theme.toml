@@ -1,0 +1,139 @@
+# ════════════════════════════════════════════════════════════════
+#  yazi — тема Lunar Eclipse (монохром, как вся система)
+#  фон #050505, текст #ffffff, dim #888888, рамки #1e1e1e, danger #ff003c
+#  Переопределяем только цвета поверх дефолтов yazi.
+# ════════════════════════════════════════════════════════════════
+
+[mgr]
+cwd = { fg = "#ffffff", bold = true }
+find_keyword = { fg = "#ffffff", bold = true, underline = true }
+find_position = { fg = "#888888" }
+symlink_target = { fg = "#888888", italic = true }
+
+marker_copied   = { fg = "#888888", bg = "#888888" }
+marker_cut      = { fg = "#ffffff", bg = "#ffffff" }
+marker_marked   = { fg = "#ffffff", bg = "#ffffff" }
+marker_selected = { fg = "#ffffff", bg = "#ffffff" }
+marker_symbol   = "│"
+
+count_copied   = { fg = "#050505", bg = "#888888" }
+count_cut      = { fg = "#050505", bg = "#ffffff" }
+count_selected = { fg = "#050505", bg = "#ffffff" }
+
+border_symbol = "│"
+border_style  = { fg = "#1e1e1e" }
+
+[tabs]
+active   = { fg = "#050505", bg = "#ffffff", bold = true }
+inactive = { fg = "#888888", bg = "#1a1a1a" }
+sep_inner = { open = "", close = "" }
+sep_outer = { open = "", close = "" }
+
+[mode]
+normal_main = { fg = "#050505", bg = "#ffffff", bold = true }
+normal_alt  = { fg = "#ffffff", bg = "#1a1a1a" }
+select_main = { fg = "#050505", bg = "#ffffff", bold = true }
+select_alt  = { fg = "#ffffff", bg = "#1a1a1a" }
+unset_main  = { fg = "#050505", bg = "#888888", bold = true }
+unset_alt   = { fg = "#888888", bg = "#1a1a1a" }
+
+[indicator]
+parent  = { fg = "#888888" }
+current = { fg = "#ffffff", bold = true }
+preview = { underline = true }
+padding = { open = "", close = "" }
+
+[status]
+perm_sep   = { fg = "#4a4a4a" }
+perm_type  = { fg = "#ffffff" }
+perm_read  = { fg = "#888888" }
+perm_write = { fg = "#888888" }
+perm_exec  = { fg = "#888888" }
+progress_label  = { fg = "#ffffff", bold = true }
+progress_normal = { fg = "#ffffff", bg = "#050505" }
+progress_error  = { fg = "#050505", bg = "#ff003c" }
+sep_left  = { open = "", close = "" }
+sep_right = { open = "", close = "" }
+
+[which]
+border          = { fg = "#1e1e1e" }
+cols            = 3
+cand            = { fg = "#ffffff" }
+rest            = { fg = "#888888" }
+desc            = { fg = "#888888" }
+separator       = "  "
+separator_style = { fg = "#4a4a4a" }
+
+[confirm]
+border     = { fg = "#1e1e1e" }
+title      = { fg = "#ffffff" }
+btn_yes    = { reversed = true }
+btn_labels = [ "  [Y]es  ", "  (N)o  " ]
+
+[notify]
+title_info  = { fg = "#ffffff" }
+title_warn  = { fg = "#888888" }
+title_error = { fg = "#ff003c" }
+icon_info   = ""
+icon_warn   = ""
+icon_error  = ""
+
+[pick]
+border   = { fg = "#1e1e1e" }
+active   = { fg = "#ffffff", bold = true }
+inactive = {}
+
+[input]
+border   = { fg = "#1e1e1e" }
+selected = { reversed = true }
+
+[cmp]
+border   = { fg = "#1e1e1e" }
+active   = { reversed = true }
+inactive = {}
+icon_file    = ""
+icon_folder  = ""
+icon_command = ""
+
+[tasks]
+border  = { fg = "#1e1e1e" }
+hovered = { fg = "#ffffff", bold = true }
+
+[help]
+border  = { fg = "#1e1e1e" }
+chord   = { fg = "#ffffff" }
+hovered = { reversed = true, bold = true }
+
+[fd]
+title    = "поиск по имени (fd):"
+position = { at = "top-center", y = 2, w = 80, h = 3 }
+
+[rg]
+title    = "поиск по содержимому (rg):"
+position = { at = "top-center", y = 2, w = 80, h = 3 }
+
+[filetype]
+rules = [
+	{ mime = "**/image/*", fg = "#888888" },
+	{ mime = "**/{audio,video}/*", fg = "#888888" },
+	{ mime = "**/application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", fg = "#888888" },
+	{ mime = "**/application/{pdf,doc,rtf}", fg = "#888888" },
+	{ mime = "vfs/{absent,stale}", fg = "#4a4a4a" },
+	{ url = "*", is = "orphan", bg = "#ff003c" },
+	{ url = "*", is = "exec", fg = "#ffffff" },
+	{ url = "*", is = "dummy", bg = "#ff003c" },
+	{ url = "*/", is = "dummy", bg = "#ff003c" },
+	{ url = "*/", fg = "#ffffff" },
+]
+
+# Иконки — чистый текст, без цветных глифов (только стрелки папок)
+[icon]
+globs = []
+dirs  = []
+files = []
+exts  = []
+conds = [
+	{ if = "dir & hovered", text = "▸", fg = "#ffffff" },
+	{ if = "dir",           text = "▸", fg = "#888888" },
+	{ if = "!dir",          text = "",  fg = "#888888" },
+]

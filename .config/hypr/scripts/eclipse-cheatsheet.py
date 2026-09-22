@@ -21,7 +21,7 @@ SECTIONS = [
         ("SUPER + D", "лаунчер"),
         ("SUPER + A", "запуск команды"),
         ("SUPER + G / C", "Hub: лаунчер и настройки"),
-        ("SUPER + E", "файлы (Dolphin)"),
+        ("SUPER + E", "файлы (yazi)"),
         ("SUPER + V", "буфер обмена"),
         ("SUPER + SHIFT + E", "панель слева"),
         ("SUPER + SHIFT + R", "панель справа"),

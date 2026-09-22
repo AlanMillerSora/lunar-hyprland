@@ -42,6 +42,18 @@ alias ..='cd ..'
 alias ...='cd ../..'
 alias grep='grep --color=auto'
 
+# ── yazi: после выхода перейти в последний каталог ──
+function y() {
+  local tmp cwd
+  tmp="$(mktemp -t yazi-cwd.XXXXXX)" || return
+  yazi "$@" --cwd-file="$tmp"
+  cwd="$(cat -- "$tmp" 2>/dev/null)"
+  if [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+    builtin cd -- "$cwd" || return
+  fi
+  rm -f -- "$tmp"
+}
+
 # ── Автодополнение ──
 autoload -Uz compinit
 compinit

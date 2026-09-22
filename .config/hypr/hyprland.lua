@@ -224,6 +224,9 @@ hl.window_rule({ match = { class = "^(kitty)$" }, opacity = "1.0 override 0.92 o
 -- VS Code: терминальный вид — прямые углы, тонкая рамка (тема в ~/.config/Code)
 hl.window_rule({ match = { class = "^(code|code-url-handler)$" }, rounding = 0, border_size = 1 })
 
+-- yazi в kitty: непрозрачное окно, прямые углы (монохромный файловый менеджер)
+hl.window_rule({ match = { class = "^(lunar-yazi)$" }, rounding = 6, opacity = "1.0 override 1.0 override" })
+
 -- Попапы райса: календарь, шпаргалка хоткеев, ввод пароля — по центру, без рамок
 hl.window_rule({ match = { class = "eclipse-calendar" },   float = true, center = true, rounding = 16, border_size = 0 })
 hl.window_rule({ match = { class = "eclipse-cheatsheet" }, float = true, center = true, rounding = 6, border_size = 0 })
@@ -247,8 +250,7 @@ local app_ws = {
             "jetbrains-.*" },
   ["4"] = { "steam", "gamescope", "heroic", "lutris",
             "com.heroicgameslauncher.hgl", "prismlauncher" },
-  ["5"] = { "dolphin", "org.kde.dolphin", "nautilus",
-            "org.gnome.Nautilus", "thunar" },
+  ["5"] = { "nautilus", "org.gnome.Nautilus", "thunar" },
   ["6"] = { "telegram-desktop", "org.telegram.desktop", "discord",
             "vesktop", "signal-desktop", "org.signal.Signal" },
   ["7"] = { "spotify", "vlc", "mpv" },
@@ -267,7 +269,7 @@ hl.bind(M .. " + RETURN",  dsp.exec_cmd("kitty"))
 hl.bind(M .. " + D",       dsp.exec_cmd("wofi --show drun"))
 hl.bind(M .. " + A",       dsp.exec_cmd("wofi --show run"))
 hl.bind(M .. " + G",       dsp.exec_cmd("qs ipc call hub toggle"))      -- Lunar Hub: launch + settings (Quickshell)
-hl.bind(M .. " + E",       dsp.exec_cmd("dolphin"))
+hl.bind(M .. " + E",       dsp.exec_cmd("kitty --class lunar-yazi -e yazi"))
 hl.bind(M .. " + V",       dsp.exec_cmd("qs ipc call clipboard toggle"))   -- буфер обмена (cliphist, Quickshell)
 hl.bind(M .. " + SHIFT + E", dsp.exec_cmd("qs ipc call sidebar toggle"))   -- боковая панель слева (Quickshell)
 hl.bind(M .. " + SHIFT + R", dsp.exec_cmd("qs ipc call rsidebar toggle"))  -- панель справа: уведомления/музыка/календарь

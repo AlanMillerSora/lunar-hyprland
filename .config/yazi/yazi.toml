@@ -1,0 +1,26 @@
+#:schema https://yazi-rs.github.io/schemas/yazi.json
+# ════════════════════════════════════════════════════════════════
+#  yazi — Lunar Eclipse
+#  Enter по тексту открывает файл в VS Code (ждёт закрытия),
+#  если VS Code нет — в nvim.
+# ════════════════════════════════════════════════════════════════
+
+[opener]
+edit = [
+	{ run = 'code --wait "$1"', block = true, desc = "VS Code" },
+	{ run = '${EDITOR:-nvim} "$1"', block = true, desc = "nvim" },
+]
+code = [
+	{ run = 'code "$1"', desc = "открыть в VS Code" },
+]
+term = [
+	{ run = 'kitty', desc = "терминал здесь" },
+]
+
+[open]
+rules = [
+	# папки — входим/открываем в yazi
+	{ url = "*/", use = [ "folder" ] },
+	# исходники и конфиги — сразу в VS Code
+	{ url = "*.{sh,bash,zsh,py,js,mjs,cjs,ts,tsx,jsx,json,jsonc,md,toml,yaml,yml,lua,qml,gjs,conf,cfg,ini,service,qss,html,css,scss,sql,rs,go,c,h,cpp,hpp,java,kt,php,rb,tex}", use = [ "edit" ] },
+]

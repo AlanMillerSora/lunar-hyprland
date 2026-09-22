@@ -16,7 +16,7 @@ sudo pacman -S --needed --noconfirm \
   kitty fastfetch chafa \
   zsh starship eza zsh-autosuggestions zsh-syntax-highlighting \
   wofi mako \
-  dolphin \
+  yazi bat ffmpeg 7zip poppler jq fd ripgrep zoxide fzf \
   playerctl brightnessctl ddcutil jq cliphist wl-clipboard \
   grim slurp wf-recorder \
   pipewire pipewire-pulse wireplumber pavucontrol \

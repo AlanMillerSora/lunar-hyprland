@@ -77,6 +77,7 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 | **Hub** | `quickshell/LunarHub.qml` | Лаунчер + настройки (980×640, как у 43PR): Launch, System, Sound, Monitors, Network, Bluetooth, Interface, Memory, Games |
 | **Memory** | `quickshell/SettingsPages/MemoryPage.qml` | Индикатор заполнения RAM/SWAP и общей памяти (MEM) + очистка системы (кнопка «ОЧИСТИТЬ») |
 | **Очистка** | `hypr/scripts/eclipse-cleanup.sh` | Сироты, кэш пакетов, журнал, tmpfiles, кэш yay, эскизы; опционально браузеры |
+| **Файлы** | `yazi/theme.toml`, `yazi/yazi.toml` | Файловый менеджер yazi в монохроме системы (`SUPER + E`); Enter по исходнику открывает его в VS Code |
 | **Sidebar** | `quickshell/LunarSidebar.qml` | Выдвигается от левого края (540px): чат (статус Ollama), буфер (cliphist; ПКМ — удалить), заметки |
 | **Sidebar R** | `quickshell/LunarSidebarRight.qml` | Выдвигается от правого края: уведомления (mako), «сейчас играет» (mpris), календарь (прокручивается, 18 месяцев), запись экрана со списком |
 | **Буфер** | `quickshell/LunarClipboard.qml` | История cliphist с поиском: `SUPER + V` |
@@ -99,7 +100,7 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 │   ├── btop/               # системный монитор (тема lunar)
 │   ├── gtk-3.0/ gtk-4.0/   # GTK-тема
 │   ├── kdeglobals          # KDE: цвета и курсор
-│   ├── dolphinrc           # Dolphin
+│   ├── yazi/               # файловый менеджер (тема lunar, opener VS Code)
 │   ├── mako/               # уведомления
 │   ├── hypridle/           # idle
 │   ├── wofi/               # лаунчер
@@ -208,7 +209,7 @@ sudo usermod -aG i2c "$USER"     # затем перелогиниться
 | `SUPER + RETURN` | Терминал (kitty) |
 | `SUPER + G` / `SUPER + C` | Hub: лаунчер + настройки |
 | `SUPER + D` / `SUPER + A` | wofi: приложения / команды |
-| `SUPER + E` | Файлы (dolphin) |
+| `SUPER + E` | Файлы (yazi) |
 | `SUPER + V` | Буфер обмена (cliphist) |
 | `SUPER + SHIFT + E` | Боковая панель (слева) |
 | `SUPER + SHIFT + R` | Панель справа (уведомления/музыка/календарь) |

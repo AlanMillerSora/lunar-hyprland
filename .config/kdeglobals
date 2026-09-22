@@ -12,7 +12,7 @@ toolBarFont=JetBrains Mono,12,-1,5,57,0,0,0,0,0,Medium
 smallestReadableFont=JetBrains Mono,10,-1,5,57,0,0,0,0,0,Medium
 
 [Icons]
-Theme=breeze-dark
+Theme=Adwaita
 
 [KDE]
 SingleClick=false
