@@ -68,7 +68,7 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 | **Hub** | `quickshell/LunarHub.qml` | Лаунчер + настройки (980×640, как у 43PR): Launch, System, Sound, Monitors, Network, Bluetooth, Interface, Memory |
 | **Memory** | `quickshell/SettingsPages/MemoryPage.qml` | Индикатор заполнения RAM/SWAP и общей памяти (MEM) + очистка системы (кнопка «ОЧИСТИТЬ») |
 | **Очистка** | `hypr/scripts/eclipse-cleanup.sh` | Сироты, кэш пакетов, журнал, tmpfiles, кэш yay, эскизы; опционально браузеры |
-| **Sidebar** | `quickshell/LunarSidebar.qml` | Выдвигается от левого края (480px): чат (статус Ollama), буфер (cliphist; ПКМ — удалить), заметки |
+| **Sidebar** | `quickshell/LunarSidebar.qml` | Выдвигается от левого края (540px): чат (статус Ollama), буфер (cliphist; ПКМ — удалить), заметки |
 | **Sidebar R** | `quickshell/LunarSidebarRight.qml` | Выдвигается от правого края: уведомления (mako), «сейчас играет» (mpris), календарь |
 | **Буфер** | `quickshell/LunarClipboard.qml` | История cliphist с поиском: `SUPER + V` |
 | **Громкость** | `quickshell/LunarVolume.qml` | Попап с крупным ползунком (клик по значку громкости на панели) |

@@ -9,7 +9,7 @@ PanelWindow {
     id: root
 
     anchors { top: true; left: true; bottom: true }
-    implicitWidth: 500
+    implicitWidth: 560
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore
 
@@ -63,7 +63,7 @@ PanelWindow {
         anchors.top: parent.top
         anchors.topMargin: 46
         anchors.bottom: parent.bottom
-        width: 480
+        width: 540
         // при скрытии уводим панель целиком за край (раньше оставалась видимая полоска)
         x: collapsed ? -(width + 4) : 0
         color: Theme.bg
@@ -102,7 +102,7 @@ PanelWindow {
                     text: "LUNAR"
                     color: Theme.text
                     font.family: Theme.fontFamily
-                    font.pixelSize: 13
+                    font.pixelSize: Theme.fontSize(17)
                     font.bold: true
                     font.letterSpacing: 3
                 }
@@ -122,7 +122,7 @@ PanelWindow {
                         text: "✕"
                         color: Theme.textDim
                         font.family: Theme.fontFamily
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontSize(14)
                     }
                     MouseArea {
                         id: closeMouse
@@ -148,7 +148,7 @@ PanelWindow {
                         required property int index
                         required property string modelData
                         Layout.fillWidth: true
-                        height: 28
+                        height: 36
                         radius: Theme.radius
                         color: tabIndex === index
                             ? Theme.alpha(Theme.accent, 0.12)
@@ -163,7 +163,7 @@ PanelWindow {
                                 ? Theme.accent
                                 : (tabMouse.containsMouse ? Theme.text : Theme.textDim)
                             font.family: Theme.fontFamily
-                            font.pixelSize: 10
+                            font.pixelSize: Theme.fontSize(13)
                         }
                         MouseArea {
                             id: tabMouse
@@ -194,7 +194,7 @@ PanelWindow {
                             text: "Lunar AI"
                             color: Theme.text
                             font.family: Theme.fontFamily
-                            font.pixelSize: 11
+                            font.pixelSize: Theme.fontSize(14)
                             font.bold: true
                         }
                         Text {
@@ -202,7 +202,7 @@ PanelWindow {
                             text: "Локальный ассистент на Ollama. Если не установлен — открой терминал и поставь."
                             color: Theme.textDim
                             font.family: Theme.fontFamily
-                            font.pixelSize: 10
+                            font.pixelSize: Theme.fontSize(13)
                             wrapMode: Text.WordWrap
                         }
                         RowLayout {
@@ -212,14 +212,14 @@ PanelWindow {
                                 text: root.aiStatus
                                 color: Theme.textFaint
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 10
+                                font.pixelSize: Theme.fontSize(13)
                             }
                             Item { Layout.fillWidth: true }
                             Text {
                                 text: "проверить"
                                 color: aiMouse.containsMouse ? Theme.accent : Theme.textFaint
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 9
+                                font.pixelSize: Theme.fontSize(12)
                                 MouseArea {
                                     id: aiMouse
                                     anchors.fill: parent
@@ -232,7 +232,7 @@ PanelWindow {
                         Item { Layout.fillHeight: true }
                         Rectangle {
                             Layout.fillWidth: true
-                            height: 30
+                            height: 40
                             radius: Theme.radius
                             color: termMouse.containsMouse
                                 ? Theme.alpha(Theme.accent, 0.16)
@@ -244,7 +244,7 @@ PanelWindow {
                                 text: "открыть терминал"
                                 color: Theme.text
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 10
+                                font.pixelSize: Theme.fontSize(13)
                             }
                             MouseArea {
                                 id: termMouse
@@ -276,14 +276,14 @@ PanelWindow {
                                 text: "буфер обмена"
                                 color: Theme.textDim
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 10
+                                font.pixelSize: Theme.fontSize(13)
                             }
                             Item { Layout.fillWidth: true }
 
                             // очистить всю историю
                             Rectangle {
-                                Layout.preferredWidth: 30
-                                Layout.preferredHeight: 20
+                                Layout.preferredWidth: 46
+                                Layout.preferredHeight: 26
                                 radius: Theme.radius
                                 color: wipeMouse.containsMouse ? Theme.alpha(Theme.danger, 0.12) : "transparent"
                                 border.width: wipeMouse.containsMouse ? 1 : 0
@@ -294,7 +294,7 @@ PanelWindow {
                                     text: "очистить"
                                     color: wipeMouse.containsMouse ? Theme.danger : Theme.textFaint
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: 8
+                                    font.pixelSize: Theme.fontSize(10)
                                 }
                                 MouseArea {
                                     id: wipeMouse
@@ -310,8 +310,8 @@ PanelWindow {
 
                             // обновить список
                             Rectangle {
-                                Layout.preferredWidth: 24
-                                Layout.preferredHeight: 20
+                                Layout.preferredWidth: 32
+                                Layout.preferredHeight: 26
                                 radius: Theme.radius
                                 color: refreshMouse.containsMouse ? Theme.alpha(Theme.accent, 0.08) : "transparent"
                                 border.width: refreshMouse.containsMouse ? 1 : 0
@@ -322,7 +322,7 @@ PanelWindow {
                                     text: "↻"
                                     color: Theme.textDim
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: 10
+                                    font.pixelSize: Theme.fontSize(13)
                                 }
                                 MouseArea {
                                     id: refreshMouse
@@ -343,7 +343,7 @@ PanelWindow {
                                 required property var modelData
                                 required property int index
                                 width: ListView.view.width
-                                height: 32
+                                height: 42
                                 radius: Theme.radius
                                 color: mouse.containsMouse ? Theme.alpha(Theme.accent, 0.08) : "transparent"
                                 Text {
@@ -352,7 +352,7 @@ PanelWindow {
                                     text: modelData.preview
                                     color: Theme.text
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: 10
+                                    font.pixelSize: Theme.fontSize(13)
                                     elide: Text.ElideRight
                                     verticalAlignment: Text.AlignVCenter
                                 }
@@ -395,14 +395,14 @@ PanelWindow {
                                 text: "заметки"
                                 color: Theme.textDim
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 10
+                                font.pixelSize: Theme.fontSize(13)
                             }
                             Item { Layout.fillWidth: true }
                             Text {
                                 text: "сохранить"
                                 color: saveMouse.containsMouse ? Theme.accent : Theme.textFaint
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 9
+                                font.pixelSize: Theme.fontSize(12)
                                 MouseArea {
                                     id: saveMouse
                                     anchors.fill: parent
@@ -425,7 +425,7 @@ PanelWindow {
                                 anchors.margins: 8
                                 color: Theme.text
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 10
+                                font.pixelSize: Theme.fontSize(13)
                                 wrapMode: TextArea.WordWrap
                                 clip: true
                                 selectByMouse: true
@@ -441,7 +441,7 @@ PanelWindow {
                                 text: "пиши здесь — сохраняется само"
                                 color: Theme.textFaint
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 10
+                                font.pixelSize: Theme.fontSize(13)
                             }
                         }
                     }
@@ -458,7 +458,7 @@ PanelWindow {
                 text: sysStats.text
                 color: Theme.textDim
                 font.family: Theme.fontFamily
-                font.pixelSize: 9
+                font.pixelSize: Theme.fontSize(12)
             }
         }
     }
