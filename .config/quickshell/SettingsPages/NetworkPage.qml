@@ -19,6 +19,11 @@ Item {
     property string zapUpdated: ""
     property string zapMsg: ""
 
+    // ── Vencord (мод Discord) ──
+    property string vencState: "notinstalled"
+    property string vencInstaller: ""
+    property string vencApp: "—"
+
     // кнопка блока ZAPRET
     component ZapBtn: Rectangle {
         property string label: ""
@@ -185,6 +190,12 @@ Item {
         pZapAction.running = true
     }
 
+    function vencStatusText() {
+        if (page.vencState === "patched") return "● установлен"
+        if (page.vencState === "unpatched") return "○ не пропатчен (обновился Discord?)"
+        return "○ не установлен"
+    }
+
     // обновление и подбор стратегии — в терминале (там интерактивный sudo и лог)
     Process {
         id: pZapUpdate
@@ -198,17 +209,52 @@ Item {
         onExited: pZap.running = true
     }
 
+    // ── Vencord: состояние и управление ────────────────────
+    Process {
+        id: pVenc
+        command: ["bash", "-c", "$HOME/.config/hypr/scripts/eclipse-vencord.sh status"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var m = {}
+                var lines = text.trim().split("\n")
+                for (var i = 0; i < lines.length; ++i) {
+                    var p = lines[i].indexOf("=")
+                    if (p > 0) m[lines[i].substring(0, p)] = lines[i].substring(p + 1)
+                }
+                page.vencState = m.state || "notinstalled"
+                page.vencInstaller = m.installer || ""
+                page.vencApp = m.appdir || "—"
+            }
+        }
+    }
+
+    Process {
+        id: pVencPatch
+        command: ["kitty", "--hold", "-e", "bash", "-c", "$HOME/.config/hypr/scripts/eclipse-vencord.sh patch"]
+        onExited: pVenc.running = true
+    }
+
+    Process {
+        id: pVencUpdate
+        command: ["kitty", "--hold", "-e", "bash", "-c", "$HOME/.config/hypr/scripts/eclipse-vencord.sh update"]
+        onExited: pVenc.running = true
+    }
+
     Timer {
         interval: 5000
         repeat: true
         running: page.visible
-        onTriggered: pZap.running = true
+        onTriggered: {
+            pZap.running = true
+            pVenc.running = true
+        }
     }
 
     Component.onCompleted: {
         pRadioGet.running = true
         pList.running = true
         pZap.running = true
+        pVenc.running = true
     }
 
     Column {
@@ -382,6 +428,71 @@ Item {
                                 ZapBtn {
                                     label: "ПОДОБРАТЬ"
                                     onClicked: pZapTune.running = true
+                                }
+                            }
+                        }
+                    }
+
+                    // ── VENCORD: мод Discord ──
+                    Rectangle {
+                        width: list.width
+                        height: 112
+                        radius: Theme.radius
+                        color: Theme.bgCard
+                        border.width: 1
+                        border.color: page.vencState === "patched" ? Theme.alpha(Theme.accent, 0.45) : Theme.border
+
+                        Column {
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.leftMargin: 14
+                            anchors.rightMargin: 14
+                            spacing: 8
+
+                            Row {
+                                spacing: 9
+
+                                Text {
+                                    text: "VENCORD"
+                                    color: Theme.text
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 12
+                                    font.letterSpacing: 2
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+
+                                Text {
+                                    text: "мод Discord · плагины и темы"
+                                    color: Theme.textFaint
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 10
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                            }
+
+                            Text {
+                                width: parent.width
+                                text: page.vencStatusText()
+                                      + (page.vencInstaller ? "   ·   " + page.vencInstaller : "")
+                                      + (page.vencApp !== "—" ? "   ·   " + page.vencApp : "")
+                                color: page.vencState === "patched" ? Theme.text : Theme.textFaint
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 11
+                                elide: Text.ElideRight
+                            }
+
+                            Row {
+                                spacing: 8
+
+                                ZapBtn {
+                                    label: "ПЕРЕПАТЧИТЬ"
+                                    onClicked: pVencPatch.running = true
+                                }
+
+                                ZapBtn {
+                                    label: "ОБНОВИТЬ"
+                                    onClicked: pVencUpdate.running = true
                                 }
                             }
                         }

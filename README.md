@@ -161,6 +161,22 @@ cd ~/rice
 > `/etc/sudoers.d/lunar-zapret` (только `systemctl start/stop/restart/enable/disable`
 > для `zapret.service`). Обновление и подбор идут в терминале.
 
+## 🧩 Vencord (мод Discord)
+
+В официальный клиент Discord вшит [Vencord](https://vencord.dev)
+(плагины, темы). Патчится `app.asar`, а Discord при обновлении создаёт новый
+каталог `app-<версия>` — патч слетает, поэтому после обновления Discord
+жми **ПЕРЕПАТЧИТЬ** в Hub → Network (блок VENCORD) или:
+
+```bash
+~/.config/hypr/scripts/eclipse-vencord.sh status    # состояние
+~/.config/hypr/scripts/eclipse-vencord.sh patch     # закрыть Discord, пропатчить, запустить
+~/.config/hypr/scripts/eclipse-vencord.sh update    # обновить инсталлятор (AUR) и пропатчить
+```
+
+Инсталлятор — из AUR (`vencord-installer-bin`, ставится `./get-deps.sh`).
+Настройки Vencord — в клиенте: **User Settings → Vencord**.
+
 ## 🟩 NVIDIA
 
 Рис рассчитан и на NVIDIA: переменные NVIDIA включаются только если карта

@@ -15,7 +15,7 @@ sudo pacman -S --needed --noconfirm \
   xdg-desktop-portal-hyprland xdg-desktop-portal-gtk \
   kitty fastfetch chafa \
   zsh starship eza zsh-autosuggestions zsh-syntax-highlighting \
-  wofi mako firefox \
+  wofi mako firefox discord \
   yazi bat ffmpeg 7zip poppler jq fd ripgrep zoxide fzf \
   playerctl brightnessctl ddcutil jq cliphist wl-clipboard \
   grim slurp wf-recorder \
@@ -72,5 +72,21 @@ else
 fi
 
 say "Обои: awww установлен (mpvpaper — опционально из AUR: yay -S mpvpaper)"
+
+# ── Vencord (AUR) ──────────────────────────────────────────────
+# Мод Discord: инсталлятор патчит app.asar. Сам патч применяется
+# скриптом eclipse-vencord.sh (или кнопкой в Hub → Network), потому
+# что после каждого обновления Discord его нужно накатывать заново.
+if command -v yay >/dev/null 2>&1; then
+  say "AUR: vencord-installer-bin (мод Vencord для Discord)"
+  yay -S --needed --noconfirm vencord-installer-bin \
+    || say "Vencord-инсталлятор не установился — вручную: yay -S vencord-installer-bin"
+elif command -v paru >/dev/null 2>&1; then
+  say "AUR: vencord-installer-bin (мод Vencord для Discord)"
+  paru -S --needed --noconfirm vencord-installer-bin \
+    || say "Vencord-инсталлятор не установился — вручную: paru -S vencord-installer-bin"
+else
+  say "yay/paru не найден — Vencord пропущен (вручную: yay -S vencord-installer-bin)"
+fi
 
 say "Готово. Дальше: ./install.sh"
