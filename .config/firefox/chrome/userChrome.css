@@ -1,0 +1,241 @@
+/* ════════════════════════════════════════════════════════════════
+   Lunar Eclipse — Firefox (интерфейс, userChrome.css)
+   TUI-строго: монохром, тонкие рамки 1px, прямые углы, без синего,
+   иконки в оттенках серого. Панель вкладок прячется при одной вкладке.
+   ════════════════════════════════════════════════════════════════ */
+
+:root {
+  --lunar-bg:     #050505;
+  --lunar-bg2:    #0d0d0d;
+  --lunar-bg3:    #1a1a1a;
+  --lunar-fg:     #ffffff;
+  --lunar-dim:    #888888;
+  --lunar-faint:  #4a4a4a;
+  --lunar-border: #1e1e1e;
+  --lunar-danger: #ff003c;
+
+  /* перекрываем переменные Firefox */
+  --toolbar-bgcolor: #050505 !important;
+  --toolbar-color: #ffffff !important;
+  --toolbarbutton-icon-fill: #ffffff !important;
+  --toolbarbutton-hover-background: #1a1a1a !important;
+  --toolbarbutton-active-background: #262626 !important;
+  --lwt-toolbarbutton-icon-fill: #ffffff !important;
+  --lwt-toolbarbutton-icon-fill-attention: #ffffff !important;
+  --lwt-accent-color: #050505 !important;
+  --lwt-text-color: #ffffff !important;
+  --tab-selected-bgcolor: #1a1a1a !important;
+  --tab-selected-textcolor: #ffffff !important;
+  --tab-selected-outline-color: #ffffff !important;
+  --tab-hover-textcolor: #ffffff !important;
+  --tabs-border-color: #1e1e1e !important;
+  --newtab-background-color: #050505 !important;
+  --arrowpanel-background: #050505 !important;
+  --arrowpanel-color: #ffffff !important;
+  --arrowpanel-border-color: #1e1e1e !important;
+  --focus-outline-color: #ffffff !important;
+  --input-bgcolor: #0d0d0d !important;
+  --input-color: #ffffff !important;
+  --input-border-color: #1e1e1e !important;
+  --urlbar-box-bgcolor: #0d0d0d !important;
+  --urlbar-box-focus-bgcolor: #0d0d0d !important;
+  --urlbar-box-hover-bgcolor: #1a1a1a !important;
+  --urlbar-popup-url-color: #ffffff !important;
+  --autocomplete-popup-background: #050505 !important;
+  --autocomplete-popup-color: #ffffff !important;
+  --autocomplete-popup-highlight-background: #1a1a1a !important;
+  --autocomplete-popup-highlight-color: #ffffff !important;
+}
+
+/* ── всё монохромное: гасим цветные иконки ─────────────────────── */
+#navigator-toolbox image,
+#navigator-toolbox .toolbarbutton-icon,
+#navigator-toolbox .toolbarbutton-badge-stack,
+#sidebar-main image,
+#sidebar-main .tab-icon-image,
+#sidebar-box image,
+#urlbar .urlbar-icon,
+#identity-box image,
+panel image,
+menupopup image {
+  filter: grayscale(1) brightness(1.15) contrast(0.95) !important;
+}
+
+/* ── рамки и фон ───────────────────────────────────────────────── */
+#navigator-toolbox {
+  background: var(--lunar-bg) !important;
+  border-bottom: 1px solid var(--lunar-border) !important;
+  box-shadow: none !important;
+}
+#nav-bar,
+#PersonalToolbar,
+#TabsToolbar,
+#titlebar {
+  background: var(--lunar-bg) !important;
+  color: var(--lunar-fg) !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+#nav-bar { border-top: 1px solid var(--lunar-border) !important; }
+
+/* ── вкладки: прямые, тонкие ───────────────────────────────────── */
+.tabbrowser-tab {
+  border-radius: 0 !important;
+  color: var(--lunar-dim) !important;
+  border: 0 !important;
+  padding-inline: 4px !important;
+}
+.tabbrowser-tab[selected] {
+  color: var(--lunar-fg) !important;
+  background: var(--lunar-bg3) !important;
+  border-top: 1px solid var(--lunar-fg) !important;
+}
+.tabbrowser-tab:hover:not([selected]) {
+  color: var(--lunar-fg) !important;
+  background: var(--lunar-bg2) !important;
+}
+.tabbrowser-tab .tab-icon-image { filter: grayscale(1) !important; }
+.tab-close-button { color: var(--lunar-dim) !important; }
+.tab-close-button:hover { background: var(--lunar-danger) !important; color: #000 !important; }
+
+/* панель вкладок прячется, если вкладка одна */
+#TabsToolbar:has(#tabbrowser-tabs .tabbrowser-tab:only-of-type) {
+  visibility: collapse !important;
+}
+
+/* ── адресная строка: как поле ввода системы ───────────────────── */
+#urlbar,
+#urlbar-input-container {
+  border-radius: 6px !important;
+  background: var(--lunar-bg2) !important;
+  color: var(--lunar-fg) !important;
+  border: 1px solid var(--lunar-border) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+#urlbar[focused] {
+  border-color: var(--lunar-fg) !important;
+}
+#urlbar-input { color: var(--lunar-fg) !important; }
+#urlbar-input::placeholder { color: var(--lunar-faint) !important; }
+#urlbar-background {
+  background: var(--lunar-bg2) !important;
+  border: 1px solid var(--lunar-border) !important;
+  border-radius: 6px !important;
+  box-shadow: none !important;
+}
+.urlbarView {
+  background: var(--lunar-bg) !important;
+  color: var(--lunar-fg) !important;
+  border: 1px solid var(--lunar-border) !important;
+  border-radius: 6px !important;
+  box-shadow: none !important;
+}
+.urlbarView-row[selected],
+.urlbarView-row:hover {
+  background: var(--lunar-bg3) !important;
+}
+.urlbarView-url { color: var(--lunar-dim) !important; }
+.urlbarView-title { color: var(--lunar-fg) !important; }
+
+/* ── панели, меню, попапы ─────────────────────────────────────── */
+panel,
+menupopup,
+#appMenu-popup,
+#unified-extensions-panel,
+#customizationui-widget-panel {
+  --panel-background: var(--lunar-bg) !important;
+  --panel-color: var(--lunar-fg) !important;
+  --panel-border-color: var(--lunar-border) !important;
+  background: var(--lunar-bg) !important;
+  color: var(--lunar-fg) !important;
+  border: 1px solid var(--lunar-border) !important;
+  border-radius: 6px !important;
+  box-shadow: none !important;
+}
+menupopup > menuitem, menu { color: var(--lunar-fg) !important; }
+menupopup > menuitem:hover,
+menupopup > menuitem[_moz-menuactive] { background: var(--lunar-bg3) !important; }
+menuseparator { border-color: var(--lunar-border) !important; }
+
+/* ── сайдбар и «найти на странице» ─────────────────────────────── */
+#sidebar-box, #sidebar-header {
+  background: var(--lunar-bg) !important;
+  color: var(--lunar-fg) !important;
+  border-right: 1px solid var(--lunar-border) !important;
+}
+findbar {
+  background: var(--lunar-bg) !important;
+  color: var(--lunar-fg) !important;
+  border-top: 1px solid var(--lunar-border) !important;
+}
+findbar textbox { background: var(--lunar-bg2) !important; color: var(--lunar-fg) !important; }
+
+/* ── статус при наведении и подсказки ──────────────────────────── */
+#statuspanel-label {
+  background: var(--lunar-bg) !important;
+  color: var(--lunar-dim) !important;
+  border: 1px solid var(--lunar-border) !important;
+}
+tooltip {
+  background: var(--lunar-bg) !important;
+  color: var(--lunar-fg) !important;
+  border: 1px solid var(--lunar-border) !important;
+}
+
+/* ── скрываем лишние кнопки (кнопку сайдбара оставляем) ────────── */
+#firefox-view-button,
+#unified-extensions-button,
+#tracking-protection-icon-container,
+#star-button-box { display: none !important; }
+
+/* ── вертикальные вкладки в боковой панели ─────────────────────── */
+#sidebar-main,
+#sidebar-box {
+  background: var(--lunar-bg) !important;
+  color: var(--lunar-fg) !important;
+  border-inline-end: 1px solid var(--lunar-border) !important;
+  box-shadow: none !important;
+}
+#sidebar-main .tabbrowser-tab,
+#tabbrowser-tabs[orient="vertical"] .tabbrowser-tab {
+  border-radius: 0 !important;
+  color: var(--lunar-dim) !important;
+  padding-inline: 8px !important;
+  margin: 0 !important;
+}
+#sidebar-main .tabbrowser-tab[selected],
+#tabbrowser-tabs[orient="vertical"] .tabbrowser-tab[selected] {
+  color: var(--lunar-fg) !important;
+  background: var(--lunar-bg3) !important;
+  box-shadow: inset 2px 0 0 var(--lunar-fg) !important;
+}
+#sidebar-main .tabbrowser-tab:hover:not([selected]),
+#tabbrowser-tabs[orient="vertical"] .tabbrowser-tab:hover:not([selected]) {
+  color: var(--lunar-fg) !important;
+  background: var(--lunar-bg2) !important;
+}
+/* заголовок панели — минимальный */
+#sidebar-header {
+  background: var(--lunar-bg) !important;
+  color: var(--lunar-fg) !important;
+  border-bottom: 1px solid var(--lunar-border) !important;
+  padding-block: 2px !important;
+}
+#sidebar-main .sidebar-panel-header,
+#sidebar-main .sidebar-actions { background: transparent !important; }
+
+/* прячем обучающий баннер вертикальных вкладок и прочие подсказки */
+#sidebar-main .onboarding,
+#sidebar-main .onboarding-message,
+#sidebar-main .vertical-tabs-onboarding,
+#sidebar-main [class*="onboarding"],
+#vertical-tabs-onboarding,
+#tabbrowser-tabs .onboarding {
+  display: none !important;
+}
+
+/* ── тонкие скроллбары в монохроме ─────────────────────────────── */
+scrollbar { background: var(--lunar-bg) !important; }
+scrollbar thumb { background: #333333 !important; border-radius: 0 !important; }
+scrollbar thumb:hover { background: #555555 !important; }

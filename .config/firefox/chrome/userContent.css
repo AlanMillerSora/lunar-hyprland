@@ -1,0 +1,66 @@
+/* ════════════════════════════════════════════════════════════════
+   Lunar Eclipse — Firefox (страницы, userContent.css)
+   Тёмный монохром для about:* , пустых вкладок и «ошибок».
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── пустая новая вкладка ─────────────────────────────────────── */
+@-moz-document url("about:blank"), url("about:newtab"), url("about:home") {
+  html, body {
+    background: #050505 !important;
+    color: #ffffff !important;
+  }
+}
+
+/* ── внутренние страницы Firefox ──────────────────────────────── */
+@-moz-document url-prefix("about:") {
+  :root {
+    --in-content-page-background: #050505 !important;
+    --in-content-page-color: #ffffff !important;
+    --in-content-box-background: #0d0d0d !important;
+    --in-content-box-border-color: #1e1e1e !important;
+    --in-content-border-color: #1e1e1e !important;
+    --in-content-button-background: #0d0d0d !important;
+    --in-content-button-background-hover: #1a1a1a !important;
+    --in-content-button-background-active: #262626 !important;
+    --in-content-primary-button-background: #ffffff !important;
+    --in-content-primary-button-text-color: #050505 !important;
+    --in-content-link-color: #ffffff !important;
+    --in-content-link-color-hover: #ffffff !important;
+    --in-content-accent-color: #ffffff !important;
+    --in-content-focus-outline-color: #ffffff !important;
+    --in-content-deemphasized-text: #888888 !important;
+    --newtab-background-color: #050505 !important;
+    --newtab-text-primary-color: #ffffff !important;
+  }
+  html, body { background: #050505 !important; color: #ffffff !important; }
+  h1, h2, h3, legend { color: #ffffff !important; }
+  a { color: #ffffff !important; text-decoration-color: #4a4a4a !important; }
+  button, select, input, textarea {
+    background: #0d0d0d !important;
+    color: #ffffff !important;
+    border: 1px solid #1e1e1e !important;
+    border-radius: 6px !important;
+  }
+  button:hover { background: #1a1a1a !important; }
+  .card, .info-box, .message-bar, .dialogBox {
+    background: #0d0d0d !important;
+    border: 1px solid #1e1e1e !important;
+    border-radius: 6px !important;
+  }
+  /* таблицы в about:preferences / about:support */
+  table, tr, td, th { border-color: #1e1e1e !important; }
+  th { background: #0d0d0d !important; color: #ffffff !important; }
+}
+
+/* ── about:config: монохромная таблица ────────────────────────── */
+@-moz-document url("about:config") {
+  #prefs tr:nth-child(even) { background: #0d0d0d !important; }
+  #prefs tr:hover { background: #1a1a1a !important; }
+  #prefs td, #prefs th { color: #ffffff !important; border-color: #1e1e1e !important; }
+}
+
+/* ── страницы ошибок (сеть/сертификаты) ───────────────────────── */
+@-moz-document url-prefix("about:neterror"), url-prefix("about:certerror"),
+               url-prefix("about:blocked"), url-prefix("about:sessionrestore") {
+  html, body { background: #050505 !important; color: #ffffff !important; }
+}

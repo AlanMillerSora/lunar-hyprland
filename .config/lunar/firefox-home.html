@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Lunar Eclipse</title>
+<style>
+  :root {
+    --bg:     #050505;
+    --fg:     #ffffff;
+    --dim:    #888888;
+    --faint:  #4a4a4a;
+    --border: #1e1e1e;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  .wrap {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 26px;
+  }
+  .logo { width: 132px; height: 132px; }
+  .logo .ring {
+    fill: none;
+    stroke: var(--fg);
+    stroke-width: 1.5;
+  }
+  .logo .tick { stroke: var(--dim); stroke-width: 1.5; }
+  .logo .moon { fill: var(--fg); }
+
+  .title {
+    font-size: 15px;
+    letter-spacing: 10px;
+    color: var(--fg);
+    text-transform: uppercase;
+    padding-left: 10px;
+  }
+  .clock {
+    font-size: 84px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .clock .sec { font-size: 30px; color: var(--dim); margin-left: 10px; }
+  .date { font-size: 14px; letter-spacing: 4px; color: var(--dim); text-transform: uppercase; }
+
+  .search {
+    margin-top: 26px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: min(560px, 70vw);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 16px;
+    background: #0d0d0d;
+  }
+  .search:focus-within { border-color: var(--fg); }
+  .search .ico { color: var(--faint); font-size: 14px; }
+  .search input {
+    flex: 1;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--fg);
+    font: inherit;
+    font-size: 14px;
+  }
+  .search input::placeholder { color: var(--faint); }
+
+  .hint {
+    position: fixed;
+    bottom: 18px;
+    left: 0; right: 0;
+    text-align: center;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--faint);
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <svg class="logo" viewBox="0 0 100 100" aria-hidden="true">
+      <circle class="ring" cx="50" cy="50" r="40"/>
+      <g class="tick">
+        <line x1="50" y1="4"  x2="50" y2="12"/>
+        <line x1="50" y1="88" x2="50" y2="96"/>
+        <line x1="4"  y1="50" x2="12" y2="50"/>
+        <line x1="88" y1="50" x2="96" y2="50"/>
+      </g>
+      <circle class="moon" cx="50" cy="50" r="20"/>
+    </svg>
+
+    <div class="title">Lunar Eclipse</div>
+
+    <div class="clock" id="clock">--:--<span class="sec">--</span></div>
+    <div class="date" id="date">&nbsp;</div>
+
+    <form class="search" id="search" autocomplete="off">
+      <span class="ico">/</span>
+      <input id="q" type="text" placeholder="поиск или адрес — Enter">
+    </form>
+  </div>
+
+  <div class="hint">esc — пусто · / — поиск</div>
+
+<script>
+  const pad = n => String(n).padStart(2, "0");
+  const months = ["января","февраля","марта","апреля","мая","июня",
+                  "июля","августа","сентября","октября","ноября","декабря"];
+  const days = ["воскресенье","понедельник","вторник","среда",
+                "четверг","пятница","суббота"];
+
+  function tick() {
+    const d = new Date();
+    document.getElementById("clock").innerHTML =
+      pad(d.getHours()) + ":" + pad(d.getMinutes()) +
+      '<span class="sec">' + pad(d.getSeconds()) + "</span>";
+    document.getElementById("date").textContent =
+      days[d.getDay()] + ", " + d.getDate() + " " + months[d.getMonth()];
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  // поиск: Enter → поиск в интернете, если похоже на запрос/адрес
+  const form = document.getElementById("search");
+  const input = document.getElementById("q");
+  window.addEventListener("load", () => input.focus());
+  document.addEventListener("keydown", e => {
+    if (e.key === "/" && document.activeElement !== input) {
+      e.preventDefault();
+      input.focus();
+    }
+  });
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+    const v = input.value.trim();
+    if (!v) return;
+    const looksUrl = /^[\w.-]+\.[a-z]{2,}(\/|$)/i.test(v) || v.startsWith("http");
+    location.href = looksUrl
+      ? (v.startsWith("http") ? v : "https://" + v)
+      : "https://duckduckgo.com/?q=" + encodeURIComponent(v);
+  });
+</script>
+</body>
+</html>
