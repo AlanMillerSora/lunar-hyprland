@@ -231,7 +231,7 @@ hl.bind("PRINT",           dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
 hl.bind(M .. " + PRINT",   dsp.exec_cmd("grim - | wl-copy"))
 hl.bind(M .. " + R",       dsp.exec_cmd("hyprctl reload"))
 hl.bind(M .. " + C",       dsp.exec_cmd("qs ipc call hub toggle"))       -- Lunar Hub: launch + settings (Quickshell)
-hl.bind(M .. " + ESCAPE",  dsp.exec_cmd("wlogout -b 5 -L 610 -R 610 -T 470 -B 470"))                 -- меню питания (блокировка убрана)
+hl.bind(M .. " + ESCAPE",  dsp.exec_cmd("qs ipc call power toggle"))     -- меню питания (Quickshell)
 
 -- медиа-клавиши (громкость через PipeWire/wpctl)
 hl.bind("XF86AudioRaiseVolume", dsp.exec_cmd("wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+"))
