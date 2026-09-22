@@ -63,7 +63,7 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 
 | Компонент | Файл | Что делает |
 |---|---|---|
-| **Панель** | `quickshell/LunarPanel.qml` | 42px сверху. Слева — лого+фаза и столы `01–08`; справа — сеть, раскладка, Game Mode, профиль питания, уведомления/DND, запись, CPU/RAM/°C/GPU, mpris, громкость, питание |
+| **Панель** | `quickshell/LunarPanel.qml` | 42px сверху. Слева — лого+фаза и столы `01–08`; справа — сеть/раскладка/уведомления, блок действий (Game Mode, профиль питания, запись), CPU/RAM/°C/GPU, mpris, громкость, питание |
 | **Статус** | `hypr/scripts/eclipse-status.sh` | Одна строка статуса для панели: сеть, раскладка, DND, уведомления, GPU, Game Mode, профиль питания, запись |
 | **Game Mode** | `hypr/scripts/eclipse-gamemode.sh` | Игровой режим: анимации/blur выкл, DND, пауза hypridle, performance, tearing |
 | **Запись** | `hypr/scripts/eclipse-record.sh` | Запись экрана (wf-recorder) → `~/Videos/lunar-*.mp4` |
