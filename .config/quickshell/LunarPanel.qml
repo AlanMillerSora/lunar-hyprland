@@ -503,7 +503,7 @@ PanelWindow {
                     text: root.netKind === "eth" ? "󰈀" : "\uf1eb"
                     color: root.netKind === "off" ? Theme.textFaint : Theme.text
                     font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSize(14)
+                    font.pixelSize: Theme.fontSize(17)
 
                     MouseArea {
                         anchors.fill: parent
@@ -517,7 +517,7 @@ PanelWindow {
                     text: root.netSignal + "%"
                     color: Theme.textDim
                     font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(11)
+                    font.pixelSize: Theme.fontSize(13)
                 }
 
                 Rectangle {
@@ -533,7 +533,7 @@ PanelWindow {
                     text: root.kbLayout
                     color: Theme.text
                     font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(12)
+                    font.pixelSize: Theme.fontSize(14)
                     font.bold: true
 
                     MouseArea {
@@ -558,7 +558,7 @@ PanelWindow {
                         ? Theme.textFaint
                         : (root.notifCount > 0 ? Theme.text : Theme.textDim)
                     font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSize(13)
+                    font.pixelSize: Theme.fontSize(15)
 
                     MouseArea {
                         anchors.fill: parent
@@ -572,7 +572,7 @@ PanelWindow {
                     text: root.notifCount
                     color: Theme.accent
                     font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(11)
+                    font.pixelSize: Theme.fontSize(13)
                     font.bold: true
                 }
             }
@@ -601,7 +601,7 @@ PanelWindow {
                     text: "CPU " + (root.cpuPct < 0 ? "--" : root.cpuPct + "%")
                     color: Theme.textDim
                     font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(12)
+                    font.pixelSize: Theme.fontSize(14)
                     height: 26
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -609,7 +609,7 @@ PanelWindow {
                     text: "RAM " + (root.ramPct < 0 ? "--" : root.ramPct + "%")
                     color: Theme.textDim
                     font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(12)
+                    font.pixelSize: Theme.fontSize(14)
                     height: 26
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -619,7 +619,7 @@ PanelWindow {
                     text: root.tempC + "°C"
                     color: Theme.textDim
                     font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(12)
+                    font.pixelSize: Theme.fontSize(14)
                     height: 26
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -628,7 +628,7 @@ PanelWindow {
                     text: "MEM " + (root.memPct < 0 ? "--" : root.memPct + "%")
                     color: Theme.textDim
                     font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(12)
+                    font.pixelSize: Theme.fontSize(14)
                     height: 26
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -664,7 +664,7 @@ PanelWindow {
                     text: "♪  " + root.marqueeText()
                     color: root.playing ? Theme.text : Theme.textDim
                     font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(12)
+                    font.pixelSize: Theme.fontSize(13)
 
                     MouseArea {
                         anchors.fill: parent
@@ -699,7 +699,7 @@ PanelWindow {
                                 : (root.vol < 0.34 ? "󰕿" : (root.vol < 0.67 ? "󰖀" : "󰕾"))
                             color: root.muted ? Theme.textFaint : Theme.text
                             font.family: Theme.iconFont
-                            font.pixelSize: Theme.fontSize(16)
+                            font.pixelSize: Theme.fontSize(19)
                             height: 26
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -707,7 +707,7 @@ PanelWindow {
                             text: root.muted ? "mute" : Math.round(root.vol * 100) + "%"
                             color: Theme.textDim
                             font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(12)
+                            font.pixelSize: Theme.fontSize(14)
                             height: 26
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -735,7 +735,7 @@ PanelWindow {
                     text: "\uf011"
                     color: Theme.text
                     font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSize(17)
+                    font.pixelSize: Theme.fontSize(20)
                     height: 26
                     verticalAlignment: Text.AlignVCenter
 
