@@ -54,7 +54,14 @@ if command -v nvidia-smi >/dev/null 2>&1; then
   read -r gpu gput < <(nvidia-smi --query-gpu=utilization.gpu,temperature.gpu \
     --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ' ' | tr ',' ' ')
 else
-  gpu="$(cat /sys/class/drm/card*/device/gpu_busy_percent 2>/dev/null | head -1)"
+  # AMD: gpu_busy_percent на APU «дёргается» 0/100 — усредняем несколько замеров
+  sum=0; n=0
+  for _ in 1 2 3 4 5 6 7 8; do
+    v="$(cat /sys/class/drm/card*/device/gpu_busy_percent 2>/dev/null | head -1)"
+    if [ -n "$v" ]; then sum=$((sum + v)); n=$((n + 1)); fi
+    sleep 0.05
+  done
+  [ "$n" -gt 0 ] && gpu=$((sum / n))
   for h in /sys/class/hwmon/hwmon*; do
     if [ "$(cat "$h/name" 2>/dev/null)" = "amdgpu" ]; then
       t="$(cat "$h/temp1_input" 2>/dev/null)"
