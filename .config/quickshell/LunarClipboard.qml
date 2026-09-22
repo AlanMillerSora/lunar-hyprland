@@ -105,7 +105,8 @@ PanelWindow {
     Rectangle {
         id: backdrop
         anchors.fill: parent
-        color: "transparent"
+        // затемнение только когда открыто — иначе слой блюрил бы экран всегда
+        color: root.showing ? Theme.alpha(Theme.bgPanel, 0.45) : "transparent"
 
         MouseArea {
             anchors.fill: parent

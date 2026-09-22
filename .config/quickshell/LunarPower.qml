@@ -55,7 +55,8 @@ PanelWindow {
     Rectangle {
         id: backdrop
         anchors.fill: parent
-        color: Theme.alpha(Theme.bgPanel, 0.45)
+        // без затемнения/блюра: иначе размывается весь экран (layer_rule blur)
+        color: "transparent"
         focus: root.showing
 
         Keys.onEscapePressed: root.closePanel()
