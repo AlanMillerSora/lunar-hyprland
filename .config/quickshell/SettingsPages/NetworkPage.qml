@@ -304,6 +304,7 @@ Item {
                                     font.pixelSize: 10
 
                                     MouseArea {
+                                        cursorShape: Qt.PointingHandCursor
                                         anchors.fill: parent
                                         onClicked: {
                                             if (modelData.connected) {
@@ -353,6 +354,7 @@ Item {
                                     anchors.verticalCenter: parent.verticalCenter
 
                                     MouseArea {
+                                        cursorShape: Qt.PointingHandCursor
                                         anchors.fill: parent
                                         onClicked: page.connectSecured(modelData.ssid, pwField.text)
                                     }

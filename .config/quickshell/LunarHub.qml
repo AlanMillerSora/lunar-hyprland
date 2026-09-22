@@ -58,6 +58,7 @@ PanelWindow {
         Keys.onEscapePressed: root.closePanel()
 
         MouseArea {
+            cursorShape: Qt.PointingHandCursor
             anchors.fill: parent
             onClicked: root.closePanel()
         }
@@ -90,6 +91,7 @@ PanelWindow {
         open: root.showing
 
         MouseArea {
+            cursorShape: Qt.PointingHandCursor
             // swallow clicks so they don't fall through to the backdrop
             anchors.fill: parent
             onClicked: {}
@@ -208,6 +210,7 @@ PanelWindow {
                                 }
 
                                 MouseArea {
+                                    cursorShape: Qt.PointingHandCursor
                                     anchors.fill: parent
                                     onClicked: root.selectedIndex = index
                                 }

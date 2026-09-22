@@ -188,6 +188,7 @@ Item {
         }
 
         MouseArea {
+            cursorShape: Qt.PointingHandCursor
             anchors.fill: parent
             onPositionChanged: function(mouse) {
                 if (pressed) {

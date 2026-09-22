@@ -369,6 +369,7 @@ Item {
                 font.pixelSize: 22
 
                 MouseArea {
+                    cursorShape: Qt.PointingHandCursor
                     anchors.fill: parent
                     onClicked: page.refresh()
                 }
@@ -427,6 +428,7 @@ Item {
                         }
 
                         MouseArea {
+                            cursorShape: Qt.PointingHandCursor
                             anchors.fill: parent
                             hoverEnabled: true
 
@@ -516,6 +518,7 @@ Item {
                     }
 
                     MouseArea {
+                        cursorShape: Qt.PointingHandCursor
                         anchors.fill: parent
 
                         onClicked: page.nightlightEnabled
