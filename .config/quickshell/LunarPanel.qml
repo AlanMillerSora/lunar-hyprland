@@ -73,7 +73,6 @@ PanelWindow {
     // ─────────────── system stats ───────────────
     property int cpuPct: -1
     property int ramPct: -1
-    property int memPct: -1
     property int tempC: -1
     property real _prevIdle: -1
     property real _prevTotal: -1
@@ -93,26 +92,18 @@ PanelWindow {
             root._prevIdle = idle
             root._prevTotal = total
         }
-        var memTotal = 0, memAvail = 0, swapTotal = 0, swapFree = 0, temp = -1
+        var memTotal = 0, memAvail = 0, temp = -1
         for (i = 0; i < lines.length; i++) {
             var l = lines[i]
             if (l.indexOf("MemTotal:") === 0)
                 memTotal = parseInt(l.split(/\s+/)[1])
             else if (l.indexOf("MemAvailable:") === 0)
                 memAvail = parseInt(l.split(/\s+/)[1])
-            else if (l.indexOf("SwapTotal:") === 0)
-                swapTotal = parseInt(l.split(/\s+/)[1])
-            else if (l.indexOf("SwapFree:") === 0)
-                swapFree = parseInt(l.split(/\s+/)[1])
             else if (/^\d+$/.test(l.trim()))
                 temp = Math.round(parseInt(l.trim()) / 1000)
         }
         if (memTotal > 0)
             root.ramPct = Math.round(100 * (memTotal - memAvail) / memTotal)
-        // память «в целом» = RAM + swap
-        var allTotal = memTotal + swapTotal
-        if (allTotal > 0)
-            root.memPct = Math.round(100 * ((memTotal - memAvail) + (swapTotal - swapFree)) / allTotal)
         if (temp > 0)
             root.tempC = temp
     }
@@ -122,7 +113,7 @@ PanelWindow {
         running: false
         command: ["bash", "-c",
             "head -1 /proc/stat; " +
-            "grep -E '^MemTotal:|^MemAvailable:|^SwapTotal:|^SwapFree:' /proc/meminfo; " +
+            "grep -E '^MemTotal:|^MemAvailable:' /proc/meminfo; " +
             "for h in /sys/class/hwmon/hwmon*; do " +
             "n=$(cat \"$h/name\" 2>/dev/null); " +
             "[ \"$n\" = k10temp ] && cat \"$h/temp1_input\"; done"]
@@ -226,6 +217,11 @@ PanelWindow {
     property string kbDevice: ""
     property bool dnd: false
     property int notifCount: 0
+    property string gpuLoad: ""
+    property string gpuTemp: ""
+    property bool gameMode: false
+    property string powerProfile: ""
+    property bool recording: false
     readonly property int focusedPhase:
         (root.focusedWs && root.focusedWs.id > 0) ? root.focusedWs.id : 0
 
@@ -257,6 +253,16 @@ PanelWindow {
                         root.dnd = (v === "1")
                     } else if (k === "notif") {
                         root.notifCount = parseInt(v) || 0
+                    } else if (k === "gpu") {
+                        root.gpuLoad = v
+                    } else if (k === "gput") {
+                        root.gpuTemp = v
+                    } else if (k === "gm") {
+                        root.gameMode = (v === "1")
+                    } else if (k === "pp") {
+                        root.powerProfile = v
+                    } else if (k === "rec") {
+                        root.recording = (v === "1")
                     }
                 }
             }
@@ -288,6 +294,24 @@ PanelWindow {
 
     function toggleDnd() {
         statusProcAction.command = ["bash", "-c", "makoctl mode -t do-not-disturb"]
+        statusProcAction.running = true
+    }
+
+    function toggleGameMode() {
+        statusProcAction.command = ["bash", "-c",
+            "~/.config/hypr/scripts/eclipse-gamemode.sh toggle"]
+        statusProcAction.running = true
+    }
+
+    function cyclePower() {
+        statusProcAction.command = ["bash", "-c",
+            "p=$(powerprofilesctl get); case \"$p\" in performance) n=balanced;; power-saver) n=performance;; *) n=power-saver;; esac; powerprofilesctl set \"$n\""]
+        statusProcAction.running = true
+    }
+
+    function toggleRecording() {
+        statusProcAction.command = ["bash", "-c",
+            "~/.config/hypr/scripts/eclipse-record.sh toggle"]
         statusProcAction.running = true
     }
 
@@ -550,6 +574,44 @@ PanelWindow {
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
+                // Game Mode (клик — переключить)
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "\uf11b"
+                    color: root.gameMode ? Theme.danger : Theme.textDim
+                    font.family: Theme.iconFont
+                    font.pixelSize: Theme.fontSize(17)
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.toggleGameMode()
+                    }
+                }
+
+                // профиль питания (клик — переключить performance/balanced/save)
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: root.powerProfile === "performance"
+                        ? "PERF"
+                        : (root.powerProfile === "power-saver" ? "SAVE" : "BAL")
+                    color: root.powerProfile === "performance" ? Theme.accent : Theme.textDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(13)
+                    font.bold: true
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.cyclePower()
+                    }
+                }
+
+                Rectangle {
+                    width: 1
+                    height: 16
+                    color: Theme.border
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
                 // уведомления / «не беспокоить» (клик — переключить)
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
@@ -574,6 +636,20 @@ PanelWindow {
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(13)
                     font.bold: true
+                }
+
+                // запись экрана (клик — начать/остановить)
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "\uf111"
+                    color: root.recording ? Theme.danger : Theme.textFaint
+                    font.family: Theme.iconFont
+                    font.pixelSize: Theme.fontSize(root.recording ? 15 : 10)
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.toggleRecording()
+                    }
                 }
             }
         }
@@ -623,9 +699,11 @@ PanelWindow {
                     height: 26
                     verticalAlignment: Text.AlignVCenter
                 }
-                // память «в целом» (RAM + swap)
+                // GPU: загрузка и температура
                 Text {
-                    text: "MEM " + (root.memPct < 0 ? "--" : root.memPct + "%")
+                    visible: root.gpuLoad !== ""
+                    text: "GPU " + root.gpuLoad + "%"
+                        + (root.gpuTemp !== "" ? " " + root.gpuTemp + "°C" : "")
                     color: Theme.textDim
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(14)

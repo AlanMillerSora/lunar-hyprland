@@ -15,7 +15,7 @@ sudo pacman -S --needed --noconfirm \
   zsh starship eza zsh-autosuggestions zsh-syntax-highlighting \
   wofi wlogout mako \
   dolphin \
-  playerctl brightnessctl jq cliphist wl-clipboard grim slurp \
+  playerctl brightnessctl jq cliphist wl-clipboard grim slurp wf-recorder \
   networkmanager bluez bluez-utils nm-connection-editor blueman \
   pavucontrol polkit-kde-agent \
   python python-psutil python-gobject \

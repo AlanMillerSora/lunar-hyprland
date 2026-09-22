@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
 # ════════════════════════════════════════════════════════════════
 #  eclipse-status.sh — быстрый статус для панели одной строкой:
-#     net=wifi:72 kb=RU kbdev=<имя> dnd=0 notif=3
+#     net=… kb=… kbdev=… dnd=… notif=… gpu=… gput=… gm=… pp=…
 #  net  — eth | wifi:<сигнал> | off
-#  kb   — текущая раскладка (RU/EN)
+#  kb   — текущая раскладка (RU/EN), kbdev — устройство
 #  dnd  — 1 если mako в режиме «не беспокоить»
-#  notif — сколько уведомлений в истории mako
+#  notif — сколько уведомлений
+#  gpu/gput — загрузка и температура GPU (AMD sysfs или NVIDIA)
+#  gm   — 1 если включён Game Mode
+#  pp   — профиль питания (performance/balanced/power-saver)
 # ════════════════════════════════════════════════════════════════
 
+# ── сеть ──
 net="off"
 dev_types="$(nmcli -t -f TYPE,STATE device status 2>/dev/null)"
 if grep -q '^ethernet:connected' <<<"$dev_types"; then
@@ -17,6 +21,7 @@ elif grep -q '^wifi:connected' <<<"$dev_types"; then
   net="wifi:${sig:-0}"
 fi
 
+# ── раскладка ──
 read -r kb kbdev < <(hyprctl devices -j 2>/dev/null | python3 -c '
 import sys, json
 try:
@@ -30,6 +35,7 @@ except Exception:
     print("EN", "")
 ')
 
+# ── уведомления ──
 mode="$(makoctl mode 2>/dev/null)"
 grep -q '^do-not-disturb$' <<<"$mode" && dnd=1 || dnd=0
 
@@ -41,5 +47,26 @@ except Exception:
     print(0)' 2>/dev/null)"
 [ -z "$notif" ] && notif=0
 
-printf 'net=%s kb=%s kbdev=%s dnd=%d notif=%s\n' \
-  "$net" "${kb:-EN}" "$kbdev" "$dnd" "$notif"
+# ── GPU ──
+gpu=""
+gput=""
+if command -v nvidia-smi >/dev/null 2>&1; then
+  read -r gpu gput < <(nvidia-smi --query-gpu=utilization.gpu,temperature.gpu \
+    --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ' ' | tr ',' ' ')
+else
+  gpu="$(cat /sys/class/drm/card*/device/gpu_busy_percent 2>/dev/null | head -1)"
+  for h in /sys/class/hwmon/hwmon*; do
+    if [ "$(cat "$h/name" 2>/dev/null)" = "amdgpu" ]; then
+      t="$(cat "$h/temp1_input" 2>/dev/null)"
+      [ -n "$t" ] && gput=$((t / 1000))
+    fi
+  done
+fi
+
+# ── Game Mode / профиль питания / запись ──
+gm="$(cat "$HOME/.cache/lunar/gamemode" 2>/dev/null || echo 0)"
+pp="$(powerprofilesctl get 2>/dev/null || echo "")"
+pgrep -x wf-recorder >/dev/null 2>&1 && rec=1 || rec=0
+
+printf 'net=%s kb=%s kbdev=%s dnd=%d notif=%s gpu=%s gput=%s gm=%s pp=%s rec=%d\n' \
+  "$net" "${kb:-EN}" "$kbdev" "$dnd" "$notif" "${gpu:-}" "${gput:-}" "${gm:-0}" "${pp:-}" "$rec"
