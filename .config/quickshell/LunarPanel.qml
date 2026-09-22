@@ -219,15 +219,129 @@ PanelWindow {
         volPanelProc.running = true
     }
 
+    // ─────────── сеть / раскладка / уведомления ───────────
+    property string netKind: "off"      // eth | wifi | off
+    property int netSignal: 0
+    property string kbLayout: "EN"
+    property string kbDevice: ""
+    property bool dnd: false
+    property int notifCount: 0
+    readonly property int focusedPhase:
+        (root.focusedWs && root.focusedWs.id > 0) ? root.focusedWs.id : 0
+
+    Process {
+        id: statusProc
+        running: false
+        command: ["bash", "-c", "~/.config/hypr/scripts/eclipse-status.sh"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var parts = text.trim().split(/\s+/)
+                for (var i = 0; i < parts.length; i++) {
+                    var kv = parts[i].split("=")
+                    if (kv.length !== 2)
+                        continue
+                    var k = kv[0], v = kv[1]
+                    if (k === "net") {
+                        if (v.indexOf("wifi:") === 0) {
+                            root.netKind = "wifi"
+                            root.netSignal = parseInt(v.substring(5)) || 0
+                        } else {
+                            root.netKind = v
+                            root.netSignal = 0
+                        }
+                    } else if (k === "kb") {
+                        root.kbLayout = v
+                    } else if (k === "kbdev") {
+                        root.kbDevice = v
+                    } else if (k === "dnd") {
+                        root.dnd = (v === "1")
+                    } else if (k === "notif") {
+                        root.notifCount = parseInt(v) || 0
+                    }
+                }
+            }
+        }
+    }
+
+    Timer {
+        interval: 1500
+        running: true
+        repeat: true
+        onTriggered: statusProc.running = true
+    }
+
+    Process { id: statusProcAction; running: false }
+
+    function openNetwork() {
+        statusProcAction.command = ["bash", "-c",
+            "qs ipc call hub open; sleep 0.15; qs ipc call hub nav 4"]
+        statusProcAction.running = true
+    }
+
+    function switchLayout() {
+        if (kbDevice.length === 0)
+            return
+        statusProcAction.command = ["bash", "-c",
+            "hyprctl switchxkblayout '" + kbDevice + "' next"]
+        statusProcAction.running = true
+    }
+
+    function toggleDnd() {
+        statusProcAction.command = ["bash", "-c", "makoctl mode -t do-not-disturb"]
+        statusProcAction.running = true
+    }
+
     // ───────────────────────────── layout ─────────────────────────────
     Item {
         anchors.fill: parent
 
+        // ── LOGO pill: марка + фаза активного стола ──
+        Rectangle {
+            id: logoPill
+            anchors.left: parent.left
+            anchors.leftMargin: 8
+            anchors.verticalCenter: parent.verticalCenter
+            height: 32
+            radius: Theme.radiusL
+            color: root.pillBg
+            border.color: root.pillBorder
+            border.width: 1
+            width: logoRow.implicitWidth + 18
+
+            Row {
+                id: logoRow
+                anchors.centerIn: parent
+                height: 26
+                spacing: 8
+
+                Image {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 15
+                    height: 15
+                    source: Qt.resolvedUrl("assets/logo.svg")
+                    sourceSize: Qt.size(48, 48)
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                    mipmap: true
+                }
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "ФАЗА " + (root.focusedPhase > 0
+                        ? ("0" + root.focusedPhase).slice(-2) : "--")
+                    color: Theme.textDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(11)
+                    font.letterSpacing: 1
+                }
+            }
+        }
+
         // ── LEFT pill: workspaces ──
         Rectangle {
             id: leftPill
-            anchors.left: parent.left
-            anchors.leftMargin: 8
+            anchors.left: logoPill.right
+            anchors.leftMargin: 6
             anchors.verticalCenter: parent.verticalCenter
             height: 32
             radius: Theme.radiusL
@@ -360,6 +474,106 @@ PanelWindow {
                     font.pixelSize: Theme.fontSize(13)
                     height: 26
                     verticalAlignment: Text.AlignVCenter
+                }
+            }
+        }
+
+        // ── STATUS pill: сеть / раскладка / уведомления ──
+        Rectangle {
+            id: statusPill
+            anchors.right: statsPill.left
+            anchors.rightMargin: 6
+            anchors.verticalCenter: parent.verticalCenter
+            height: 32
+            radius: Theme.radiusL
+            color: root.pillBg
+            border.color: root.pillBorder
+            border.width: 1
+            width: statusRow.implicitWidth + 18
+
+            Row {
+                id: statusRow
+                anchors.centerIn: parent
+                height: 26
+                spacing: 8
+
+                // сеть (клик — список сетей в Hub)
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: root.netKind === "eth" ? "󰈀" : "\uf1eb"
+                    color: root.netKind === "off" ? Theme.textFaint : Theme.text
+                    font.family: Theme.iconFont
+                    font.pixelSize: Theme.fontSize(14)
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.openNetwork()
+                    }
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: root.netKind === "wifi"
+                    text: root.netSignal + "%"
+                    color: Theme.textDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(11)
+                }
+
+                Rectangle {
+                    width: 1
+                    height: 16
+                    color: Theme.border
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                // раскладка (клик — переключить)
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: root.kbLayout
+                    color: Theme.text
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(12)
+                    font.bold: true
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.switchLayout()
+                    }
+                }
+
+                Rectangle {
+                    width: 1
+                    height: 16
+                    color: Theme.border
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                // уведомления / «не беспокоить» (клик — переключить)
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: root.dnd ? "\uf1f6" : "\uf0f3"
+                    color: root.dnd
+                        ? Theme.textFaint
+                        : (root.notifCount > 0 ? Theme.text : Theme.textDim)
+                    font.family: Theme.iconFont
+                    font.pixelSize: Theme.fontSize(13)
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.toggleDnd()
+                    }
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: root.notifCount > 0
+                    text: root.notifCount
+                    color: Theme.accent
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(11)
+                    font.bold: true
                 }
             }
         }

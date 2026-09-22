@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <!-- тонкое кольцо-корона + луна, проходящая по краю (затмение) -->
+  <circle cx="120" cy="128" r="94" fill="none" stroke="#ffffff" stroke-width="6"/>
+  <circle cx="160" cy="128" r="34" fill="#ffffff"/>
+</svg>

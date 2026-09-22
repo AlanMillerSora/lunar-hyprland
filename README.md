@@ -63,7 +63,8 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 
 | Компонент | Файл | Что делает |
 |---|---|---|
-| **Панель** | `quickshell/LunarPanel.qml` | 42px сверху, резервирует место. Столы `01–08` (иконки фаз затмения) слева; справа — CPU, RAM и °C, индикаторы RAM/MEM, mpris, громкость, питание |
+| **Панель** | `quickshell/LunarPanel.qml` | 42px сверху. Слева — лого+фаза активного стола и фазы `01–08`; справа — сеть (клик → Network), раскладка RU/EN (клик → переключить), уведомления/DND, CPU/RAM/°C/MEM, mpris, громкость, питание |
+| **Статус** | `hypr/scripts/eclipse-status.sh` | Одна строка статуса для панели: сеть, раскладка, DND, число уведомлений |
 | **Hub** | `quickshell/LunarHub.qml` | Лаунчер + настройки (980×640, как у 43PR): Launch, System, Sound, Monitors, Network, Bluetooth, Interface, Memory |
 | **Memory** | `quickshell/SettingsPages/MemoryPage.qml` | Индикатор заполнения RAM/SWAP и общей памяти (MEM) + очистка системы (кнопка «ОЧИСТИТЬ») |
 | **Очистка** | `hypr/scripts/eclipse-cleanup.sh` | Сироты, кэш пакетов, журнал, tmpfiles, кэш yay, эскизы; опционально браузеры |
