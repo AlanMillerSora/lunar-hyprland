@@ -58,7 +58,11 @@ case "${1:-status}" in
     close_discord
 
     echo "== патчу Vencord =="
-    if [ "${1}" = repair ]; then vencordinstaller -repair; else vencordinstaller -install; fi
+    if [ "${1}" = repair ]; then
+      vencordinstaller -repair -location "$DISCORD_DIR" < /dev/null
+    else
+      vencordinstaller -install -location "$DISCORD_DIR" < /dev/null
+    fi
     rc=$?
 
     if [ "$wasrunning" = yes ] && [ "$rc" -eq 0 ]; then
@@ -72,7 +76,7 @@ case "${1:-status}" in
     command -v vencordinstaller >/dev/null 2>&1 || { echo "нет vencordinstaller"; exit 1; }
     close_discord
     echo "== удаляю Vencord =="
-    vencordinstaller -uninstall
+    vencordinstaller -uninstall -location "$DISCORD_DIR" < /dev/null
     ;;
 
   update)
