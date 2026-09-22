@@ -136,12 +136,10 @@ PanelWindow {
     }
 
     // ─────────────── clock ───────────────
-    readonly property var dayNames: [
-        "воскресенье", "понедельник", "вторник", "среда",
-        "четверг", "пятница", "суббота"
-    ]
+    readonly property var dayNames: ["вс", "пн", "вт", "ср", "чт", "пт", "сб"]
     property string clockText: Qt.formatTime(new Date(), "HH:mm")
     property string dayText: dayNames[new Date().getDay()]
+    property string dateText: Qt.formatDate(new Date(), "dd.MM")
 
     Timer {
         interval: 1000
@@ -151,6 +149,7 @@ PanelWindow {
             var now = new Date()
             root.clockText = Qt.formatTime(now, "HH:mm")
             root.dayText = root.dayNames[now.getDay()]
+            root.dateText = Qt.formatDate(now, "dd.MM")
         }
     }
 
@@ -321,36 +320,46 @@ PanelWindow {
             id: centerPill
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
-            height: 34
+            height: 32
             radius: Theme.radiusL
             color: root.pillBg
             border.color: root.pillBorder
             border.width: 1
-            width: Math.max(clockLabel.implicitWidth, dayLabel.implicitWidth) + 30
+            width: clockRow.implicitWidth + 30
 
-            Column {
+            Row {
+                id: clockRow
                 anchors.centerIn: parent
-                spacing: 0
+                height: 26
+                spacing: 10
 
                 Text {
                     id: clockLabel
-                    anchors.horizontalCenter: parent.horizontalCenter
                     text: root.clockText
                     color: Theme.text
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(15)
                     font.bold: true
                     font.letterSpacing: 1
+                    height: 26
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+                Rectangle {
+                    width: 1
+                    height: 16
+                    color: Theme.border
+                    anchors.verticalCenter: parent.verticalCenter
                 }
 
                 Text {
                     id: dayLabel
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: root.dayText
+                    text: root.dayText + " " + root.dateText
                     color: Theme.textDim
                     font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(8)
-                    font.letterSpacing: 1
+                    font.pixelSize: Theme.fontSize(10)
+                    height: 26
+                    verticalAlignment: Text.AlignVCenter
                 }
             }
         }
