@@ -54,6 +54,17 @@ build() {
   sudo make -C "$ZDIR" systemd -j"$(nproc)"
 }
 
+# ── fake-пакеты ────────────────────────────────────────────────
+# Небольшие payload'ы для nfqws --dpi-desync-fake-*. ACTIVE_DISCORD_UDP.bin —
+# реальный медиапакет Discord: важен именно он, IP-discovery пакет заставляет
+# сервер ответить чужим SSRC и голос падает в NO_ROUTE («не установлен маршрут»).
+install_fake_files() {
+  [ -d "$HERE/files/fake" ] || return 0
+  say "zapret: fake-пакеты → ${ZDIR}/files/fake"
+  sudo mkdir -p "$ZDIR/files/fake"
+  sudo install -m 0644 "$HERE"/files/fake/*.bin "$ZDIR/files/fake/"
+}
+
 # ── конфиг ─────────────────────────────────────────────────────
 # Генерируется из апстримного config.default, чтобы его обновления
 # подхватывались, а наши значения накатывались поверх.
@@ -77,7 +88,7 @@ opt = f'''NFQWS_OPT="
 --filter-tcp=443 --dpi-desync=fake,fakedsplit --dpi-desync-repeats=6 --dpi-desync-fooling=ts --dpi-desync-fakedsplit-pattern=0x00 --dpi-desync-fake-tls={F}/tls_clienthello_www_google_com.bin <HOSTLIST> --new
 --filter-tcp=2053,2083,2087,2096,8443 --hostlist-domains=discord.media --dpi-desync=fake,fakedsplit --dpi-desync-repeats=6 --dpi-desync-fooling=ts --dpi-desync-fakedsplit-pattern=0x00 --dpi-desync-fake-tls={F}/tls_clienthello_www_google_com.bin --new
 --filter-udp=443 --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fake-quic={F}/quic_initial_www_google_com.bin <HOSTLIST_NOAUTO> --new
---filter-udp=19294-19344,50000-50100 --filter-l7=discord,stun --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fake-discord={F}/discord-ip-discovery-with-port.bin --dpi-desync-fake-stun={F}/stun.bin
+--filter-udp=19294-19344,50000-50100 --filter-l7=discord,stun --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fake-discord={F}/ACTIVE_DISCORD_UDP.bin --dpi-desync-fake-stun={F}/ACTIVE_DISCORD_UDP.bin
 "'''
 
 s, n = re.subn(r'NFQWS_OPT="\n.*?\n"', opt, s, count=1, flags=re.S)
@@ -142,6 +153,7 @@ case "$MODE" in
   update)
     install_deps
     get_sources
+    install_fake_files
     build
     sudo systemctl restart "$UNIT" 2>/dev/null || true
     say "zapret обновлён и перезапущен"
@@ -150,6 +162,7 @@ case "$MODE" in
   install|"")
     install_deps
     get_sources
+    install_fake_files
     have_bin || build
     write_config
     install_service
