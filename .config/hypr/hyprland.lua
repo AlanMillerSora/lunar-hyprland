@@ -236,6 +236,30 @@ hl.layer_rule({ match = { namespace = "quickshell" }, blur = true, ignore_alpha 
 -- Запрет blur окон под полноэкранной игрой/видео
 hl.window_rule({ match = { fullscreen = true }, no_blur = true })
 
+-- ─────────── Автораскладка: приложение → свой стол ───────────
+-- Окна сами открываются на нужной фазе (столе). Чтобы отключить —
+-- убери строку класса или весь блок.
+local app_ws = {
+  ["2"] = { "firefox", "firefox-developer-edition", "chromium",
+            "google-chrome", "brave-browser", "vivaldi-stable",
+            "zen", "zen-browser" },
+  ["3"] = { "code", "code-oss", "code-url-handler", "cursor", "zed",
+            "jetbrains-.*" },
+  ["4"] = { "steam", "gamescope", "heroic", "lutris",
+            "com.heroicgameslauncher.hgl", "prismlauncher" },
+  ["5"] = { "dolphin", "org.kde.dolphin", "nautilus",
+            "org.gnome.Nautilus", "thunar" },
+  ["6"] = { "telegram-desktop", "org.telegram.desktop", "discord",
+            "vesktop", "signal-desktop", "org.signal.Signal" },
+  ["7"] = { "spotify", "vlc", "mpv" },
+}
+for ws, classes in pairs(app_ws) do
+  for _, cls in ipairs(classes) do
+    -- "silent" — окно открывается на столе, но фокус не уводит
+    hl.window_rule({ match = { class = "^(" .. cls .. ")$" }, workspace = ws .. " silent" })
+  end
+end
+
 -- ─────────────────────────────────── Клавиши ───────────────────────
 local dsp = hl.dsp
 local M = "SUPER"
