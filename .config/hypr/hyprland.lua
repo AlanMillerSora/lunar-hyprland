@@ -255,8 +255,7 @@ local app_ws = {
 }
 for ws, classes in pairs(app_ws) do
   for _, cls in ipairs(classes) do
-    -- "silent" — окно открывается на столе, но фокус не уводит
-    hl.window_rule({ match = { class = "^(" .. cls .. ")$" }, workspace = ws .. " silent" })
+    hl.window_rule({ match = { class = "^(" .. cls .. ")$" }, workspace = ws })
   end
 end
 
