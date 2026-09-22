@@ -69,6 +69,8 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 | **Запись** | `hypr/scripts/eclipse-record.sh` | Запись экрана (wf-recorder) → `~/Videos/lunar-*.mp4` |
 | **Меню питания** | `quickshell/LunarPower.qml` | Меню питания в стиле системы (HUD-скобки, рамка 1px): спящий/гибернация/выход/перезагрузка/выключение, `SUPER + ESC` |
 | **Games** | `quickshell/SettingsPages/GamesPage.qml` | Список игр (desktop-записи с `Categories=Game`) и запуск |
+| **Dev** | `quickshell/SettingsPages/DevPage.qml` | Раздел «Разработка»: сам находит git-проекты, показывает ветку/изменения/последний коммит, кнопки VS Code / терминал / `git pull` |
+| **VS Code** | `.config/Code/User/settings.json` | VS Code в терминальном виде: монохром, JetBrains Mono, без minimap и иконок, прямые углы |
 | **Monitors** | `quickshell/SettingsPages/MonitorsPage.qml` | Режим мониторов, яркость (ноут — `brightnessctl`, внешние — `ddcutil`), ночной свет, частота обновления (Гц), VRR (FreeSync/GSync), масштаб, tearing |
 | **Яркость** | `hypr/scripts/eclipse-brightness.sh` | Яркость для Monitors: встроенная панель через `brightnessctl`, внешние мониторы через `ddcutil` (DDC/CI) |
 | **Hub** | `quickshell/LunarHub.qml` | Лаунчер + настройки (980×640, как у 43PR): Launch, System, Sound, Monitors, Network, Bluetooth, Interface, Memory, Games |
@@ -90,6 +92,7 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 ├── .config/                # → ~/.config
 │   ├── hypr/               # hyprland.lua, scripts/
 │   ├── quickshell/         # весь шелл (QML) + assets/moon-phases
+│   ├── Code/               # VS Code: тема в стиле терминала (settings.json)
 │   ├── kitty/              # терминал
 │   ├── fastfetch/          # логотип + конфиг
 │   ├── btop/               # системный монитор (тема lunar)
@@ -181,6 +184,18 @@ Wiki → Nvidia).
 echo i2c-dev | sudo tee /etc/modules-load.d/i2c-dev.conf
 sudo usermod -aG i2c "$USER"     # затем перелогиниться
 ```
+
+## 🧑💻 Разработка
+
+- **Hub → Dev** — дашборд проектов: сам находит git-репозитории в `~/Projects`,
+  `~/projects`, `~/dev`, `~/code`, `~/src`, `~/work`, `~/rice`, `~/git` и в
+  домашнем каталоге. Показывает ветку, число изменений и последний коммит.
+  Кнопки: **CODE** (открыть в VS Code), **TERM** (терминал в проекте),
+  **PULL** (`git pull`); клик по строке — открыть проект в VS Code.
+- **VS Code** ставится из AUR (`visual-studio-code-bin`, официальный билд
+  Microsoft) и оформлен в терминальном стиле: монохром, JetBrains Mono,
+  без minimap, иконок файлов и цветных скобок, прямые углы (правило в
+  `hyprland.lua`). Настройки — `.config/Code/User/settings.json`.
 
 ## ⌨️ Горячие клавиши
 

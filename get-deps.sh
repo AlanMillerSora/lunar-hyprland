@@ -49,6 +49,21 @@ else
   say "NVIDIA не найдена — драйверы NVIDIA пропущены"
 fi
 
+# ── VS Code (AUR) ──────────────────────────────────────────────
+# В репах есть только code (OSS-сборка). Для официального билда
+# Microsoft с полным маркетплейсом ставим visual-studio-code-bin из AUR.
+if command -v yay >/dev/null 2>&1; then
+  say "AUR: visual-studio-code-bin (VS Code)"
+  yay -S --needed --noconfirm visual-studio-code-bin \
+    || say "VS Code не установился — вручную: yay -S visual-studio-code-bin"
+elif command -v paru >/dev/null 2>&1; then
+  say "AUR: visual-studio-code-bin (VS Code)"
+  paru -S --needed --noconfirm visual-studio-code-bin \
+    || say "VS Code не установился — вручную: paru -S visual-studio-code-bin"
+else
+  say "yay/paru не найден — VS Code пропущен (вручную: yay -S visual-studio-code-bin)"
+fi
+
 say "Обои: awww установлен (mpvpaper — опционально из AUR: yay -S mpvpaper)"
 
 say "Готово. Дальше: ./install.sh"
