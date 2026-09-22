@@ -227,11 +227,22 @@ PanelWindow {
             border.width: 1
             width: leftRow.implicitWidth + 18
 
+            // тонкая «орбита» за фазами — связывает индикаторы в цикл
+            Rectangle {
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.leftMargin: 15
+                anchors.rightMargin: 15
+                height: 1
+                color: Theme.alpha(Theme.accent, 0.10)
+            }
+
             Row {
                 id: leftRow
                 anchors.centerIn: parent
                 height: 26
-                spacing: 3
+                spacing: 7
 
                 Repeater {
                     model: 8
@@ -244,30 +255,41 @@ PanelWindow {
                         readonly property bool isFocused: root.focusedWs !== null && root.focusedWs.id === wsId
                         readonly property bool isOccupied: ws !== null && ws.toplevels.values.length > 0
 
-                        width: 34
+                        width: 28
                         height: 26
-                        radius: Theme.radiusM
-                        // состояния как в настройках/лаунчере:
-                        // выбрано — accent 0.12 + рамка accent, hover — accent 0.08
-                        color: isFocused
-                            ? Theme.alpha(Theme.accent, 0.12)
-                            : (wsMouse.containsMouse
-                                ? Theme.alpha(Theme.accent, 0.08)
-                                : (isOccupied ? Theme.alpha(Theme.accent, 0.05) : "transparent"))
-                        border.width: isFocused ? 1 : 0
-                        border.color: Theme.accent
+                        color: "transparent"
 
-                        Behavior on color { ColorAnimation { duration: 120 } }
-
-                        Text {
+                        // тонкое кольцо-выделение активного стола
+                        Rectangle {
                             anchors.centerIn: parent
-                            text: ("0" + (index + 1)).slice(-2)
-                            color: wsPill.isFocused
-                                ? Theme.text
-                                : (wsPill.isOccupied ? Theme.textDim : Theme.textFaint)
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(12)
-                            font.bold: wsPill.isFocused
+                            width: 24
+                            height: 24
+                            radius: 12
+                            color: "transparent"
+                            border.width: 1
+                            border.color: Theme.alpha(Theme.accent, 0.55)
+                            visible: wsPill.isFocused
+                        }
+
+                        // только сама фаза; состояние — яркостью (активный — чистый белый)
+                        Image {
+                            anchors.centerIn: parent
+                            width: 16
+                            height: 16
+                            source: Qt.resolvedUrl("assets/moon-phases/phase_"
+                                + ("0" + (index + 1)).slice(-2) + ".svg")
+                            sourceSize: Qt.size(64, 64)
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            mipmap: true
+                            opacity: wsPill.isFocused
+                                ? 1.0
+                                : (wsMouse.containsMouse ? 0.85 : (wsPill.isOccupied ? 0.78 : 0.26))
+                            scale: wsPill.isFocused
+                                ? 1.15
+                                : (wsMouse.containsMouse ? 1.1 : (wsPill.isOccupied ? 1.07 : 1.0))
+                            Behavior on opacity { NumberAnimation { duration: 120 } }
+                            Behavior on scale { NumberAnimation { duration: 120 } }
                         }
 
                         MouseArea {

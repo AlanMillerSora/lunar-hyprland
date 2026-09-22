@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs>
+    <radialGradient id="moon" cx="38%" cy="32%" r="78%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="72%" stop-color="#f4f4f4"/>
+      <stop offset="100%" stop-color="#d6d6d6"/>
+    </radialGradient>
+  </defs>
+  <path d="M 64.0,4.0 A 60.0,60.0 0 0 1 64.0,124.0 A 9.60,60.0 0 0 0 64.0,4.0 Z" fill="url(#moon)"/>
+</svg>
