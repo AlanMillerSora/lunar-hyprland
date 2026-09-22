@@ -19,6 +19,7 @@ PanelWindow {
 
     property bool collapsed: true
     property int tabIndex: 0
+    property string aiStatus: "проверяю…"
 
     function openPanel() { collapsed = false }
     function closePanel() { collapsed = true }
@@ -31,6 +32,9 @@ PanelWindow {
     IpcHandler {
         target: "sidebar"
         function toggle(): void { root.toggle() }
+        function open(): void { root.openPanel() }
+        function close(): void { root.closePanel() }
+        function tab(idx: int): void { root.tabIndex = Math.max(0, Math.min(2, idx)) }
     }
 
     mask: Region {
@@ -146,19 +150,26 @@ PanelWindow {
                         Layout.fillWidth: true
                         height: 28
                         radius: Theme.radius
-                        color: tabIndex === index ? Theme.alpha(Theme.accent, 0.12) : "transparent"
+                        color: tabIndex === index
+                            ? Theme.alpha(Theme.accent, 0.12)
+                            : (tabMouse.containsMouse ? Theme.alpha(Theme.accent, 0.06) : "transparent")
                         border.color: tabIndex === index ? Theme.borderAccent : "transparent"
                         border.width: 1
 
                         Text {
                             anchors.centerIn: parent
                             text: modelData
-                            color: tabIndex === index ? Theme.accent : Theme.textDim
+                            color: tabIndex === index
+                                ? Theme.accent
+                                : (tabMouse.containsMouse ? Theme.text : Theme.textDim)
                             font.family: Theme.fontFamily
                             font.pixelSize: 10
                         }
                         MouseArea {
+                            id: tabMouse
                             anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
                             onClicked: tabIndex = index
                         }
                     }
@@ -188,18 +199,44 @@ PanelWindow {
                         }
                         Text {
                             Layout.fillWidth: true
-                            text: "ИИ-ассистент пока не подключён. Откройте терминал для работы с Ollama или другим провайдером."
+                            text: "Локальный ассистент на Ollama. Если не установлен — открой терминал и поставь."
                             color: Theme.textDim
                             font.family: Theme.fontFamily
                             font.pixelSize: 10
                             wrapMode: Text.WordWrap
+                        }
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 6
+                            Text {
+                                text: root.aiStatus
+                                color: Theme.textFaint
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 10
+                            }
+                            Item { Layout.fillWidth: true }
+                            Text {
+                                text: "проверить"
+                                color: aiMouse.containsMouse ? Theme.accent : Theme.textFaint
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 9
+                                MouseArea {
+                                    id: aiMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: ollamaProc.running = true
+                                }
+                            }
                         }
                         Item { Layout.fillHeight: true }
                         Rectangle {
                             Layout.fillWidth: true
                             height: 30
                             radius: Theme.radius
-                            color: Theme.alpha(Theme.accent, 0.08)
+                            color: termMouse.containsMouse
+                                ? Theme.alpha(Theme.accent, 0.16)
+                                : Theme.alpha(Theme.accent, 0.08)
                             border.color: Theme.borderAccent
                             border.width: 1
                             Text {
@@ -210,7 +247,10 @@ PanelWindow {
                                 font.pixelSize: 10
                             }
                             MouseArea {
+                                id: termMouse
                                 anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
                                 onClicked: {
                                     termProc.command = ["hyprctl", "dispatch", "exec", "kitty"]
                                     termProc.running = true
@@ -320,9 +360,18 @@ PanelWindow {
                                     id: mouse
                                     anchors.fill: parent
                                     hoverEnabled: true
-                                    onClicked: {
-                                        clipSelectProc.command = ["bash", "-c", "cliphist decode " + modelData.id + " | wl-copy"]
-                                        clipSelectProc.running = true
+                                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: function (m) {
+                                        if (m.button === Qt.RightButton) {
+                                            clipDeleteProc.command = ["bash", "-c",
+                                                "cliphist list | grep -P '^" + modelData.id + "\\t' | cliphist delete"]
+                                            clipDeleteProc.running = true
+                                        } else {
+                                            clipSelectProc.command = ["bash", "-c",
+                                                "cliphist decode " + modelData.id + " | wl-copy"]
+                                            clipSelectProc.running = true
+                                        }
                                     }
                                 }
                             }
@@ -438,11 +487,26 @@ PanelWindow {
         onExited: clipModel.load()
     }
     Process {
+        id: clipDeleteProc
+        running: false
+        onExited: clipModel.load()
+    }
+    Process {
         id: wipeProc
         running: false
         onExited: clipModel.load()
     }
     Process { id: notesSaveProc; running: false }
+
+    Process {
+        id: ollamaProc
+        running: false
+        command: ["bash", "-c",
+            "if command -v ollama >/dev/null 2>&1; then " +
+            "n=$(ollama list 2>/dev/null | tail -n +2 | grep -c .); " +
+            "echo \"Ollama: моделей — ${n:-0}\"; else echo 'Ollama не установлен'; fi"]
+        stdout: StdioCollector { onStreamFinished: root.aiStatus = text.trim() }
+    }
 
     QtObject {
         id: clipModel
@@ -493,6 +557,7 @@ PanelWindow {
     Component.onCompleted: {
         notesLoadProc.command = ["bash", "-c", "cat ~/.cache/lunar_notes.txt 2>/dev/null || true"]
         notesLoadProc.running = true
+        ollamaProc.running = true
     }
 
     Process {

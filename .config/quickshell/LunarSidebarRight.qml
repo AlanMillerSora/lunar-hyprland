@@ -153,18 +153,24 @@ PanelWindow {
                         Layout.fillWidth: true
                         height: 28
                         radius: Theme.radius
-                        color: root.tabIndex === index ? Theme.alpha(Theme.accent, 0.12) : "transparent"
+                        color: root.tabIndex === index
+                            ? Theme.alpha(Theme.accent, 0.12)
+                            : (tabMouse.containsMouse ? Theme.alpha(Theme.accent, 0.06) : "transparent")
                         border.color: root.tabIndex === index ? Theme.borderAccent : "transparent"
                         border.width: 1
                         Text {
                             anchors.centerIn: parent
                             text: modelData
-                            color: root.tabIndex === index ? Theme.accent : Theme.textDim
+                            color: root.tabIndex === index
+                                ? Theme.accent
+                                : (tabMouse.containsMouse ? Theme.text : Theme.textDim)
                             font.family: Theme.fontFamily
                             font.pixelSize: 10
                         }
                         MouseArea {
+                            id: tabMouse
                             anchors.fill: parent
+                            hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: root.tabIndex = index
                         }
