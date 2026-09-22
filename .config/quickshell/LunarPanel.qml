@@ -316,10 +316,10 @@ PanelWindow {
 
                 Image {
                     anchors.verticalCenter: parent.verticalCenter
-                    width: 15
-                    height: 15
+                    width: 21
+                    height: 21
                     source: Qt.resolvedUrl("assets/logo.svg")
-                    sourceSize: Qt.size(48, 48)
+                    sourceSize: Qt.size(64, 64)
                     fillMode: Image.PreserveAspectFit
                     smooth: true
                     mipmap: true
@@ -327,12 +327,12 @@ PanelWindow {
 
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "ФАЗА " + (root.focusedPhase > 0
+                    text: "LUNAR " + (root.focusedPhase > 0
                         ? ("0" + root.focusedPhase).slice(-2) : "--")
                     color: Theme.textDim
                     font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(11)
-                    font.letterSpacing: 1
+                    font.pixelSize: Theme.fontSize(14)
+                    font.letterSpacing: 1.5
                 }
             }
         }
