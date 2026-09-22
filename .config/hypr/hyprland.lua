@@ -69,6 +69,7 @@ hl.config({
       vibrancy = 0.1696,
       popups   = true,
       xray     = true,
+      new_optimizations = true,   -- дешёвый blur — держит высокий FPS
     },
   },
 
@@ -94,8 +95,11 @@ hl.config({
   -- Плавность: без логотипа, окна тянутся/ресайзятся анимированно
   misc = {
     disable_hyprland_logo = true,
+    disable_splash_rendering = true,
     animate_manual_resizes = true,
     animate_mouse_windowdragging = true,
+    vrr = 2,                    -- FreeSync/GSync (плавно в играх)
+    focus_on_activate = true,
   },
 })
 
@@ -122,9 +126,14 @@ hl.curve("eclipse", {
 hl.animation({ leaf = "workspaces",  enabled = true, speed = 6,  bezier = "eclipse", style = "slidefadediagonal" })
 hl.animation({ leaf = "windows",     enabled = true, speed = 8,  bezier = "moon" })
 hl.animation({ leaf = "windowsIn",   enabled = true, speed = 10, bezier = "moon", style = "popin" })
+hl.animation({ leaf = "windowsOut",  enabled = true, speed = 8,  bezier = "moon", style = "popin 80%" })
 hl.animation({ leaf = "fade",        enabled = true, speed = 8,  bezier = "moon" })
 hl.animation({ leaf = "fadeSwitch",  enabled = true, speed = 7,  bezier = "moon" })
 hl.animation({ leaf = "border",      enabled = true, speed = 7, bezier = "moon" })
+-- Плавное появление/уход слоёв (уведомления mako, попапы)
+hl.animation({ leaf = "layers",      enabled = true, speed = 6, bezier = "moon", style = "fade" })
+hl.animation({ leaf = "fadeLayers",  enabled = true, speed = 6, bezier = "moon" })
+hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 6, bezier = "eclipse", style = "slidevert" })
 
 -- ─────────────────────────── Рабочие столы = фазы ──────────────────
 -- 8 фаз затмения. Имена I..VIII (римские, как в превью);
