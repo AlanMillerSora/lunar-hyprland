@@ -67,6 +67,7 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 | **Статус** | `hypr/scripts/eclipse-status.sh` | Одна строка статуса для панели: сеть, раскладка, DND, уведомления, GPU, Game Mode, профиль питания, запись |
 | **Game Mode** | `hypr/scripts/eclipse-gamemode.sh` | Игровой режим: анимации/blur выкл, DND, пауза hypridle, performance, tearing |
 | **Запись** | `hypr/scripts/eclipse-record.sh` | Запись экрана (wf-recorder) → `~/Videos/lunar-*.mp4` |
+| **Меню питания** | `wlogout/` | Круги с PNG-иконками (стиль 43PR): suspend/hibernate/logout/reboot/shutdown, `SUPER + ESC` |
 | **Games** | `quickshell/SettingsPages/GamesPage.qml` | Список игр (desktop-записи с `Categories=Game`) и запуск |
 | **Monitors** | `quickshell/SettingsPages/MonitorsPage.qml` | Режим мониторов, яркость, ночной свет, частота обновления (Гц), VRR (FreeSync/GSync), масштаб, tearing |
 | **Hub** | `quickshell/LunarHub.qml` | Лаунчер + настройки (980×640, как у 43PR): Launch, System, Sound, Monitors, Network, Bluetooth, Interface, Memory, Games |
@@ -86,7 +87,7 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 ```
 .
 ├── .config/                # → ~/.config
-│   ├── hypr/               # hyprland.lua, hyprlock.conf, scripts/
+│   ├── hypr/               # hyprland.lua, scripts/
 │   ├── quickshell/         # весь шелл (QML) + assets/moon-phases
 │   ├── kitty/              # терминал
 │   ├── fastfetch/          # логотип + конфиг
@@ -95,7 +96,7 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 │   ├── kde/                # kdeglobals, dolphin, цвета
 │   ├── mako/               # уведомления
 │   ├── hypridle/           # idle
-│   ├── wofi/ wlogout/      # меню и выключение
+│   ├── wofi/ wlogout/      # меню и меню питания
 │   ├── lunar/lunar.bash    # bash
 │   ├── .zshrc              # zsh
 │   └── starship.toml       # промпт
@@ -142,7 +143,7 @@ cd ~/rice
 | `SUPER + SHIFT + 1…8` | Перенести окно на стол |
 | `SUPER + T` / `SHIFT+T` | Группа / закрепить |
 | `SUPER + S` / `SHIFT+S` | Scratchpad |
-| `SUPER + SHIFT + L` / `ESC` | Блокировка |
+| `SUPER + ESC` | Меню питания (wlogout) |
 | `PRINT` / `SUPER + PRINT` | Скриншот: область / весь экран |
 | `SUPER + R` | Перезагрузить Hyprland |
 

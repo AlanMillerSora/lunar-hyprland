@@ -226,14 +226,12 @@ hl.bind(M .. " + SHIFT + T", dsp.group.lock_active())
 hl.bind(M .. " + S", dsp.workspace.toggle_special("scratchpad"))
 hl.bind(M .. " + SHIFT + S", dsp.window.move({ workspace = "special:scratchpad" }))
 
--- lock / скриншоты / перезагрузка
--- (SUPER+L занят фокусом вправо → lock перенесён на SUPER+SHIFT+L)
-hl.bind(M .. " + SHIFT + L", dsp.exec_cmd("hyprlock"))
+-- скриншоты / перезагрузка / меню питания
 hl.bind("PRINT",           dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
 hl.bind(M .. " + PRINT",   dsp.exec_cmd("grim - | wl-copy"))
 hl.bind(M .. " + R",       dsp.exec_cmd("hyprctl reload"))
 hl.bind(M .. " + C",       dsp.exec_cmd("qs ipc call hub toggle"))       -- Lunar Hub: launch + settings (Quickshell)
-hl.bind(M .. " + ESCAPE",  dsp.exec_cmd("hyprlock"))
+hl.bind(M .. " + ESCAPE",  dsp.exec_cmd("wlogout -b 5 -L 610 -R 610 -T 470 -B 470"))                 -- меню питания (блокировка убрана)
 
 -- медиа-клавиши (громкость через PipeWire/wpctl)
 hl.bind("XF86AudioRaiseVolume", dsp.exec_cmd("wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+"))

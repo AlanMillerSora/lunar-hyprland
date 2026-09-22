@@ -1,65 +1,49 @@
 /* ═══ wlogout · Lunar Eclipse ═══
-   Круглые кнопки 100px, radius 100:
-   монохром, hover — инверт в акцент. Палитра Lunar Eclipse.
-   Экранированная копия: шрифт — JetBrains Mono + Nerd-иконки. */
+   Круглые кнопки с PNG-иконками (как у 43PR), монохром, hover — акцент.
+   Иконки берём из пакета wlogout: /usr/share/wlogout/icons */
 
 * {
     background-image: none;
     box-shadow: none;
-    font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", sans-serif;
     font-size: 0px;
     margin: 0;
     padding: 0;
 }
 
 window {
-    background-color: rgba(7, 7, 9, 0.3);
+    background-color: rgba(5, 5, 7, 0.55);
 }
 
-/* все кнопки — круги 100px */
 button {
-    margin: 0;
+    margin: 14px;
 
-    min-width: 100px;
-    min-height: 100px;
+    min-width: 140px;
+    min-height: 140px;
 
-    border-radius: 100px;
-    border: 1px solid transparent;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
 
-    color: #ffffff;
-    background-color: rgba(10, 10, 12, 0.4);
-
+    background-color: rgba(13, 13, 15, 0.78);
     background-repeat: no-repeat;
     background-position: center;
+    background-size: 44%;
 
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
 
-    transition: all 0.2s ease;
-}
-
-/* текст-иконка внутри круга (наш вариант: без внешних PNG) */
-button label {
-    font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", sans-serif;
-    font-size: 30px;
-    color: #e6e6e6;
-    background: transparent;
+    transition: all 0.18s ease;
 }
 
 button:hover,
 button:focus,
 button:active {
-    background-color: rgba(126, 166, 255, 0.16);
-    border-color: rgba(126, 166, 255, 0.35);
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.6);
+    background-color: rgba(126, 166, 255, 0.20);
+    border-color: rgba(126, 166, 255, 0.55);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.65);
     outline: none;
 }
 
-button:hover label {
-    color: #b7ccff;
-}
-
-#lock:hover     { background-color: rgba(126, 166, 255, 0.2); }
-#suspend:hover  { background-color: rgba(183, 204, 255, 0.16); }
-#logout:hover   { background-color: rgba(126, 166, 255, 0.16); }
-#shutdown:hover { background-color: rgba(255, 90, 90, 0.22); }
-#reboot:hover   { background-color: rgba(255, 170, 90, 0.2); }
+#suspend   { background-image: url("/usr/share/wlogout/icons/suspend.png"); }
+#hibernate { background-image: url("/usr/share/wlogout/icons/hibernate.png"); }
+#logout    { background-image: url("/usr/share/wlogout/icons/logout.png"); }
+#reboot    { background-image: url("/usr/share/wlogout/icons/reboot.png"); }
+#shutdown  { background-image: url("/usr/share/wlogout/icons/shutdown.png"); }

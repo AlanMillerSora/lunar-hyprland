@@ -9,7 +9,7 @@ say() { printf '\033[38;5;15m==>\033[0m %s\n' "$*"; }
 
 say "pacman: пакеты"
 sudo pacman -S --needed --noconfirm \
-  hyprland hyprlock hypridle \
+  hyprland hypridle \
   quickshell \
   kitty fastfetch chafa \
   zsh starship eza zsh-autosuggestions zsh-syntax-highlighting \

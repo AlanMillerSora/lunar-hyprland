@@ -1,14 +1,14 @@
 {
-    "label" : "lock",
-    "action": "hyprctl dispatch exec hyprlock",
-    "text"  : "󰌾",
-    "keybind": "l"
-}
-{
     "label" : "suspend",
     "action": "systemctl suspend",
     "text"  : "󰛇",
     "keybind" : "s"
+}
+{
+    "label" : "hibernate",
+    "action": "systemctl hibernate",
+    "text"  : "󰤄",
+    "keybind" : "h"
 }
 {
     "label" : "logout",

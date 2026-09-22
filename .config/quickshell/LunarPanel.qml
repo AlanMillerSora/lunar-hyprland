@@ -191,11 +191,8 @@ PanelWindow {
     }
 
     // ─────────────── power ───────────────
+    // Кнопки питания на панели нет — меню открывается по SUPER + ESC.
     Process { id: powerProc; running: false }
-    function openPower() {
-        powerProc.command = ["bash", "-c", "pgrep -x wlogout >/dev/null || setsid wlogout >/dev/null 2>&1 &"]
-        powerProc.running = true
-    }
 
     Process { id: pavuProc; running: false }
     function openMixer() {
@@ -849,22 +846,6 @@ PanelWindow {
                         onWheel: function (wheel) {
                             root.bumpVol(wheel.angleDelta.y > 0 ? 0.05 : -0.05)
                         }
-                    }
-                }
-
-                // power
-                Text {
-                    text: "\uf011"
-                    color: Theme.text
-                    font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSize(20)
-                    height: 26
-                    verticalAlignment: Text.AlignVCenter
-
-                    MouseArea {
-                        anchors.fill: parent
-                        acceptedButtons: Qt.LeftButton
-                        onClicked: root.openPower()
                     }
                 }
             }
