@@ -136,12 +136,22 @@ PanelWindow {
     }
 
     // ─────────────── clock ───────────────
+    readonly property var dayNames: [
+        "воскресенье", "понедельник", "вторник", "среда",
+        "четверг", "пятница", "суббота"
+    ]
     property string clockText: Qt.formatTime(new Date(), "HH:mm")
+    property string dayText: dayNames[new Date().getDay()]
+
     Timer {
         interval: 1000
         running: true
         repeat: true
-        onTriggered: root.clockText = Qt.formatTime(new Date(), "HH:mm")
+        onTriggered: {
+            var now = new Date()
+            root.clockText = Qt.formatTime(now, "HH:mm")
+            root.dayText = root.dayNames[now.getDay()]
+        }
     }
 
     // ─────────────── audio (PipeWire) ───────────────
@@ -311,22 +321,37 @@ PanelWindow {
             id: centerPill
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
-            height: 32
+            height: 34
             radius: Theme.radiusL
             color: root.pillBg
             border.color: root.pillBorder
             border.width: 1
-            width: clockLabel.implicitWidth + 36
+            width: Math.max(clockLabel.implicitWidth, dayLabel.implicitWidth) + 30
 
-            Text {
-                id: clockLabel
+            Column {
                 anchors.centerIn: parent
-                text: root.clockText
-                color: Theme.text
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize(15)
-                font.bold: true
-                font.letterSpacing: 1
+                spacing: 0
+
+                Text {
+                    id: clockLabel
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: root.clockText
+                    color: Theme.text
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(15)
+                    font.bold: true
+                    font.letterSpacing: 1
+                }
+
+                Text {
+                    id: dayLabel
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: root.dayText
+                    color: Theme.textDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(8)
+                    font.letterSpacing: 1
+                }
             }
         }
 
