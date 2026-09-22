@@ -24,7 +24,7 @@ sudo pacman -S --needed --noconfirm \
   networkmanager iwd bluez bluez-utils nm-connection-editor blueman \
   gammastep \
   python python-psutil python-gobject \
-  pciutils dmidecode \
+  pciutils dmidecode pacman-contrib \
   librsvg curl \
   awww \
   ttf-jetbrains-mono-nerd ttf-iosevka-nerd

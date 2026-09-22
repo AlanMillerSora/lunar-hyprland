@@ -13,6 +13,8 @@ Item {
     property string gpu: "Loading..."
     property string memory: "Loading..."
     property string ramSpeed: "Loading..."
+    property int updateCount: -1
+    property string updateList: ""
 
     property real cpuUsage: 0
     property real gpuUsage: 0
@@ -178,6 +180,67 @@ Item {
         font.pixelSize: page.hardwareTextSize
         elide: Text.ElideRight
         width: parent.width
+    }
+
+    // кнопка раздела «Обновления»
+    component ActionButton: Rectangle {
+        property string label: ""
+        signal clicked()
+
+        width: 142
+        height: 36
+        radius: Theme.radius
+
+        color: btnArea.containsMouse
+            ? Theme.alpha(Theme.accent, 0.12)
+            : "transparent"
+
+        border.width: 1
+        border.color: btnArea.containsMouse ? Theme.accent : Theme.border
+
+        Text {
+            anchors.centerIn: parent
+            text: label
+            color: btnArea.containsMouse ? Theme.accent : Theme.textDim
+            font.family: Theme.fontFamily
+            font.pixelSize: 11
+            font.letterSpacing: 1
+        }
+
+        MouseArea {
+            id: btnArea
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: clicked()
+        }
+    }
+
+    // проверка обновлений (checkupdates из pacman-contrib, иначе pacman -Qu)
+    Process {
+        id: pUpdates
+        running: false
+
+        command: ["bash", "-c",
+            "if command -v checkupdates >/dev/null 2>&1; then checkupdates 2>/dev/null; " +
+            "else pacman -Qu 2>/dev/null; fi"]
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var t = text.trim()
+                var lines = t === "" ? [] : t.split("\n")
+                page.updateCount = lines.length
+                page.updateList = lines.slice(0, 12).join("\n")
+            }
+        }
+    }
+
+    // обновление системы в терминале (интерактивный sudo)
+    Process {
+        id: updateProc
+        running: false
+        command: ["kitty", "--hold", "-e", "sudo", "pacman", "-Syu"]
+        onExited: pUpdates.running = true
     }
 
     Process {
@@ -422,6 +485,7 @@ Item {
     Component.onCompleted: {
         page.updateClock()
         pRamSpeed.running = true
+        pUpdates.running = true
     }
 
     Flickable {
@@ -898,6 +962,63 @@ Item {
                         opacity: 0.35
                         font.family: page.mono
                         font.pixelSize: 8
+                    }
+                }
+            }
+
+            // ── обновления системы ─────────────────────────────
+            Column {
+                width: parent.width
+                spacing: 10
+
+                Row {
+                    width: parent.width
+                    height: 24
+                    spacing: 20
+
+                    Text {
+                        text: "󰚰  ОБНОВЛЕНИЯ"
+                        color: Theme.accent
+                        font.family: page.mono
+                        font.pixelSize: page.hardwareLabelSize
+                        font.letterSpacing: 2
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Text {
+                        text: page.updateCount < 0
+                            ? "не проверялось"
+                            : (page.updateCount === 0
+                                ? "система актуальна"
+                                : page.updateCount + " пакетов")
+                        color: Theme.text
+                        font.family: page.mono
+                        font.pixelSize: 11
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+
+                Text {
+                    width: parent.width
+                    visible: page.updateList !== ""
+                    text: page.updateList
+                    color: Theme.textDim
+                    font.family: page.mono
+                    font.pixelSize: 10
+                    lineHeight: 1.3
+                }
+
+                Row {
+                    spacing: 8
+
+                    ActionButton {
+                        label: "ПРОВЕРИТЬ"
+                        onClicked: pUpdates.running = true
+                    }
+
+                    ActionButton {
+                        label: "ОБНОВИТЬ"
+                        onClicked: updateProc.running = true
                     }
                 }
             }

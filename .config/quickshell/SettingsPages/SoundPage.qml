@@ -70,8 +70,8 @@ Item {
             spacing: 2
 
             Rectangle {
-                width: 28
-                height: 28
+                width: 30
+                height: 30
                 radius: Theme.radius
                 anchors.verticalCenter: parent.verticalCenter
 
@@ -337,8 +337,8 @@ Item {
                         spacing: 6
 
                         Rectangle {
-                            width: 28
-                            height: 28
+                            width: 30
+                            height: 30
                             radius: Theme.radius
                             anchors.verticalCenter: parent.verticalCenter
 

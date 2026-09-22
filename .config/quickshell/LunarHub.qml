@@ -89,8 +89,8 @@ PanelWindow {
     PerspectivePanel {
         id: card
         anchors.centerIn: parent
-        width: Math.min(980, root.width - 80)
-        height: Math.min(640, root.height - 80)
+        width: Math.min(1320, root.width - 80)
+        height: Math.min(768, root.height - 80)
         open: root.showing
 
         MouseArea {
@@ -136,7 +136,7 @@ PanelWindow {
                 // ---------------- Sidebar ----------------
                 Column {
                     id: sidebar
-                    width: 150
+                    width: 158
                     height: parent.height
                     spacing: 22
 
@@ -168,7 +168,7 @@ PanelWindow {
                                 required property int index
 
                                 width: sidebar.width
-                                height: 38
+                                height: 42
                                 radius: Theme.radius
 
                                 color: root.selectedIndex === index
@@ -196,7 +196,7 @@ PanelWindow {
                                     Text {
                                         text: modelData.icon
                                         font.family: Theme.iconFont
-                                        font.pixelSize: 14
+                                        font.pixelSize: 15
                                         color: root.selectedIndex === index
                                             ? Theme.accent
                                             : Theme.textDim
@@ -205,7 +205,7 @@ PanelWindow {
                                     Text {
                                         text: modelData.name
                                         font.family: Theme.fontFamily
-                                        font.pixelSize: 13
+                                        font.pixelSize: 14
                                         color: root.selectedIndex === index
                                             ? Theme.text
                                             : Theme.textDim
@@ -230,7 +230,7 @@ PanelWindow {
 
                 // ---------------- Page content ----------------
                 Item {
-                    width: parent.width - sidebar.width - 29
+                    width: parent.width - sidebar.width - 57
                     height: parent.height
                     clip: true
 

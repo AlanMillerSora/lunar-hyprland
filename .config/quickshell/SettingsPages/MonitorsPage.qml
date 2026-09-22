@@ -554,8 +554,8 @@ Item {
                 }
 
                 Rectangle {
-                    width: 70
-                    height: 36
+                    width: 74
+                    height: 38
                     radius: Theme.radius
                     anchors.verticalCenter: parent.verticalCenter
 
@@ -575,7 +575,7 @@ Item {
                             ? Theme.accent
                             : "#A0A0A0"
                         font.family: Theme.fontFamily
-                        font.pixelSize: 10
+                        font.pixelSize: 11
                         font.bold: true
                     }
 
@@ -710,8 +710,8 @@ Item {
                             }
 
                             Rectangle {
-                                width: 54
-                                height: 26
+                                width: 58
+                                height: 30
                                 radius: Theme.radius
                                 anchors.verticalCenter: parent.verticalCenter
                                 color: monCard.modelData.vrr
@@ -761,8 +761,8 @@ Item {
                                     required property var modelData
                                     readonly property bool active:
                                         Math.abs(monCard.modelData.scale - modelData) < 0.01
-                                    width: 58
-                                    height: 26
+                                    width: 62
+                                    height: 30
                                     radius: Theme.radius
                                     anchors.verticalCenter: parent.verticalCenter
                                     color: active
@@ -816,8 +816,8 @@ Item {
                     }
 
                     Rectangle {
-                        width: 54
-                        height: 26
+                        width: 58
+                        height: 30
                         radius: Theme.radius
                         anchors.verticalCenter: parent.verticalCenter
                         color: page.tearing ? Theme.alpha(Theme.accent, 0.14) : "transparent"

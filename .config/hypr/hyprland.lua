@@ -248,6 +248,7 @@ hl.bind(M .. " + E",       dsp.exec_cmd("dolphin"))
 hl.bind(M .. " + V",       dsp.exec_cmd("qs ipc call clipboard toggle"))   -- буфер обмена (cliphist, Quickshell)
 hl.bind(M .. " + SHIFT + E", dsp.exec_cmd("qs ipc call sidebar toggle"))   -- боковая панель слева (Quickshell)
 hl.bind(M .. " + SHIFT + R", dsp.exec_cmd("qs ipc call rsidebar toggle"))  -- панель справа: уведомления/музыка/календарь
+hl.bind(M .. " + SHIFT + D", dsp.exec_cmd("sh -c 'qs ipc call hub nav 9; qs ipc call hub open'"))  -- Hub: раздел «Разработка»
 hl.bind(M .. " + SLASH",   dsp.exec_cmd("~/.config/hypr/scripts/eclipse-cheatsheet.py"))
 hl.bind(M .. " + Q",       dsp.window.close())
 hl.bind(M .. " + W",       dsp.window.fullscreen({ mode = "maximized" }))
@@ -305,6 +306,10 @@ hl.bind("XF86AudioRaiseVolume", dsp.exec_cmd("wpctl set-volume -l 1.5 @DEFAULT_A
 hl.bind("XF86AudioLowerVolume", dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"))
 hl.bind("XF86AudioMute",        dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"))
 hl.bind("XF86AudioMicMute",     dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"))
+
+-- яркость (ноут — backlight, внешние мониторы — ddcutil) + OSD
+hl.bind("XF86MonBrightnessUp",   dsp.exec_cmd("sh -c '~/.config/hypr/scripts/eclipse-brightness.sh up; qs ipc call brightness open'"))
+hl.bind("XF86MonBrightnessDown", dsp.exec_cmd("sh -c '~/.config/hypr/scripts/eclipse-brightness.sh down; qs ipc call brightness open'"))
 
 -- ─────────────────────────────── Автозапуск ─────────────────────────
 hl.on("hyprland.start", function()

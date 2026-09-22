@@ -34,7 +34,7 @@ Item {
 
         Rectangle {
             Layout.fillWidth: true
-            height: 38
+            height: 42
             radius: Theme.radius
             color: Theme.bgCard
             border.color: search.activeFocus ? Theme.borderAccent : Theme.border

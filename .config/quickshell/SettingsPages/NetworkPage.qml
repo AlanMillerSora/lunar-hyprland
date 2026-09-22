@@ -153,8 +153,8 @@ Item {
                 // обновить список сетей (иначе он «замерзал» после первого скана)
                 Rectangle {
                     id: scanBtn
-                    width: 70
-                    height: 36
+                    width: 76
+                    height: 38
                     radius: Theme.radius
                     color: scanMouse.containsMouse
                         ? Theme.alpha(Theme.accent, 0.08)
@@ -181,8 +181,8 @@ Item {
 
                 Rectangle {
                     id: wifiToggle
-                    width: 70
-                    height: 36
+                    width: 76
+                    height: 38
                     radius: Theme.radius
                     color: page.wifiEnabled ? Theme.alpha(Theme.accent, 0.1) : Theme.alpha("#A0A0A0", 0.15)
                     border.width: 1
@@ -322,12 +322,12 @@ Item {
                             Row {
                                 visible: page.pendingSsid === modelData.ssid
                                 width: parent.width
-                                height: 32
+                                height: 36
                                 spacing: 10
 
                                 Rectangle {
                                     width: 220
-                                    height: 32
+                                    height: 36
                                     color: Theme.bgCard
                                     border.color: Theme.accent
                                     border.width: 1

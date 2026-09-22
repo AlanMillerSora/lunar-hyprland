@@ -143,8 +143,8 @@ Item {
                 id: bluetoothToggle
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                width: 70
-                height: 36
+                width: 76
+                height: 38
                 radius: Theme.radius
                 color: page.powered ? Theme.alpha(Theme.accent, 0.1) : Theme.alpha("#A0A0A0", 0.15)
                 border.width: 1

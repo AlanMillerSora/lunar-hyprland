@@ -4,6 +4,7 @@
 #
 #    get        → текущая яркость в процентах (0..100)
 #    set <N>    → выставить N процентов
+#    up / down  → шаг ±5% (клавиши яркости + OSD)
 #
 #  Встроенная панель (ноут): brightnessctl.
 #  Внешний монитор (десктоп): ddcutil (DDC/CI).
@@ -24,6 +25,25 @@ get_internal() {
 
 set_internal() {
   brightnessctl set "${1}%" >/dev/null 2>&1
+}
+
+# ── шаг вверх/вниз (клавиши яркости) ───────────────────────────
+adjust() {
+  local delta="$1" cur new
+  if have_internal; then
+    cur="$(get_internal)"
+  else
+    cur="$(get_external || true)"
+  fi
+  [ -n "$cur" ] || return 0
+  new=$(( cur + delta ))
+  [ "$new" -lt 1 ] && new=1
+  [ "$new" -gt 100 ] && new=100
+  if have_internal; then
+    set_internal "$new"
+  else
+    set_external "$new"
+  fi
 }
 
 # ── внешний монитор (DDC/CI) ───────────────────────────────────
@@ -66,8 +86,14 @@ case "${1:-get}" in
       set_external "$pct"
     fi
     ;;
+  up)
+    adjust 5
+    ;;
+  down)
+    adjust -5
+    ;;
   *)
-    echo "usage: $0 get | set <0..100>" >&2
+    echo "usage: $0 get | set <0..100> | up | down" >&2
     exit 2
     ;;
 esac

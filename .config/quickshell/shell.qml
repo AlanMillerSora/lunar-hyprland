@@ -6,6 +6,7 @@ ShellRoot {
     LunarSidebar {}
     LunarSidebarRight {}
     LunarVolumeOsd {}
+    LunarBrightnessOsd {}
     LunarVolume {}
     LunarClipboard {}
     LunarPower {}

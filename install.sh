@@ -21,6 +21,11 @@ say "Обои → ~/Pictures/EclipseWalls"
 mkdir -p "$HOME/Pictures/EclipseWalls"
 cp "$REPO"/wallpapers/*.png "$HOME/Pictures/EclipseWalls/" 2>/dev/null || true
 
+# ── KDE: цветовая схема (kdeglobals/dolphinrc идут через .config) ──
+say "Цветовая схема KDE → ~/.local/share/color-schemes"
+mkdir -p "$HOME/.local/share/color-schemes"
+cp "$REPO"/color-schemes/*.colors "$HOME/.local/share/color-schemes/" 2>/dev/null || true
+
 # ── курсор Bibata (монохромный, в тему) ────────────────────────
 if [ ! -d "$HOME/.local/share/icons/Bibata-Modern-Ice" ]; then
   say "Курсор Bibata → ~/.local/share/icons"

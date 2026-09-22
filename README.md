@@ -69,7 +69,8 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 | **Запись** | `hypr/scripts/eclipse-record.sh` | Запись экрана (wf-recorder) → `~/Videos/lunar-*.mp4` |
 | **Меню питания** | `quickshell/LunarPower.qml` | Меню питания в стиле системы (HUD-скобки, рамка 1px): спящий/гибернация/выход/перезагрузка/выключение, `SUPER + ESC` |
 | **Games** | `quickshell/SettingsPages/GamesPage.qml` | Список игр (desktop-записи с `Categories=Game`) и запуск |
-| **Dev** | `quickshell/SettingsPages/DevPage.qml` | Раздел «Разработка»: сам находит git-проекты, показывает ветку/изменения/последний коммит, кнопки VS Code / терминал / `git pull` |
+| **Dev** | `quickshell/SettingsPages/DevPage.qml` | Раздел «Разработка»: сам находит git-проекты и показывает ветку/изменения/последний коммит; кнопки VS Code, терминал и GIT-панель (ветки, коммит, `diff`, `pull`, `push`) |
+| **Обновления** | `quickshell/SettingsPages/SystemPage.qml` | Раздел «Обновления» в System: проверка через `checkupdates`/`pacman -Qu`, запуск `sudo pacman -Syu` в терминале |
 | **VS Code** | `.config/Code/User/settings.json` | VS Code в терминальном виде: монохром, JetBrains Mono, без minimap и иконок, прямые углы |
 | **Monitors** | `quickshell/SettingsPages/MonitorsPage.qml` | Режим мониторов, яркость (ноут — `brightnessctl`, внешние — `ddcutil`), ночной свет, частота обновления (Гц), VRR (FreeSync/GSync), масштаб, tearing |
 | **Яркость** | `hypr/scripts/eclipse-brightness.sh` | Яркость для Monitors: встроенная панель через `brightnessctl`, внешние мониторы через `ddcutil` (DDC/CI) |
@@ -80,7 +81,7 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 | **Sidebar R** | `quickshell/LunarSidebarRight.qml` | Выдвигается от правого края: уведомления (mako), «сейчас играет» (mpris), календарь (прокручивается, 18 месяцев), запись экрана со списком |
 | **Буфер** | `quickshell/LunarClipboard.qml` | История cliphist с поиском: `SUPER + V` |
 | **Громкость** | `quickshell/LunarVolume.qml` | Попап с крупным ползунком (клик по значку громкости на панели) |
-| **OSD** | `quickshell/LunarVolumeOsd.qml` | Индикатор громкости с HUD-скобками |
+| **OSD** | `quickshell/LunarVolumeOsd.qml`, `LunarBrightnessOsd.qml` | Индикаторы громкости и яркости с HUD-скобками |
 | **Ползунок** | `quickshell/Slider.qml` | Общий слайдер темы (настройки, попап громкости) |
 | **Тема** | `quickshell/Theme.qml` | Единая палитра, радиусы, шрифты, ползунки прозрачности и масштаба |
 | **btop** | `btop/themes/lunar.theme` | Монитор системы в теме `lunar`, автозапуск на столе 08 |
@@ -97,7 +98,8 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 │   ├── fastfetch/          # логотип + конфиг
 │   ├── btop/               # системный монитор (тема lunar)
 │   ├── gtk-3.0/ gtk-4.0/   # GTK-тема
-│   ├── kde/                # kdeglobals, dolphin, цвета
+│   ├── kdeglobals          # KDE: цвета и курсор
+│   ├── dolphinrc           # Dolphin
 │   ├── mako/               # уведомления
 │   ├── hypridle/           # idle
 │   ├── wofi/               # лаунчер
@@ -105,6 +107,7 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 │   ├── .zshrc              # zsh
 │   └── starship.toml       # промпт
 ├── wallpapers/             # 8 фаз затмения
+├── color-schemes/          # цветовая схема KDE → ~/.local/share/color-schemes
 ├── systemd/                # wifi-guard
 ├── assets/                 # логотип и скриншоты
 ├── install.sh              # установка конфигов
@@ -191,7 +194,8 @@ sudo usermod -aG i2c "$USER"     # затем перелогиниться
   `~/projects`, `~/dev`, `~/code`, `~/src`, `~/work`, `~/rice`, `~/git` и в
   домашнем каталоге. Показывает ветку, число изменений и последний коммит.
   Кнопки: **CODE** (открыть в VS Code), **TERM** (терминал в проекте),
-  **PULL** (`git pull`); клик по строке — открыть проект в VS Code.
+  **GIT** — панель с ветками, коммитом, `diff`, `pull`, `push` и выводом git;
+  клик по строке — открыть проект в VS Code.
 - **VS Code** ставится из AUR (`visual-studio-code-bin`, официальный билд
   Microsoft) и оформлен в терминальном стиле: монохром, JetBrains Mono,
   без minimap, иконок файлов и цветных скобок, прямые углы (правило в
@@ -208,6 +212,7 @@ sudo usermod -aG i2c "$USER"     # затем перелогиниться
 | `SUPER + V` | Буфер обмена (cliphist) |
 | `SUPER + SHIFT + E` | Боковая панель (слева) |
 | `SUPER + SHIFT + R` | Панель справа (уведомления/музыка/календарь) |
+| `SUPER + SHIFT + D` | Hub: раздел «Разработка» |
 | `SUPER + /` | Шпаргалка по хоткеям |
 | `SUPER + Q` | Закрыть окно |
 | `SUPER + W` / `SHIFT+W` | Развернуть / полный экран |
@@ -220,6 +225,7 @@ sudo usermod -aG i2c "$USER"     # затем перелогиниться
 | `SUPER + S` / `SHIFT+S` | Scratchpad |
 | `SUPER + ESC` | Меню питания (Quickshell) |
 | `PRINT` / `SUPER + PRINT` | Скриншот: область / весь экран |
+| `XF86MonBrightness ±` | Яркость (ноут — backlight, внешние — DDC/CI) + OSD |
 | `SUPER + R` | Перезагрузить Hyprland |
 
 ## 🎨 Тема
