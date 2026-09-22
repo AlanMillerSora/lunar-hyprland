@@ -1,25 +1,30 @@
-[General]
-ShowFullPath=false
-ShowSpaceInfo=true
-GlobalViewProps=false
+[CompactMode]
+FontSize=11
+PreviewSize=32
 
 [ContentDisplay]
 DirectoryViewMode=1
-UseMimeTypeBasedZoomLevels=false
 PreviewSize=24
+UseMimeTypeBasedZoomLevels=false
 
 [DetailsMode]
-PreviewSize=20
-FontSize=10
 ColumnWidths=1,0,0,0,0,0,0,0
+FontSize=11
+PreviewSize=20
 VisibleRoles=Details_text,Details_size,Details_modificationtime
+
+[General]
+GlobalViewProps=false
+ShowFullPath=false
+ShowSpaceInfo=true
 
 [IconsMode]
 PreviewSize=64
+FontSize=11
 
-[CompactMode]
-FontSize=10
-PreviewSize=32
+[KFileDialog Settings]
+Places Icons Auto-resize=false
+Places Icons Static Size=22
 
 [MainWindow]
 MenuBar=Disabled
@@ -27,7 +32,10 @@ ToolbarMovable=false
 
 [Settings]
 HiddenFilesShown=false
-SortRole=text
-SortOrder=ascending
 ShowFilterBar=false
 ShowStatusBar=false
+SortOrder=ascending
+SortRole=text
+
+[UiSettings]
+ColorScheme=LunarEclipse

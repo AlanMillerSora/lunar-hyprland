@@ -5,11 +5,11 @@ Name=Lunar Eclipse
 TerminalApplication=kitty
 TerminalService=kitty.desktop
 BrowserApplication=firefox
-fixed=Fira Code
-font=Inter,10,-1,5,50,0,0,0,0,0,Regular
-menuFont=Inter,10,-1,5,50,0,0,0,0,0,Regular
-toolBarFont=Inter,10,-1,5,50,0,0,0,0,0,Regular
-smallestReadableFont=Inter,8,-1,5,50,0,0,0,0,0,Regular
+fixed=JetBrains Mono,12,-1,5,57,0,0,0,0,0,Medium
+font=JetBrains Mono,12,-1,5,57,0,0,0,0,0,Medium
+menuFont=JetBrains Mono,12,-1,5,57,0,0,0,0,0,Medium
+toolBarFont=JetBrains Mono,12,-1,5,57,0,0,0,0,0,Medium
+smallestReadableFont=JetBrains Mono,10,-1,5,57,0,0,0,0,0,Medium
 
 [Icons]
 Theme=breeze-dark
