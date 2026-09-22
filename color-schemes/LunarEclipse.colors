@@ -46,16 +46,16 @@ DecorationFocus=255,255,255
 DecorationHover=255,255,255
 
 [Colors:Selection]
-BackgroundNormal=255,255,255
-BackgroundAlternate=255,255,255
-ForegroundNormal=0,0,0
-ForegroundInactive=40,40,40
-ForegroundActive=0,0,0
-ForegroundLink=0,0,0
-ForegroundVisited=40,40,40
+BackgroundNormal=26,26,26
+BackgroundAlternate=26,26,26
+ForegroundNormal=255,255,255
+ForegroundInactive=170,170,170
+ForegroundActive=255,255,255
+ForegroundLink=255,255,255
+ForegroundVisited=170,170,170
 ForegroundNegative=120,0,30
-ForegroundNeutral=60,60,60
-ForegroundPositive=0,0,0
+ForegroundNeutral=200,200,200
+ForegroundPositive=255,255,255
 DecorationFocus=255,255,255
 DecorationHover=255,255,255
 
