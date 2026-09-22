@@ -365,6 +365,16 @@ PanelWindow {
                     height: 26
                     verticalAlignment: Text.AlignVCenter
                 }
+                // температура — вместе с CPU/RAM, до индикаторов памяти
+                Text {
+                    visible: root.tempC > 0
+                    text: root.tempC + "°C"
+                    color: Theme.textDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(12)
+                    height: 26
+                    verticalAlignment: Text.AlignVCenter
+                }
                 // индикатор заполнения RAM
                 Rectangle {
                     width: 40
@@ -408,15 +418,6 @@ PanelWindow {
                         color: root.memPct > 90 ? Theme.danger : Theme.accent2
                         Behavior on width { NumberAnimation { duration: 200 } }
                     }
-                }
-                Text {
-                    visible: root.tempC > 0
-                    text: root.tempC + "°C"
-                    color: Theme.textDim
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(12)
-                    height: 26
-                    verticalAlignment: Text.AlignVCenter
                 }
             }
         }
