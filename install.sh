@@ -44,8 +44,55 @@ if [ -d "$REPO/.config/firefox/chrome" ]; then
       cp "$REPO"/.config/firefox/chrome/*.css "$P/chrome/" 2>/dev/null || true
       sed "s|__LUNAR_HOME__|file://$HOME/.config/lunar/firefox-home.html|g" \
         "$REPO/.config/firefox/user.js" > "$P/user.js"
+
+      # New Tab Override: новая вкладка = наша страница (URL задаётся
+      # через managed-storage ниже; тут только ставим само расширение)
+      if [ ! -f "$P/extensions/newtaboverride@agenedia.com.xpi" ]; then
+        mkdir -p "$P/extensions"
+        curl -sL -o "$P/extensions/newtaboverride@agenedia.com.xpi" \
+          "https://addons.mozilla.org/firefox/downloads/latest/new-tab-override/latest.xpi" \
+          2>/dev/null || say "New Tab Override не скачался (не критично)"
+      fi
     done
+
+    # настройка расширения: новая вкладка = наша страница.
+    # Формат native-manifest: {name, type:"storage", data:{…}};
+    # путь для пользователя — ~/.mozilla/managed-storage/<id>.json
+    if [ -f "$HOME/.config/lunar/firefox-home.html" ]; then
+      mkdir -p "$HOME/.mozilla/managed-storage"
+      cat > "$HOME/.mozilla/managed-storage/newtaboverride@agenedia.com.json" <<JSON
+{
+  "name": "newtaboverride@agenedia.com",
+  "description": "Lunar Eclipse — новая вкладка",
+  "type": "storage",
+  "data": {
+    "type": "custom_url",
+    "url": "file://$HOME/.config/lunar/firefox-home.html",
+    "focus_website": true,
+    "background_color": "#050505"
+  }
+}
+JSON
+      say "Firefox: новая вкладка → lunar (managed storage)"
+    fi
   fi
+fi
+
+# ── Firefox: иконка приложения (наш logo) ──────────────────────
+if command -v rsvg-convert >/dev/null 2>&1 && [ -f "$REPO/assets/lunar-icon.svg" ]; then
+  say "Иконка приложений → ~/.local/share/icons (lunar-eclipse)"
+  for s in 512 256 128 64 48 32; do
+    d="$HOME/.local/share/icons/hicolor/${s}x${s}/apps"
+    mkdir -p "$d"
+    rsvg-convert -w "$s" -h "$s" -o "$d/lunar-eclipse.png" "$REPO/assets/lunar-icon.svg" 2>/dev/null || true
+  done
+  gtk-update-icon-cache -f -t "$HOME/.local/share/icons/hicolor" 2>/dev/null || true
+fi
+# desktop-файл Firefox с нашей иконкой (перекрывает системный)
+if [ -f /usr/share/applications/firefox.desktop ]; then
+  mkdir -p "$HOME/.local/share/applications"
+  sed 's|^Icon=firefox$|Icon=lunar-eclipse|' /usr/share/applications/firefox.desktop \
+    > "$HOME/.local/share/applications/firefox.desktop"
 fi
 
 # ── курсор Bibata (монохромный, в тему) ────────────────────────

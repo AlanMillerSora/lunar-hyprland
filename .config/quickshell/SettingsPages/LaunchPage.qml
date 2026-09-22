@@ -245,10 +245,10 @@ Item {
 import json, os, glob
 
 bases = [
-    "/usr/share/applications",
     os.path.expanduser("~/.local/share/applications"),
-    "/var/lib/flatpak/exports/share/applications",
+    "/usr/share/applications",
     os.path.expanduser("~/.local/share/flatpak/exports/share/applications"),
+    "/var/lib/flatpak/exports/share/applications",
 ]
 DROPS = ["%f", "%F", "%u", "%U", "%i", "%c", "%k", "%d", "%D", "%n", "%N", "%v", "%m"]
 

@@ -66,3 +66,9 @@ user_pref("browser.bookmarks.addedImportButton", false);
 user_pref("browser.shell.checkDefaultBrowser", false);
 user_pref("extensions.getAddons.showPane", false);
 user_pref("extensions.pocket.enabled", false);
+
+// ── New Tab Override (новая вкладка — наша страница) ────────────
+// Само расширение ставит install.sh, а его URL задаётся через
+// managed-storage (см. install.sh) — здесь только разрешаем
+// «загруженное сбоку» расширение, чтобы оно включилось.
+user_pref("extensions.autoDisableScopes", 0);
