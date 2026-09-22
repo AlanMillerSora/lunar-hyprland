@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell.Io
 import QtQuick.Layouts
 import "../"
 
@@ -7,6 +8,43 @@ Item {
 
     property string mono: "JetBrainsMono Nerd Font"
     property int rightMargin: 36
+
+    // ── размытие (блюр) — управляет Hyprland, действует на всю систему ──
+    property real blurValue: 0.66          // 0..1  → size 0..12
+    property bool blurReady: false
+
+    Process {
+        id: blurGet
+        running: true
+        command: ["bash", "-c", "hyprctl -j getoption decoration:blur:size 2>/dev/null | jq -r '.int // 0'"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var s = parseInt(text.trim())
+                if (!isNaN(s)) {
+                    page.blurValue = Math.max(0, Math.min(1, s / 12))
+                    page.blurReady = true
+                }
+            }
+        }
+    }
+
+    Process { id: blurProc; running: false }
+
+    Timer {
+        id: blurDebounce
+        interval: 120
+        onTriggered: page.applyBlur()
+    }
+
+    function applyBlur() {
+        var size = Math.round(blurValue * 12)
+        var enabled = size > 0
+        var passes = size >= 6 ? 4 : 3
+        blurProc.command = ["hyprctl", "eval",
+            "hl.config({decoration = {blur = {enabled = " + enabled
+            + ", size = " + size + ", passes = " + passes + "}}})"]
+        blurProc.running = true
+    }
 
     Flickable {
         id: scrollArea
@@ -100,6 +138,54 @@ Item {
                     width: parent.width
                     value: Theme.interfaceOpacity
                     onValueChanged: Theme.interfaceOpacity = value
+                }
+            }
+
+            // Размытие (блюр) — на всю систему через Hyprland
+            Column {
+                width: parent.width
+                spacing: 10
+
+                Row {
+                    width: parent.width
+                    spacing: 16
+
+                    Text {
+                        text: "\uf043"
+                        color: Theme.accent
+                        font.family: page.mono
+                        font.pixelSize: 14
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Column {
+                        spacing: 4
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        Text {
+                            text: "размытие (блюр)"
+                            color: Theme.text
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 12
+                        }
+                        Text {
+                            text: page.blurValue <= 0.01
+                                ? "выключен"
+                                : Math.round(page.blurValue * 100) + "%"
+                            color: Theme.textDim
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 10
+                        }
+                    }
+                }
+
+                CustomSlider {
+                    width: parent.width
+                    value: page.blurValue
+                    onValueChanged: {
+                        page.blurValue = value
+                        blurDebounce.restart()
+                    }
                 }
             }
 

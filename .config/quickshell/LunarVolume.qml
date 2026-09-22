@@ -67,8 +67,7 @@ PanelWindow {
     Rectangle {
         id: backdrop
         anchors.fill: parent
-        // затемнение/блюр только пока открыто
-        color: root.showing ? Theme.alpha(Theme.bgPanel, 0.45) : "transparent"
+        color: "transparent"
         focus: root.showing
         Keys.onEscapePressed: root.closePanel()
 
