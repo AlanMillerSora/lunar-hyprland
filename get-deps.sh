@@ -43,10 +43,13 @@ if grep -qi '0x10de' /sys/class/drm/card*/device/vendor 2>/dev/null; then
   say "NVIDIA: nvidia-open-dkms $KERNEL_PKG-headers + nvidia-utils, nvidia-settings, libva-nvidia-driver"
   sudo pacman -S --needed --noconfirm \
     nvidia-open-dkms "$KERNEL_PKG-headers" \
-    nvidia-utils nvidia-settings libva-nvidia-driver
+    nvidia-utils nvidia-settings libva-nvidia-driver \
+    libva-utils
   say "NVIDIA: после установки перезагрузись (см. раздел NVIDIA в README)"
 else
-  say "NVIDIA не найдена — драйверы NVIDIA пропущены"
+  # AMD/Intel: VAAPI-энкодеры даёт mesa; libva-utils — для диагностики (vainfo).
+  say "NVIDIA не найдена — драйверы NVIDIA пропущены (VAAPI через mesa)"
+  sudo pacman -S --needed --noconfirm libva-utils mesa-vdpau 2>/dev/null || true
 fi
 
 # ── zapret: обход DPI (Discord / YouTube) ──────────────────────

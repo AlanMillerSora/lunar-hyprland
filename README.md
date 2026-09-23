@@ -66,7 +66,7 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 | **Панель** | `quickshell/LunarPanel.qml` | 42px сверху. Слева — лого+фаза и столы `01–09`; справа — сеть/раскладка/уведомления, блок действий (Game Mode, профиль питания, запись), CPU/RAM/°C/GPU, mpris, трей, громкость, питание |
 | **Статус** | `hypr/scripts/eclipse-status.sh` | Одна строка статуса для панели: сеть, раскладка, DND, уведомления, GPU, Game Mode, профиль питания, запись |
 | **Game Mode** | `hypr/scripts/eclipse-gamemode.sh` | Игровой режим: анимации/blur выкл, DND, пауза hypridle, performance, tearing |
-| **Запись** | `hypr/scripts/eclipse-record.sh` | Запись экрана (wf-recorder) → `~/Videos/lunar-*.mp4` |
+| **Запись** | `hypr/scripts/eclipse-record.sh` | Запись экрана (wf-recorder) → `~/Videos/lunar-*.mp4`; аппаратный кодек (VAAPI: NVENC на NVIDIA, родной на AMD/Intel) с авто-откатом на софт (libx264) |
 | **Меню питания** | `quickshell/LunarPower.qml` | Меню питания в стиле системы (HUD-скобки, рамка 1px): спящий/гибернация/выход/перезагрузка/выключение, `SUPER + ESC` |
 | **Games** | `quickshell/SettingsPages/GamesPage.qml` | Список игр (desktop-записи с `Categories=Game`) и запуск |
 | **Dev** | `quickshell/SettingsPages/DevPage.qml` | Раздел «Разработка»: сам находит git-проекты и показывает ветку/изменения/последний коммит; кнопки VS Code, терминал и GIT-панель (ветки, коммит, `diff`, `pull`, `push`) |
@@ -230,7 +230,15 @@ cd ~/rice
 видит карту NVIDIA:
 
 ```
-nvidia-open-dkms  <ядро>-headers  nvidia-utils  nvidia-settings  libva-nvidia-driver
+nvidia-open-dkms  <ядро>-headers  nvidia-utils  nvidia-settings  libva-nvidia-driver  libva-utils
+```
+
+`libva-nvidia-driver` — VAAPI-прослойка поверх NVENC: именно через неё
+работает аппаратная запись экрана (см. `eclipse-record.sh`).
+`libva-utils` даёт `vainfo` — проверить, что энкодер виден:
+
+```bash
+vainfo | grep -i Encoder      # должны быть H264/HEVC Encoder
 ```
 
 - Turing и новее (GTX 16xx / RTX 20xx+) — `nvidia-open-dkms`, поддерживается.
