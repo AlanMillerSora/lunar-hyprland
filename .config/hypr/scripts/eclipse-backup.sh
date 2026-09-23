@@ -8,23 +8,33 @@
 #  Формат: tar.zst (архив) + пакеты.txt
 #  Ротация: хранится только последние N (по умолчанию 5), старые удаляются.
 #
-#  Запуск:  eclipse-backup.sh [--keep N] [--quiet]
+#  Запуск:  eclipse-backup.sh [--keep N] [--quiet] [--force]
+#    --force — сделать бэкап даже в Game Mode (нужен перед обновлением)
 # ════════════════════════════════════════════════════════════════
 set -uo pipefail
 
 BACKUP_ROOT="$HOME/.local/share/lunar/backups"
 KEEP=5
 QUIET=0
+FORCE=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --keep) KEEP="$2"; shift 2 ;;
     --quiet) QUIET=1; shift ;;
-    *) echo "usage: $0 [--keep N] [--quiet]" >&2; exit 1 ;;
+    --force) FORCE=1; shift ;;
+    *) echo "usage: $0 [--keep N] [--quiet] [--force]" >&2; exit 1 ;;
   esac
 done
 
 log() { [[ "$QUIET" == 1 ]] || echo "$@"; }
+
+# ── Game Mode: не гоняем бэкап (тяжёлый I/O) во время игры ──────
+if [[ "$FORCE" != 1 \
+      && "$(cat "$HOME/.cache/lunar/gamemode" 2>/dev/null || echo 0)" == 1 ]]; then
+  log "Game Mode включён — бэкап пропущен (--force чтобы всё равно)"
+  exit 0
+fi
 
 STAMP="$(date +%Y%m%d-%H%M%S)"
 DEST="$BACKUP_ROOT/system-$STAMP"
@@ -36,7 +46,7 @@ TMP="$(mktemp -d)"
 mkdir -p "$TMP/home-config"
 
 for d in hypr quickshell kitty yazi mako hypridle btop fastfetch \
-         Code gtk-3.0 gtk-4.0 firefox lunar wofi; do
+         Code gtk-3.0 gtk-4.0 firefox lunar; do
   [[ -e "$HOME/.config/$d" ]] && cp -a "$HOME/.config/$d" "$TMP/home-config/" 2>/dev/null
 done
 for f in starship.toml kdeglobals .zshrc; do

@@ -23,6 +23,10 @@ priv() { sudo -n "$@" 2>/dev/null || pkexec "$@" ; }
 is_active()  { systemctl is-active  --quiet "$UNIT" 2>/dev/null; }
 is_enabled() { systemctl is-enabled --quiet "$UNIT" 2>/dev/null; }
 
+# Game Mode: пересборка/перезапуск zapret рвёт сеть на время — в игре это
+# мешает, поэтому update/tune во время игры откладываем.
+gm_active() { [[ "$(cat "$HOME/.cache/lunar/gamemode" 2>/dev/null || echo 0)" == 1 ]]; }
+
 gitc() { git -C "$ZDIR" -c safe.directory="$ZDIR" "$@" 2>/dev/null ; }
 
 healthcheck() {
@@ -66,6 +70,7 @@ case "${1:-status}" in
     ;;
 
   update)
+    gm_active && { echo "Game Mode включён — обновление zapret отложено"; exit 0; }
     echo "── обновляю zapret ──"
     sudo git -C "$ZDIR" pull --ff-only || { echo "git pull не удался"; exit 1; }
     sudo make -C "$ZDIR" systemd -j"$(nproc)" || { echo "сборка не удалась"; exit 1; }
@@ -75,6 +80,7 @@ case "${1:-status}" in
     ;;
 
   tune)
+    gm_active && { echo "Game Mode включён — подбор стратегии отложен"; exit 0; }
     echo "── подбор стратегии (blockcheck) ──"
     echo "zapret на время теста будет остановлен самим blockcheck'ом"
     sudo "$ZDIR/blockcheck.sh"

@@ -39,6 +39,15 @@ done
 
 say() { printf '\033[38;5;15m==>\033[0m %s\n' "$*"; }
 
+# ── Game Mode: не запускаем отложенное обновление во время игры ─
+# Обновление — тяжёлая операция (загрузка, распаковка, перезапуск служб),
+# в игре она только мешает. Принудительно — флагом --now.
+if [[ "$MODE" == "update" && "$NOW" != 1 \
+      && "$(cat "$HOME/.cache/lunar/gamemode" 2>/dev/null || echo 0)" == 1 ]]; then
+  say "Game Mode включён — обновление отложено (закончишь игру — запусти снова или с --now)"
+  exit 0
+fi
+
 # ── перевод через translate-shell (Google), с кэшем ─────────────
 translate() {
   local text="$1"
@@ -161,7 +170,7 @@ fi
 # бэкап
 if [[ "$DO_BACKUP" == 1 && -x "$HOME/.config/hypr/scripts/eclipse-backup.sh" ]]; then
   say "бэкап конфигов перед обновлением"
-  "$HOME/.config/hypr/scripts/eclipse-backup.sh" --quiet || say "бэкап не удался (продолжаю)"
+  "$HOME/.config/hypr/scripts/eclipse-backup.sh" --quiet --force || say "бэкап не удался (продолжаю)"
 fi
 
 # снимок timeshift (если установлен) — системный откат
