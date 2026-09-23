@@ -127,12 +127,15 @@ fi
 
 # ── systemd --user (wifi-guard, локальная страница Firefox) ────
 if [ -d "$REPO/systemd" ]; then
-  say "systemd --user → lunar-wifi-guard, lunar-homepage"
+  say "systemd --user → lunar-wifi-guard, lunar-homepage, lunar-quickshell"
   mkdir -p "$HOME/.config/systemd/user"
   cp "$REPO"/systemd/*.service "$HOME/.config/systemd/user/"
   systemctl --user daemon-reload 2>/dev/null || true
   systemctl --user enable --now lunar-wifi-guard.service 2>/dev/null || true
   systemctl --user enable --now lunar-homepage.service 2>/dev/null || true
+  # quickshell НЕ включаем в автозапуск: его стартует hyprland.lua после
+  # композитора (иначе юнит поднимется раньше Wayland и будет падать).
+  systemctl --user disable lunar-quickshell.service 2>/dev/null || true
 fi
 
 # ── shell по умолчанию ─────────────────────────────────────────

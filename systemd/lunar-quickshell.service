@@ -1,0 +1,16 @@
+[Unit]
+Description=Lunar Eclipse — Quickshell (панель, Hub, сайдбары, OSD)
+# Юнит запускается из hyprland.lua после старта композитора
+# (не enable: иначе стартует раньше Wayland и падает).
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/quickshell
+Restart=always
+RestartSec=2
+Nice=-5
+
+[Install]
+WantedBy=graphical-session.target

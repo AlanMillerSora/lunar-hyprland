@@ -351,8 +351,10 @@ hl.bind("XF86MonBrightnessDown", dsp.exec_cmd("sh -c '~/.config/hypr/scripts/ecl
 -- ─────────────────────────────── Автозапуск ─────────────────────────
 hl.on("hyprland.start", function()
   hl.exec_cmd("awww-daemon")
-  -- waybar заменён верхней панелью Quickshell (LunarPanel.qml)
-  hl.exec_cmd("quickshell")
+  -- waybar заменён верхней панелью Quickshell (LunarPanel.qml).
+  -- Шелл живёт под systemd-user (Restart=always): упал — поднимется сам.
+  -- Сначала отдаём юниту env сессии (иначе он не увидит WAYLAND_DISPLAY).
+  hl.exec_cmd("sh -c 'systemctl --user import-environment DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE; systemctl --user --no-block start lunar-quickshell.service'")
   hl.exec_cmd("mako")
   hl.exec_cmd("hypridle")
   -- история буфера обмена (клипборд Quickshell, SUPER+V)
