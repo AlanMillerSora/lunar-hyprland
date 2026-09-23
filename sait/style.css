@@ -1,0 +1,1514 @@
+﻿@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #000000;
+  --surface: rgba(10, 10, 10, 0.72);
+  --surface-solid: #0a0a0a;
+  --border: rgba(255, 255, 255, 0.10);
+  --text: #e6e6e6;
+  --text-dim: #6f6f6f;
+  --white: #ffffff;
+  --white-dim: #cdcdcd;
+  --moon-black: #000000;
+  --glow: rgba(255, 255, 255, 0.35);
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  user-select: none;
+}
+
+.hidden { display: none !important; }
+
+/* ═══════════════ BOOT SCREEN ═══════════════ */
+
+#boot-screen {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.boot-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: #777;
+}
+
+.boot-line {
+  opacity: 0;
+  transform: translateY(5px);
+  transition: all 0.4s ease;
+}
+
+.boot-line.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.boot-cursor {
+  color: var(--white);
+  animation: blink 0.8s step-end infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* ═══════════════ DESKTOP ═══════════════ */
+
+#desktop {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* ═══════════════ ECLIPSE BACKGROUND ═══════════════ */
+
+#eclipse-bg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, #0c0c0c 0%, #000 100%);
+  overflow: hidden;
+  transition: background 1.2s ease;
+}
+
+/* Slightly different sky per desktop */
+.eclipse-phase-1 #eclipse-bg,
+.eclipse-phase-8 #eclipse-bg,
+.eclipse-phase-9 #eclipse-bg {
+  background: radial-gradient(ellipse at center, #10151c 0%, #05070c 60%, #000 100%);
+}
+.eclipse-phase-2 #eclipse-bg,
+.eclipse-phase-7 #eclipse-bg {
+  background: radial-gradient(ellipse at center, #0d1218 0%, #04060a 65%, #000 100%);
+}
+.eclipse-phase-3 #eclipse-bg,
+.eclipse-phase-6 #eclipse-bg {
+  background: radial-gradient(ellipse at center, #0e1018 0%, #06070d 60%, #000 100%);
+}
+.eclipse-phase-4 #eclipse-bg {
+  background: radial-gradient(ellipse at center, #14110f 0%, #1a0c0e 22%, #050307 62%, #000 100%);
+}
+.eclipse-phase-5 #eclipse-bg {
+  background: radial-gradient(ellipse at center, #0b1019 0%, #050812 62%, #000 100%);
+}
+
+.eclipse-container {
+  position: absolute;
+  top: 44%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 560px;
+  height: 560px;
+  z-index: 1;
+}
+
+.sun {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 250px;
+  height: 250px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    #ffffff 0%,
+    #ffffff 40%,
+    #f7f7f7 55%,
+    rgba(255, 255, 255, 0.6) 72%,
+    rgba(255, 255, 255, 0.14) 84%,
+    rgba(255, 255, 255, 0) 100%);
+  box-shadow:
+    inset 0 0 24px rgba(255, 255, 255, 0.9),
+    inset 0 0 64px rgba(255, 255, 255, 0.5),
+    0 0 36px rgba(255, 255, 255, 0.6),
+    0 0 80px rgba(255, 255, 255, 0.32),
+    0 0 150px rgba(255, 255, 255, 0.14);
+  transition: opacity 0.8s ease;
+}
+
+/* Outer soft halo — smooth breathing, no spinning parts */
+.sun-glow-outer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 310px;
+  height: 310px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    rgba(255, 255, 255, 0.18) 0%,
+    rgba(255, 255, 255, 0.08) 46%,
+    rgba(255, 255, 255, 0.02) 70%,
+    rgba(255, 255, 255, 0) 84%);
+  filter: blur(5px);
+  animation: sunBreath 5s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes sunBreath {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50%      { transform: translate(-50%, -50%) scale(1.045); }
+}
+
+/* Hair-thin annular ring — sun just barely larger than the moon */
+.moon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 246px;
+  height: 246px;
+  border-radius: 50%;
+  background: var(--moon-black);
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.9);
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
+  cursor: grab;
+}
+
+.moon:active { cursor: grabbing; }
+
+/* Soft permanent glow around the moon (halo outside the disc) */
+.moon-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 360px;
+  height: 360px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    rgba(255,255,255,0) 63%,
+    rgba(180,200,255,0.10) 68%,
+    rgba(150,180,255,0.24) 73%,
+    rgba(170,200,255,0.12) 80%,
+    rgba(255,255,255,0) 88%);
+  opacity: 0;
+  transition: opacity 1s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+.eclipse-phase-2 .moon-glow,
+.eclipse-phase-6 .moon-glow { opacity: 0.35; }
+.eclipse-phase-3 .moon-glow,
+.eclipse-phase-5 .moon-glow { opacity: 0.6; }
+.eclipse-phase-4 .moon-glow { opacity: 0.85; }
+.eclipse-phase-1 .moon-glow,
+.eclipse-phase-7 .moon-glow,
+.eclipse-phase-9 .moon-glow { opacity: 0.2; }
+
+/* Moon travels LEFT → RIGHT: hair-thin annular ring visible at full eclipse */
+.eclipse-phase-1 .moon { transform: translate(calc(-50% - 339px), -50%); }
+.eclipse-phase-2 .moon { transform: translate(calc(-50% - 288px), -50%); }
+.eclipse-phase-3 .moon { transform: translate(calc(-50% - 230px), -50%); }
+.eclipse-phase-4 .moon { transform: translate(calc(-50% - 107px), -50%); }
+.eclipse-phase-5 .moon { transform: translate(-50%, -50%); }
+.eclipse-phase-6 .moon { transform: translate(calc(-50% + 107px), -50%); }
+.eclipse-phase-7 .moon { transform: translate(calc(-50% + 230px), -50%); }
+.eclipse-phase-8 .moon { transform: translate(calc(-50% + 288px), -50%); }
+.eclipse-phase-9 .moon { transform: translate(calc(-50% + 339px), -50%); }
+
+/* Penumbra — soft outer shadow of the moon during partial phases */
+.penumbra {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300px;
+  height: 300px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    rgba(0, 0, 0, 0.85) 0%,
+    rgba(0, 0, 0, 0.55) 46%,
+    rgba(0, 0, 0, 0.28) 62%,
+    rgba(0, 0, 0, 0) 78%);
+  opacity: 0;
+  transition: opacity 1s ease;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Baily's beads — bright rim points around the moon edge during partial phases */
+.beads {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 252px;
+  height: 252px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    rgba(255, 255, 255, 0) 58%,
+    rgba(255, 255, 255, 0) 63%,
+    rgba(255, 255, 255, 0.25) 66%,
+    rgba(255, 255, 255, 0) 70%);
+  opacity: 0;
+  transition: opacity 0.8s ease;
+  pointer-events: none;
+}
+
+/* Partial phases: penumbra strongly visible */
+.eclipse-phase-2 .penumbra,
+.eclipse-phase-6 .penumbra { opacity: 0.9; }
+.eclipse-phase-3 .penumbra,
+.eclipse-phase-5 .penumbra { opacity: 1; }
+.eclipse-phase-1 .penumbra,
+.eclipse-phase-7 .penumbra,
+.eclipse-phase-9 .penumbra { opacity: 0.5; }
+.eclipse-phase-4 .penumbra { opacity: 0.25; }
+.eclipse-phase-8 .penumbra { opacity: 0; }
+
+/* Baily's beads during fine partial phases */
+.eclipse-phase-2 .beads,
+.eclipse-phase-6 .beads { opacity: 0.25; }
+.eclipse-phase-3 .beads,
+.eclipse-phase-5 .beads { opacity: 0.7; }
+.eclipse-phase-4 .beads { opacity: 0.95; }
+
+/* Sun dims slightly as eclipse covers it (annular — rim always visible) */
+.eclipse-phase-1 .sun,
+.eclipse-phase-8 .sun { opacity: 1; }
+.eclipse-phase-2 .sun,
+.eclipse-phase-7 .sun { opacity: 0.95; }
+.eclipse-phase-3 .sun,
+.eclipse-phase-6 .sun { opacity: 0.88; }
+.eclipse-phase-4 .sun,
+.eclipse-phase-5 .sun { opacity: 0.95; }
+
+/* Sun glow outer also stays visible during annular eclipse */
+.eclipse-phase-2 .sun-glow-outer,
+.eclipse-phase-7 .sun-glow-outer { opacity: 0.85; }
+.eclipse-phase-3 .sun-glow-outer,
+.eclipse-phase-6 .sun-glow-outer { opacity: 0.65; }
+.eclipse-phase-4 .sun-glow-outer,
+.eclipse-phase-5 .sun-glow-outer { opacity: 0.5; }
+
+/* Light squeezing around the hair-thin ring during annular eclipse */
+.eclipse-phase-3 .moon,
+.eclipse-phase-5 .moon {
+  box-shadow:
+    0 0 4px 1px rgba(255, 255, 255, 0.45),
+    0 0 12px 3px rgba(255, 255, 255, 0.2);
+}
+
+.eclipse-phase-4 .moon {
+  box-shadow:
+    0 0 2px 0px rgba(255, 255, 255, 0.7),
+    0 0 6px 1px rgba(255, 255, 255, 0.28),
+    0 0 14px 3px rgba(255, 255, 255, 0.12);
+}
+
+/* Corona — soft halo around the moon during eclipse */
+.corona {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 260px;
+  height: 260px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: transparent;
+  box-shadow:
+    0 0 40px rgba(255, 255, 255, 0),
+    0 0 90px rgba(255, 255, 255, 0),
+    inset 0 0 45px rgba(255, 255, 255, 0);
+  transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.corona-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 380px;
+  height: 380px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0) 55%, rgba(255,255,255,0) 100%);
+  transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Phase 3 & 5 — white corona */
+.eclipse-phase-3 .corona,
+.eclipse-phase-5 .corona {
+  box-shadow:
+    0 0 40px rgba(255, 255, 255, 0.18),
+    0 0 90px rgba(255, 255, 255, 0.07),
+    inset 0 0 36px rgba(255, 255, 255, 0.05);
+}
+
+/* Phase 4 — tight glow hugging the thin annular ring */
+.eclipse-phase-4 .corona {
+  border: none;
+  box-shadow:
+    0 0 12px rgba(255, 255, 255, 0.5),
+    0 0 32px rgba(255, 255, 255, 0.28),
+    0 0 66px rgba(255, 255, 255, 0.12),
+    inset 0 0 22px rgba(255, 255, 255, 0.28);
+  animation: coronaPulse 4s ease-in-out infinite;
+}
+
+.eclipse-phase-3 .corona-glow,
+.eclipse-phase-5 .corona-glow {
+  background: radial-gradient(circle, rgba(255,255,255,0.06) 45%, rgba(255,255,255,0) 72%);
+}
+
+.eclipse-phase-4 .corona-glow {
+  background: radial-gradient(circle,
+    rgba(255, 255, 255, 0.16) 30%,
+    rgba(255, 255, 255, 0.07) 52%,
+    rgba(255, 255, 255, 0) 74%);
+  animation: glowPulse 4s ease-in-out infinite;
+}
+
+@keyframes coronaPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 10px rgba(255, 255, 255, 0.42),
+      0 0 28px rgba(255, 255, 255, 0.22),
+      0 0 58px rgba(255, 255, 255, 0.10),
+      inset 0 0 20px rgba(255, 255, 255, 0.24);
+  }
+  50% {
+    box-shadow:
+      0 0 16px rgba(255, 255, 255, 0.62),
+      0 0 42px rgba(255, 255, 255, 0.36),
+      0 0 90px rgba(255, 255, 255, 0.16),
+      inset 0 0 30px rgba(255, 255, 255, 0.38);
+  }
+}
+
+/* ─── Soft cosmic dust during totality ─── */
+.space-dust {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 24% 28%, rgba(255, 255, 255, 0.07) 0%, transparent 55%),
+    radial-gradient(ellipse at 78% 20%, rgba(230, 238, 255, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 72%, rgba(255, 255, 255, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse at 18% 66%, rgba(220, 232, 255, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 52% 42%, rgba(255, 255, 255, 0.05) 0%, transparent 55%);
+  opacity: 0;
+  transition: opacity 1.5s ease;
+  animation: dustDrift 14s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.eclipse-phase-4 .space-dust { opacity: 0.9; }
+.eclipse-phase-3 .space-dust,
+.eclipse-phase-5 .space-dust { opacity: 0.35; }
+
+@keyframes dustDrift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-18px, 6px) scale(1.05); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.8; }
+  50%      { opacity: 1; }
+}
+
+/* ─── Nightfall flash (blue crescent orbiting the full eclipse) ─── */
+.nightfall {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 560px;
+  height: 560px;
+  overflow: hidden;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0;
+}
+
+.nightfall.show {
+  animation: nightfallBurst 2.5s ease-out forwards;
+}
+
+.nf-burst {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.nf-crescent {
+  filter: drop-shadow(0 0 6px rgba(140, 185, 255, 0.9));
+}
+
+@keyframes nightfallBurst {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
+  14%  { opacity: 1; transform: translate(-50%, -50%) scale(0.95); }
+  32%  { opacity: 0.9; transform: translate(-50%, -50%) scale(1.22); }
+  55%  { opacity: 0.55; transform: translate(-50%, -50%) scale(1.34); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.45); }
+}
+
+/* Horizon glow at the bottom during eclipse */
+.horizon-glow {
+  position: absolute;
+  bottom: -120px;
+  left: 0;
+  right: 0;
+  height: 460px;
+  background:
+    radial-gradient(ellipse at 50% 100%, rgba(255,255,255,0.30) 0%, rgba(255,255,255,0.10) 35%, rgba(255,255,255,0) 70%);
+  filter: blur(12px);
+  opacity: 0;
+  transition: opacity 1.2s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.horizon-glow::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent);
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+
+.eclipse-phase-3 .horizon-glow,
+.eclipse-phase-5 .horizon-glow { opacity: 0.35; }
+.eclipse-phase-3 .horizon-glow::after,
+.eclipse-phase-5 .horizon-glow::after { opacity: 0.35; }
+
+/* Soft shining horizon during totality */
+.eclipse-phase-4 .horizon-glow {
+  opacity: 1;
+  background:
+    radial-gradient(ellipse at 50% 100%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.28) 30%, rgba(255,255,255,0.10) 55%, rgba(255,255,255,0) 75%);
+}
+
+/* Blood-moon red skyline during the full eclipse */
+.eclipse-phase-4 .horizon-glow {
+  background:
+    radial-gradient(ellipse at 50% 100%, rgba(210, 40, 55, 0.8) 0%, rgba(180, 30, 50, 0.5) 30%, rgba(140, 18, 42, 0.22) 55%, rgba(255,255,255,0.10) 70%, rgba(255,255,255,0) 82%);
+}
+
+.eclipse-phase-4 .horizon-glow::after {
+  opacity: 1;
+  background: linear-gradient(90deg, transparent, rgba(247, 96, 110, 0.95), rgba(255,255,255,0.8), transparent);
+}
+
+/* Blood moon — deep red tint around the moon during totality */
+.eclipse-phase-4 .moon {
+  box-shadow:
+    0 0 24px rgba(178, 34, 52, 0.5),
+    0 0 64px rgba(178, 34, 52, 0.28),
+    inset 0 0 40px rgba(120, 20, 40, 0.9);
+}
+
+/* Stars glow intense during totality */
+.eclipse-phase-4 .stars .star {
+  filter: brightness(1.5);
+}
+.eclipse-phase-4 .stars .star:nth-child(3n) {
+  width: 2px;
+  height: 2px;
+  filter: brightness(2);
+}
+
+/* Stars */
+.stars {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: #fff;
+  border-radius: 50%;
+  animation: twinkle var(--dur) ease-in-out infinite;
+  opacity: 0;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.1; }
+  50% { opacity: var(--max-op); }
+}
+
+/* ═══════════════ METEOR SHOWER ═══════════════ */
+
+.meteors {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  overflow: hidden;
+  display: none;
+}
+
+.eclipse-phase-4 .meteors { display: block; }
+
+.meteor {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 8px 2px rgba(190, 215, 255, 0.9);
+  opacity: 0;
+}
+
+.meteor::after {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 1px;
+  width: 120px;
+  height: 2px;
+  background: linear-gradient(90deg,
+    rgba(240, 248, 255, 0.95) 0%,
+    rgba(190, 215, 255, 0.5) 45%,
+    rgba(190, 215, 255, 0) 100%);
+  transform-origin: left center;
+  transform: rotate(-24deg);
+  border-radius: 2px;
+}
+
+@keyframes meteorFall {
+  0%   { transform: translate(0, 0); opacity: 0; }
+  3%   { opacity: 0.35; }
+  7%   { opacity: 1; }
+  40%  { opacity: 1; }
+  62%  { opacity: 0; }
+  100% { transform: translate(-45vw, 34vh); opacity: 0; }
+}
+
+/* ═══════════════ WAYBAR ═══════════════ */
+
+#waybar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 36px;
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  z-index: 100;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  transition: height 0.3s ease, opacity 0.3s ease;
+}
+
+/* Adaptive waybar: collapses when window is focused */
+#waybar.collapsed {
+  height: 6px;
+  opacity: 0.5;
+  overflow: hidden;
+  border-bottom-color: rgba(255,255,255,0.08);
+}
+#waybar.collapsed:hover {
+  height: 36px;
+  opacity: 1;
+  overflow: visible;
+  border-bottom-color: rgba(255,255,255,0.15);
+}
+#waybar.collapsed:hover * { animation: none; }
+
+.waybar-left, .waybar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.waybar-logo {
+  font-size: 20px;
+  color: var(--text-dim);
+  margin-right: 8px;
+}
+
+.waybar-workspaces {
+  display: flex;
+  gap: 3px;
+}
+
+.ws-btn {
+  width: 30px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  position: relative;
+  padding: 0;
+}
+
+.ws-btn:hover .ws-svg {
+  color: var(--text);
+}
+
+.ws-btn.active {
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.ws-btn.active .ws-svg {
+  color: var(--white);
+}
+
+.ws-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 1px;
+  background: var(--white);
+  border-radius: 1px;
+}
+
+.ws-svg {
+  display: block;
+  color: var(--text-dim);
+  transition: color 0.3s ease;
+}
+
+.waybar-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.waybar-clock {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--text);
+  letter-spacing: 0.5px;
+}
+
+.waybar-module {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.waybar-module svg { opacity: 0.7; }
+
+/* Eclipse progress bar */
+.eclipse-pbar {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 88px;
+  padding: 3px 10px;
+  height: 30px;
+  justify-content: center;
+  cursor: default;
+}
+.ep-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text);
+}
+#ep-ico { font-size: 13px; color: var(--text-dim); }
+.ep-track {
+  width: 100%;
+  height: 3px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.ep-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #7ea6ff, #ffffff);
+  transition: width 0.8s ease;
+}
+
+/* Tray icons */
+.tray-icons {
+  display: flex;
+  gap: 4px;
+  padding: 2px 8px;
+  height: 30px;
+  min-width: 0;
+  max-width: 180px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tray-icons::-webkit-scrollbar { display: none; }
+.tray-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  color: var(--text-dim);
+  font-size: 13px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  background: transparent;
+}
+.tray-icon:hover { background: rgba(255,255,255,0.08); color: var(--text); border-color: rgba(255,255,255,0.12); }
+.tray-icon.active { background: rgba(122,166,255,0.15); color: #b7ccff; }
+
+/* Auto-cycle toggle */
+.auto-cycle {
+  cursor: pointer;
+  height: 30px;
+  padding: 4px 10px;
+}
+.auto-cycle svg { opacity: 0.8; transition: all 0.3s ease; }
+.auto-cycle.on {
+  color: #b7ccff;
+  border: 1px solid rgba(122,166,255,0.4);
+  background: rgba(122,166,255,0.12);
+}
+.auto-cycle.on svg { opacity: 1; animation: spin 2s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+#date-display {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ═══════════════ DESKTOP ICONS ═══════════════ */
+
+#desktop-icons {
+  position: absolute;
+  right: 24px;
+  top: 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  z-index: 50;
+}
+
+.desktop-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  width: 80px;
+}
+
+.desktop-icon:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.desktop-icon:active {
+  transform: scale(0.95);
+}
+
+.icon-img {
+  color: var(--text-dim);
+  transition: all 0.2s ease;
+}
+
+.desktop-icon:hover .icon-img {
+  color: var(--white);
+}
+
+.desktop-icon span {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+.desktop-icon:hover span {
+  color: var(--text);
+}
+
+/* ═══════════════ WALLPAPER TEXT ═══════════════ */
+
+#wallpaper-text {
+  position: absolute;
+  bottom: 60px;
+  left: 40px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.wp-title {
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: 12px;
+  color: rgba(255, 255, 255, 0.07);
+  text-transform: uppercase;
+  font-family: 'Inter', sans-serif;
+}
+
+.wp-subtitle {
+  font-size: 14px;
+  letter-spacing: 4px;
+  color: rgba(255, 255, 255, 0.12);
+  margin-top: 4px;
+}
+
+/* ═══════════════ GENERIC APP WINDOWS ═══════════════ */
+
+.gen-window {
+  width: 560px;
+  height: 380px;
+  top: 130px;
+  left: 120px;
+}
+
+.gen-body {
+  height: calc(100% - 36px);
+  padding: 20px 24px;
+  background: rgba(0, 0, 0, 0.85);
+  overflow-y: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+}
+
+.gen-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.gen-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--gen-accent) 22%, rgba(255,255,255,0.04));
+  color: var(--gen-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.gen-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.gen-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.gen-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.gen-line {
+  color: var(--text-dim);
+  white-space: pre;
+  line-height: 1.5;
+}
+
+.gen-line.gen-hdr {
+  color: var(--text);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 4px;
+}
+
+.gen-line.gen-active {
+  color: var(--white);
+}
+
+.gen-line.gen-acc {
+  color: var(--gen-accent);
+}
+
+/* ═══════════════ APP WINDOWS ═══════════════ */
+
+.app-window {
+  position: absolute;
+  background: var(--surface);
+  backdrop-filter: blur(30px);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 1px rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  z-index: 200;
+  animation: windowOpen 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  resize: both;
+  min-width: 400px;
+  min-height: 250px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.app-window.focused {
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.75), 0 0 24px rgba(255, 255, 255, 0.05);
+}
+
+.app-window.ws-hidden { display: none !important; }
+
+@keyframes windowOpen {
+  from { opacity: 0; transform: scale(0.9); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.window-bar {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  background: rgba(5, 5, 5, 0.75);
+  border-bottom: 1px solid var(--border);
+  padding: 0 12px;
+  gap: 12px;
+}
+
+.window-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dot.red { background: rgba(255,255,255,0.28); }
+.dot.yellow { background: rgba(255,255,255,0.22); }
+.dot.green { background: rgba(255,255,255,0.34); }
+
+.dot:hover { background: rgba(255,255,255,0.7); opacity: 1; }
+
+.window-title {
+  flex: 1;
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.window-controls {
+  display: flex;
+  gap: 4px;
+}
+
+.win-btn {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.win-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text);
+}
+
+/* ═══════════════ TERMINAL ═══════════════ */
+
+#terminal-window {
+  width: 700px;
+  height: 420px;
+  top: 120px;
+  left: 100px;
+}
+
+.terminal-body {
+  padding: 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  height: calc(100% - 36px);
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.85);
+}
+
+.terminal-body::-webkit-scrollbar { width: 6px; }
+.terminal-body::-webkit-scrollbar-track { background: transparent; }
+.terminal-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+
+.terminal-output {
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.terminal-output .line { margin-bottom: 2px; color: var(--text); }
+.terminal-output .line.info { color: var(--white); }
+.terminal-output .line.success { color: var(--white); }
+.terminal-output .line.error { color: var(--white); font-weight: 500; }
+.terminal-output .line.warning { color: var(--white-dim); }
+.terminal-output .line.muted { color: var(--text-dim); }
+
+.terminal-input-line {
+  display: flex;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.terminal-prompt { white-space: nowrap; font-size: 13px; }
+.terminal-prompt .user { color: var(--white); font-weight: 600; }
+.terminal-prompt .host { color: var(--text-dim); }
+.terminal-prompt .dir { color: var(--white-dim); }
+
+.terminal-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  caret-color: var(--white);
+}
+
+/* ═══════════════ FILE MANAGER ═══════════════ */
+
+#files-window {
+  width: 650px;
+  height: 400px;
+  top: 140px;
+  left: 160px;
+}
+
+.file-body {
+  display: flex;
+  height: calc(100% - 36px);
+  background: rgba(0, 0, 0, 0.85);
+}
+
+.file-sidebar {
+  width: 180px;
+  border-right: 1px solid var(--border);
+  padding: 8px;
+  overflow-y: auto;
+}
+
+.file-sidebar-item {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.file-sidebar-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+}
+
+.file-sidebar-item.active {
+  background: rgba(255, 255, 255, 0.10);
+  color: var(--white);
+}
+
+.file-main {
+  flex: 1;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 12px;
+  align-content: start;
+}
+
+.file-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.file-item:hover { background: rgba(255, 255, 255, 0.06); }
+
+.file-item span {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: center;
+  word-break: break-all;
+}
+
+.file-item:hover span { color: var(--text); }
+
+/* ═══════════════ BROWSER ═══════════════ */
+
+#browser-window {
+  width: 750px;
+  height: 480px;
+  top: 100px;
+  left: 140px;
+}
+
+.browser-url-bar {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.browser-url-bar svg { opacity: 0.5; }
+
+.browser-body {
+  height: calc(100% - 36px);
+  background: rgba(0, 0, 0, 0.9);
+  overflow-y: auto;
+}
+
+.browser-page { padding: 32px; }
+
+.browser-header { text-align: center; margin-bottom: 32px; }
+.browser-header h1 { font-size: 32px; font-weight: 700; color: var(--white); letter-spacing: 2px; }
+.browser-header p { color: var(--text-dim); margin-top: 8px; font-style: italic; }
+
+.browser-nav {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.browser-nav a {
+  color: var(--white-dim);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.2s;
+}
+
+.browser-nav a:hover { color: var(--white); }
+
+.browser-content p {
+  color: var(--text-dim);
+  text-align: center;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+.browser-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.browser-card h3 { color: var(--white); font-size: 14px; margin-bottom: 4px; }
+.browser-card p { color: var(--text-dim); font-size: 12px; text-align: left; margin: 0; }
+
+/* ═══════════════ WOFI ═══════════════ */
+
+#wofi-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 15vh;
+  z-index: 500;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+#wofi {
+  width: 460px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
+  animation: wofiOpen 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes wofiOpen {
+  from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.wofi-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
+}
+
+.wofi-search input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 16px;
+  font-family: 'Inter', sans-serif;
+}
+
+.wofi-search input::placeholder { color: var(--text-dim); }
+
+.wofi-apps {
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.wofi-app {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.wofi-app:hover, .wofi-app.selected { background: rgba(255, 255, 255, 0.08); }
+
+.wofi-app-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.wofi-app-name { font-size: 14px; color: var(--text); }
+.wofi-app-desc { font-size: 11px; color: var(--text-dim); }
+
+/* ═══════════════ NOTIFICATION STACK ═══════════════ */
+
+#notification-stack {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 600;
+  max-width: 360px;
+}
+
+.notification {
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  animation: notifIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.notification.leaving {
+  opacity: 0;
+  transform: translateX(30px);
+}
+
+.notification .notif-icon {
+  font-size: 24px;
+  color: var(--text-dim);
+}
+
+.notification.dragging { transition: none; user-select: none; }
+
+.notification .notif-progress {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #7ea6ff, #ffffff);
+  border-radius: 0 0 12px 12px;
+  transition: width 0.4s ease;
+}
+
+.notification { position: relative; }
+
+.notification .notif-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.notification .notif-text strong { font-size: 13px; color: var(--text); }
+.notification .notif-text span { font-size: 11px; color: var(--text-dim); word-wrap: break-word; }
+
+@keyframes notifIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ═══════════════ CALCULATOR ═══════════════ */
+
+#calculator-window {
+  width: 320px;
+  height: 440px;
+  top: 200px;
+  left: 480px;
+  min-width: 280px;
+  min-height: 380px;
+}
+
+.calc-body {
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 36px);
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.85);
+  gap: 12px;
+}
+
+.calc-display {
+  flex: 0 0 auto;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 28px;
+  color: var(--white);
+  text-align: right;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.calc-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.calc-btn {
+  border: none;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.calc-btn:hover { background: rgba(255, 255, 255, 0.14); }
+.calc-btn:active { transform: scale(0.94); }
+
+.calc-btn.calc-ops { background: rgba(255, 255, 255, 0.12); color: var(--white); }
+.calc-btn.calc-eq { background: rgba(130, 177, 255, 0.25); color: var(--white); }
+.calc-btn.calc-eq:hover { background: rgba(130, 177, 255, 0.4); }
+.calc-zero { grid-column: span 2; }
+
+/* ═══════════════ RESPONSIVE ═══════════════ */
+
+@media (max-width: 768px) {
+  .wp-title { font-size: 28px; letter-spacing: 6px; }
+  .wp-subtitle { font-size: 11px; }
+  #desktop-icons { right: 12px; top: 50px; gap: 10px; }
+  .desktop-icon { width: 60px; padding: 8px; }
+  .icon-img svg { width: 36px; height: 36px; }
+  .app-window { min-width: 300px; }
+  #terminal-window { width: calc(100vw - 40px); left: 20px; height: 300px; }
+  #files-window { width: calc(100vw - 40px); left: 20px; height: 300px; }
+  #browser-window { width: calc(100vw - 40px); left: 20px; height: 350px; }
+}
+
+/* ═══════════════ AMBIENT ═══════════════ */
+
+.particle {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: float var(--dur) linear infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+  10% { opacity: 0.4; }
+  90% { opacity: 0.4; }
+  100% { transform: translateY(-20px) translateX(var(--drift)); opacity: 0; }
+}
+/* probe: стол 9 — как фаза 1, но луна слева (зеркало) */
+.eclipse-phase-9 #eclipse-bg { background: radial-gradient(ellipse at center, #10151c 0%, #05070c 60%, #000 100%); }
+.eclipse-phase-9 .moon-glow { opacity: 0.2; }
+.eclipse-phase-9 .moon { transform: translate(calc(-50% - 250px), -50%); }
+.eclipse-phase-9 .penumbra { opacity: 0.5; }
+.eclipse-phase-9 .sun, .eclipse-phase-9 .sun-glow-outer { opacity: 1; }

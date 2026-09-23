@@ -7,7 +7,7 @@
 #       без 256-цветного зерна и полос.  ЛУЧШИЙ вариант.
 #    2) awww + GIF (eclipse_NN.gif), иначе PNG/JPG — запасной.
 #
-#  Файлы фаз: ~/Pictures/EclipseWalls/eclipse_01..08.(webm|mp4|gif|png|jpg)
+#  Файлы фаз: ~/Pictures/EclipseWalls/eclipse_01..09.(webm|mp4|gif|png|jpg)
 #  (устанавливаются из репозитория: wallpapers/*.png)
 #
 #  Установка mpvpaper (AUR, нужен sudo):  yay -S mpvpaper
@@ -20,6 +20,19 @@
 
 WALLDIR="${1:-$HOME/Pictures/EclipseWalls}"
 MPV_SOCK="${XDG_RUNTIME_DIR:-/tmp}/eclipse-mpvpaper-$(id -u).sock"
+
+# ── режим «set»: поставить набор кадров из каталога и выйти ──
+#    eclipse-walls.sh set ~/.local/share/lunar/walls/3440x1440
+if [[ "${1:-}" == "set" ]]; then
+  SRC="${2:-}"
+  [[ -d "$SRC" ]] || { echo "Использование: eclipse-walls.sh set <каталог с eclipse_NN.png>" >&2; exit 1; }
+  mkdir -p "$HOME/Pictures/EclipseWalls"
+  cp "$SRC"/eclipse_*.png "$HOME/Pictures/EclipseWalls/" 2>/dev/null || true
+  cp "$SRC"/eclipse_*.jpg "$HOME/Pictures/EclipseWalls/" 2>/dev/null || true
+  echo "Кадры обоев обновлены из $SRC → ~/Pictures/EclipseWalls"
+  echo "Перезапусти eclipse-walls.sh, чтобы применить."
+  exit 0
+fi
 
 active_ws() {
   hyprctl activeworkspace -j 2>/dev/null | python3 -c 'import sys, json

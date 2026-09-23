@@ -16,6 +16,11 @@ mkdir -p "$HOME/.config"
 cp -r "$REPO/.config/." "$HOME/.config/"
 chmod +x "$HOME"/.config/hypr/scripts/* 2>/dev/null || true
 
+# ── сайт-превью (генератор обоев под любое разрешение) ─────────
+say "Превью-сайт → ~/.config/lunar/sait"
+mkdir -p "$HOME/.config/lunar/sait"
+cp "$REPO"/sait/* "$HOME/.config/lunar/sait/" 2>/dev/null || true
+
 # ── обои ───────────────────────────────────────────────────────
 say "Обои → ~/Pictures/EclipseWalls"
 mkdir -p "$HOME/Pictures/EclipseWalls"
