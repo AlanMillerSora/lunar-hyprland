@@ -31,6 +31,9 @@ hl.env("HYPRCURSOR_SIZE", "24")
 hl.env("XCURSOR_THEME", "Bibata-Modern-Ice")
 hl.env("HYPRCURSOR_THEME", "Bibata-Modern-Ice")
 
+-- Браузер по умолчанию — Firefox (для xdg-open, CLI-утилит и ссылок)
+hl.env("BROWSER", "firefox")
+
 -- ─────────────────────── NVIDIA: окружение ──────────────────────
 -- Ставим переменные ТОЛЬКО если NVIDIA реально есть в системе —
 -- на AMD/Intel ничего не меняется (иначе сломается рендер).
@@ -240,20 +243,28 @@ hl.layer_rule({ match = { namespace = "quickshell" }, blur = true, ignore_alpha 
 hl.window_rule({ match = { fullscreen = true }, no_blur = true })
 
 -- ─────────── Автораскладка: приложение → свой стол ───────────
--- Окна сами открываются на нужной фазе (столе). Чтобы отключить —
--- убери строку класса или весь блок.
+-- Раскладка по задачам:
+--   1 — игры              2 — браузер (Firefox)   3 — Discord
+--   4 — пустой            5 — Steam               6 — кодинг
+--   7 — пустой            8 — btop (автозапуск)
+-- Не перечисленные приложения открываются на текущем столе.
 local app_ws = {
+  -- 1 — игры (Steam/Proton, Heroic, Lutris, эмуляторы)
+  ["1"] = { "steam_app_.*", "gamescope", "wine.*", "proton.*",
+            "heroic", "com.heroicgameslauncher.hgl", "lutris",
+            "prismlauncher", "Minecraft.*", "retroarch", "dolphin-emu",
+            "ryujinx", "citra.*", "ppsspp.*", "osu!.*" },
+  -- 2 — браузер
   ["2"] = { "firefox", "firefox-developer-edition", "chromium",
             "google-chrome", "brave-browser", "vivaldi-stable",
             "zen", "zen-browser" },
-  ["3"] = { "code", "code-oss", "code-url-handler", "cursor", "zed",
+  -- 3 — Discord
+  ["3"] = { "discord", "vesktop" },
+  -- 5 — Steam (сам клиент)
+  ["5"] = { "steam", "steamwebhelper" },
+  -- 6 — кодинг
+  ["6"] = { "code", "code-oss", "code-url-handler", "cursor", "zed",
             "jetbrains-.*" },
-  ["4"] = { "steam", "gamescope", "heroic", "lutris",
-            "com.heroicgameslauncher.hgl", "prismlauncher" },
-  ["5"] = { "nautilus", "org.gnome.Nautilus", "thunar" },
-  ["6"] = { "telegram-desktop", "org.telegram.desktop", "discord",
-            "vesktop", "signal-desktop", "org.signal.Signal" },
-  ["7"] = { "spotify", "vlc", "mpv" },
 }
 for ws, classes in pairs(app_ws) do
   for _, cls in ipairs(classes) do

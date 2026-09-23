@@ -95,6 +95,13 @@ if [ -f /usr/share/applications/firefox.desktop ]; then
     > "$HOME/.local/share/applications/firefox.desktop"
 fi
 
+# ── Firefox: браузер по умолчанию ──────────────────────────────
+if command -v xdg-settings >/dev/null 2>&1; then
+  xdg-settings set default-web-browser firefox.desktop 2>/dev/null \
+    && say "Firefox: браузер по умолчанию" \
+    || say "Firefox: не удалось назначить браузером по умолчанию (не критично)"
+fi
+
 # ── курсор Bibata (монохромный, в тему) ────────────────────────
 if [ ! -d "$HOME/.local/share/icons/Bibata-Modern-Ice" ]; then
   say "Курсор Bibata → ~/.local/share/icons"
