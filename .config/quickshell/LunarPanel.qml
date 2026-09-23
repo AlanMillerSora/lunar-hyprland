@@ -670,6 +670,49 @@ PanelWindow {
             }
         }
 
+        // ── NET pill: скорость сети (отдельным блоком перед иконкой сети) ──
+        // Не прячем: при простое цифры тускнеют. Клик — список сетей в Hub.
+        Rectangle {
+            id: netPill
+            anchors.right: statusPill.left
+            anchors.rightMargin: 6
+            anchors.verticalCenter: parent.verticalCenter
+            height: 32
+            radius: Theme.radiusL
+            color: root.pillBg
+            border.color: root.pillBorder
+            border.width: 1
+            width: netRow.implicitWidth + 18
+
+            Row {
+                id: netRow
+                anchors.centerIn: parent
+                height: 26
+                spacing: 8
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "󰁅" + root.netFmt(root.netDown)
+                    color: root.netDown > 1024 ? Theme.text : Theme.textFaint
+                    font.family: Theme.iconFont
+                    font.pixelSize: Theme.fontSize(12)
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "󰁝" + root.netFmt(root.netUp)
+                    color: root.netUp > 1024 ? Theme.text : Theme.textFaint
+                    font.family: Theme.iconFont
+                    font.pixelSize: Theme.fontSize(12)
+                }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.openNetwork()
+            }
+        }
+
         // ── STATUS pill: сеть / раскладка / уведомления ──
         Rectangle {
             id: statusPill
@@ -710,27 +753,6 @@ PanelWindow {
                     color: Theme.textDim
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(13)
-                }
-
-                // скорость сети: не прячем, при простое — тускло
-                Row {
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 6
-
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: "󰁅" + root.netFmt(root.netDown)
-                        color: root.netDown > 1024 ? Theme.text : Theme.textFaint
-                        font.family: Theme.iconFont
-                        font.pixelSize: Theme.fontSize(12)
-                    }
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: "󰁝" + root.netFmt(root.netUp)
-                        color: root.netUp > 1024 ? Theme.text : Theme.textFaint
-                        font.family: Theme.iconFont
-                        font.pixelSize: Theme.fontSize(12)
-                    }
                 }
 
                 Rectangle {
