@@ -264,6 +264,8 @@ PanelWindow {
     // ─────────── сеть / раскладка / уведомления ───────────
     property string netKind: "off"      // eth | wifi | off
     property int netSignal: 0
+    property real netDown: 0            // МБ/с приём
+    property real netUp: 0              // МБ/с передача
     property string kbLayout: "EN"
     property string kbDevice: ""
     property bool dnd: false
@@ -327,7 +329,53 @@ PanelWindow {
         onTriggered: statusProc.running = true
     }
 
+    // ── скорость сети (МБ/с) из /proc/net/dev ─────────────────
+    // Скрипт считает дельту по суммарному трафику всех интерфейсов
+    // (кроме lo) за интервал и печатает "down up" в МБ/с.
+    Process {
+        id: netProc
+        running: false
+        command: ["python3", "-c", `
+import time, os
+def read():
+    rx = tx = 0
+    with open("/proc/net/dev") as f:
+        for line in f.readlines()[2:]:
+            name, data = line.split(":", 1)
+            if name.strip() == "lo":
+                continue
+            parts = data.split()
+            rx += int(parts[0]); tx += int(parts[8])
+    return rx, tx
+r1, t1 = read()
+time.sleep(1.0)
+r2, t2 = read()
+print(f"{(r2-r1)/1048576:.2f} {(t2-t1)/1048576:.2f}")
+`]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var p = text.trim().split(/\s+/)
+                if (p.length >= 2) {
+                    root.netDown = parseFloat(p[0]) || 0
+                    root.netUp = parseFloat(p[1]) || 0
+                }
+            }
+        }
+    }
+
+    Timer {
+        interval: 3000
+        running: true
+        repeat: true
+        onTriggered: if (!netProc.running) netProc.running = true
+    }
+
     Process { id: statusProcAction; running: false }
+    Process {
+        id: mediaPanelProc
+        running: false
+        command: ["qs", "ipc", "call", "media", "toggle"]
+    }
 
     function openNetwork() {
         statusProcAction.command = ["bash", "-c",
@@ -595,6 +643,16 @@ PanelWindow {
                     font.pixelSize: Theme.fontSize(13)
                 }
 
+                // скорость сети (показываем, когда есть трафик)
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: root.netDown > 0.05 || root.netUp > 0.05
+                    text: "󰁅 " + root.netDown.toFixed(1) + "  󰁝 " + root.netUp.toFixed(1)
+                    color: Theme.textFaint
+                    font.family: Theme.iconFont
+                    font.pixelSize: Theme.fontSize(11)
+                }
+
                 Rectangle {
                     width: 1
                     height: 16
@@ -850,7 +908,7 @@ PanelWindow {
                             else if (mouse.button === Qt.MiddleButton)
                                 root.player.previous()
                             else
-                                root.player.togglePlaying()
+                                mediaPanelProc.running = true   // ЛКМ — попап «сейчас играет»
                         }
                     }
                 }
