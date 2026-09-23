@@ -1506,9 +1506,3 @@ body {
   90% { opacity: 0.4; }
   100% { transform: translateY(-20px) translateX(var(--drift)); opacity: 0; }
 }
-/* probe: стол 9 — как фаза 1, но луна слева (зеркало) */
-.eclipse-phase-9 #eclipse-bg { background: radial-gradient(ellipse at center, #10151c 0%, #05070c 60%, #000 100%); }
-.eclipse-phase-9 .moon-glow { opacity: 0.2; }
-.eclipse-phase-9 .moon { transform: translate(calc(-50% - 250px), -50%); }
-.eclipse-phase-9 .penumbra { opacity: 0.5; }
-.eclipse-phase-9 .sun, .eclipse-phase-9 .sun-glow-outer { opacity: 1; }

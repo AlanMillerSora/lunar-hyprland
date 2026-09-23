@@ -11,13 +11,13 @@
 #    eclipse-walls-gen.sh                # в разрешении текущего монитора
 #    eclipse-walls-gen.sh 3440x1440      # явное разрешение
 #    eclipse-walls-gen.sh 3840x2160 1 5  # только кадры 1 и 5
-#    FORMAT=video eclipse-walls-gen.sh   # ещё и живые webm (12 с, 60 fps)
 #
-#  Результат: ~/.local/share/lunar/walls/<WxH>/eclipse_NN.png|webm
-#  (установить как обои — eclipse-walls.sh set или ./install.sh)
+#  Результат: ~/.local/share/lunar/walls/<WxH>/eclipse_NN.png
+#  Это статика для фолбэка / «лёгкого режима»: живые обои рисует
+#  Quickshell (LunarWallpaper.qml). Скопировать кадры в Pictures:
+#    eclipse-walls.sh set <каталог>
 #
 #  Зависимости: chromium (или google-chrome / brave / microsoft-edge)
-#               для видео — дополнительно ffmpeg
 # ════════════════════════════════════════════════════════════
 set -euo pipefail
 
@@ -78,26 +78,6 @@ echo "Размер:    ${W}x${H}"
 echo "Каталог:   $OUT"
 echo
 
-# ── делаем ли живые видео (webm) ─────────────────────────────
-WANT_VIDEO="${FORMAT:-image}"
-VIDEO_OK=0
-if [[ "$WANT_VIDEO" == "video" ]]; then
-  command -v ffmpeg >/dev/null 2>&1 && VIDEO_OK=1 \
-    || echo "ВНИМАНИЕ: нет ffmpeg — видео не соберу, будут только кадры" >&2
-fi
-
-# Петля из одного кадра: лёгкое «дыхание» (зум ~1.5%) + дрейф вниз,
-# чтобы обои не выглядели мёртвой картинкой. Вход/выход совпадают — шва нет.
-# Кадр сперва растягиваем в 4 раза (запас на зум и дрейф) — чёрных полос нет.
-make_video() {
-  local png="$1" out="$2"
-  local WW=$(( W * 4 )) HH=$(( H * 4 ))
-  ffmpeg -y -loglevel error -loop 1 -i "$png" -t 12 \
-    -vf "scale=${WW}:${HH}:force_original_aspect_ratio=increase,crop=${WW}:${HH},zoompan=z='1.06+0.02*sin(2*PI*on/720)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)+60*sin(2*PI*on/720)':d=720:s=${W}x${H}:fps=60,format=yuv420p10le" \
-    -c:v libvpx-vp9 -pix_fmt yuv420p10le -b:v 0 -crf 34 -row-mt 1 \
-    -an -r 60 "$out"
-}
-
 for n in "${PHASES[@]}"; do
   [[ "$n" =~ ^[0-9]+$ ]] || continue
   f="$(printf 'eclipse_%02d.png' "$n")"
@@ -109,17 +89,7 @@ for n in "${PHASES[@]}"; do
     --screenshot="$OUT/$f" \
     "file://$SAIT/index.html?phase=$n&clean=1" >/dev/null 2>&1 || true
   if [[ -s "$OUT/$f" ]]; then
-    if [[ "$VIDEO_OK" == 1 ]]; then
-      v="$(printf 'eclipse_%02d.webm' "$n")"
-      echo -n "ок, видео … "
-      if make_video "$OUT/$f" "$OUT/$v" 2>/dev/null && [[ -s "$OUT/$v" ]]; then
-        echo "ок"
-      else
-        echo "не собралось"
-      fi
-    else
-      echo "ок"
-    fi
+    echo "ок"
   else
     echo "ОШИБКА"
   fi

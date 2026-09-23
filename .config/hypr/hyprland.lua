@@ -354,7 +354,8 @@ hl.bind("XF86MonBrightnessDown", dsp.exec_cmd("sh -c '~/.config/hypr/scripts/ecl
 
 -- ─────────────────────────────── Автозапуск ─────────────────────────
 hl.on("hyprland.start", function()
-  hl.exec_cmd("awww-daemon")
+  -- Живые обои — в Quickshell (LunarWallpaper.qml, фоновый слой):
+  -- поднимаются вместе с шеллом, отдельный демон (awww/mpvpaper) не нужен.
   -- waybar заменён верхней панелью Quickshell (LunarPanel.qml).
   -- Шелл живёт под systemd-user (Restart=always): упал — поднимется сам.
   -- Сначала отдаём юниту env сессии (иначе он не увидит WAYLAND_DISPLAY).
@@ -364,7 +365,6 @@ hl.on("hyprland.start", function()
   -- история буфера обмена (клипборд Quickshell, SUPER+V)
   hl.exec_cmd("wl-paste --type text  --watch cliphist store")
   hl.exec_cmd("wl-paste --type image --watch cliphist store")
-  hl.exec_cmd("~/.config/hypr/scripts/eclipse-walls.sh")
   hl.exec_cmd("/usr/lib/polkit-kde-authentication-agent-1")
   hl.exec_cmd("~/.config/hypr/scripts/eclipse-transparency.sh")
   -- курсор Bibata (тема применяется на лету)
@@ -375,5 +375,5 @@ end)
 
 -- Проверка:  hyprctl configerrors
 -- Применение на лету:  hyprctl eval 'hl.config({ ... })'
--- Сменить обои вручную:  hyprctl eval 'hl.dispatch(hl.dsp.exec_cmd("awww img ~/Pictures/EclipseWalls/eclipse_04.png"))'
+-- Обои живут в Quickshell (LunarWallpaper.qml) и меняются по столам сами.
 -- (в Hyprland 0.56 hyprctl dispatch/exec парсятся как Lua, поэтому eval)

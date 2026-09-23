@@ -29,6 +29,9 @@ QtObject {
     property real interfaceOpacity: 1.0
     property real fontScale: 1.0
 
+    // живые обои (QML-сцена): false — «лёгкий режим» без звёзд/метеоров/пыли
+    property bool wallpaperLive: true
+
     // попап громкости открыт — центральный OSD не показываем (без дубля)
     property bool volumePopupOpen: false
 
@@ -73,11 +76,13 @@ QtObject {
             property real interfaceOpacity: 1.0
             property real fontScale: 1.0
             property int trayVisible: 3
+            property bool wallpaperLive: true
 
             // файл → UI
             onInterfaceOpacityChanged: theme.interfaceOpacity = interfaceOpacity
             onFontScaleChanged: theme.fontScale = fontScale
             onTrayVisibleChanged: theme.trayVisible = trayVisible
+            onWallpaperLiveChanged: theme.wallpaperLive = wallpaperLive
         }
     }
 
@@ -85,6 +90,7 @@ QtObject {
     onInterfaceOpacityChanged: uiAdapter.interfaceOpacity = interfaceOpacity
     onFontScaleChanged: uiAdapter.fontScale = fontScale
     onTrayVisibleChanged: uiAdapter.trayVisible = trayVisible
+    onWallpaperLiveChanged: uiAdapter.wallpaperLive = wallpaperLive
 
     function alpha(c, a) {
         return Qt.rgba(c.r, c.g, c.b, a)

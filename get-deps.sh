@@ -37,7 +37,6 @@ sudo pacman -S --needed --noconfirm \
   python python-psutil python-gobject \
   pciutils dmidecode pacman-contrib \
   librsvg curl \
-  awww \
   ttf-jetbrains-mono-nerd ttf-iosevka-nerd
 
 # python3 — бинарь пакета python (выше); psutil/gobject — для скриптов
@@ -109,7 +108,7 @@ else
   say "yay/paru не найден — VS Code пропущен (вручную: yay -S visual-studio-code-bin)"
 fi
 
-say "Обои: awww установлен (mpvpaper — опционально из AUR: yay -S mpvpaper)"
+say "Обои: живые — QML-сцена в Quickshell (LunarWallpaper.qml); статику под разрешение генерит eclipse-walls-gen.sh"
 
 # ── Vencord (AUR) ──────────────────────────────────────────────
 # Мод Discord: инсталлятор патчит app.asar. Сам патч применяется

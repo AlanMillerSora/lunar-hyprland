@@ -1,6 +1,7 @@
 import Quickshell
 
 ShellRoot {
+    LunarWallpaper {}   // живые обои (фоновый слой) — первыми, под всем
     LunarPanel {}
     LunarHub {}
     LunarSidebar {}

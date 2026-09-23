@@ -314,7 +314,9 @@ function initAutoCycle() {
 
 // ═══════════════ MOON DRAG → PHASE SLIDER ═══════════════
 
-const MOON_OFFSETS = [0, -250, -162, -84, 0, 84, 162, 215, 251];
+// Позиции луны совпадают с таблицей фаз в style.css (столы 1..8):
+// -339, -288, -230, -107, 0, +107, +230, +288 (индекс 0 не используется).
+const MOON_OFFSETS = [0, -339, -288, -230, -107, 0, 107, 230, 288];
 
 function moonDragDesktop(offset) {
   let best = 1, bestDist = Infinity;

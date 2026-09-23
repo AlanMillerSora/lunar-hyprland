@@ -63,6 +63,7 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 
 | Компонент | Файл | Что делает |
 |---|---|---|
+| **Обои** | `quickshell/LunarWallpaper.qml`, `LunarWallpaperScene.qml` | Живая сцена затмения на чистом QtQuick (фоновый слой): фаза по активному столу 1–9, звёзды/метеоры/пыль, вспышка серпа nightfall. Превью без Hyprland — `preview.qml` |
 | **Панель** | `quickshell/LunarPanel.qml` | 42px сверху. Слева — лого+фаза и столы `01–09`; справа — отдельная пилюля **скорости сети** (Б/К/М), сеть/раскладка/уведомления, блок действий (Game Mode, профиль питания, запись), CPU/RAM/°C/GPU, mpris, трей, громкость |
 | **Media** | `quickshell/LunarMedia.qml` | Попап «сейчас играет» (клик по треку на панели): трек/исполнитель, прогресс, назад/пауза/вперёд |
 | **Статус** | `hypr/scripts/eclipse-status.sh` | Одна строка статуса для панели: сеть, раскладка, DND, уведомления, GPU, Game Mode, профиль питания, запись |
@@ -114,17 +115,23 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 
 ## 🌘 Обои
 
-Живые обои сменяются по столам (`hypr/scripts/eclipse-walls.sh`): видео `eclipse_NN.webm`
-через **mpvpaper**, статика `eclipse_NN.png` — через **awww** (если видео нет).
+Живые обои рисует сам Quickshell (`quickshell/LunarWallpaper.qml`) — сцена
+затмения на чистом QtQuick, на фоновом слое. Фаза = активный стол (1..9):
+луна едет слева направо, на 5 — кольцо, на 4 — кровавая луна с метеорами и
+пылью, на 3/4/6/7 вспыхивает синий серп. Тумблер **живые / лёгкий режим**
+(без звёзд/метеоров/пыли) — в Hub → **Wallpapers**. Отдельного демона
+(mpvpaper/awww) больше нет.
 
-Кадры снимает превью-сайт (`sait/`) — генератор рендерит сцену в любом разрешении
-(headless Chromium), поэтому на 1920×1080 ноута и 3440×1440 ПК обои свои:
+Сцену можно посмотреть без Hyprland: `qml6 .config/quickshell/preview.qml`
+(клавиши 1..9 — фазы, L — лёгкий режим).
+
+Статика фаз (фолбэк) генерится из превью-сайта `sait/` под любое разрешение
+(headless Chromium):
 
 ```
 hypr/scripts/eclipse-walls-gen.sh                # кадры под текущий монитор
 hypr/scripts/eclipse-walls-gen.sh 3440x1440      # явное разрешение
-FORMAT=video hypr/scripts/eclipse-walls-gen.sh   # ещё и живые webm (12 с, 60 fps)
-hypr/scripts/eclipse-walls.sh set ~/.local/share/lunar/walls/3440x1440   # применить
+hypr/scripts/eclipse-walls.sh set ~/.local/share/lunar/walls/3440x1440   # скопировать
 ```
 
 Всё то же есть в Hub → **Wallpapers** (выбор разрешения, генерация, применение).
@@ -150,7 +157,7 @@ hypr/scripts/eclipse-walls.sh set ~/.local/share/lunar/walls/3440x1440   # пр�
 │   ├── .zshrc              # zsh
 │   └── starship.toml       # промпт
 ├── wallpapers/             # 9 фаз затмения (01..09)
-├── sait/                   # превью-сайт → генератор обоев под любое разрешение
+├── sait/                   # визуальная спека сцены + генератор статики обоев
 ├── color-schemes/          # цветовая схема KDE → ~/.local/share/color-schemes
 ├── systemd/                # wifi-guard, lunar-homepage (страница новой вкладки)
 ├── assets/                 # логотип и скриншоты

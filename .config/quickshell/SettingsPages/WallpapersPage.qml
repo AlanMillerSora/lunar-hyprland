@@ -3,9 +3,11 @@ import Quickshell.Io
 import "../"
 
 // ════════════════════════════════════════════════════════════════
-//  WALLPAPERS — генерация обоев фаз затмения из превью-сайта
-//  сайт ~/.config/lunar/sait/index.html рендерится в headless
-//  Chromium под любое разрешение (1920x1080, 3440x1440, 4K …).
+//  WALLPAPERS — живые обои + статика фаз.
+//  Живую сцену рисует Quickshell (LunarWallpaper.qml, фоновый слой),
+//  фаза — по активному столу. Здесь: тумблер «живые / лёгкий режим»
+//  и генерация статических PNG под разрешение (headless Chromium,
+//  сайт-спека ~/.config/lunar/sait/index.html) для фолбэка.
 // ════════════════════════════════════════════════════════════════
 Item {
     id: page
@@ -163,6 +165,71 @@ Item {
                 font.family: page.mono
                 font.pixelSize: 18
                 font.letterSpacing: 3
+            }
+
+            Rectangle { width: parent.width; height: 1; color: Theme.border }
+
+            // ── блок: режим обоев (живые QML / лёгкий) ──
+            Row {
+                width: parent.width
+                spacing: 12
+
+                Text {
+                    text: "\uf03e"
+                    color: Theme.accent
+                    font.family: page.mono
+                    font.pixelSize: 14
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                Column {
+                    spacing: 4
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Text {
+                        text: "live eclipse scene (QML)"
+                        color: Theme.text
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 12
+                    }
+                    Text {
+                        text: Theme.wallpaperLive
+                            ? "звёзды, метеоры, пыль, серп — анимация включена"
+                            : "лёгкий режим: без звёзд/метеоров/пыли (слабое железо)"
+                        color: Theme.textDim
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 10
+                    }
+                }
+
+                // тумблер
+                Rectangle {
+                    id: liveToggle
+                    width: 46
+                    height: 24
+                    radius: 12
+                    anchors.verticalCenter: parent.verticalCenter
+                    color: Theme.wallpaperLive ? Theme.accent : Theme.trackBg
+                    border.width: 1
+                    border.color: Theme.wallpaperLive ? Theme.accent : Theme.border
+                    Behavior on color { ColorAnimation { duration: 120 } }
+
+                    Rectangle {
+                        width: 18
+                        height: 18
+                        radius: 9
+                        anchors.verticalCenter: parent.verticalCenter
+                        x: Theme.wallpaperLive ? parent.width - width - 3 : 3
+                        color: Theme.wallpaperLive ? Theme.bgPanel : Theme.textDim
+                        Behavior on x { NumberAnimation { duration: 120 } }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: Theme.wallpaperLive = !Theme.wallpaperLive
+                    }
+                }
             }
 
             Rectangle { width: parent.width; height: 1; color: Theme.border }
