@@ -552,6 +552,93 @@ print(f"{(r2-r1)/1048576:.2f} {(t2-t1)/1048576:.2f}")
             }
         }
 
+        // ── NET pill: скорость сети (между столами и часами) ──
+        // Минимализм: две цифры со стрелками, свечение только при трафике.
+        Rectangle {
+            id: netPill
+            anchors.left: leftPill.right
+            anchors.leftMargin: 6
+            anchors.verticalCenter: parent.verticalCenter
+            height: 32
+            radius: Theme.radiusL
+            color: root.pillBg
+            border.color: root.netDown > 0.05 || root.netUp > 0.05
+                ? Theme.borderAccent : root.pillBorder
+            border.width: 1
+            width: netRow.implicitWidth + 18
+            Behavior on border.color { ColorAnimation { duration: 200 } }
+
+            Row {
+                id: netRow
+                anchors.centerIn: parent
+                height: 26
+                spacing: 9
+
+                // приём
+                Row {
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 3
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "󰁅"
+                        color: root.netDown > 0.05 ? Theme.accent : Theme.textFaint
+                        font.family: Theme.iconFont
+                        font.pixelSize: Theme.fontSize(12)
+                    }
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: root.netDown.toFixed(1)
+                        color: root.netDown > 0.05 ? Theme.text : Theme.textFaint
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(12)
+                    }
+                }
+
+                Rectangle {
+                    width: 1
+                    height: 14
+                    color: Theme.border
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                // передача
+                Row {
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 3
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "󰁝"
+                        color: root.netUp > 0.05 ? Theme.accent : Theme.textFaint
+                        font.family: Theme.iconFont
+                        font.pixelSize: Theme.fontSize(12)
+                    }
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: root.netUp.toFixed(1)
+                        color: root.netUp > 0.05 ? Theme.text : Theme.textFaint
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(12)
+                    }
+                }
+
+                // единица — мелко и один раз
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "МБ/с"
+                    color: Theme.textFaint
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(9)
+                    font.letterSpacing: 0.5
+                }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.openNetwork()
+            }
+        }
+
         // ── CENTER pill: clock ──
         Rectangle {
             id: centerPill
@@ -641,16 +728,6 @@ print(f"{(r2-r1)/1048576:.2f} {(t2-t1)/1048576:.2f}")
                     color: Theme.textDim
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(13)
-                }
-
-                // скорость сети (показываем, когда есть трафик)
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    visible: root.netDown > 0.05 || root.netUp > 0.05
-                    text: "󰁅 " + root.netDown.toFixed(1) + "  󰁝 " + root.netUp.toFixed(1)
-                    color: Theme.textFaint
-                    font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSize(11)
                 }
 
                 Rectangle {
