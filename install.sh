@@ -138,6 +138,22 @@ if [ -d "$REPO/systemd" ]; then
   systemctl --user disable lunar-quickshell.service 2>/dev/null || true
 fi
 
+# ── i2c-dev: внешние мониторы через ddcutil (яркость DDC/CI) ───
+# Нужно только там, где есть внешний монитор; на ноуте безвредно.
+# Ставим модуль в автозагрузку и добавляем пользователя в группу i2c,
+# иначе ddcutil не видит шину (см. README → «Яркость»).
+if command -v ddcutil >/dev/null 2>&1; then
+  if [ ! -f /etc/modules-load.d/i2c-dev.conf ]; then
+    say "i2c-dev → автозагрузка модуля"
+    printf 'i2c-dev\n' | sudo tee /etc/modules-load.d/i2c-dev.conf >/dev/null 2>&1 || true
+  fi
+  sudo modprobe i2c-dev 2>/dev/null || true
+  if ! id -nG "$USER" 2>/dev/null | tr ' ' '\n' | grep -qx i2c; then
+    say "i2c: пользователь → группа i2c (нужен перелогин)"
+    sudo usermod -aG i2c "$USER" 2>/dev/null || true
+  fi
+fi
+
 # ── shell по умолчанию ─────────────────────────────────────────
 if command -v zsh >/dev/null 2>&1 && [ "${SHELL:-}" != "$(command -v zsh)" ]; then
   say "zsh как шелл по умолчанию"

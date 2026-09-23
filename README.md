@@ -277,7 +277,9 @@ Wayland мерцает (нет explicit sync).
 Wiki → Nvidia).
 
 **Яркость.** Встроенная панель — `brightnessctl`, внешние мониторы — `ddcutil`
-(DDC/CI). Для ddcutil нужен `i2c-dev`:
+(DDC/CI). Для ddcutil нужен `i2c-dev` — `./install.sh` включает модуль и
+добавляет пользователя в группу `i2c` автоматически (нужен перелогин).
+Вручную то же самое:
 
 ```bash
 echo i2c-dev | sudo tee /etc/modules-load.d/i2c-dev.conf

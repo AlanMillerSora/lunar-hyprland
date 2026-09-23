@@ -7,15 +7,25 @@ set -euo pipefail
 
 say() { printf '\033[38;5;15m==>\033[0m %s\n' "$*"; }
 
+# ── multilib: нужен для steam ──────────────────────────────────
+# На чистой Arch секция [multilib] закомментирована — без неё steam не
+# поставится. Раскомментируем идемпотентно.
+if ! pacman-conf --repo-list 2>/dev/null | grep -qx multilib; then
+  say "multilib: включаю репозиторий (для steam)"
+  sudo sed -i '/^#\[multilib\]/,/^#Include = \/etc\/pacman.d\/mirrorlist/ s/^#//' /etc/pacman.conf
+  sudo pacman -Sy --noconfirm >/dev/null 2>&1 || true
+fi
+
 # ── базовые пакеты ─────────────────────────────────────────────
 say "pacman: пакеты"
 sudo pacman -S --needed --noconfirm \
+  git \
   hyprland hypridle \
   quickshell \
   xdg-desktop-portal-hyprland xdg-desktop-portal-gtk \
   kitty fastfetch chafa \
   zsh starship eza zsh-autosuggestions zsh-syntax-highlighting \
-  mako firefox discord \
+  mako firefox discord steam \
   yazi bat ffmpeg 7zip poppler jq fd ripgrep zoxide fzf \
   playerctl brightnessctl ddcutil jq cliphist wl-clipboard \
   grim slurp wf-recorder \
