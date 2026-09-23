@@ -78,7 +78,7 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 | **Hub** | `quickshell/LunarHub.qml` | Лаунчер + настройки (980×640, как у 43PR): Launch, System, Sound, Monitors, Network, Bluetooth, Interface, Memory, Games |
 | **Memory** | `quickshell/SettingsPages/MemoryPage.qml` | Индикатор заполнения RAM/SWAP и общей памяти (MEM) + очистка системы (кнопка «ОЧИСТИТЬ») |
 | **Очистка** | `hypr/scripts/eclipse-cleanup.sh` | Сироты, кэш пакетов, журнал, tmpfiles, кэш yay, эскизы; опционально браузеры |
-| **Файлы** | `yazi/theme.toml`, `yazi/yazi.toml` | Файловый менеджер yazi в монохроме системы (`SUPER + E`); Enter по исходнику открывает его в VS Code |
+| **Файлы** | `yazi/theme.toml`, `yazi/yazi.toml` | Файловый менеджер yazi в монохроме системы (`SUPER + E`); Enter по исходнику открывает его в VS Code. Превью картинок, PDF (poppler), шрифтов (imagemagick) и видео (ffmpeg) |
 | **Firefox** | `firefox/chrome/userChrome.css`, `firefox/user.js` | Тёмный монохром, вертикальные вкладки, без рекламы и телеметрии; своя страница новой вкладки `lunar/firefox-home.html` (отдаёт локальный сервис `lunar-homepage`) и иконка Lunar |
 | **Sidebar** | `quickshell/LunarSidebar.qml` | Выдвигается от левого края (560px): чат (**OpenCode** — агент прямо в панели), буфер (cliphist; ПКМ — удалить), заметки |
 | **Sidebar R** | `quickshell/LunarSidebarRight.qml` | Выдвигается от правого края: уведомления (mako), «сейчас играет» (mpris), календарь (прокручивается, 18 месяцев), запись экрана со списком |

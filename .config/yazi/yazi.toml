@@ -1,9 +1,26 @@
 #:schema https://yazi-rs.github.io/schemas/yazi.json
 # ════════════════════════════════════════════════════════════════
 #  yazi — Lunar Eclipse
-#  Enter по тексту открывает файл в VS Code (ждёт закрытия),
+#
+#  Превью «из коробки» — встроенные превьюеры yazi:
+#    · картинки  — image (встроенный декодер), magick для avif/heif/jxl;
+#    · PDF       — pdf (poppler, `pdftoppm`);
+#    · шрифты    — font (imagemagick рисует образец начертания);
+#    · текст/код — code (подсветка).
+#  Нужные пакеты: poppler, imagemagick, fontconfig — есть в get-deps.sh.
+#
+#  Enter по тексту/коду открывает файл в VS Code (ждёт закрытия),
 #  если VS Code нет — в nvim.
 # ════════════════════════════════════════════════════════════════
+
+[preview]
+# Кэш превью — под широкий монитор ПК (3440×1440) и ноут.
+max_width     = 1920
+max_height    = 1080
+image_filter  = "lanczos3"
+image_quality = 80
+image_delay   = 30
+tab_size      = 4
 
 [opener]
 edit = [
@@ -18,9 +35,18 @@ term = [
 ]
 
 [open]
-rules = [
-	# папки — входим/открываем в yazi
-	{ url = "*/", use = [ "folder" ] },
-	# исходники и конфиги — сразу в VS Code
-	{ url = "*.{sh,bash,zsh,py,js,mjs,cjs,ts,tsx,jsx,json,jsonc,md,toml,yaml,yml,lua,qml,gjs,conf,cfg,ini,service,qss,html,css,scss,sql,rs,go,c,h,cpp,hpp,java,kt,php,rb,tex}", use = [ "edit" ] },
+# prepend_rules (а НЕ rules) — сохраняем дефолтные правила yazi:
+#   PDF и документы → приложение по умолчанию (xdg-open),
+#   картинки → просмотрщик по умолчанию, аудио/видео → play.
+# Своё правило — только для исходников и конфигов: сразу в VS Code.
+prepend_rules = [
+	{ url = "*.{sh,bash,zsh,py,js,mjs,cjs,ts,tsx,jsx,json,jsonc,md,toml,yaml,yml,lua,qml,gjs,conf,cfg,ini,service,qss,html,css,scss,sql,rs,go,c,h,cpp,hpp,java,kt,php,rb,tex}", use = [ "edit", "reveal" ] },
+]
+
+[plugin]
+# Шрифты — по расширению, а не по MIME: `file` на части систем отдаёт
+# для .ttf «application/octet-stream», и встроенное правило font/* не
+# срабатывает. Сам превьюер font рисует образец через imagemagick.
+prepend_previewers = [
+	{ url = "*.{ttf,otf,ttc,woff,woff2}", run = "font" },
 ]
