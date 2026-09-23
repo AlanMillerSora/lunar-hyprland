@@ -26,7 +26,8 @@ sudo pacman -S --needed --noconfirm \
   kitty fastfetch chafa \
   zsh starship eza zsh-autosuggestions zsh-syntax-highlighting \
   mako firefox discord steam \
-  yazi bat ffmpeg 7zip poppler jq fd ripgrep zoxide fzf \
+  yazi bat ffmpeg 7zip jq fd ripgrep zoxide fzf \
+  poppler imagemagick fontconfig \
   playerctl brightnessctl ddcutil jq cliphist wl-clipboard \
   grim slurp wf-recorder \
   pipewire pipewire-pulse wireplumber pavucontrol \
@@ -38,6 +39,21 @@ sudo pacman -S --needed --noconfirm \
   librsvg curl \
   awww \
   ttf-jetbrains-mono-nerd ttf-iosevka-nerd
+
+# python3 — бинарь пакета python (выше); psutil/gobject — для скриптов
+# статуса и GTK-виджетов (шпаргалка, календарь).
+
+# ── игры и медиа (часть риса: стол 01 — игры) ──────────────────
+# Игровое окружение и захват: Steam тянет Proton; gamescope/mangohud —
+# оверлеи и композитинг; gamemode — профиль производительности.
+# lutris/эмуляторы — по README (стол игр).
+say "pacman: игры и медиа"
+sudo pacman -S --needed --noconfirm \
+  gamescope mangohud lib32-mangohud gamemode \
+  lutris \
+  retroarch dolphin-emu \
+  obs-studio mpv \
+  || say "часть игровых пакетов не поставилась — см. вывод"
 
 # ── NVIDIA ─────────────────────────────────────────────────────
 # Ставим только если в системе реально есть карта NVIDIA (по sysfs).

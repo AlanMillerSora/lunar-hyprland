@@ -12,6 +12,37 @@ say() { printf '\033[38;5;15m==>\033[0m %s\n' "$*"; }
 
 # ── конфиги ────────────────────────────────────────────────────
 say "Конфиги → ~/.config"
+
+# Безопасный повторный запуск: если в ~/.config есть файлы, которых нет в
+# репо (или которые отличаются), — не затираем молча. Показываем список и
+# делаем бэкап этих файлов в ~/.config-backup-<дата>/ перед копированием.
+LOCAL_DIFF=""
+while IFS= read -r f; do
+  rel="${f#"$HOME"/.config/}"
+  if [ ! -e "$REPO/.config/$rel" ]; then
+    LOCAL_DIFF="${LOCAL_DIFF}${rel} (нет в репо)"$'\n'
+  elif ! cmp -s "$f" "$REPO/.config/$rel"; then
+    LOCAL_DIFF="${LOCAL_DIFF}${rel} (изменён локально)"$'\n'
+  fi
+done < <(find "$HOME/.config" -type f \
+           -not -path "*/.config/lunar/sait/*" \
+           -not -path "*/.config/systemd/*" 2>/dev/null)
+
+if [ -n "$LOCAL_DIFF" ]; then
+  BACKUP="$HOME/.config-backup-$(date +%Y%m%d-%H%M%S)"
+  say "ВНИМАНИЕ: в ~/.config есть локальные отличия от репо:"
+  printf '%s' "$LOCAL_DIFF" | head -20
+  say "Бэкап этих файлов → $BACKUP"
+  mkdir -p "$BACKUP"
+  printf '%s' "$LOCAL_DIFF" | sed 's/ (.*//' | while IFS= read -r rel; do
+    [ -n "$rel" ] || continue
+    [ -e "$HOME/.config/$rel" ] || continue
+    mkdir -p "$BACKUP/$(dirname "$rel")"
+    cp -a "$HOME/.config/$rel" "$BACKUP/$rel" 2>/dev/null || true
+  done
+  say "Продолжаю: конфиги будут перезаписаны из репо (бэкап сохранён)"
+fi
+
 mkdir -p "$HOME/.config"
 cp -r "$REPO/.config/." "$HOME/.config/"
 chmod +x "$HOME"/.config/hypr/scripts/* 2>/dev/null || true

@@ -163,14 +163,17 @@ hypr/scripts/eclipse-walls.sh set ~/.local/share/lunar/walls/3440x1440   # пр�
 git clone https://github.com/AlanMillerSora/lunar-hyprland.git ~/rice
 cd ~/rice
 
-./get-deps.sh     # зависимости (pacman)
+./get-deps.sh     # зависимости (pacman; сам включает multilib для steam)
 ./install.sh      # конфиги → ~/.config, обои, zsh по умолчанию
 ```
 
 Затем перелогинься в Hyprland (или `hyprctl reload`).
 
+> `install.sh` можно запускать повторно: если в `~/.config` есть локальные
+> правки, он предупредит и сложит их в `~/.config-backup-<дата>/` перед
+> тем, как перезаписать конфигами из репо.
+
 > Требуется **Hyprland 0.55+** (конфиг на Lua — `hyprland.lua`).
-> Обои-видео (mpvpaper) — опционально: `yay -S mpvpaper`.
 
 ## 🛡️ Обход DPI (zapret)
 
