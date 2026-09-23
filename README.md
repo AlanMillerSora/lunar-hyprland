@@ -302,6 +302,37 @@ sudo usermod -aG i2c "$USER"     # затем перелогиниться
   без minimap, иконок файлов и цветных скобок, прямые углы (правило в
   `hyprland.lua`). Настройки — `.config/Code/User/settings.json`.
 
+## 🔄 Обновления
+
+- **Hub → Update** — вкладка обновления: состояние (буфер, число пакетов),
+  кнопки **ОБНОВИТЬ** (с буфером), **ОБНОВИТЬ СРАЗУ**, **ОТКАТ** (снимки
+  timeshift) и **ПРОВЕРИТЬ**; свежие новости Arch показываются с переводом
+  на русский (Google Translate).
+- Скрипты: `eclipse-update.sh` — буфер 1–2 дня, `informant`, перевод
+  новостей, бэкап, `pacman -Syu` (+ AUR через paru/yay);
+  `eclipse-backup.sh` — бэкап конфигов перед обновлением с ротацией
+  (по умолчанию 5 последних), каталог `~/.local/share/lunar/backups/`.
+- **timeshift** — снимки системы перед обновлением (ext4, rsync). Откат —
+  кнопкой «Откат» во вкладке (сначала предпросмотр снимков).
+
+## 🆘 Если Quickshell отвалился
+
+Панель/Hub/OSD живут под systemd-user с авто-рестартом. Поднять шелл:
+
+```bash
+systemctl --user restart lunar-quickshell.service   # перезапуск
+systemctl --user status  lunar-quickshell.service   # что случилось
+```
+
+Не помогло — запусти вручную (в терминале):
+
+```bash
+quickshell
+```
+
+Откат: **конфиги** — через git (`git -C ~/rice checkout -- .config`),
+**система** — снимком timeshift (Hub → Update → **ОТКАТ**).
+
 ## ⌨️ Горячие клавиши
 
 | Клавиши | Действие |

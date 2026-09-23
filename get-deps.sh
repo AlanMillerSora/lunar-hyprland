@@ -43,6 +43,15 @@ sudo pacman -S --needed --noconfirm \
 # python3 — бинарь пакета python (выше); psutil/gobject — для скриптов
 # статуса и GTK-виджетов (шпаргалка, календарь).
 
+# ── обновления (Hub → Update, eclipse-update.sh) ───────────────
+# informant — блокирует обновление, пока не прочитаны новости Arch;
+# translate-shell (trans) — перевод новостей на русский (Google);
+# timeshift — снимки системы для отката (кнопка «Откат» в Hub).
+say "pacman: обновления и откат"
+sudo pacman -S --needed --noconfirm \
+  informant translate-shell timeshift cronie \
+  || say "часть пакетов обновлений не поставилась — см. вывод"
+
 # ── игры и медиа (часть риса: стол 01 — игры) ──────────────────
 # Игровое окружение и захват: Steam тянет Proton; gamescope/mangohud —
 # оверлеи и композитинг; gamemode — профиль производительности.

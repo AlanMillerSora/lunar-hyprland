@@ -79,7 +79,8 @@ PanelWindow {
         { name: "Memory",     icon: "󰍛", page: "MemoryPage" },
         { name: "Games",      icon: "\uf11b", page: "GamesPage" },
         { name: "Dev",        icon: "\uf121", page: "DevPage" },
-        { name: "Wallpapers", icon: "\uf03e", page: "WallpapersPage" }
+        { name: "Wallpapers", icon: "\uf03e", page: "WallpapersPage" },
+        { name: "Update",     icon: "\uf021", page: "UpdatePage" }
     ]
 
     property int selectedIndex: 0

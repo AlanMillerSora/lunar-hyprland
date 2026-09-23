@@ -1015,11 +1015,14 @@ Item {
                         label: "ПРОВЕРИТЬ"
                         onClicked: pUpdates.running = true
                     }
+                }
 
-                    ActionButton {
-                        label: "ОБНОВИТЬ"
-                        onClicked: updateProc.running = true
-                    }
+                Text {
+                    width: parent.width
+                    text: "обновление и чтение новостей — в разделе «Обновление»"
+                    color: Theme.textFaint
+                    font.family: page.mono
+                    font.pixelSize: 10
                 }
             }
         }
