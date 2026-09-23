@@ -52,18 +52,18 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 | Терминал (zsh + starship) | btop — тема `lunar` |
 |:---:|:---:|
 | ![Terminal](assets/screens/terminal.png) | ![btop](assets/screens/btop.png) |
-| Логотип-затмение + инфо системы | Автозапуск на столе 08 |
+| Логотип-затмение + инфо системы | Автозапуск на столе 09 |
 
 <div align="center">
   <img src="assets/screens/bar.png" width="92%" alt="Верхняя панель"/>
-  <br/><sub>Верхняя панель — столы 01–08, CPU/RAM/°C, часы, трек, звук, питание</sub>
+  <br/><sub>Верхняя панель — столы 01–09, CPU/RAM/°C, часы, трек, звук, питание</sub>
 </div>
 
 ## 🧩 Компоненты
 
 | Компонент | Файл | Что делает |
 |---|---|---|
-| **Панель** | `quickshell/LunarPanel.qml` | 42px сверху. Слева — лого+фаза и столы `01–08`; справа — сеть/раскладка/уведомления, блок действий (Game Mode, профиль питания, запись), CPU/RAM/°C/GPU, mpris, трей, громкость, питание |
+| **Панель** | `quickshell/LunarPanel.qml` | 42px сверху. Слева — лого+фаза и столы `01–09`; справа — сеть/раскладка/уведомления, блок действий (Game Mode, профиль питания, запись), CPU/RAM/°C/GPU, mpris, трей, громкость, питание |
 | **Статус** | `hypr/scripts/eclipse-status.sh` | Одна строка статуса для панели: сеть, раскладка, DND, уведомления, GPU, Game Mode, профиль питания, запись |
 | **Game Mode** | `hypr/scripts/eclipse-gamemode.sh` | Игровой режим: анимации/blur выкл, DND, пауза hypridle, performance, tearing |
 | **Запись** | `hypr/scripts/eclipse-record.sh` | Запись экрана (wf-recorder) → `~/Videos/lunar-*.mp4` |
@@ -87,7 +87,7 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 | **OSD** | `quickshell/LunarVolumeOsd.qml`, `LunarBrightnessOsd.qml` | Индикаторы громкости и яркости с HUD-скобками |
 | **Ползунок** | `quickshell/Slider.qml` | Общий слайдер темы (настройки, попап громкости) |
 | **Тема** | `quickshell/Theme.qml` | Единая палитра, радиусы, шрифты; прозрачность интерфейса, масштаб шрифта и число значков трея сохраняются между перезапусками Quickshell (`lunar-ui.json` в state-каталоге) |
-| **btop** | `btop/themes/lunar.theme` | Монитор системы в теме `lunar`, автозапуск на столе 08 |
+| **btop** | `btop/themes/lunar.theme` | Монитор системы в теме `lunar`, автозапуск на столе 09 |
 
 ## 🗂 Рабочие столы
 
@@ -98,14 +98,35 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 | **01** | игры (Steam/Proton, Heroic, Lutris, эмуляторы) |
 | **02** | браузер — Firefox (он же браузер по умолчанию) |
 | **03** | Discord |
-| **04** | пустой |
-| **05** | Steam |
+| **04** | Steam |
+| **05** | затмение — пустой (не для окон) |
 | **06** | кодинг (VS Code, Zed, JetBrains…) |
 | **07** | пустой |
-| **08** | btop (открывается автоматически) |
+| **08** | пустой |
+| **09** | btop (открывается автоматически) |
+
+Иконки в панели — зеркальный ряд фаз: `01` и `09` полная луна, `02–04` серпы
+со светом справа, `05` кольцо-затмение, `06–08` серпы со светом слева.
 
 Остальные приложения открываются на текущем столе. Дополнить список классов —
 в таблице `app_ws` в `hyprland.lua`.
+
+## 🌘 Обои
+
+Живые обои сменяются по столам (`hypr/scripts/eclipse-walls.sh`): видео `eclipse_NN.webm`
+через **mpvpaper**, статика `eclipse_NN.png` — через **awww** (если видео нет).
+
+Кадры снимает превью-сайт (`sait/`) — генератор рендерит сцену в любом разрешении
+(headless Chromium), поэтому на 1920×1080 ноута и 3440×1440 ПК обои свои:
+
+```
+hypr/scripts/eclipse-walls-gen.sh                # кадры под текущий монитор
+hypr/scripts/eclipse-walls-gen.sh 3440x1440      # явное разрешение
+FORMAT=video hypr/scripts/eclipse-walls-gen.sh   # ещё и живые webm (12 с, 60 fps)
+hypr/scripts/eclipse-walls.sh set ~/.local/share/lunar/walls/3440x1440   # применить
+```
+
+Всё то же есть в Hub → **Wallpapers** (выбор разрешения, генерация, применение).
 
 ## 📂 Структура
 
@@ -128,7 +149,8 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 │   ├── lunar/lunar.bash    # bash
 │   ├── .zshrc              # zsh
 │   └── starship.toml       # промпт
-├── wallpapers/             # 8 фаз затмения
+├── wallpapers/             # 9 фаз затмения (01..09)
+├── sait/                   # превью-сайт → генератор обоев под любое разрешение
 ├── color-schemes/          # цветовая схема KDE → ~/.local/share/color-schemes
 ├── systemd/                # wifi-guard, lunar-homepage (страница новой вкладки)
 ├── assets/                 # логотип и скриншоты
@@ -286,8 +308,8 @@ sudo usermod -aG i2c "$USER"     # затем перелогиниться
 | `SUPER + F` / `P` / `SPACE` | Плавающее / псевдо / следующее |
 | `SUPER + ←↑↓→` / `HJKL` | Фокус |
 | `SUPER + SHIFT + ←↑↓→` | Перенос окна |
-| `SUPER + 1…8` | Рабочий стол (фаза затмения) |
-| `SUPER + SHIFT + 1…8` | Перенести окно на стол |
+| `SUPER + 1…9` | Рабочий стол (фаза затмения) |
+| `SUPER + SHIFT + 1…9` | Перенести окно на стол |
 | `SUPER + T` / `SHIFT+T` | Группа / закрепить |
 | `SUPER + S` / `SHIFT+S` | Scratchpad |
 | `SUPER + ESC` | Меню питания (Quickshell) |

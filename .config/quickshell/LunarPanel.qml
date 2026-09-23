@@ -443,7 +443,7 @@ PanelWindow {
                 spacing: 7
 
                 Repeater {
-                    model: 8
+                    model: 9
 
                     delegate: Rectangle {
                         id: wsPill

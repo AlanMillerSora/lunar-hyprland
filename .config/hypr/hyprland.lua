@@ -203,8 +203,8 @@ hl.animation({ leaf = "fadeLayers",  enabled = true, speed = 6, bezier = "moon" 
 hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 6, bezier = "eclipse", style = "slidevert" })
 
 -- ─────────────────────────── Рабочие столы = фазы ──────────────────
--- 8 фаз затмения. Имена I..VIII (римские, как в превью);
--- панель рисует Quickshell; id 1..8 — триггер для скрипта обоев.
+-- 9 фаз затмения. Стол 5 — само затмение (центр), 1 и 9 — начало и конец.
+-- панель рисует Quickshell; id 1..9 — триггер для скрипта обоев.
 hl.workspace_rule({ workspace = "1", default_name = "01" })
 hl.workspace_rule({ workspace = "2", default_name = "02" })
 hl.workspace_rule({ workspace = "3", default_name = "03" })
@@ -213,6 +213,7 @@ hl.workspace_rule({ workspace = "5", default_name = "05" })
 hl.workspace_rule({ workspace = "6", default_name = "06" })
 hl.workspace_rule({ workspace = "7", default_name = "07" })
 hl.workspace_rule({ workspace = "8", default_name = "08" })
+hl.workspace_rule({ workspace = "9", default_name = "09" })
 
 -- ─────────────────────────────────── Окна ──────────────────────────
 -- Плавающие окна утилит по центру, со скруглением темы
@@ -245,8 +246,8 @@ hl.window_rule({ match = { fullscreen = true }, no_blur = true })
 -- ─────────── Автораскладка: приложение → свой стол ───────────
 -- Раскладка по задачам:
 --   1 — игры              2 — браузер (Firefox)   3 — Discord
---   4 — пустой            5 — Steam               6 — кодинг
---   7 — пустой            8 — btop (автозапуск)
+--   4 — Steam             5 — затмение (пустой)    6 — кодинг
+--   7 — пустой            8 — пустой               9 — btop (автозапуск)
 -- Не перечисленные приложения открываются на текущем столе.
 local app_ws = {
   -- 1 — игры (Steam/Proton, Heroic, Lutris, эмуляторы)
@@ -260,8 +261,8 @@ local app_ws = {
             "zen", "zen-browser" },
   -- 3 — Discord
   ["3"] = { "discord", "vesktop" },
-  -- 5 — Steam (сам клиент)
-  ["5"] = { "steam", "steamwebhelper" },
+  -- 4 — Steam (сам клиент)
+  ["4"] = { "steam", "steamwebhelper" },
   -- 6 — кодинг
   ["6"] = { "code", "code-oss", "code-url-handler", "cursor", "zed",
             "jetbrains-.*" },
@@ -315,7 +316,7 @@ hl.bind(M .. " + mouse:272", dsp.window.drag(),   { mouse = true })  -- SUPER + 
 hl.bind(M .. " + mouse:273", dsp.window.resize(), { mouse = true })  -- SUPER + ПКМ
 
 -- стеки = фазы
-for ws = 1, 8 do
+for ws = 1, 9 do
   hl.bind(M .. " + " .. ws,
     dsp.focus({ workspace = ws }))
   hl.bind(M .. " + SHIFT + " .. ws,
@@ -363,7 +364,7 @@ hl.on("hyprland.start", function()
   -- курсор Bibata (тема применяется на лету)
   hl.exec_cmd("hyprctl setcursor Bibata-Modern-Ice 24")
   -- btop на 8-м столе (фаза затмения), без перехвата фокуса
-  hl.exec_cmd("[workspace 8 silent] kitty --class lunar-btop --title btop -e btop")
+  hl.exec_cmd("[workspace 9 silent] kitty --class lunar-btop --title btop -e btop")
 end)
 
 -- Проверка:  hyprctl configerrors

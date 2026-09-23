@@ -6,5 +6,6 @@
       <stop offset="100%" stop-color="#d6d6d6"/>
     </radialGradient>
   </defs>
-  <path d="M 64.0,4.0 A 60.0,60.0 0 0 1 64.0,124.0 A 9.60,60.0 0 0 0 64.0,4.0 Z" fill="url(#moon)"/>
+  <circle cx="64" cy="64" r="58" fill="none" stroke="url(#moon)" stroke-width="7"/>
+  <circle cx="64" cy="64" r="44" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.45"/>
 </svg>
