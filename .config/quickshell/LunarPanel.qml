@@ -552,90 +552,52 @@ print(f"{(r2-r1)/1048576:.2f} {(t2-t1)/1048576:.2f}")
             }
         }
 
-        // ── NET pill: скорость сети (между столами и часами) ──
-        // Минимализм: две цифры со стрелками, свечение только при трафике.
+        // ── MEDIA pill: «сейчас играет» (между столами и часами) ──
+        // Минимализм: иконка ноты + бегущая строка трека.
         Rectangle {
-            id: netPill
+            id: mediaPill
             anchors.left: leftPill.right
             anchors.leftMargin: 6
             anchors.verticalCenter: parent.verticalCenter
             height: 32
             radius: Theme.radiusL
             color: root.pillBg
-            border.color: root.netDown > 0.05 || root.netUp > 0.05
-                ? Theme.borderAccent : root.pillBorder
+            border.color: root.playing ? Theme.borderAccent : root.pillBorder
             border.width: 1
-            width: netRow.implicitWidth + 18
+            width: mediaRow.implicitWidth + 18
+            visible: root.track.length > 0
             Behavior on border.color { ColorAnimation { duration: 200 } }
 
             Row {
-                id: netRow
+                id: mediaRow
                 anchors.centerIn: parent
                 height: 26
-                spacing: 9
+                spacing: 8
 
-                // приём
-                Row {
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 3
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: "󰁅"
-                        color: root.netDown > 0.05 ? Theme.accent : Theme.textFaint
-                        font.family: Theme.iconFont
-                        font.pixelSize: Theme.fontSize(12)
-                    }
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: root.netDown.toFixed(1)
-                        color: root.netDown > 0.05 ? Theme.text : Theme.textFaint
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize(12)
-                    }
-                }
-
-                Rectangle {
-                    width: 1
-                    height: 14
-                    color: Theme.border
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                // передача
-                Row {
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 3
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: "󰁝"
-                        color: root.netUp > 0.05 ? Theme.accent : Theme.textFaint
-                        font.family: Theme.iconFont
-                        font.pixelSize: Theme.fontSize(12)
-                    }
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: root.netUp.toFixed(1)
-                        color: root.netUp > 0.05 ? Theme.text : Theme.textFaint
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize(12)
-                    }
-                }
-
-                // единица — мелко и один раз
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "МБ/с"
-                    color: Theme.textFaint
+                    text: root.playing ? "󰏤" : "󰐊"
+                    color: root.playing ? Theme.accent : Theme.textFaint
+                    font.family: Theme.iconFont
+                    font.pixelSize: Theme.fontSize(13)
+                }
+
+                Text {
+                    width: 220
+                    height: 26
+                    verticalAlignment: Text.AlignVCenter
+                    clip: true
+                    text: root.marqueeText()
+                    color: root.playing ? Theme.text : Theme.textDim
                     font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(9)
-                    font.letterSpacing: 0.5
+                    font.pixelSize: Theme.fontSize(12)
                 }
             }
 
             MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
-                onClicked: root.openNetwork()
+                onClicked: mediaPanelProc.running = true   // попап «сейчас играет»
             }
         }
 
@@ -728,6 +690,28 @@ print(f"{(r2-r1)/1048576:.2f} {(t2-t1)/1048576:.2f}")
                     color: Theme.textDim
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(13)
+                }
+
+                // скорость сети (компактно: только когда есть трафик)
+                Row {
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 6
+                    visible: root.netDown > 0.05 || root.netUp > 0.05
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "󰁅" + root.netDown.toFixed(1)
+                        color: root.netDown > 0.05 ? Theme.text : Theme.textFaint
+                        font.family: Theme.iconFont
+                        font.pixelSize: Theme.fontSize(12)
+                    }
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "󰁝" + root.netUp.toFixed(1)
+                        color: root.netUp > 0.05 ? Theme.text : Theme.textFaint
+                        font.family: Theme.iconFont
+                        font.pixelSize: Theme.fontSize(12)
+                    }
                 }
 
                 Rectangle {
@@ -961,34 +945,6 @@ print(f"{(r2-r1)/1048576:.2f} {(t2-t1)/1048576:.2f}")
                 anchors.centerIn: parent
                 height: 26
                 spacing: 10
-
-                // mpris marquee
-                Text {
-                    visible: root.track.length > 0
-                    width: visible ? 240 : 0
-                    height: 26
-                    verticalAlignment: Text.AlignVCenter
-                    clip: true
-                    text: "♪  " + root.marqueeText()
-                    color: root.playing ? Theme.text : Theme.textDim
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(13)
-
-                    MouseArea {
-                        anchors.fill: parent
-                        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-                        onClicked: function (mouse) {
-                            if (!root.player)
-                                return
-                            if (mouse.button === Qt.RightButton)
-                                root.player.next()
-                            else if (mouse.button === Qt.MiddleButton)
-                                root.player.previous()
-                            else
-                                mediaPanelProc.running = true   // ЛКМ — попап «сейчас играет»
-                        }
-                    }
-                }
 
                 // ── системный трей: до 3 значков, остальные — в списке ──
                 Rectangle {
