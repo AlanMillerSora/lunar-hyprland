@@ -693,16 +693,16 @@ PanelWindow {
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: "󰁅" + root.netFmt(root.netDown)
-                    color: root.netDown > 1024 ? Theme.text : Theme.textFaint
+                    color: Theme.text
                     font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSize(12)
+                    font.pixelSize: Theme.fontSize(15)
                 }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: "󰁝" + root.netFmt(root.netUp)
-                    color: root.netUp > 1024 ? Theme.text : Theme.textFaint
+                    color: Theme.text
                     font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSize(12)
+                    font.pixelSize: Theme.fontSize(15)
                 }
             }
 
