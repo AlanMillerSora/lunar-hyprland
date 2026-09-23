@@ -33,6 +33,9 @@ QtObject {
     property int radiusM: 6
     property int radiusL: 6
 
+    // сколько значков трея видно в панели (остальные — в списке «+N»)
+    property int trayVisible: 3
+
     property int animFast: 120
     property int animMed: 220
     property int animSlow: 380

@@ -63,7 +63,7 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 
 | Компонент | Файл | Что делает |
 |---|---|---|
-| **Панель** | `quickshell/LunarPanel.qml` | 42px сверху. Слева — лого+фаза и столы `01–08`; справа — сеть/раскладка/уведомления, блок действий (Game Mode, профиль питания, запись), CPU/RAM/°C/GPU, mpris, громкость, питание |
+| **Панель** | `quickshell/LunarPanel.qml` | 42px сверху. Слева — лого+фаза и столы `01–08`; справа — сеть/раскладка/уведомления, блок действий (Game Mode, профиль питания, запись), CPU/RAM/°C/GPU, mpris, трей, громкость, питание |
 | **Статус** | `hypr/scripts/eclipse-status.sh` | Одна строка статуса для панели: сеть, раскладка, DND, уведомления, GPU, Game Mode, профиль питания, запись |
 | **Game Mode** | `hypr/scripts/eclipse-gamemode.sh` | Игровой режим: анимации/blur выкл, DND, пауза hypridle, performance, tearing |
 | **Запись** | `hypr/scripts/eclipse-record.sh` | Запись экрана (wf-recorder) → `~/Videos/lunar-*.mp4` |
@@ -83,6 +83,7 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 | **Sidebar R** | `quickshell/LunarSidebarRight.qml` | Выдвигается от правого края: уведомления (mako), «сейчас играет» (mpris), календарь (прокручивается, 18 месяцев), запись экрана со списком |
 | **Буфер** | `quickshell/LunarClipboard.qml` | История cliphist с поиском: `SUPER + V` |
 | **Громкость** | `quickshell/LunarVolume.qml` | Попап с крупным ползунком (клик по значку громкости на панели) |
+| **Трей** | `quickshell/LunarTray.qml` | Системный трей (SNI): в панели видно `Theme.trayVisible` (3) значка, остальные сворачиваются в список «+N» — ЛКМ активирует, ПКМ открывает меню приложения |
 | **OSD** | `quickshell/LunarVolumeOsd.qml`, `LunarBrightnessOsd.qml` | Индикаторы громкости и яркости с HUD-скобками |
 | **Ползунок** | `quickshell/Slider.qml` | Общий слайдер темы (настройки, попап громкости) |
 | **Тема** | `quickshell/Theme.qml` | Единая палитра, радиусы, шрифты, ползунки прозрачности и масштаба |

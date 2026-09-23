@@ -4,6 +4,7 @@ import Quickshell.Wayland
 import Quickshell.Hyprland
 import Quickshell.Services.Pipewire
 import Quickshell.Services.Mpris
+import Quickshell.Services.SystemTray
 import QtQuick
 import QtQuick.Layouts
 
@@ -205,6 +206,43 @@ PanelWindow {
     function openVolumePanel() {
         volPanelProc.command = ["bash", "-c", "qs ipc call volume toggle"]
         volPanelProc.running = true
+    }
+
+    // ─────────── системный трей ───────────
+    // сколько значков показываем в панели, остальные — в списке (Theme.trayVisible)
+    readonly property int trayMax: Theme.trayVisible
+
+    Process { id: trayPanelProc; running: false }
+    function openTrayPanel() {
+        trayPanelProc.command = ["bash", "-c", "qs ipc call tray toggle"]
+        trayPanelProc.running = true
+    }
+
+    // icon у SNI бывает: путь, file:///image:// или имя темы — приводим к Image source.
+    // Важно: если иконки нет в теме, image://icon отдаёт заглушку, поэтому
+    // сначала проверяем hasThemeIcon и иначе возвращаем "" (в UI будет точка).
+    function trayIconSource(item) {
+        if (!item) return ""
+        var ic = item.icon || ""
+        if (ic.indexOf("file://") === 0 || ic.indexOf("qrc:") === 0) return ic
+        if (ic.indexOf("image://icon/") === 0) {
+            var n = ic.substring("image://icon/".length)
+            return Quickshell.hasThemeIcon(n) ? ic : ""
+        }
+        if (ic.indexOf("image://") === 0) return ic
+        if (ic.charAt(0) === "/") return "file://" + ic
+        if (ic && Quickshell.hasThemeIcon(ic)) return Quickshell.iconPath(ic)
+        var id = item.id || ""
+        if (id && Quickshell.hasThemeIcon(id)) return Quickshell.iconPath(id)
+        return ""
+    }
+
+    // показать родное меню приложения (ПКМ)
+    function trayMenu(item, mouseArea, mx, my) {
+        if (!item || !item.hasMenu) return
+        var ci = root.contentItem
+        var pt = ci ? mouseArea.mapToItem(ci, mx, my) : Qt.point(0, root.implicitHeight)
+        item.display(root, Math.round(pt.x), Math.round(pt.y))
     }
 
     // ─────────── сеть / раскладка / уведомления ───────────
@@ -797,6 +835,106 @@ PanelWindow {
                                 root.player.previous()
                             else
                                 root.player.togglePlaying()
+                        }
+                    }
+                }
+
+                // ── системный трей: до 3 значков, остальные — в списке ──
+                Rectangle {
+                    visible: SystemTray.items.values.length > 0
+                    width: 1
+                    height: 16
+                    color: Theme.border
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                Item {
+                    visible: SystemTray.items.values.length > 0
+                    width: visible ? trayRow.implicitWidth : 0
+                    height: 26
+
+                    Row {
+                        id: trayRow
+                        anchors.centerIn: parent
+                        height: 26
+                        spacing: 9
+
+                        Repeater {
+                            model: SystemTray.items.values.slice(0, root.trayMax)
+
+                            delegate: Item {
+                                required property var modelData
+                                width: 20
+                                height: 26
+
+                                Image {
+                                    id: trayImg
+                                    anchors.centerIn: parent
+                                    source: root.trayIconSource(modelData)
+                                    sourceSize.width: 18
+                                    sourceSize.height: 18
+                                    smooth: true
+                                    fillMode: Image.PreserveAspectFit
+                                    visible: source != "" && status !== Image.Error
+                                }
+
+                                // если у приложения нет иконки — точка-фолбэк
+                                Text {
+                                    anchors.centerIn: parent
+                                    visible: !trayImg.visible
+                                    text: "\uf111"
+                                    color: Theme.textFaint
+                                    font.family: Theme.iconFont
+                                    font.pixelSize: Theme.fontSize(8)
+                                }
+
+                                MouseArea {
+                                    id: trayIconMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: function (m) {
+                                        if (m.button === Qt.MiddleButton) {
+                                            modelData.secondaryActivate()
+                                        } else if (m.button === Qt.RightButton || modelData.onlyMenu) {
+                                            root.trayMenu(modelData, trayIconMouse, m.x, m.y)
+                                        } else {
+                                            modelData.activate()
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // сколько значков не влезло — открыть список
+                        Rectangle {
+                            visible: SystemTray.items.values.length > root.trayMax
+                            width: moreText.implicitWidth + 12
+                            height: 22
+                            radius: Theme.radius
+                            anchors.verticalCenter: parent.verticalCenter
+                            color: moreMouse.containsMouse ? Theme.alpha(Theme.accent, 0.12) : "transparent"
+                            border.width: 1
+                            border.color: moreMouse.containsMouse ? Theme.accent : Theme.borderAccent
+
+                            Text {
+                                id: moreText
+                                anchors.centerIn: parent
+                                text: "+" + (SystemTray.items.values.length - root.trayMax)
+                                color: moreMouse.containsMouse ? Theme.accent : Theme.textDim
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSize(10)
+                                font.bold: true
+                            }
+
+                            MouseArea {
+                                id: moreMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.openTrayPanel()
+                            }
                         }
                     }
                 }

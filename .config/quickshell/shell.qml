@@ -8,6 +8,7 @@ ShellRoot {
     LunarVolumeOsd {}
     LunarBrightnessOsd {}
     LunarVolume {}
+    LunarTray {}
     LunarClipboard {}
     LunarPower {}
 }
