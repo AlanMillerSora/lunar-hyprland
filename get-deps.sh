@@ -15,7 +15,7 @@ sudo pacman -S --needed --noconfirm \
   xdg-desktop-portal-hyprland xdg-desktop-portal-gtk \
   kitty fastfetch chafa \
   zsh starship eza zsh-autosuggestions zsh-syntax-highlighting \
-  wofi mako firefox discord \
+  mako firefox discord \
   yazi bat ffmpeg 7zip poppler jq fd ripgrep zoxide fzf \
   playerctl brightnessctl ddcutil jq cliphist wl-clipboard \
   grim slurp wf-recorder \

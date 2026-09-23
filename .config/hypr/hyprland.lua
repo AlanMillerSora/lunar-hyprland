@@ -217,7 +217,6 @@ hl.workspace_rule({ workspace = "9", default_name = "09" })
 
 -- ─────────────────────────────────── Окна ──────────────────────────
 -- Плавающие окна утилит по центру, со скруглением темы
-hl.window_rule({ match = { class = "^(wofi)$" },              float = true, center = true, rounding = 14 })
 hl.window_rule({ match = { class = "nm-connection-editor" },  float = true, center = true })
 hl.window_rule({ match = { class = "blueman-manager" },       float = true, center = true })
 hl.window_rule({ match = { class = "org.pulseaudio.pavucontrol" }, float = true, center = true })
@@ -278,13 +277,14 @@ local dsp = hl.dsp
 local M = "SUPER"
 
 hl.bind(M .. " + RETURN",  dsp.exec_cmd("kitty"))
-hl.bind(M .. " + D",       dsp.exec_cmd("wofi --show drun"))
-hl.bind(M .. " + A",       dsp.exec_cmd("wofi --show run"))
 hl.bind(M .. " + G",       dsp.exec_cmd("qs ipc call hub toggle"))      -- Lunar Hub: launch + settings (Quickshell)
 hl.bind(M .. " + E",       dsp.exec_cmd("kitty --class lunar-yazi -e yazi"))
 hl.bind(M .. " + V",       dsp.exec_cmd("qs ipc call clipboard toggle"))   -- буфер обмена (cliphist, Quickshell)
 hl.bind(M .. " + SHIFT + E", dsp.exec_cmd("qs ipc call sidebar toggle"))   -- боковая панель слева (Quickshell)
-hl.bind(M .. " + SHIFT + R", dsp.exec_cmd("qs ipc call rsidebar toggle"))  -- панель справа: уведомления/музыка/календарь
+hl.bind(M .. " + SHIFT + N", dsp.exec_cmd("qs ipc call rsidebar toggle"))  -- панель справа: уведомления/музыка/календарь
+hl.bind(M .. " + SHIFT + R", dsp.exec_cmd("~/.config/hypr/scripts/eclipse-record.sh toggle"))  -- запись экрана (start/stop)
+hl.bind(M .. " + SHIFT + G", dsp.exec_cmd("~/.config/hypr/scripts/eclipse-gamemode.sh toggle"))  -- Game Mode (анимации/blur выкл, performance)
+hl.bind(M .. " + SHIFT + P", dsp.window.pin())                             -- закрепить окно поверх всех
 hl.bind(M .. " + SHIFT + D", dsp.exec_cmd("sh -c 'qs ipc call hub nav 9; qs ipc call hub open'"))  -- Hub: раздел «Разработка»
 hl.bind(M .. " + SLASH",   dsp.exec_cmd("~/.config/hypr/scripts/eclipse-cheatsheet.py"))
 hl.bind(M .. " + Q",       dsp.window.close())
@@ -293,6 +293,10 @@ hl.bind(M .. " + SHIFT + W", dsp.window.fullscreen({ mode = "fullscreen" }))
 hl.bind(M .. " + F",       dsp.window.float())
 hl.bind(M .. " + P",       dsp.window.pseudo())
 hl.bind(M .. " + SPACE",   dsp.window.cycle_next())
+
+-- альт-таб: следующее/предыдущее окно по кругу
+hl.bind(M .. " + TAB",  dsp.window.cycle_next({ next = true }))
+hl.bind(M .. " + SHIFT + TAB", dsp.window.cycle_next({ next = false }))
 
 -- фокус: HJKL и стрелки
 hl.bind(M .. " + LEFT",  dsp.focus({ direction = "left" }))
@@ -332,10 +336,10 @@ hl.bind(M .. " + S", dsp.workspace.toggle_special("scratchpad"))
 hl.bind(M .. " + SHIFT + S", dsp.window.move({ workspace = "special:scratchpad" }))
 
 -- скриншоты / перезагрузка / меню питания
-hl.bind("PRINT",           dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
-hl.bind(M .. " + PRINT",   dsp.exec_cmd("grim - | wl-copy"))
+hl.bind("PRINT",           dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))   -- область в буфер
+hl.bind(M .. " + PRINT",   dsp.exec_cmd("grim - | wl-copy"))                    -- весь экран в буфер
+hl.bind(M .. " + SHIFT + PRINT", dsp.exec_cmd("sh -c 'mkdir -p $HOME/Pictures/Screenshots && grim $HOME/Pictures/Screenshots/lunar-$(date +%Y%m%d-%H%M%S).png'"))  -- весь экран в файл
 hl.bind(M .. " + R",       dsp.exec_cmd("hyprctl reload"))
-hl.bind(M .. " + C",       dsp.exec_cmd("qs ipc call hub toggle"))       -- Lunar Hub: launch + settings (Quickshell)
 hl.bind(M .. " + ESCAPE",  dsp.exec_cmd("qs ipc call power toggle"))     -- меню питания (Quickshell)
 
 -- медиа-клавиши (громкость через PipeWire/wpctl)

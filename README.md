@@ -145,7 +145,6 @@ hypr/scripts/eclipse-walls.sh set ~/.local/share/lunar/walls/3440x1440   # пр�
 │   ├── firefox/            # тема и префы Firefox (userChrome/userContent, user.js)
 │   ├── mako/               # уведомления
 │   ├── hypridle/           # idle
-│   ├── wofi/               # лаунчер
 │   ├── lunar/lunar.bash    # bash
 │   ├── .zshrc              # zsh
 │   └── starship.toml       # промпт
@@ -295,17 +294,20 @@ sudo usermod -aG i2c "$USER"     # затем перелогиниться
 | Клавиши | Действие |
 |---|---|
 | `SUPER + RETURN` | Терминал (kitty) |
-| `SUPER + G` / `SUPER + C` | Hub: лаунчер + настройки |
-| `SUPER + D` / `SUPER + A` | wofi: приложения / команды |
+| `SUPER + G` | Hub: лаунчер + настройки |
 | `SUPER + E` | Файлы (yazi) |
 | `SUPER + V` | Буфер обмена (cliphist) |
 | `SUPER + SHIFT + E` | Боковая панель (слева) |
-| `SUPER + SHIFT + R` | Панель справа (уведомления/музыка/календарь) |
+| `SUPER + SHIFT + N` | Панель справа (уведомления/музыка/календарь) |
+| `SUPER + SHIFT + R` | Запись экрана (вкл/выкл) |
+| `SUPER + SHIFT + G` | Game Mode (вкл/выкл) |
 | `SUPER + SHIFT + D` | Hub: раздел «Разработка» |
 | `SUPER + /` | Шпаргалка по хоткеям |
 | `SUPER + Q` | Закрыть окно |
 | `SUPER + W` / `SHIFT+W` | Развернуть / полный экран |
 | `SUPER + F` / `P` / `SPACE` | Плавающее / псевдо / следующее |
+| `SUPER + SHIFT + P` | Закрепить окно поверх |
+| `SUPER + TAB` / `SHIFT+TAB` | Следующее / предыдущее окно |
 | `SUPER + ←↑↓→` / `HJKL` | Фокус |
 | `SUPER + SHIFT + ←↑↓→` | Перенос окна |
 | `SUPER + 1…9` | Рабочий стол (фаза затмения) |
@@ -313,7 +315,8 @@ sudo usermod -aG i2c "$USER"     # затем перелогиниться
 | `SUPER + T` / `SHIFT+T` | Группа / закрепить |
 | `SUPER + S` / `SHIFT+S` | Scratchpad |
 | `SUPER + ESC` | Меню питания (Quickshell) |
-| `PRINT` / `SUPER + PRINT` | Скриншот: область / весь экран |
+| `PRINT` / `SUPER + PRINT` | Скриншот: область / весь экран (в буфер) |
+| `SUPER + SHIFT + PRINT` | Скриншот всего экрана в файл (`~/Pictures/Screenshots`) |
 | `XF86MonBrightness ±` | Яркость (ноут — backlight, внешние — DDC/CI) + OSD |
 | `SUPER + R` | Перезагрузить Hyprland |
 
