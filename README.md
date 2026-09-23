@@ -79,7 +79,7 @@ HUD-скобки**, монохромная палитра, шрифт JetBrains 
 | **Очистка** | `hypr/scripts/eclipse-cleanup.sh` | Сироты, кэш пакетов, журнал, tmpfiles, кэш yay, эскизы; опционально браузеры |
 | **Файлы** | `yazi/theme.toml`, `yazi/yazi.toml` | Файловый менеджер yazi в монохроме системы (`SUPER + E`); Enter по исходнику открывает его в VS Code |
 | **Firefox** | `firefox/chrome/userChrome.css`, `firefox/user.js` | Тёмный монохром, вертикальные вкладки, без рекламы и телеметрии; своя страница новой вкладки `lunar/firefox-home.html` (отдаёт локальный сервис `lunar-homepage`) и иконка Lunar |
-| **Sidebar** | `quickshell/LunarSidebar.qml` | Выдвигается от левого края (540px): чат (статус Ollama), буфер (cliphist; ПКМ — удалить), заметки |
+| **Sidebar** | `quickshell/LunarSidebar.qml` | Выдвигается от левого края (560px): чат (**OpenCode** — агент прямо в панели), буфер (cliphist; ПКМ — удалить), заметки |
 | **Sidebar R** | `quickshell/LunarSidebarRight.qml` | Выдвигается от правого края: уведомления (mako), «сейчас играет» (mpris), календарь (прокручивается, 18 месяцев), запись экрана со списком |
 | **Буфер** | `quickshell/LunarClipboard.qml` | История cliphist с поиском: `SUPER + V` |
 | **Громкость** | `quickshell/LunarVolume.qml` | Попап с крупным ползунком (клик по значку громкости на панели) |
@@ -302,9 +302,20 @@ sudo usermod -aG i2c "$USER"     # затем перелогиниться
   без minimap, иконок файлов и цветных скобок, прямые углы (правило в
   `hyprland.lua`). Настройки — `.config/Code/User/settings.json`.
 
-## 🔄 Обновления
+## 🤖 Чат (OpenCode)
 
-- **Hub → Update** — вкладка обновления: состояние (буфер, число пакетов),
+В левом сайдбаре — вкладка **чат**: это полноценный агент [OpenCode](https://opencode.ai)
+прямо в панели. Вывод стримится в UI (`opencode run --format json`), контекст
+держится в сессии (`--continue`), «＋» начинает новую, «▣» открывает обычный
+OpenCode в терминале.
+
+**Права.** Агент умеет выполнять команды с `sudo`, но только доверенные —
+белый список в `/etc/sudoers.d/lunar-agent` (ставит `./install.sh`):
+`journalctl`, `systemctl` (start/stop/restart/enable/disable, включая `--user`),
+`pacman -Syu/-Sy/-Qu/-Qe` и скрипты риса (`~/rice`, `~/.config/hypr/scripts`).
+Всё остальное от root — только после подтверждения в чате.
+
+## 🔄 Обновления- **Hub → Update** — вкладка обновления: состояние (буфер, число пакетов),
   кнопки **ОБНОВИТЬ** (с буфером), **ОБНОВИТЬ СРАЗУ**, **ОТКАТ** (снимки
   timeshift) и **ПРОВЕРИТЬ**; свежие новости Arch показываются с переводом
   на русский (Google Translate).

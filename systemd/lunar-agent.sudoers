@@ -1,0 +1,39 @@
+# ════════════════════════════════════════════════════════════════
+#  Lunar Eclipse — sudo-права для агента в чате (OpenCode).
+#
+#  Белый список: агент может без пароля запускать только доверенные
+#  команды. Всё остальное — через подтверждение в чате OpenCode.
+#
+#  Ставится из install.sh в /etc/sudoers.d/lunar-agent.
+#  Проверка: sudo -n -l
+# ════════════════════════════════════════════════════════════════
+
+# системное состояние и логи
+Cmnd_Alias LUNAR_READ = \
+  /usr/bin/journalctl, \
+  /usr/bin/systemctl status *, \
+  /usr/bin/systemctl list-units *, \
+  /usr/bin/systemctl --user status *, \
+  /usr/bin/systemctl --user list-units *
+
+# службы (без произвольных unit-файлов — только start/stop/restart/enable/disable)
+Cmnd_Alias LUNAR_SVC = \
+  /usr/bin/systemctl start *, /usr/bin/systemctl stop *, \
+  /usr/bin/systemctl restart *, /usr/bin/systemctl reload *, \
+  /usr/bin/systemctl enable *, /usr/bin/systemctl disable *, \
+  /usr/bin/systemctl --user start *, /usr/bin/systemctl --user stop *, \
+  /usr/bin/systemctl --user restart *, /usr/bin/systemctl --user reload *, \
+  /usr/bin/systemctl --user enable *, /usr/bin/systemctl --user disable *
+
+# обновление системы (только эти формы)
+Cmnd_Alias LUNAR_PKG = \
+  /usr/bin/pacman -Syu, /usr/bin/pacman -Syu *, \
+  /usr/bin/pacman -Sy, /usr/bin/pacman -Qu, /usr/bin/pacman -Qe
+
+# скрипты риса
+Cmnd_Alias LUNAR_RICE = \
+  /home/sora/rice/*.sh, \
+  /home/sora/.config/hypr/scripts/*.sh, \
+  /home/sora/.config/hypr/scripts/*.py
+
+%wheel ALL=(root) NOPASSWD: LUNAR_READ, LUNAR_SVC, LUNAR_PKG, LUNAR_RICE

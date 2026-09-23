@@ -19,7 +19,6 @@ PanelWindow {
 
     property bool collapsed: true
     property int tabIndex: 0
-    property string aiStatus: "проверяю…"
 
     function openPanel() { collapsed = false }
     function closePanel() { collapsed = true }
@@ -188,74 +187,197 @@ PanelWindow {
                     border.width: 1
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: 14
-                        spacing: 10
-                        Text {
-                            text: "Lunar AI"
-                            color: Theme.text
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(14)
-                            font.bold: true
-                        }
-                        Text {
-                            Layout.fillWidth: true
-                            text: "Локальный ассистент на Ollama. Если не установлен — открой терминал и поставь."
-                            color: Theme.textDim
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(13)
-                            wrapMode: Text.WordWrap
-                        }
+                        anchors.margins: 10
+                        spacing: 8
+
                         RowLayout {
                             Layout.fillWidth: true
                             spacing: 6
                             Text {
-                                text: root.aiStatus
-                                color: Theme.textFaint
+                                text: "OPENCODE"
+                                color: Theme.text
                                 font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSize(13)
+                                font.pixelSize: Theme.fontSize(14)
+                                font.bold: true
+                                font.letterSpacing: 2
                             }
                             Item { Layout.fillWidth: true }
                             Text {
-                                text: "проверить"
-                                color: aiMouse.containsMouse ? Theme.accent : Theme.textFaint
+                                text: chat.busy ? "думает…" : "агент"
+                                color: chat.busy ? Theme.accent : Theme.textFaint
                                 font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSize(12)
-                                MouseArea {
-                                    id: aiMouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: ollamaProc.running = true
+                                font.pixelSize: Theme.fontSize(11)
+                            }
+                        }
+
+                        // история чата
+                        Flickable {
+                            id: chatFlick
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            clip: true
+                            contentWidth: width
+                            contentHeight: chatCol.implicitHeight
+                            boundsBehavior: Flickable.StopAtBounds
+
+                            onContentHeightChanged: contentY = Math.max(0, contentHeight - height)
+
+                            Column {
+                                id: chatCol
+                                width: chatFlick.width
+                                spacing: 8
+
+                                Repeater {
+                                    model: chat.messages
+
+                                    delegate: Rectangle {
+                                        required property var modelData
+                                        width: chatCol.width
+                                        height: msgText.implicitHeight + 16
+                                        radius: Theme.radius
+                                        color: modelData.role === "user"
+                                            ? Theme.alpha(Theme.accent, 0.10)
+                                            : Theme.alpha(Theme.text, 0.03)
+                                        border.width: 1
+                                        border.color: Theme.border
+
+                                        Text {
+                                            id: msgText
+                                            anchors.left: parent.left
+                                            anchors.right: parent.right
+                                            anchors.top: parent.top
+                                            anchors.margins: 8
+                                            text: modelData.text
+                                            color: modelData.role === "user" ? Theme.text : Theme.textDim
+                                            font.family: Theme.fontFamily
+                                            font.pixelSize: Theme.fontSize(12)
+                                            wrapMode: Text.Wrap
+                                            textFormat: Text.PlainText
+                                        }
+                                    }
                                 }
                             }
                         }
-                        Item { Layout.fillHeight: true }
+
+                        // строка ввода
                         Rectangle {
                             Layout.fillWidth: true
                             height: 40
                             radius: Theme.radius
-                            color: termMouse.containsMouse
-                                ? Theme.alpha(Theme.accent, 0.16)
-                                : Theme.alpha(Theme.accent, 0.08)
-                            border.color: Theme.borderAccent
+                            color: Theme.bg
                             border.width: 1
-                            Text {
-                                anchors.centerIn: parent
-                                text: "открыть терминал"
+                            border.color: chatInput.activeFocus ? Theme.borderAccent : Theme.border
+
+                            TextInput {
+                                id: chatInput
+                                anchors.fill: parent
+                                anchors.leftMargin: 10
+                                anchors.rightMargin: 10
+                                verticalAlignment: TextInput.AlignVCenter
                                 color: Theme.text
                                 font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSize(13)
-                            }
-                            MouseArea {
-                                id: termMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    termProc.command = ["hyprctl", "dispatch", "exec", "kitty"]
-                                    termProc.running = true
+                                font.pixelSize: Theme.fontSize(12)
+                                clip: true
+                                selectByMouse: true
+                                onAccepted: chat.send(text)
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: "спроси что-нибудь…"
+                                    color: Theme.textFaint
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.fontSize(12)
+                                    visible: chatInput.text === "" && !chatInput.activeFocus
                                 }
                             }
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 6
+
+                            Rectangle {
+                                Layout.fillWidth: true
+                                height: 36
+                                radius: Theme.radius
+                                color: sendMouse.containsMouse
+                                    ? Theme.alpha(Theme.accent, 0.16)
+                                    : Theme.alpha(Theme.accent, 0.08)
+                                border.color: Theme.borderAccent
+                                border.width: 1
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: chat.busy ? "СТОП" : "ОТПРАВИТЬ"
+                                    color: Theme.text
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.fontSize(12)
+                                    font.letterSpacing: 1
+                                }
+                                MouseArea {
+                                    id: sendMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: chat.busy ? chat.stop() : chat.send(chatInput.text)
+                                }
+                            }
+
+                            // новая сессия (сбросить контекст)
+                            Rectangle {
+                                Layout.preferredWidth: 40
+                                height: 36
+                                radius: Theme.radius
+                                color: newMouse.containsMouse ? Theme.alpha(Theme.danger, 0.12) : "transparent"
+                                border.width: 1
+                                border.color: newMouse.containsMouse ? Theme.danger : Theme.border
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "＋"
+                                    color: newMouse.containsMouse ? Theme.danger : Theme.textDim
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.fontSize(14)
+                                }
+                                MouseArea {
+                                    id: newMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: chat.newSession()
+                                }
+                            }
+
+                            // открыть полноценный opencode в терминале
+                            Rectangle {
+                                Layout.preferredWidth: 40
+                                height: 36
+                                radius: Theme.radius
+                                color: tuiMouse.containsMouse ? Theme.alpha(Theme.accent, 0.12) : "transparent"
+                                border.width: 1
+                                border.color: tuiMouse.containsMouse ? Theme.accent : Theme.border
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "▣"
+                                    color: tuiMouse.containsMouse ? Theme.accent : Theme.textDim
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.fontSize(14)
+                                }
+                                MouseArea {
+                                    id: tuiMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: chat.openTui()
+                                }
+                            }
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            text: chat.status
+                            color: Theme.textFaint
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize(10)
+                            elide: Text.ElideRight
                         }
                     }
                 }
@@ -481,6 +603,84 @@ PanelWindow {
     }
 
     Process { id: termProc; running: false }
+
+    // ═══════════════ OpenCode-чат (агент в сайдбаре) ═══════════════
+    // Вызов: opencode run --format json "<сообщение>" — стримит JSON-события,
+    // из них берём текстовые части ответа. Контекст держим в сессии
+    // (--continue), пока пользователь не сбросит (＋).
+    QtObject {
+        id: chat
+        property var messages: []
+        property bool busy: false
+        property string status: "готов"
+        property string sessionId: ""
+
+        function send(text) {
+            if (text.trim() === "" || busy) return
+            messages = messages.concat([{ role: "user", text: text }])
+            messages = messages.concat([{ role: "assistant", text: "" }])
+            busy = true
+            status = "opencode работает…"
+            if (chatInput) chatInput.text = ""
+
+            var args = "opencode run --format json "
+            if (sessionId !== "") args += "--session " + sessionId + " "
+            chatProc.command = ["bash", "-c",
+                args + "-- " + JSON.stringify(text).replace(/^"|"$/g, "'\\''")]
+            chatProc.running = true
+        }
+
+        function appendAssistant(chunk) {
+            var m = messages.slice()
+            if (m.length === 0) return
+            m[m.length - 1] = { role: "assistant", text: m[m.length - 1].text + chunk }
+            messages = m
+        }
+
+        function newSession() {
+            if (sessionId !== "") {
+                sessionsProc.command = ["opencode", "session", "delete", sessionId]
+                sessionsProc.running = true
+            }
+            sessionId = ""
+            messages = []
+            status = "новая сессия"
+        }
+
+        function openTui() {
+            termProc.command = ["bash", "-c",
+                "hyprctl dispatch 'hl.dsp.exec_cmd(\"kitty -e opencode\")'"]
+            termProc.running = true
+        }
+
+        function stop() {
+            chatProc.running = false
+            busy = false
+            status = "остановлено"
+        }
+    }
+
+    Process {
+        id: chatProc
+        running: false
+        onExited: {
+            chat.busy = false
+            chat.status = "готов"
+        }
+        stdout: SplitParser {
+            onRead: function(line) {
+                if (!line) return
+                try {
+                    var ev = JSON.parse(line)
+                    if (ev.type === "text" && ev.part && ev.part.text !== undefined)
+                        chat.appendAssistant(ev.part.text)
+                    if (ev.sessionID) chat.sessionId = ev.sessionID
+                } catch (e) { /* не-JSON строки игнорируем */ }
+            }
+        }
+    }
+
+    Process { id: sessionsProc; running: false }
     Process {
         id: clipSelectProc
         running: false
@@ -497,16 +697,6 @@ PanelWindow {
         onExited: clipModel.load()
     }
     Process { id: notesSaveProc; running: false }
-
-    Process {
-        id: ollamaProc
-        running: false
-        command: ["bash", "-c",
-            "if command -v ollama >/dev/null 2>&1; then " +
-            "n=$(ollama list 2>/dev/null | tail -n +2 | grep -c .); " +
-            "echo \"Ollama: моделей — ${n:-0}\"; else echo 'Ollama не установлен'; fi"]
-        stdout: StdioCollector { onStreamFinished: root.aiStatus = text.trim() }
-    }
 
     QtObject {
         id: clipModel
@@ -557,7 +747,6 @@ PanelWindow {
     Component.onCompleted: {
         notesLoadProc.command = ["bash", "-c", "cat ~/.cache/lunar_notes.txt 2>/dev/null || true"]
         notesLoadProc.running = true
-        ollamaProc.running = true
     }
 
     Process {

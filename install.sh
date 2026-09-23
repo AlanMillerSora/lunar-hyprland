@@ -185,6 +185,17 @@ if command -v ddcutil >/dev/null 2>&1; then
   fi
 fi
 
+# ── sudo для агента чата (OpenCode): белый список ──────────────
+# Агент может без пароля только доверенные команды (systemctl,
+# hyprctl-скрипты, pacman -Syu, логи). Всё остальное — через
+# подтверждение в чате. Файл кладём с правами 0440 (требование sudo).
+if [ -f "$REPO/systemd/lunar-agent.sudoers" ]; then
+  say "sudo: белый список для агента → /etc/sudoers.d/lunar-agent"
+  sudo install -m 0440 -o root -g root \
+    "$REPO/systemd/lunar-agent.sudoers" /etc/sudoers.d/lunar-agent 2>/dev/null \
+    || say "sudoers не установлен (нужен sudo) — см. systemd/lunar-agent.sudoers"
+fi
+
 # ── shell по умолчанию ─────────────────────────────────────────
 if command -v zsh >/dev/null 2>&1 && [ "${SHELL:-}" != "$(command -v zsh)" ]; then
   say "zsh как шелл по умолчанию"
