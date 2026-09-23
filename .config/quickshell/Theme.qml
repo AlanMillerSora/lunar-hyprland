@@ -36,6 +36,11 @@ QtObject {
     // сколько значков трея видно в панели (остальные — в списке «+N»)
     property int trayVisible: 3
 
+    // тултип панели: панель выставляет, LunarTooltip показывает
+    property bool tooltipShown: false
+    property string tooltipText: ""
+    property real tooltipX: 0
+
     property int animFast: 120
     property int animMed: 220
     property int animSlow: 380

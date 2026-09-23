@@ -245,6 +245,22 @@ PanelWindow {
         item.display(root, Math.round(pt.x), Math.round(pt.y))
     }
 
+    // тултип панели: показать текст над элементом
+    function showTip(text, area) {
+        if (!text) return
+        var ci = root.contentItem
+        var pt = ci ? area.mapToItem(ci, area.width / 2, 0) : Qt.point(0, 0)
+        Theme.tooltipText = text
+        Theme.tooltipX = Math.round(pt.x)
+        Theme.tooltipShown = true
+    }
+
+    // тултип с названием приложения при наведении на значок трея
+    function showTrayTip(item, area) {
+        if (!item) return
+        root.showTip(item.tooltipTitle || item.title || item.id || "", area)
+    }
+
     // ─────────── сеть / раскладка / уведомления ───────────
     property string netKind: "off"      // eth | wifi | off
     property int netSignal: 0
@@ -894,6 +910,8 @@ PanelWindow {
                                     hoverEnabled: true
                                     acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
                                     cursorShape: Qt.PointingHandCursor
+                                    onEntered: root.showTrayTip(modelData, trayIconMouse)
+                                    onExited: Theme.tooltipShown = false
                                     onClicked: function (m) {
                                         if (m.button === Qt.MiddleButton) {
                                             modelData.secondaryActivate()
@@ -933,6 +951,8 @@ PanelWindow {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
+                                onEntered: root.showTip("свёрнутые приложения", moreMouse)
+                                onExited: Theme.tooltipShown = false
                                 onClicked: root.openTrayPanel()
                             }
                         }

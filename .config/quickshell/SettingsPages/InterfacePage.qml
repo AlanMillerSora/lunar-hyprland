@@ -232,6 +232,82 @@ Item {
                 }
             }
 
+            // Значков трея в панели
+            Column {
+                width: parent.width
+                spacing: 10
+
+                Row {
+                    width: parent.width
+                    spacing: 16
+
+                    Text {
+                        text: "\uf00a"
+                        color: Theme.accent
+                        font.family: page.mono
+                        font.pixelSize: 14
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Column {
+                        spacing: 4
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        Text {
+                            text: "значков трея в панели"
+                            color: Theme.text
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 12
+                        }
+                        Text {
+                            text: Theme.trayVisible + " видно, остальные — в списке «+N»"
+                            color: Theme.textDim
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 10
+                        }
+                    }
+                }
+
+                Row {
+                    spacing: 8
+
+                    Repeater {
+                        model: [1, 2, 3, 4, 5, 6]
+
+                        delegate: Rectangle {
+                            required property int modelData
+                            width: 40
+                            height: 30
+                            radius: Theme.radius
+                            color: Theme.trayVisible === modelData
+                                ? Theme.alpha(Theme.accent, 0.12)
+                                : "transparent"
+                            border.width: 1
+                            border.color: Theme.trayVisible === modelData
+                                ? Theme.accent
+                                : (presetMouse.containsMouse ? Theme.borderAccent : Theme.border)
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: modelData
+                                color: Theme.trayVisible === modelData ? Theme.accent : Theme.textDim
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 11
+                                font.bold: Theme.trayVisible === modelData
+                            }
+
+                            MouseArea {
+                                id: presetMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: Theme.trayVisible = modelData
+                            }
+                        }
+                    }
+                }
+            }
+
             // Превью
             Rectangle {
                 width: parent.width
