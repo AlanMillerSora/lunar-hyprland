@@ -264,8 +264,8 @@ PanelWindow {
     // ─────────── сеть / раскладка / уведомления ───────────
     property string netKind: "off"      // eth | wifi | off
     property int netSignal: 0
-    property real netDown: 0            // МБ/с приём
-    property real netUp: 0              // МБ/с передача
+    property real netDown: 0            // байт/с, приём
+    property real netUp: 0              // байт/с, передача
     property string kbLayout: "EN"
     property string kbDevice: ""
     property bool dnd: false
@@ -329,45 +329,65 @@ PanelWindow {
         onTriggered: statusProc.running = true
     }
 
-    // ── скорость сети (МБ/с) из /proc/net/dev ─────────────────
-    // Скрипт считает дельту по суммарному трафику всех интерфейсов
-    // (кроме lo) за интервал и печатает "down up" в МБ/с.
+    // ── скорость сети (байт/с) из /proc/net/dev ───────────────
+    // /proc/net/dev отдаёт счётчики байт с момента загрузки. Читаем
+    // снимок мгновенно (cat), храним предыдущий снимок и время, дельту
+    // и скорость считаем в QML. Так всплески между замерами не теряются
+    // (окно — ровно интервал таймера), и нет спящего процесса.
+    property double netRxPrev: -1
+    property double netTxPrev: -1
+    property double netTimePrev: 0
+
     Process {
         id: netProc
         running: false
-        command: ["python3", "-c", `
-import time, os
-def read():
-    rx = tx = 0
-    with open("/proc/net/dev") as f:
-        for line in f.readlines()[2:]:
-            name, data = line.split(":", 1)
-            if name.strip() == "lo":
-                continue
-            parts = data.split()
-            rx += int(parts[0]); tx += int(parts[8])
-    return rx, tx
-r1, t1 = read()
-time.sleep(1.0)
-r2, t2 = read()
-print(f"{(r2-r1)/1048576:.2f} {(t2-t1)/1048576:.2f}")
-`]
+        command: ["cat", "/proc/net/dev"]
         stdout: StdioCollector {
             onStreamFinished: {
-                var p = text.trim().split(/\s+/)
-                if (p.length >= 2) {
-                    root.netDown = parseFloat(p[0]) || 0
-                    root.netUp = parseFloat(p[1]) || 0
+                var lines = text.split("\n")
+                if (lines.length < 3)
+                    return
+                var rx = 0, tx = 0
+                for (var i = 2; i < lines.length; i++) {
+                    var line = lines[i]
+                    var c = line.indexOf(":")
+                    if (c < 0)
+                        continue
+                    if (line.substring(0, c).trim() === "lo")
+                        continue
+                    var p = line.substring(c + 1).trim().split(/\s+/)
+                    if (p.length < 9)
+                        continue
+                    rx += parseInt(p[0]) || 0
+                    tx += parseInt(p[8]) || 0
                 }
+                var now = Date.now()
+                if (root.netRxPrev >= 0 && now > root.netTimePrev) {
+                    var dt = (now - root.netTimePrev) / 1000
+                    root.netDown = Math.max(0, (rx - root.netRxPrev) / dt)
+                    root.netUp = Math.max(0, (tx - root.netTxPrev) / dt)
+                }
+                root.netRxPrev = rx
+                root.netTxPrev = tx
+                root.netTimePrev = now
             }
         }
     }
 
     Timer {
-        interval: 3000
+        interval: 1000
         running: true
         repeat: true
         onTriggered: if (!netProc.running) netProc.running = true
+    }
+
+    // человекочитаемая скорость: КБ/с и МБ/с одной буквой, без дубля единицы
+    function netFmt(bps) {
+        if (bps < 1024)
+            return Math.round(bps) + "Б"
+        if (bps < 1048576)
+            return (bps / 1024).toFixed(bps < 10240 ? 1 : 0) + "К"
+        return (bps / 1048576).toFixed(1) + "М"
     }
 
     Process { id: statusProcAction; running: false }
@@ -692,23 +712,22 @@ print(f"{(r2-r1)/1048576:.2f} {(t2-t1)/1048576:.2f}")
                     font.pixelSize: Theme.fontSize(13)
                 }
 
-                // скорость сети (компактно: только когда есть трафик)
+                // скорость сети: не прячем, при простое — тускло
                 Row {
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 6
-                    visible: root.netDown > 0.05 || root.netUp > 0.05
 
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
-                        text: "󰁅" + root.netDown.toFixed(1)
-                        color: root.netDown > 0.05 ? Theme.text : Theme.textFaint
+                        text: "󰁅" + root.netFmt(root.netDown)
+                        color: root.netDown > 1024 ? Theme.text : Theme.textFaint
                         font.family: Theme.iconFont
                         font.pixelSize: Theme.fontSize(12)
                     }
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
-                        text: "󰁝" + root.netUp.toFixed(1)
-                        color: root.netUp > 0.05 ? Theme.text : Theme.textFaint
+                        text: "󰁝" + root.netFmt(root.netUp)
+                        color: root.netUp > 1024 ? Theme.text : Theme.textFaint
                         font.family: Theme.iconFont
                         font.pixelSize: Theme.fontSize(12)
                     }
