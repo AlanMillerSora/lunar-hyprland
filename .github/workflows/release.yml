@@ -1,0 +1,27 @@
+name: Release
+
+# Релиз собирается автоматически при пуше тега v<VERSION>
+# (тег ставит ./release.sh). Заметки генерируются из коммитов.
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Release
+        uses: softprops/action-gh-release@v3
+        with:
+          name: Lunar Eclipse ${{ github.ref_name }}
+          generate_release_notes: true
+          make_latest: true
