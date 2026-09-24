@@ -24,6 +24,18 @@ Item {
     property int phase: 5
     property bool live: true
 
+    // ── общее время сцены, обновляется ~25 раз/с ───────────────
+    // Все анимации (звёзды, пыль, метеоры, дыхание, серп) считаются от `t`,
+    // а не тикают на каждом кадре. Композитор перерисовывает фон 25 раз/с
+    // вместо 60 — на слабом iGPU это главное облегчение без потери жизни.
+    property real t: 0
+    Timer {
+        interval: 40
+        running: scene.live
+        repeat: true
+        onTriggered: scene.t += interval / 1000
+    }
+
     // ── текущая фаза (1..9) и масштаб сцены ────────────────────
     readonly property int p: Math.max(1, Math.min(9, phase))
     readonly property real unit: Math.max(0.5, Math.min(width / 1920, height / 1080))
@@ -43,9 +55,17 @@ Item {
     readonly property bool nightfallOn: live && (p === 3 || p === 4 || p === 6 || p === 7)
     readonly property bool nightfallRight: p <= 4
 
-    property real nfOpacity: 0
-    property real nfScale: 1
-    onNightfallOnChanged: if (!nightfallOn) { nfOpacity = 0; nfScale = 1 }
+    // вспышка серпа считается от общего времени сцены
+    readonly property real nfOpacity: {
+        if (!nightfallOn) return 0
+        var k = nfPhase()
+        return k < 0 ? 0 : nfVal(k)[0]
+    }
+    readonly property real nfScale: {
+        if (!nightfallOn) return 1
+        var k = nfPhase()
+        return k < 0 ? 1 : nfVal(k)[1]
+    }
 
     // ═══════════════ фон по фазам (CSS #eclipse-bg) ═══════════════
     function bgStops(ph) {
@@ -143,7 +163,8 @@ Item {
                 size: rnd() < 0.08 ? 2 : 1,
                 dur: 2000 + rnd() * 4000,
                 max: 0.3 + rnd() * 0.7,
-                delay: rnd() * 4000
+                delay: rnd() * 4000,
+                ph: rnd() * 6.28318
             })
         }
         return a
@@ -170,11 +191,41 @@ Item {
                 size: 1 + rnd() * 2,
                 dur: 10000 + rnd() * 20000,
                 drift: rnd() * 100 - 50,
-                delay: rnd() * 15000
+                delay: rnd() * 15000,
+                ph: rnd() * 6.28318
             })
         }
         return a
     }
+    // прогресс падения метеора (0..1) или -1, если он сейчас «спит».
+    // Считается от общего времени сцены, а не анимацией на кадр.
+    function meteorPhase(m) {
+        var fall = Math.max(0.6, m.dur / 1000)
+        var P = fall + 6.0 + (m.delay % 6000) / 1000
+        var local = (scene.t + (m.delay % 9000) / 1000) % P
+        return local < fall ? local / fall : -1
+    }
+
+    // цикл вспышки серпа: 2.5 с вспышка + пауза; k — прогресс 0..1 или -1
+    function nfPhase() {
+        var P = 6.7
+        var local = scene.t % P
+        return local > 2.5 ? -1 : local / 2.5
+    }
+    // кусочно-линейные кривые из CSS nightfallBurst: [opacity, scale]
+    function nfVal(k) {
+        var ks = [0, 0.14, 0.32, 0.55, 1.0]
+        var os = [0, 1, 0.9, 0.55, 0]
+        var ss = [0.7, 0.95, 1.22, 1.34, 1.45]
+        for (var i = 0; i < ks.length - 1; i++) {
+            if (k <= ks[i + 1]) {
+                var f = (k - ks[i]) / (ks[i + 1] - ks[i])
+                return [os[i] + (os[i + 1] - os[i]) * f, ss[i] + (ss[i + 1] - ss[i]) * f]
+            }
+        }
+        return [0, 1.45]
+    }
+
     readonly property var starData: makeStars()
     readonly property var meteorData: makeMeteors()
     readonly property var dustData: makeDust()
@@ -222,19 +273,12 @@ Item {
             height: modelData.size
             radius: width / 2
             color: "#ffffff"
-            opacity: 0.1
-            SequentialAnimation on opacity {
-                running: scene.live
-                loops: Animation.Infinite
-                PauseAnimation { duration: modelData.delay }
-                NumberAnimation {
-                    from: 0.1; to: scene.totality ? Math.min(1, modelData.max * 1.5) : modelData.max
-                    duration: modelData.dur / 2; easing.type: Easing.InOutSine
-                }
-                NumberAnimation {
-                    from: scene.totality ? Math.min(1, modelData.max * 1.5) : modelData.max; to: 0.1
-                    duration: modelData.dur / 2; easing.type: Easing.InOutSine
-                }
+            // мерцание считается от общего времени сцены (без анимации на кадр)
+            opacity: {
+                var hi = scene.totality ? Math.min(1, modelData.max * 1.5) : modelData.max
+                var w = Math.PI / (modelData.dur / 1000)
+                var k = 0.5 + 0.5 * Math.sin(scene.t * w + modelData.ph)
+                return 0.1 + (hi - 0.1) * k
             }
         }
     }
@@ -270,12 +314,8 @@ Item {
             }
         }
 
-        SequentialAnimation on scale {
-            running: scene.live
-            loops: Animation.Infinite
-            NumberAnimation { from: 1; to: 1.05; duration: 7000; easing.type: Easing.InOutSine }
-            NumberAnimation { from: 1.05; to: 1; duration: 7000; easing.type: Easing.InOutSine }
-        }
+        // лёгкое «дыхание» дымки от общего времени (без отдельной анимации)
+        scale: 1 + 0.05 * (0.5 + 0.5 * Math.sin(scene.t * 0.9))
     }
 
     // ── пылинки (мелкие точки, дрейф) ──────────────────────────
@@ -283,34 +323,15 @@ Item {
         model: (scene.live && scene.dustOps[scene.p] > 0) ? scene.dustData : []
         delegate: Rectangle {
             required property var modelData
-            x: modelData.x * scene.width
-            y: modelData.y * scene.height
             width: modelData.size
             height: modelData.size
             radius: width / 2
             color: "#ffffff"
-            opacity: 0
-            SequentialAnimation on opacity {
-                running: scene.live
-                loops: Animation.Infinite
-                PauseAnimation { duration: modelData.delay }
-                NumberAnimation { from: 0; to: 0.28 * scene.dustOps[scene.p]; duration: modelData.dur * 0.4 }
-                NumberAnimation { from: 0.28 * scene.dustOps[scene.p]; to: 0; duration: modelData.dur * 0.6 }
-            }
-            NumberAnimation on x {
-                running: scene.live
-                loops: Animation.Infinite
-                from: modelData.x * scene.width
-                to: modelData.x * scene.width + modelData.drift * scene.unit
-                duration: modelData.dur; easing.type: Easing.InOutSine
-            }
-            NumberAnimation on y {
-                running: scene.live
-                loops: Animation.Infinite
-                from: modelData.y * scene.height
-                to: modelData.y * scene.height - 40 * scene.unit
-                duration: modelData.dur; easing.type: Easing.InOutSine
-            }
+            opacity: scene.live
+                ? scene.dustOps[scene.p] * (0.12 + 0.12 * (0.5 + 0.5 * Math.sin(scene.t * 0.5 + modelData.ph)))
+                : 0
+            x: modelData.x * scene.width + modelData.drift * scene.unit * Math.sin(scene.t * 0.15 + modelData.ph)
+            y: modelData.y * scene.height - 40 * scene.unit * (0.5 + 0.5 * Math.sin(scene.t * 0.12 + modelData.ph * 1.3))
         }
     }
 
@@ -368,11 +389,12 @@ Item {
         model: (scene.live && scene.totality) ? scene.meteorData : []
         delegate: Item {
             required property var modelData
-            x: modelData.x * scene.width
-            y: modelData.y * scene.height
+            readonly property real pr: (scene.live && scene.totality) ? scene.meteorPhase(modelData) : -1
             width: 2
             height: 2
-            opacity: 0
+            opacity: pr < 0 ? 0 : (pr < 0.1 ? pr / 0.1 : (pr > 0.6 ? (1 - pr) / 0.4 : 1))
+            x: modelData.x * scene.width - 0.45 * scene.width * Math.max(0, pr)
+            y: modelData.y * scene.height + 0.34 * scene.height * Math.max(0, pr)
 
             // хвост
             Rectangle {
@@ -402,28 +424,6 @@ Item {
                 border.color: "#66BED7FF"
             }
 
-            SequentialAnimation on opacity {
-                running: scene.live && scene.totality
-                loops: Animation.Infinite
-                PauseAnimation { duration: modelData.delay }
-                NumberAnimation { from: 0; to: 1; duration: modelData.dur * 0.07 }
-                NumberAnimation { from: 1; to: 0; duration: modelData.dur * 0.55 }
-                PauseAnimation { duration: modelData.dur * 0.4 }
-            }
-            NumberAnimation on x {
-                running: scene.live && scene.totality
-                loops: Animation.Infinite
-                from: modelData.x * scene.width
-                to: modelData.x * scene.width - 0.45 * scene.width
-                duration: modelData.dur; easing.type: Easing.Linear
-            }
-            NumberAnimation on y {
-                running: scene.live && scene.totality
-                loops: Animation.Infinite
-                from: modelData.y * scene.height
-                to: modelData.y * scene.height + 0.34 * scene.height
-                duration: modelData.dur; easing.type: Easing.Linear
-            }
         }
     }
 
@@ -455,12 +455,8 @@ Item {
             height: 310 * scene.unit
             stops: scene.sunGlowStops
             opacity: scene.sunOps[scene.p]
-            SequentialAnimation on scale {
-                running: scene.live
-                loops: Animation.Infinite
-                NumberAnimation { from: 1; to: 1.045; duration: 2500; easing.type: Easing.InOutSine }
-                NumberAnimation { from: 1.045; to: 1; duration: 2500; easing.type: Easing.InOutSine }
-            }
+            // дыхание солнца (период 5 с) от общего времени — без анимации на кадр
+            scale: 1 + 0.045 * (0.5 + 0.5 * Math.sin(scene.t * 1.2566))
         }
 
         // гало короны (внешнее, .corona-glow 380px)
@@ -578,23 +574,6 @@ Item {
             }
         }
 
-        SequentialAnimation {
-            running: scene.nightfallOn
-            loops: Animation.Infinite
-            PauseAnimation { duration: 4200 }
-            ParallelAnimation {
-                NumberAnimation { target: scene; property: "nfOpacity"; from: 0; to: 1; duration: 350 }
-                NumberAnimation { target: scene; property: "nfScale"; from: 0.7; to: 0.95; duration: 350 }
-            }
-            ParallelAnimation {
-                NumberAnimation { target: scene; property: "nfOpacity"; from: 1; to: 0.9; duration: 450 }
-                NumberAnimation { target: scene; property: "nfScale"; from: 0.95; to: 1.22; duration: 450 }
-            }
-            ParallelAnimation {
-                NumberAnimation { target: scene; property: "nfOpacity"; from: 0.9; to: 0; duration: 1600 }
-                NumberAnimation { target: scene; property: "nfScale"; from: 1.22; to: 1.45; duration: 1600 }
-            }
-        }
     }
 
     // ── геометрия серпа (порт crescentPoints из sait/script.js) ─

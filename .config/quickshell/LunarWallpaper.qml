@@ -21,6 +21,9 @@ PanelWindow {
 
     WlrLayershell.layer: WlrLayer.Background
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+    // Отдельный namespace: иначе layerrule Hyprland блюрит и фоновые обои
+    // (полноэкранный blur каждый кадр — на слабом iGPU это главный тормоз).
+    WlrLayershell.namespace: "lunar-wallpaper"
     exclusionMode: ExclusionMode.Ignore
 
     // активный стол: activeWorkspace, а если он не отдаёт объект —

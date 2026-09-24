@@ -115,12 +115,12 @@ hl.config({
     rounding_power = 2.0,      -- скругленные "сквирклы" как в превью
     active_opacity   = 1.0,
     inactive_opacity = 0.95,
-    dim_inactive     = true,
+    dim_inactive     = false,    -- лишний проход по неактивным окнам — выкл
     dim_strength     = 0.12,
 
     shadow = {
       enabled        = true,
-      range          = 18,
+      range          = 14,       -- было 18: тени дешевле
       render_power   = 2,
       offset         = { 0, 4 },
       color          = "0xff000000",   -- 0xAARRGGBB
@@ -129,11 +129,11 @@ hl.config({
 
     blur = {
       enabled = true,
-      size    = 6,               -- баланс качества и FPS (iGPU слабый)
-      passes  = 3,
+      size    = 5,               -- было 6: меньше выборка размытия
+      passes  = 2,               -- было 3: -1/3 работы блюра
       ignore_opacity = false,
-      vibrancy = 0.25,
-      popups   = true,
+      vibrancy = 0.0,            -- сатурация — отдельный проход, выкл
+      popups   = false,          -- попапы/меню не блюрим
       xray     = true,           -- меньше перерисовки
       new_optimizations = true,
     },
