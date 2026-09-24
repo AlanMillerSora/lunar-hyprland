@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Shapes
 
 // ════════════════════════════════════════════════════════════════
 //  LunarWallpaperScene — живая сцена затмения на чистом QtQuick.
@@ -12,11 +11,12 @@ import QtQuick.Shapes
 //  заменены слоями радиальных градиентов (Canvas) с теми же цветами,
 //  радиусами и прозрачностями.
 //
-//  Фаза 1..9 (по активному столу):
-//    · луна едет слева направо, на 5 — кольцо;
-//    · 3/4/6/7 — вспышка синего серпа nightfall (сторона из фазы);
-//    · 4 — кровавая луна, метеоры, космическая пыль, яркие звёзды.
-//  live=false — «лёгкий режим»: без звёзд/метеоров/пыли и вспышек.
+//  Фаза 1..9 (по активному столу), все зеркально симметричны (1↔9,
+//  2↔8, 3↔7, 4↔6):
+//    · луна едет слева направо;
+//    · 5 — ПОЛНОЕ затмение: кольцо, свечение горизонта, пыль, метеоры;
+//    · чем дальше от 5, тем бледнее гало и полутень.
+//  live=false — «лёгкий режим»: без звёзд/метеоров/пыли.
 // ════════════════════════════════════════════════════════════════
 Item {
     id: scene
@@ -45,41 +45,27 @@ Item {
     readonly property real cyp: height * 0.44
 
     // ── таблицы фаз (индекс = фаза; 0 не используется) ─────────
+    // Все фазы симметричны относительно центра (5): 1↔9, 2↔8, 3↔7, 4↔6.
+    // Эталон зеркальных пар — правая сторона (6..9). Полное затмение
+    // (кольцо, метеоры, пыль, свечение горизонта) — фаза 5.
     readonly property var moonOffsets: [0, -339, -288, -230, -107, 0, 107, 230, 288, 339]
-    readonly property var sunOps:      [0, 1, 0.95, 0.88, 0.95, 0.95, 0.88, 0.95, 1, 1]
-    readonly property var moonGlowOps: [0, 0.2, 0.35, 0.6, 0.85, 0.6, 0.35, 0.2, 0, 0.2]
-    readonly property var penumbraOps: [0, 0.5, 0.9, 1, 0.25, 1, 0.9, 0.5, 0, 0.5]
-    readonly property var dustOps:     [0, 0, 0, 0.35, 0.9, 0.35, 0, 0, 0, 0]
-    readonly property var horizonOps:  [0, 0, 0, 0.35, 1, 0.35, 0, 0, 0, 0]
+    readonly property var sunOps:      [0, 1, 1, 0.95, 0.88, 0.95, 0.88, 0.95, 1, 1]
+    readonly property var moonGlowOps: [0, 0.2, 0, 0.2, 0.35, 0.6, 0.35, 0.2, 0, 0.2]
+    readonly property var penumbraOps: [0, 0.5, 0, 0.5, 0.9, 1, 0.9, 0.5, 0, 0.5]
+    readonly property var dustOps:     [0, 0, 0, 0, 0, 0.9, 0, 0, 0, 0]
+    readonly property var horizonOps:  [0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
 
-    readonly property bool totality: p === 4
-    readonly property bool ring: p === 3 || p === 5
-    readonly property bool nightfallOn: live && (p === 3 || p === 4 || p === 6 || p === 7)
-    readonly property bool nightfallRight: p <= 4
-
-    // вспышка серпа считается от общего времени сцены
-    readonly property real nfOpacity: {
-        if (!nightfallOn) return 0
-        var k = nfPhase()
-        return k < 0 ? 0 : nfVal(k)[0]
-    }
-    readonly property real nfScale: {
-        if (!nightfallOn) return 1
-        var k = nfPhase()
-        return k < 0 ? 1 : nfVal(k)[1]
-    }
+    readonly property bool fullEclipse: p === 5
 
     // ═══════════════ фон по фазам (CSS #eclipse-bg) ═══════════════
     function bgStops(ph) {
         switch (ph) {
-        case 1: case 8: case 9:
+        case 1: case 9:
             return [{ p: 0, c: "#10151c" }, { p: 0.6, c: "#05070c" }, { p: 1, c: "#000000" }]
-        case 2: case 7:
+        case 2: case 8:
             return [{ p: 0, c: "#0d1218" }, { p: 0.65, c: "#04060a" }, { p: 1, c: "#000000" }]
-        case 3: case 6:
+        case 3: case 4: case 6: case 7:
             return [{ p: 0, c: "#0e1018" }, { p: 0.6, c: "#06070d" }, { p: 1, c: "#000000" }]
-        case 4:
-            return [{ p: 0, c: "#080a10" }, { p: 0.62, c: "#030407" }, { p: 1, c: "#000000" }]
         case 5:
             return [{ p: 0, c: "#0b1019" }, { p: 0.62, c: "#050812" }, { p: 1, c: "#000000" }]
         }
@@ -133,7 +119,7 @@ Item {
     // .corona 260px (радиус 130) + внешние box-shadow:
     //   3/5 — 40/90px, 4 — 12/32/66px. Бокс 440px, чтобы свечение
     //   (130..220) не обрезалось диском луны (радиус 123).
-    readonly property var coronaStops: ring
+    readonly property var coronaStops: fullEclipse
         ? [{ p: 0, c: "rgba(255,255,255,0)" }, { p: 0.54, c: "rgba(255,255,255,0)" },
            { p: 0.57, c: "rgba(255,255,255,0.30)" }, { p: 0.68, c: "rgba(255,255,255,0.16)" },
            { p: 0.85, c: "rgba(255,255,255,0.06)" }, { p: 1, c: "rgba(255,255,255,0)" }]
@@ -141,7 +127,7 @@ Item {
            { p: 0.60, c: "rgba(255,255,255,0.50)" }, { p: 0.67, c: "rgba(255,255,255,0.28)" },
            { p: 0.82, c: "rgba(255,255,255,0.12)" }, { p: 1, c: "rgba(255,255,255,0)" }]
     // .corona-glow 380px
-    readonly property var coronaGlowStops: ring
+    readonly property var coronaGlowStops: fullEclipse
         ? [{ p: 0, c: "rgba(255,255,255,0.06)" }, { p: 0.45, c: "rgba(255,255,255,0.06)" },
            { p: 0.72, c: "rgba(255,255,255,0)" }, { p: 1, c: "rgba(255,255,255,0)" }]
         : [{ p: 0, c: "rgba(255,255,255,0.16)" }, { p: 0.30, c: "rgba(255,255,255,0.16)" },
@@ -208,26 +194,6 @@ Item {
         return local < fall ? local / fall : -1
     }
 
-    // цикл вспышки серпа: 2.5 с вспышка + пауза; k — прогресс 0..1 или -1
-    function nfPhase() {
-        var P = 6.7
-        var local = scene.t % P
-        return local > 2.5 ? -1 : local / 2.5
-    }
-    // кусочно-линейные кривые из CSS nightfallBurst: [opacity, scale]
-    function nfVal(k) {
-        var ks = [0, 0.14, 0.32, 0.55, 1.0]
-        var os = [0, 1, 0.9, 0.55, 0]
-        var ss = [0.7, 0.95, 1.22, 1.34, 1.45]
-        for (var i = 0; i < ks.length - 1; i++) {
-            if (k <= ks[i + 1]) {
-                var f = (k - ks[i]) / (ks[i + 1] - ks[i])
-                return [os[i] + (os[i + 1] - os[i]) * f, ss[i] + (ss[i + 1] - ss[i]) * f]
-            }
-        }
-        return [0, 1.45]
-    }
-
     readonly property var starData: makeStars()
     readonly property var meteorData: makeMeteors()
     readonly property var dustData: makeDust()
@@ -277,7 +243,7 @@ Item {
             color: "#ffffff"
             // мерцание считается от общего времени сцены (без анимации на кадр)
             opacity: {
-                var hi = scene.totality ? Math.min(1, modelData.max * 1.5) : modelData.max
+                var hi = scene.fullEclipse ? Math.min(1, modelData.max * 1.5) : modelData.max
                 var w = Math.PI / (modelData.dur / 1000)
                 var k = 0.5 + 0.5 * Math.sin(scene.t * w + modelData.ph)
                 return 0.1 + (hi - 0.1) * k
@@ -388,10 +354,10 @@ Item {
 
     // ── метеоры (только кровавая луна, фаза 4) ─────────────────
     Repeater {
-        model: (scene.live && scene.totality) ? scene.meteorData : []
+        model: (scene.live && scene.fullEclipse) ? scene.meteorData : []
         delegate: Item {
             required property var modelData
-            readonly property real pr: (scene.live && scene.totality) ? scene.meteorPhase(modelData) : -1
+            readonly property real pr: (scene.live && scene.fullEclipse) ? scene.meteorPhase(modelData) : -1
             width: 2
             height: 2
             opacity: pr < 0 ? 0 : (pr < 0.1 ? pr / 0.1 : (pr > 0.6 ? (1 - pr) / 0.4 : 1))
@@ -469,7 +435,7 @@ Item {
             width: 380 * scene.unit
             height: 380 * scene.unit
             stops: scene.coronaGlowStops
-            opacity: scene.ring ? 0.9 : 0
+            opacity: scene.fullEclipse ? 0.9 : 0
             visible: opacity > 0.001
             Behavior on opacity { NumberAnimation { duration: 800 } }
         }
@@ -482,7 +448,7 @@ Item {
             width: 440 * scene.unit
             height: 440 * scene.unit
             stops: scene.coronaStops
-            opacity: scene.ring ? 1 : 0
+            opacity: scene.fullEclipse ? 1 : 0
             visible: opacity > 0.001
             Behavior on opacity { NumberAnimation { duration: 800 } }
         }
@@ -547,63 +513,5 @@ Item {
                 color: "#000000"
             }
         }
-
-        // ── nightfall — синий серп (сторона и вспышка из фазы) ─
-        Shape {
-            id: nightfall
-            x: -280 * scene.unit
-            y: -280 * scene.unit
-            width: 560
-            height: 560
-            scale: scene.unit * scene.nfScale
-            opacity: scene.nfOpacity
-            visible: scene.nightfallOn
-            preferredRendererType: Shape.CurveRenderer
-
-            ShapePath {
-                fillGradient: LinearGradient {
-                    x1: scene.nightfallRight ? 273 : 150
-                    y1: 0
-                    x2: scene.nightfallRight ? 410 : 287
-                    y2: 0
-                    GradientStop { position: 0; color: scene.nightfallRight ? "#ffffff" : "#2e6bff" }
-                    GradientStop { position: scene.nightfallRight ? 0.55 : 0.45; color: "#a6c8ff" }
-                    GradientStop { position: 1; color: scene.nightfallRight ? "#2e6bff" : "#ffffff" }
-                }
-                PathPolyline {
-                    path: scene.crescentPoints(scene.nightfallRight ? "right" : "left")
-                }
-            }
-        }
-
-    }
-
-    // ── геометрия серпа (порт crescentPoints из sait/script.js) ─
-    function crescentPoints(side) {
-        var cx = 280, cy = 280, r = 130, off = 14, n = 80
-        var cutCx = cx + off
-        var hornX = cx + off / 2
-        var hornD = Math.sqrt(r * r - off * off / 4)
-        var botY = cy + hornD, topY = cy - hornD
-        var aTopMain = Math.atan2(topY - cy, hornX - cx); if (aTopMain < 0) aTopMain += 2 * Math.PI
-        var aBotMain = Math.atan2(botY - cy, hornX - cx)
-        var aTopCut = Math.atan2(topY - cy, hornX - cutCx); if (aTopCut < 0) aTopCut += 2 * Math.PI
-        var aBotCut = Math.atan2(botY - cy, hornX - cutCx)
-        var pts = []
-        for (var i = 0; i <= n; i++) {
-            var a = aBotMain + (aTopMain - aBotMain) * i / n
-            pts.push(Qt.point(cx + r * Math.cos(a), cy + r * Math.sin(a)))
-        }
-        for (var j = 0; j <= n; j++) {
-            var b = aTopCut + (aBotCut - aTopCut) * j / n
-            pts.push(Qt.point(cutCx + r * Math.cos(b), cy + r * Math.sin(b)))
-        }
-        if (side === "right") {
-            var mirror = []
-            for (var k = 0; k < pts.length; k++)
-                mirror.push(Qt.point(2 * cx - pts[k].x, pts[k].y))
-            return mirror
-        }
-        return pts
     }
 }
