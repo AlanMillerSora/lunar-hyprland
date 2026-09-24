@@ -98,6 +98,92 @@ Item {
                 color: Theme.border
             }
 
+            // Производительность: NORMAL (полный блюр, обои 60 fps)
+            //                  / OPTIMIZE (легче, обои ~25 fps)
+            Column {
+                width: parent.width
+                spacing: 10
+
+                Row {
+                    width: parent.width
+                    spacing: 16
+
+                    Text {
+                        text: "\uf0e7"
+                        color: Theme.accent
+                        font.family: page.mono
+                        font.pixelSize: 14
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Column {
+                        spacing: 4
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        Text {
+                            text: "производительность"
+                            color: Theme.text
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 12
+                        }
+                        Text {
+                            text: Theme.optimizeMode
+                                ? "OPTIMIZE — блюр легче, обои ~25 fps (слабое железо)"
+                                : "NORMAL — полный блюр, обои ~60 fps"
+                            color: Theme.textDim
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 10
+                        }
+                    }
+                }
+
+                Row {
+                    spacing: 8
+
+                    Repeater {
+                        model: [{ mode: false, label: "NORMAL" }, { mode: true, label: "OPTIMIZE" }]
+
+                        delegate: Rectangle {
+                            required property var modelData
+                            readonly property bool active: Theme.optimizeMode === modelData.mode
+
+                            width: perfText.implicitWidth + 28
+                            height: 30
+                            radius: Theme.radius
+                            color: active ? Theme.alpha(Theme.accent, 0.12)
+                                 : (perfMouse.containsMouse ? Theme.alpha(Theme.accent, 0.08) : "transparent")
+                            border.width: 1
+                            border.color: active ? Theme.accent
+                                        : (perfMouse.containsMouse ? Theme.borderAccent : Theme.border)
+
+                            Text {
+                                id: perfText
+                                anchors.centerIn: parent
+                                text: modelData.label
+                                color: active ? Theme.accent : Theme.textDim
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 11
+                                font.bold: active
+                            }
+
+                            MouseArea {
+                                id: perfMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: Theme.optimizeMode = modelData.mode
+                            }
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                width: parent.width
+                height: 1
+                color: Theme.border
+            }
+
             // Прозрачность панели
             Column {
                 width: parent.width

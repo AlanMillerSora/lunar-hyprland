@@ -115,25 +115,27 @@ hl.config({
     rounding_power = 2.0,      -- скругленные "сквирклы" как в превью
     active_opacity   = 1.0,
     inactive_opacity = 0.95,
-    dim_inactive     = false,    -- лишний проход по неактивным окнам — выкл
+    dim_inactive     = true,
     dim_strength     = 0.12,
 
     shadow = {
       enabled        = true,
-      range          = 14,       -- было 18: тени дешевле
+      range          = 18,
       render_power   = 2,
       offset         = { 0, 4 },
       color          = "0xff000000",   -- 0xAARRGGBB
       color_inactive = "0x66000000",
     },
 
+    -- Нормальные значения (режим NORMAL). Режим ECONOM (Hub → Interface)
+    -- на лету облегчает их через hypr/scripts/eclipse-perf.sh.
     blur = {
       enabled = true,
-      size    = 5,               -- было 6: меньше выборка размытия
-      passes  = 2,               -- было 3: -1/3 работы блюра
+      size    = 6,
+      passes  = 3,
       ignore_opacity = false,
-      vibrancy = 0.0,            -- сатурация — отдельный проход, выкл
-      popups   = false,          -- попапы/меню не блюрим
+      vibrancy = 0.25,
+      popups   = true,
       xray     = true,           -- меньше перерисовки
       new_optimizations = true,
     },

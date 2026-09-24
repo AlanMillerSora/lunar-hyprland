@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Hyprland
 
@@ -31,9 +32,29 @@ PanelWindow {
     readonly property var ws: Hyprland.activeWorkspace || Hyprland.focusedWorkspace
     readonly property int wsId: (ws && ws.id > 0) ? ws.id : 5
 
+    // Профиль производительности (Theme.optimizeMode): на лету переключает
+    // блюр/тени Hyprland (eclipse-perf.sh) и темп анимации обоев (40/16 мс).
+    readonly property bool optimize: Theme.optimizeMode
+    onOptimizeChanged: applyPerf()
+    Component.onCompleted: applyPerf()
+
+    // команду задаём явно перед запуском (binding не успевал обновиться
+    // к моменту running=true, и режимы переключались наоборот)
+    function applyPerf() {
+        perfProc.command = ["bash", "-c",
+            "$HOME/.config/hypr/scripts/eclipse-perf.sh " + (root.optimize ? "optimize" : "normal")]
+        perfProc.running = true
+    }
+
+    Process {
+        id: perfProc
+        running: false
+    }
+
     LunarWallpaperScene {
         anchors.fill: parent
         phase: Math.max(1, Math.min(9, root.wsId))
         live: Theme.wallpaperLive
+        tickMs: root.optimize ? 40 : 16
     }
 }

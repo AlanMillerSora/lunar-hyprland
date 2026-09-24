@@ -28,9 +28,11 @@ Item {
     // Все анимации (звёзды, пыль, метеоры, дыхание, серп) считаются от `t`,
     // а не тикают на каждом кадре. Композитор перерисовывает фон 25 раз/с
     // вместо 60 — на слабом iGPU это главное облегчение без потери жизни.
+    // темп анимации: 16 мс (≈60 fps, NORMAL) или 40 мс (≈25 fps, OPTIMIZE)
+    property int tickMs: 16
     property real t: 0
     Timer {
-        interval: 40
+        interval: scene.tickMs
         running: scene.live
         repeat: true
         onTriggered: scene.t += interval / 1000

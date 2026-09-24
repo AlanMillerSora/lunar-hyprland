@@ -32,6 +32,11 @@ QtObject {
     // живые обои (QML-сцена): false — «лёгкий режим» без звёзд/метеоров/пыли
     property bool wallpaperLive: true
 
+    // Производительность (Hub → Interface):
+    //   true  = OPTIMIZE — облегчённый блюр/тени, обои ~25 fps
+    //   false = NORMAL   — полный блюр/тени, обои ~60 fps
+    property bool optimizeMode: true
+
     // попап громкости открыт — центральный OSD не показываем (без дубля)
     property bool volumePopupOpen: false
 
@@ -77,12 +82,14 @@ QtObject {
             property real fontScale: 1.0
             property int trayVisible: 3
             property bool wallpaperLive: true
+            property bool optimizeMode: true
 
             // файл → UI
             onInterfaceOpacityChanged: theme.interfaceOpacity = interfaceOpacity
             onFontScaleChanged: theme.fontScale = fontScale
             onTrayVisibleChanged: theme.trayVisible = trayVisible
             onWallpaperLiveChanged: theme.wallpaperLive = wallpaperLive
+            onOptimizeModeChanged: theme.optimizeMode = optimizeMode
         }
     }
 
@@ -91,6 +98,7 @@ QtObject {
     onFontScaleChanged: uiAdapter.fontScale = fontScale
     onTrayVisibleChanged: uiAdapter.trayVisible = trayVisible
     onWallpaperLiveChanged: uiAdapter.wallpaperLive = wallpaperLive
+    onOptimizeModeChanged: uiAdapter.optimizeMode = optimizeMode
 
     function alpha(c, a) {
         return Qt.rgba(c.r, c.g, c.b, a)
