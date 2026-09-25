@@ -442,9 +442,29 @@ PanelWindow {
         Layout.alignment: Qt.AlignVCenter
         Layout.preferredWidth: 1
         Layout.preferredHeight: 16
-        Layout.leftMargin: 9
-        Layout.rightMargin: 9
+        Layout.leftMargin: 6
+        Layout.rightMargin: 6
         color: Theme.border
+    }
+
+    // Метрики моношрифта: по ним считаем ширины числовых полей, чтобы
+    // цифры при скачках значений не дёргали раскладку.
+    FontMetrics { id: fm11; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSize(11) }
+    FontMetrics { id: fm13; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSize(13) }
+    FontMetrics { id: fm14; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSize(14) }
+    FontMetrics { id: fm15; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSize(15) }
+    // иконки из разных наборов Nerd Font бывают разной ширины — тоже чиним
+    FontMetrics { id: fmIcon13; font.family: Theme.iconFont; font.pixelSize: Theme.fontSize(13) }
+    FontMetrics { id: fmIcon15; font.family: Theme.iconFont; font.pixelSize: Theme.fontSize(15) }
+    FontMetrics { id: fmIcon17; font.family: Theme.iconFont; font.pixelSize: Theme.fontSize(17) }
+    FontMetrics { id: fmIcon19; font.family: Theme.iconFont; font.pixelSize: Theme.fontSize(19) }
+
+    // Дополнить строку слева пробелами до ширины w (моношрифт → ровно)
+    function padNum(s, w) {
+        s = "" + s
+        while (s.length < w)
+            s = " " + s
+        return s
     }
 
     // ── ЛЕВАЯ ЧАСТЬ: марка LUNAR + рабочие столы ──
@@ -599,7 +619,7 @@ PanelWindow {
         // ── телеметрия и управление: прижаты к правому краю ──
         RowLayout {
             anchors.right: parent.right
-            anchors.rightMargin: 14
+            anchors.rightMargin: 12
             anchors.verticalCenter: parent.verticalCenter
             spacing: 0
 
@@ -613,20 +633,37 @@ PanelWindow {
                     id: netRow
                     anchors.centerIn: parent
                     height: 26
-                    spacing: 8
+                    spacing: 6
 
+                    // стрелка и число — отдельно: число в поле фикс. ширины
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
-                        text: "󰁅" + root.netFmt(root.netDown)
-                        color: Theme.text
+                        text: "󰁅"
+                        color: Theme.textDim
                         font.family: Theme.iconFont
                         font.pixelSize: Theme.fontSize(15)
                     }
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
-                        text: "󰁝" + root.netFmt(root.netUp)
+                        width: fm15.advanceWidth("00.0K")
+                        text: root.netFmt(root.netDown)
                         color: Theme.text
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(15)
+                    }
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "󰁝"
+                        color: Theme.textDim
                         font.family: Theme.iconFont
+                        font.pixelSize: Theme.fontSize(15)
+                    }
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: fm15.advanceWidth("00.0K")
+                        text: root.netFmt(root.netUp)
+                        color: Theme.text
+                        font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSize(15)
                     }
                 }
@@ -645,11 +682,12 @@ PanelWindow {
                 id: statusRow
                 Layout.alignment: Qt.AlignVCenter
                 height: 26
-                spacing: 8
+                spacing: 7
 
                 // сеть (клик — список сетей в Hub)
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
+                    width: Math.max(fmIcon17.advanceWidth("󰈀"), fmIcon17.advanceWidth("\uf1eb"))
                     text: root.netKind === "eth" ? "󰈀" : "\uf1eb"
                     color: root.netKind === "off" ? Theme.textFaint : Theme.text
                     font.family: Theme.iconFont
@@ -663,8 +701,8 @@ PanelWindow {
                 }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    visible: root.netKind === "wifi"
-                    text: root.netSignal + "%"
+                    width: fm13.advanceWidth("100%")
+                    text: root.netKind === "wifi" ? root.netSignal + "%" : ""
                     color: Theme.textDim
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(13)
@@ -703,6 +741,7 @@ PanelWindow {
                 // уведомления / «не беспокоить» (клик — переключить)
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
+                    width: Math.max(fmIcon15.advanceWidth("\uf1f6"), fmIcon15.advanceWidth("\uf0f3"))
                     text: root.dnd ? "\uf1f6" : "\uf0f3"
                     color: root.dnd
                         ? Theme.textFaint
@@ -718,8 +757,8 @@ PanelWindow {
                 }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    visible: root.notifCount > 0
-                    text: root.notifCount
+                    width: fm13.advanceWidth("999")
+                    text: root.notifCount > 0 ? root.notifCount : ""
                     color: Theme.accent
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(13)
@@ -734,7 +773,7 @@ PanelWindow {
                 id: actionRow
                 Layout.alignment: Qt.AlignVCenter
                 height: 26
-                spacing: 10
+                spacing: 8
 
                 // Game Mode (клик — переключить)
                 Text {
@@ -753,6 +792,7 @@ PanelWindow {
                 // профиль питания (клик — переключить performance/balanced/save)
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
+                    width: fm13.advanceWidth("PERF")
                     text: root.powerProfile === "performance"
                         ? "PERF"
                         : (root.powerProfile === "power-saver" ? "SAVE" : "BAL")
@@ -776,7 +816,7 @@ PanelWindow {
 
                 // запись экрана — с явной подписью, чтобы было понятно
                 Rectangle {
-                    width: recLabel.implicitWidth + 20
+                    width: fm11.advanceWidth("● ЗАПИСЬ") + 20
                     height: 24
                     radius: Theme.radius
                     anchors.verticalCenter: parent.verticalCenter
@@ -812,10 +852,12 @@ PanelWindow {
                 id: statsRow
                 Layout.alignment: Qt.AlignVCenter
                 height: 26
-                spacing: 14
+                spacing: 10
 
+                // каждое поле — фиксированной ширины, цифры не дёргают строку
                 Text {
-                    text: "CPU " + (root.cpuPct < 0 ? "--" : root.cpuPct + "%")
+                    width: fm14.advanceWidth("CPU 100%")
+                    text: "CPU " + root.padNum(root.cpuPct < 0 ? "--" : root.cpuPct + "%", 4)
                     color: Theme.textDim
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(14)
@@ -823,17 +865,19 @@ PanelWindow {
                     verticalAlignment: Text.AlignVCenter
                 }
                 Text {
-                    text: "RAM " + (root.ramPct < 0 ? "--" : root.ramPct + "%")
+                    width: fm14.advanceWidth("RAM 100%")
+                    text: "RAM " + root.padNum(root.ramPct < 0 ? "--" : root.ramPct + "%", 4)
                     color: Theme.textDim
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(14)
                     height: 26
                     verticalAlignment: Text.AlignVCenter
                 }
-                // температура — вместе с CPU/RAM, до индикаторов памяти
+                // температура — вместе с CPU/RAM
                 Text {
                     visible: root.tempC > 0
-                    text: root.tempC + "°C"
+                    width: fm14.advanceWidth("100°C")
+                    text: root.padNum(root.tempC + "°C", 5)
                     color: Theme.textDim
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(14)
@@ -843,8 +887,9 @@ PanelWindow {
                 // GPU: загрузка и температура
                 Text {
                     visible: root.gpuLoad !== ""
-                    text: "GPU " + root.gpuLoad + "%"
-                        + (root.gpuTemp !== "" ? " " + root.gpuTemp + "°C" : "")
+                    width: fm14.advanceWidth("GPU 100% 100°C")
+                    text: "GPU " + root.padNum(root.gpuLoad + "%", 4)
+                        + " " + root.padNum(root.gpuTemp !== "" ? root.gpuTemp + "°C" : "--", 5)
                     color: Theme.textDim
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(14)
@@ -860,7 +905,7 @@ PanelWindow {
                 id: rightRow
                 Layout.alignment: Qt.AlignVCenter
                 height: 26
-                spacing: 10
+                spacing: 9
 
                 // ── системный трей: до N значков, остальные — в списке ──
                 Item {
@@ -970,6 +1015,8 @@ PanelWindow {
                         spacing: 6
 
                         Text {
+                            width: Math.max(fmIcon19.advanceWidth("󰖁"), fmIcon19.advanceWidth("󰕿"),
+                                            fmIcon19.advanceWidth("󰖀"), fmIcon19.advanceWidth("󰕾"))
                             text: root.muted
                                 ? "󰖁"
                                 : (root.vol < 0.34 ? "󰕿" : (root.vol < 0.67 ? "󰖀" : "󰕾"))
@@ -980,6 +1027,7 @@ PanelWindow {
                             verticalAlignment: Text.AlignVCenter
                         }
                         Text {
+                            width: fm14.advanceWidth("100%")
                             text: root.muted ? "mute" : Math.round(root.vol * 100) + "%"
                             color: Theme.textDim
                             font.family: Theme.fontFamily
@@ -1069,6 +1117,7 @@ PanelWindow {
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
+                width: Math.max(fmIcon13.advanceWidth("󰏤"), fmIcon13.advanceWidth("󰐊"))
                 text: root.playing ? "󰏤" : "󰐊"
                 color: root.playing ? Theme.accent : Theme.textFaint
                 font.family: Theme.iconFont
