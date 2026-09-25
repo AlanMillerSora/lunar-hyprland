@@ -198,6 +198,36 @@ PanelWindow {
         return big.substring(o, o + len)
     }
 
+    // ── cava: спектр для полосы «сейчас играет» ──
+    // Столбики рисуем только когда реально играет; иначе — линия.
+    readonly property bool mediaActive: root.playing && root.track.length > 0
+    readonly property int barCount: 20
+    property var barValues: []
+
+    function feedCava(line) {
+        var t = ("" + line).trim()
+        if (t.length === 0)
+            return
+        var parts = t.split(/\s+/)
+        var out = []
+        for (var i = 0; i < root.barCount; i++) {
+            var v = parseInt(parts[i] === undefined ? "0" : parts[i]) || 0
+            out.push(Math.max(0, Math.min(1, v / 1000)))
+        }
+        root.barValues = out
+    }
+
+    Process {
+        id: cavaProc
+        running: root.mediaActive
+        command: ["cava", "-p", Quickshell.shellPath("cava-lunar.conf")]
+        stdout: SplitParser {
+            splitMarker: "\n"
+            onRead: (line) => root.feedCava(line)
+        }
+        stderr: StdioCollector {}
+    }
+
     // ─────────────── power ───────────────
     // Кнопки питания на панели нет — меню открывается по SUPER + ESC.
     Process { id: powerProc; running: false }
@@ -1076,47 +1106,95 @@ PanelWindow {
         }
     }
 
-    // медиа «сейчас играет»: занимает всё свободное место между столами
-    // и часами (левый край — сразу за блоком столов, правый — перед часами)
+    // медиа «сейчас играет»: пусто — тонкая линия, играет — столбики cava
+    // (1/3 ширины) слева и бегущая строка с названием трека (2/3) справа.
+    // Лежит внутри правого блока, не задевая столы и часы.
     Item {
         id: mediaBox
         anchors.verticalCenter: parent.verticalCenter
         height: 26
-        visible: root.track.length > 0
         // внутри правого блока, с отступом от столов и от часов
         x: rightBar.x + 18
         width: Math.max(0, clockBox.x - 18 - x)
+        readonly property bool active: root.mediaActive
+        readonly property real vizW: width / 3
+        readonly property real titleW: Math.max(0, width - vizW - 12)
         readonly property real mqCharW: fm12.advanceWidth("0") > 0 ? fm12.advanceWidth("0") : 8
         readonly property int mqChars:
-            Math.max(6, Math.floor((width - noteIcon.width - 8) / mqCharW))
+            Math.max(4, Math.floor((titleW - 18 - 8) / mqCharW))
 
+        // холостой ход — линия
+        Rectangle {
+            anchors.verticalCenter: parent.verticalCenter
+            width: parent.width
+            height: 1
+            color: Theme.alpha(Theme.accent, 0.18)
+            visible: !mediaBox.active
+        }
+
+        // играет — столбики cava + название
         Row {
+            visible: mediaBox.active
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
             height: 26
-            spacing: 8
+            spacing: 12
 
-            Text {
-                id: noteIcon
-                width: 18
+            // столбики — треть ширины
+            Row {
+                anchors.verticalCenter: parent.verticalCenter
                 height: 26
-                verticalAlignment: Text.AlignVCenter
-                horizontalAlignment: Text.AlignHCenter
-                text: root.playing ? "\uf04c" : "\uf04b"
-                color: root.playing ? Theme.accent : Theme.textFaint
-                font.family: Theme.iconFont
-                font.pixelSize: Theme.fontSize(13)
+                spacing: 2
+
+                Repeater {
+                    model: root.barCount
+
+                    delegate: Item {
+                        required property int index
+                        width: Math.max(1, (mediaBox.vizW - (root.barCount - 1) * 2) / root.barCount)
+                        height: 26
+
+                        Rectangle {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.bottom: parent.bottom
+                            anchors.bottomMargin: 3
+                            width: parent.width
+                            height: 2 + (root.barValues[index] || 0) * 18
+                            radius: 1
+                            color: Theme.alpha(Theme.accent, 0.5 + 0.5 * (root.barValues[index] || 0))
+                        }
+                    }
+                }
             }
 
-            Text {
-                width: Math.max(0, mediaBox.width - noteIcon.width - 8)
+            // название трека — две трети
+            Row {
+                anchors.verticalCenter: parent.verticalCenter
                 height: 26
-                verticalAlignment: Text.AlignVCenter
-                clip: true
-                text: root.marqueeText(mediaBox.mqChars)
-                color: root.playing ? Theme.text : Theme.textDim
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize(12)
+                spacing: 8
+
+                Text {
+                    id: noteIcon
+                    width: 18
+                    height: 26
+                    verticalAlignment: Text.AlignVCenter
+                    horizontalAlignment: Text.AlignHCenter
+                    text: root.playing ? "\uf04c" : "\uf04b"
+                    color: root.playing ? Theme.accent : Theme.textFaint
+                    font.family: Theme.iconFont
+                    font.pixelSize: Theme.fontSize(13)
+                }
+
+                Text {
+                    width: Math.max(0, mediaBox.titleW - noteIcon.width - 8)
+                    height: 26
+                    verticalAlignment: Text.AlignVCenter
+                    clip: true
+                    text: root.marqueeText(mediaBox.mqChars)
+                    color: Theme.text
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(12)
+                }
             }
         }
 
