@@ -14,7 +14,8 @@ Cmnd_Alias LUNAR_READ = \
   /usr/bin/systemctl status *, \
   /usr/bin/systemctl list-units *, \
   /usr/bin/systemctl --user status *, \
-  /usr/bin/systemctl --user list-units *
+  /usr/bin/systemctl --user list-units *, \
+  /usr/bin/dmidecode -t memory
 
 # службы (без произвольных unit-файлов — только start/stop/restart/enable/disable)
 Cmnd_Alias LUNAR_SVC = \
