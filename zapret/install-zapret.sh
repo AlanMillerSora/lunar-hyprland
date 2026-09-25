@@ -31,8 +31,10 @@ have_bin() { [ -x "$ZDIR/nfq/nfqws" ] || [ -x "$ZDIR/binaries/my/nfqws" ]; }
 # ── зависимости сборки и работы ────────────────────────────────
 install_deps() {
   say "zapret: зависимости (gcc/make, netfilter, nftables)"
+  # systemd-libs отдельно не ставим: точечное обновление ломает связку с
+  # systemd (частичный апгрейд) — библиотека и так есть в системе.
   sudo pacman -S --needed --noconfirm \
-    gcc make zlib libcap libnetfilter_queue libmnl systemd-libs \
+    gcc make zlib libcap libnetfilter_queue libmnl \
     nftables curl
 }
 

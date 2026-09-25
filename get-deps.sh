@@ -104,8 +104,9 @@ fi
 # Сам zapret ставится из исходников через ./install.sh (zapret/install-zapret.sh);
 # тут — зависимости сборки (gcc/make) и работы (netfilter/nftables).
 say "pacman: зависимости zapret (сборка nfqws + netfilter)"
+# systemd-libs отдельно не ставим — точечное обновление ломает systemd.
 sudo pacman -S --needed --noconfirm \
-  gcc make zlib libcap libnetfilter_queue libmnl systemd-libs nftables \
+  gcc make zlib libcap libnetfilter_queue libmnl nftables \
   && ok "zapret: зависимости" \
   || warn "зависимости zapret не поставились — см. вывод"
 

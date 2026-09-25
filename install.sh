@@ -67,12 +67,24 @@ while IFS= read -r f; do
   fi
 done < <(find "$HOME/.config" -type f \
            -not -path "*/.config/lunar/sait/*" \
-           -not -path "*/.config/systemd/*" 2>/dev/null)
+           -not -path "*/.config/systemd/*" \
+           -not -path "*/.config/chromium*" \
+           -not -path "*/.config/google-chrome*" \
+           -not -path "*/.config/BraveSoftware*" \
+           -not -path "*/.config/vivaldi*" \
+           -not -path "*/.config/mozilla*" \
+           -not -path "*/.config/Code/User/globalStorage*" \
+           -not -path "*/.config/Code/User/workspaceStorage*" \
+           -not -path "*/.config/Code/User/History*" \
+           -not -path "*/.config/Code/logs*" \
+           -not -path "*/.config/Code/CachedData*" \
+           -not -path "*.bak*" \
+           -size -2M 2>/dev/null)
 
 if [ -n "$LOCAL_DIFF" ]; then
   BACKUP="$HOME/.config-backup-$(date +%Y%m%d-%H%M%S)"
   warn "в ~/.config есть локальные отличия от репо:"
-  printf '%s' "$LOCAL_DIFF" | head -20
+  printf '%s' "$LOCAL_DIFF" | head -20 || true
   say "бэкап этих файлов → $BACKUP"
   mkdir -p "$BACKUP"
   printf '%s' "$LOCAL_DIFF" | sed 's/ (.*//' | while IFS= read -r rel; do
