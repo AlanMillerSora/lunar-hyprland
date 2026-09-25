@@ -47,8 +47,11 @@ sudo pacman -S --needed --noconfirm \
 # translate-shell (trans) — перевод новостей на русский (Google);
 # timeshift — снимки системы для отката (кнопка «Откат» в Hub).
 say "pacman: обновления и откат"
+# fwupd — обновление прошивок (SSD/мышь/док-станция) из Hub → Update.
+# Отдельного пакета fwupd-dummy-device в Arch/AUR нет — dummy-устройство
+# это тестовый плагин сборки, для реального железа не нужен.
 sudo pacman -S --needed --noconfirm \
-  informant translate-shell timeshift cronie \
+  informant translate-shell timeshift cronie fwupd \
   || say "часть пакетов обновлений не поставилась — см. вывод"
 
 # ── игры и медиа (часть риса: стол 01 — игры) ──────────────────

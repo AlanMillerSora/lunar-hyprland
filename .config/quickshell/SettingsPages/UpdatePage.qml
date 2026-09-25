@@ -118,6 +118,13 @@ Item {
         pAction.running = true
     }
 
+    // кэш pacman (2 версии), журнал (≤200 МБ), сироты под подтверждение
+    function runClean() {
+        pAction.command = ["kitty", "--hold", "-e", "bash", "-c",
+            "$HOME/.config/hypr/scripts/eclipse-update.sh --clean"]
+        pAction.running = true
+    }
+
     Process { id: pRollback }
 
     function showRollback() {
@@ -220,6 +227,11 @@ Item {
                         label: "ПРОВЕРИТЬ"
                         enabledBtn: !page.busy
                         onClicked: { pCheck.running = true; pNews.running = true }
+                    }
+                    ActionButton {
+                        label: "ПОЧИСТИТЬ"
+                        enabledBtn: !page.busy
+                        onClicked: page.runClean()
                     }
                 }
 

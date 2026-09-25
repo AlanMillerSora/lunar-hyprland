@@ -9,11 +9,12 @@
 #    4) делает бэкап конфигов (eclipse-backup.sh);
 #    5) обновляет систему (pacman -Syu + AUR через paru/yay).
 #
-#  Запуск:  eclipse-update.sh [--now] [--check] [--news] [--no-backup]
+#  Запуск:  eclipse-update.sh [--now] [--check] [--news] [--clean] [--no-backup]
 #    без флага      — с буфером (ждём, если новости свежие)
 #    --now          — обновить сразу, игнорируя буфер
 #    --check        — только показать, что ждёт обновления (не обновлять)
 #    --news         — показать свежие новости (переведённые) и выйти
+#    --clean        — гигиена: кэш pacman, журнал, сироты (кнопка «Почистить»)
 #    --no-backup    — без бэкапа конфигов
 # ════════════════════════════════════════════════════════════════
 set -uo pipefail
@@ -23,7 +24,7 @@ RSS_URL="https://archlinux.org/feeds/news/"
 CACHE="$HOME/.cache/lunar-news"
 mkdir -p "$CACHE"
 
-MODE="update"      # update | check | news
+MODE="update"      # update | check | news | clean
 NOW=0
 DO_BACKUP=1
 
@@ -32,12 +33,18 @@ while [[ $# -gt 0 ]]; do
     --now) NOW=1; shift ;;
     --check) MODE="check"; shift ;;
     --news) MODE="news"; shift ;;
+    --clean) MODE="clean"; shift ;;
     --no-backup) DO_BACKUP=0; shift ;;
-    *) echo "usage: $0 [--now|--check|--news] [--no-backup]" >&2; exit 1 ;;
+    *) echo "usage: $0 [--now|--check|--news|--clean] [--no-backup]" >&2; exit 1 ;;
   esac
 done
 
-say() { printf '\033[38;5;15m==>\033[0m %s\n' "$*"; }
+# цвет только в терминале: --check/--news читает QML, ANSI ему не нужен
+if [ -t 1 ]; then
+  say() { printf '\033[38;5;15m==>\033[0m %s\n' "$*"; }
+else
+  say() { printf '==> %s\n' "$*"; }
+fi
 
 # ── Game Mode: не запускаем отложенное обновление во время игры ─
 # Обновление — тяжёлая операция (загрузка, распаковка, перезапуск служб),
@@ -47,6 +54,81 @@ if [[ "$MODE" == "update" && "$NOW" != 1 \
   say "Game Mode включён — обновление отложено (закончишь игру — запусти снова или с --now)"
   exit 0
 fi
+
+# ── гигиена: кэш pacman (2 версии) и журнал (≤200 МБ) ───────────
+clean_cache_journal() {
+  if command -v paccache >/dev/null 2>&1; then
+    local before after
+    before="$(du -sh /var/cache/pacman/pkg 2>/dev/null | cut -f1)"
+    sudo paccache -rk2 >/dev/null 2>&1 || true
+    after="$(du -sh /var/cache/pacman/pkg 2>/dev/null | cut -f1)"
+    say "кэш pacman (paccache -rk2): ${before:-?} → ${after:-?}"
+  else
+    say "paccache нет (pacman-contrib) — кэш пакетов пропущен"
+  fi
+
+  local jbefore jafter
+  jbefore="$(journalctl --disk-usage 2>/dev/null | grep -o '[0-9.]*[MG]' | head -1)"
+  sudo journalctl --vacuum-size=200M >/dev/null 2>&1 || true
+  jafter="$(journalctl --disk-usage 2>/dev/null | grep -o '[0-9.]*[MG]' | head -1)"
+  say "журнал systemd (--vacuum-size=200M): ${jbefore:-?} → ${jafter:-?}"
+}
+
+# ── гигиена: пакеты-сироты (список + подтверждение) ────────────
+clean_orphans() {
+  local orphans=()
+  mapfile -t orphans < <(pacman -Qtdq 2>/dev/null)
+  if [ "${#orphans[@]}" -eq 0 ]; then
+    say "пакетов-сирот нет"
+    return
+  fi
+  say "пакеты-сироты (${#orphans[@]}):"
+  printf '   %s\n' "${orphans[@]}"
+  local ans=""
+  read -r -p "Удалить сироты? [y/N] " ans </dev/tty || ans=""
+  if [[ ! "${ans:-}" =~ ^[Yy]$ ]]; then
+    say "сироты оставлены"
+    return
+  fi
+  # --transient есть в свежем pacman; иначе обычный -Rns
+  if pacman -R --help 2>&1 | grep -q -- "--transient"; then
+    sudo pacman -Rns --transient --noconfirm "${orphans[@]}" \
+      && say "сироты удалены" || say "не удалось удалить сироты"
+  else
+    sudo pacman -Rns --noconfirm "${orphans[@]}" \
+      && say "сироты удалены" || say "не удалось удалить сироты"
+  fi
+}
+
+# ── прошивки (fwupd): проверка и установка с подтверждением ────
+firmware_step() {
+  command -v fwupdmgr >/dev/null 2>&1 || { say "fwupd не установлен — прошивки пропущены"; return; }
+  say "прошивки: обновляю список (fwupdmgr refresh)"
+  sudo fwupdmgr refresh --force >/dev/null 2>&1 || true
+
+  local ups
+  ups="$(fwupdmgr get-updates 2>/dev/null || true)"
+  if [[ -z "$ups" ]] || grep -qiE "no updates|updates? not|nothing to do|failed" <<<"$ups"; then
+    say "прошивки: обновлений нет"
+    return
+  fi
+
+  say "прошивки: доступны обновления"
+  grep -E "Device|Version|Summary" <<<"$ups" | head -20 || true
+  local ans=""
+  read -r -p "Установить прошивки? [y/N] " ans </dev/tty || ans=""
+  if [[ ! "${ans:-}" =~ ^[Yy]$ ]]; then
+    say "прошивки оставлены"
+    return
+  fi
+  say "прошивки: установка (fwupdmgr update)"
+  if sudo fwupdmgr update -y 2>&1 | tail -8; then
+    notify-send -a "Lunar" "Прошивки обновлены" \
+      "Перезагрузка или выключение — по требованию устройства" 2>/dev/null || true
+  else
+    say "прошивки: установка не удалась"
+  fi
+}
 
 # ── перевод через translate-shell (Google), с кэшем ─────────────
 translate() {
@@ -137,6 +219,14 @@ if [[ "$MODE" == "news" ]]; then
   exit 0
 fi
 
+# кнопка «Почистить» в Hub → Update: кэш, журнал, сироты
+if [[ "$MODE" == "clean" ]]; then
+  say "гигиена системы"
+  clean_cache_journal
+  clean_orphans
+  exit 0
+fi
+
 AGE="$(newest_age_days)"
 
 if [[ "$MODE" == "check" ]]; then
@@ -194,6 +284,12 @@ elif command -v yay >/dev/null 2>&1; then
   say "обновляю AUR (yay)"
   yay -Sua --noconfirm || say "AUR: есть проблемы"
 fi
+
+# гигиена после обновления: кэш pacman (2 версии) и журнал (≤200 МБ)
+clean_cache_journal
+
+# прошивки (fwupd) — с подтверждением
+firmware_step
 
 say "обновление завершено"
 notify-send -a "Lunar" "Обновление системы" "Готово" 2>/dev/null || true
