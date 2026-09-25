@@ -21,7 +21,7 @@
 
 <div align="center">
 
-[Скриншоты](#скриншоты) · [Столы](#столы) · [Обои](#обои) · [Установка](#установка) · [Zapret и Vencord](#zapret-и-vencord) · [Игры](#игры-game-mode) · [NVIDIA](#nvidia) · [Чат](#чат-opencode) · [Обновления](#обновления) · [Горячие клавиши](#горячие-клавиши) · [Тема](#тема)
+[Скриншоты](#скриншоты) · [Столы](#столы) · [Обои](#обои) · [Установка](#установка) · [Zapret и Vencord](#zapret-и-vencord) · [Игры](#игры-game-mode) · [NVIDIA](#nvidia) · [Чат](#чат-opencode) · [Календарь](#календарь) · [Обновления](#обновления) · [Горячие клавиши](#горячие-клавиши) · [Тема](#тема)
 
 </div>
 
@@ -252,6 +252,16 @@ lib32-nvidia-utils
 
 ---
 
+<h2 align="center" id="календарь">Календарь</h2>
+
+<div align="center">
+
+Локальный, без сети: клик по дню в правом сайдбаре → список событий и форма (название, время, за сколько минут напомнить). Точки на днях показывают, где есть события; напоминание приходит уведомлением mako, звук — опцией. События хранятся в `~/.local/share/lunar/calendar.json`, логика — `hypr/scripts/eclipse-calendar.py`. Синхронизация CalDAV (Google/Nextcloud) — следующим этапом.
+
+</div>
+
+---
+
 <h2 align="center" id="обновления">Обновления</h2>
 
 <div align="center">
@@ -268,7 +278,7 @@ lib32-nvidia-utils
 
 <div align="center">
 
-Обои · Панель · Hub · Sidebar'ы · OSD · Чат · Game Mode · Обновления — всё на Quickshell (QML), `waybar` и GTK-приложений нет. Один визуальный язык: рамка 1px, радиус 6, HUD-скобки, JetBrains Mono.
+Обои · Панель · Hub · Sidebar'ы · Календарь · OSD · Чат · Game Mode · Обновления — всё на Quickshell (QML), `waybar` и GTK-приложений нет. Один визуальный язык: рамка 1px, радиус 6, HUD-скобки, JetBrains Mono.
 
 </div>
 
@@ -283,7 +293,7 @@ lib32-nvidia-utils
 | **Панель** | `quickshell/LunarPanel.qml` | 42px сверху. Лого+фаза, столы `01–09`; справа — пилюля **скорости сети** (Б/К/М), сеть/раскладка/уведомления, Game Mode, питание, CPU/RAM/°C/GPU, mpris, трей, громкость |
 | **Hub** | `quickshell/LunarHub.qml` | Лаунчер + настройки (980×640): Launch, System, Sound, Monitors, Network, Bluetooth, Interface, Memory, Games, Dev, Wallpapers, Update |
 | **Sidebar** | `quickshell/LunarSidebar.qml` | Слева (560px): чат OpenCode, буфер cliphist (ПКМ — удалить), заметки |
-| **Sidebar R** | `quickshell/LunarSidebarRight.qml` | Справа: уведомления (mako), «сейчас играет» (mpris), календарь, запись экрана |
+| **Sidebar R** | `quickshell/LunarSidebarRight.qml` | Справа: уведомления (mako), «сейчас играет» (mpris), календарь (локальные события и напоминания), запись экрана |
 | **Очистка/Система** | `SettingsPages/MemoryPage.qml`, `hypr/scripts/eclipse-cleanup.sh` | RAM/SWAP и кнопка «ОЧИСТИТЬ»: сироты, кэш, журнал, tmpfiles |
 | **Game Mode** | `hypr/scripts/eclipse-gamemode.sh` | Анимации/blur выкл, DND, performance, пауза hypridle, tearing + пауза фоновых задач |
 | **Запись** | `hypr/scripts/eclipse-record.sh` | wf-recorder → `~/Videos/lunar-*.mp4`; аппаратный кодек (VAAPI/NVENC) с откатом на софт |

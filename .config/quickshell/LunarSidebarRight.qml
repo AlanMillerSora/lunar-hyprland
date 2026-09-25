@@ -24,9 +24,18 @@ PanelWindow {
     property bool collapsed: true
     property int tabIndex: 0
 
-    function openPanel() { collapsed = false; notif.load(); recModel.load(); recStatusProc.running = true }
+    function openPanel() { collapsed = false; notif.load(); recModel.load(); recStatusProc.running = true; cal.reload() }
     function closePanel() { collapsed = true }
     function toggle() { collapsed = !collapsed }
+
+    // добавление события из формы календаря
+    function addCalEvent() {
+        if (!cal.selected) return
+        cal.add(calTitle.text, cal.selected, calTime.text, calRemind.text)
+        calTitle.text = ""
+        calTime.text = ""
+        calRemind.text = ""
+    }
 
     onCollapsedChanged: {
         if (!collapsed && !stripHover.hovered && !contentHover.hovered)
@@ -499,8 +508,9 @@ PanelWindow {
                             text: root.todayText
                             color: Theme.textDim
                             font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(12)
+                            font.pixelSize: Theme.fontSize(14)
                         }
+
 
                         Flickable {
                             id: monthFlick
@@ -529,7 +539,7 @@ PanelWindow {
                                             text: modelData.title
                                             color: Theme.text
                                             font.family: Theme.fontFamily
-                                            font.pixelSize: Theme.fontSize(15)
+                                            font.pixelSize: Theme.fontSize(17)
                                             font.bold: true
                                             font.letterSpacing: 1
                                             horizontalAlignment: Text.AlignHCenter
@@ -542,11 +552,11 @@ PanelWindow {
                                                 model: ["пн", "вт", "ср", "чт", "пт", "сб", "вс"]
                                                 Text {
                                                     required property string modelData
-                                                    width: 58
+                                                    width: 68
                                                     text: modelData
                                                     color: Theme.textFaint
                                                     font.family: Theme.fontFamily
-                                                    font.pixelSize: Theme.fontSize(12)
+                                                    font.pixelSize: Theme.fontSize(13)
                                                     horizontalAlignment: Text.AlignHCenter
                                                 }
                                             }
@@ -560,12 +570,17 @@ PanelWindow {
                                                 model: modelData.cells
                                                 Rectangle {
                                                     required property var modelData
-                                                    width: 58
-                                                    height: 34
+                                                    width: 68
+                                                    height: 42
                                                     radius: Theme.radius
+                                                    readonly property bool isSel: modelData.day > 0 && cal.selected === modelData.date
+
                                                     color: modelData.today
-                                                        ? Theme.alpha(Theme.accent, 0.14) : "transparent"
-                                                    border.width: modelData.today ? 1 : 0
+                                                        ? Theme.alpha(Theme.accent, 0.14)
+                                                        : (isSel ? Theme.alpha(Theme.accent, 0.10)
+                                                        : (cellMouse.containsMouse && modelData.day > 0
+                                                            ? Theme.alpha(Theme.accent, 0.06) : "transparent"))
+                                                    border.width: (modelData.today || isSel) ? 1 : 0
                                                     border.color: Theme.borderAccent
                                                     Text {
                                                         anchors.centerIn: parent
@@ -574,12 +589,188 @@ PanelWindow {
                                                             ? "transparent"
                                                             : (modelData.today ? Theme.accent : Theme.text)
                                                         font.family: Theme.fontFamily
-                                                        font.pixelSize: Theme.fontSize(13)
+                                                        font.pixelSize: Theme.fontSize(15)
                                                         font.bold: modelData.today
+                                                    }
+                                                    // точка: на этот день есть события
+                                                    Rectangle {
+                                                        visible: modelData.has === true
+                                                        width: 5
+                                                        height: 5
+                                                        radius: 3
+                                                        color: modelData.today ? Theme.accent : Theme.textDim
+                                                        anchors.horizontalCenter: parent.horizontalCenter
+                                                        anchors.bottom: parent.bottom
+                                                        anchors.bottomMargin: 3
+                                                    }
+                                                    MouseArea {
+                                                        id: cellMouse
+                                                        anchors.fill: parent
+                                                        hoverEnabled: true
+                                                        cursorShape: modelData.day > 0 ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                                        onClicked: if (modelData.day > 0)
+                                                            cal.selected = (cal.selected === modelData.date ? "" : modelData.date)
                                                     }
                                                 }
                                             }
                                         }
+                                    }
+                                }
+                            }
+                        }
+
+                        // ── выбранный день: события и добавление ──
+                        ColumnLayout {
+                            visible: cal.selected !== ""
+                            Layout.fillWidth: true
+                            spacing: 6
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: cal.selected
+                                    color: Theme.text
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.fontSize(14)
+                                    font.bold: true
+                                }
+                                Text {
+                                    text: "\uf00d"
+                                    color: Theme.textDim
+                                    font.family: Theme.iconFont
+                                    font.pixelSize: Theme.fontSize(14)
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: cal.selected = ""
+                                    }
+                                }
+                            }
+
+                            Repeater {
+                                model: cal.eventsFor(cal.selected)
+                                delegate: RowLayout {
+                                    required property var modelData
+                                    Layout.fillWidth: true
+                                    spacing: 8
+                                    Text {
+                                        text: (modelData.time && modelData.time.length > 0) ? modelData.time : "весь"
+                                        color: Theme.textDim
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: Theme.fontSize(13)
+                                    }
+                                    Text {
+                                        Layout.fillWidth: true
+                                        text: modelData.title
+                                        color: Theme.text
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: Theme.fontSize(13)
+                                        elide: Text.ElideRight
+                                    }
+                                    Text {
+                                        text: "\uf1f8"
+                                        color: Theme.textFaint
+                                        font.family: Theme.iconFont
+                                        font.pixelSize: Theme.fontSize(13)
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: cal.del(modelData.id)
+                                        }
+                                    }
+                                }
+                            }
+
+                            // добавление: название · время · за сколько минут напомнить
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 6
+
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    height: 32
+                                    radius: Theme.radius
+                                    color: Theme.trackBg
+                                    border.width: 1
+                                    border.color: Theme.border
+                                    TextInput {
+                                        id: calTitle
+                                        anchors.fill: parent
+                                        anchors.leftMargin: 8
+                                        anchors.rightMargin: 8
+                                        verticalAlignment: TextInput.AlignVCenter
+                                        color: Theme.text
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: Theme.fontSize(13)
+                                        clip: true
+                                        Text {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            visible: parent.text.length === 0
+                                            text: "событие"
+                                            color: Theme.textFaint
+                                            font: parent.font
+                                        }
+                                    }
+                                }
+                                Rectangle {
+                                    width: 66
+                                    height: 32
+                                    radius: Theme.radius
+                                    color: Theme.trackBg
+                                    border.width: 1
+                                    border.color: Theme.border
+                                    TextInput {
+                                        id: calTime
+                                        anchors.fill: parent
+                                        horizontalAlignment: TextInput.AlignHCenter
+                                        verticalAlignment: TextInput.AlignVCenter
+                                        color: Theme.text
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: Theme.fontSize(13)
+                                        Text {
+                                            anchors.centerIn: parent
+                                            visible: parent.text.length === 0
+                                            text: "чч:мм"
+                                            color: Theme.textFaint
+                                            font: parent.font
+                                        }
+                                    }
+                                }
+                                Rectangle {
+                                    width: 52
+                                    height: 32
+                                    radius: Theme.radius
+                                    color: Theme.trackBg
+                                    border.width: 1
+                                    border.color: Theme.border
+                                    TextInput {
+                                        id: calRemind
+                                        anchors.fill: parent
+                                        horizontalAlignment: TextInput.AlignHCenter
+                                        verticalAlignment: TextInput.AlignVCenter
+                                        color: Theme.text
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: Theme.fontSize(13)
+                                        validator: IntValidator { bottom: 0; top: 600 }
+                                        Text {
+                                            anchors.centerIn: parent
+                                            visible: parent.text.length === 0
+                                            text: "мин"
+                                            color: Theme.textFaint
+                                            font: parent.font
+                                        }
+                                    }
+                                }
+                                Text {
+                                    text: "\uf067"
+                                    color: Theme.accent
+                                    font.family: Theme.iconFont
+                                    font.pixelSize: Theme.fontSize(17)
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: root.addCalEvent()
                                     }
                                 }
                             }
@@ -820,8 +1011,9 @@ PanelWindow {
         return d.getDate() + "." + ("0" + (d.getMonth() + 1)).slice(-2) + "." + d.getFullYear()
     }
 
-    // 18 месяцев вперёд — список прокручивается
+    // 18 месяцев вперёд — список прокручивается; cal.events даёт точки событий
     readonly property var months: {
+        var evs = cal.events
         var out = []
         var now = new Date()
         for (var i = 0; i < 18; i++) {
@@ -831,9 +1023,14 @@ PanelWindow {
             var days = new Date(y, m + 1, 0).getDate()
             var cells = []
             for (var k = 0; k < startDow; k++)
-                cells.push({ day: 0, today: false })
-            for (var dd = 1; dd <= days; dd++)
-                cells.push({ day: dd, today: (i === 0 && dd === now.getDate()) })
+                cells.push({ day: 0, today: false, date: "", has: false })
+            for (var dd = 1; dd <= days; dd++) {
+                var ds = y + "-" + ("0" + (m + 1)).slice(-2) + "-" + ("0" + dd).slice(-2)
+                var has = false
+                for (var q = 0; q < evs.length; q++)
+                    if (evs[q].date === ds) { has = true; break }
+                cells.push({ day: dd, today: (i === 0 && dd === now.getDate()), date: ds, has: has })
+            }
             out.push({ title: monthNames[m] + " " + y, cells: cells })
         }
         return out
@@ -854,6 +1051,86 @@ PanelWindow {
         repeat: true
         running: !root.collapsed
         onTriggered: notif.load()
+    }
+
+    // ─────────── локальный календарь (события + напоминания) ───────────
+    // Хранилище — ~/.local/share/lunar/calendar.json (скрипт eclipse-calendar.py).
+    // Сеть не нужна; CalDAV добавим отдельным этапом.
+    QtObject {
+        id: cal
+        property var events: []
+        property var settings: ({})
+        property string selected: ""      // выбранный день, YYYY-MM-DD
+
+        function reload() { calList.running = true }
+
+        function eventsFor(date) {
+            var out = []
+            for (var i = 0; i < events.length; i++)
+                if (events[i].date === date) out.push(events[i])
+            out.sort(function(a, b) {
+                var x = a.time || "99:99", y = b.time || "99:99"
+                return x < y ? -1 : (x > y ? 1 : 0)
+            })
+            return out
+        }
+
+        function py() {
+            return Quickshell.env("HOME") + "/.config/hypr/scripts/eclipse-calendar.py"
+        }
+
+        function add(title, date, time, remind) {
+            title = (title || "").trim()
+            if (!title || !date) return
+            var cmd = ["python3", py(), "add", "--date", date, "--title", title]
+            var t = (time || "").trim()
+            if (t !== "" && /^\d{1,2}:\d{2}$/.test(t)) {
+                if (/^\d:\d{2}$/.test(t)) t = "0" + t
+                cmd = cmd.concat(["--time", t])
+            }
+            var r = (remind || "").trim()
+            if (r !== "" && !isNaN(parseInt(r)))
+                cmd = cmd.concat(["--remind", "" + Math.max(0, parseInt(r))])
+            calMutate.command = cmd
+            calMutate.running = true
+        }
+
+        function del(id) {
+            calMutate.command = ["python3", py(), "del", "--id", id]
+            calMutate.running = true
+        }
+    }
+
+    Process {
+        id: calList
+        command: ["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/eclipse-calendar.py", "list"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    var d = JSON.parse(text)
+                    cal.events = d.events || []
+                    cal.settings = d.settings || {}
+                } catch (e) {
+                    cal.events = []
+                }
+            }
+        }
+    }
+
+    Process { id: calMutate; onExited: cal.reload() }
+
+    Process {
+        id: calReminder
+        command: ["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/eclipse-calendar.py", "reminders"]
+    }
+
+    // напоминания проверяем раз в минуту — работает и при закрытой панели
+    Timer {
+        interval: 60000
+        repeat: true
+        running: true
+        triggeredOnStart: true
+        onTriggered: calReminder.running = true
     }
 
     QtObject {
@@ -1042,5 +1319,6 @@ print(json.dumps(out[:200]))
         notif.load()
         recModel.load()
         recStatusProc.running = true
+        cal.reload()
     }
 }
