@@ -435,25 +435,41 @@ PanelWindow {
     }
 
     // ───────────────────────────── layout ─────────────────────────────
-    Item {
-        anchors.fill: parent
+    // Единый цельный блок во всю ширину: слева «LUNAR + фазы столов»,
+    // по центру — часы, справа — телеметрия и управление. Внутренние
+    // секции разделены тонкими 1px-разделителями (Sep).
+    component Sep: Rectangle {
+        Layout.alignment: Qt.AlignVCenter
+        Layout.preferredWidth: 1
+        Layout.preferredHeight: 16
+        Layout.leftMargin: 9
+        Layout.rightMargin: 9
+        color: Theme.border
+    }
 
-        // ── LOGO pill: марка + фаза активного стола ──
-        Rectangle {
-            id: logoPill
-            anchors.left: parent.left
-            anchors.leftMargin: 8
-            anchors.verticalCenter: parent.verticalCenter
-            height: 32
-            radius: Theme.radiusL
-            color: root.pillBg
-            border.color: root.pillBorder
-            border.width: 1
-            width: logoRow.implicitWidth + 18
+    Rectangle {
+        id: bar
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.leftMargin: 8
+        anchors.rightMargin: 8
+        anchors.verticalCenter: parent.verticalCenter
+        height: 32
+        radius: Theme.radiusL
+        color: root.pillBg
+        border.color: root.pillBorder
+        border.width: 1
+        clip: true
 
+        RowLayout {
+            anchors.fill: parent
+            anchors.leftMargin: 14
+            anchors.rightMargin: 14
+            spacing: 0
+
+            // ── марка LUNAR + фаза активного стола ──
             Row {
-                id: logoRow
-                anchors.centerIn: parent
+                Layout.alignment: Qt.AlignVCenter
                 height: 26
                 spacing: 8
 
@@ -478,164 +494,98 @@ PanelWindow {
                     font.letterSpacing: 1.5
                 }
             }
-        }
 
-        // ── LEFT pill: workspaces ──
-        Rectangle {
-            id: leftPill
-            anchors.left: logoPill.right
-            anchors.leftMargin: 6
-            anchors.verticalCenter: parent.verticalCenter
-            height: 32
-            radius: Theme.radiusL
-            color: root.pillBg
-            border.color: root.pillBorder
-            border.width: 1
-            width: leftRow.implicitWidth + 18
+            Sep {}
 
-            // тонкая «орбита» за фазами — связывает индикаторы в цикл
-            Rectangle {
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.leftMargin: 15
-                anchors.rightMargin: 15
-                height: 1
-                color: Theme.alpha(Theme.accent, 0.10)
-            }
+            // ── рабочие столы: 9 фаз ──
+            Item {
+                Layout.alignment: Qt.AlignVCenter
+                implicitWidth: wsRow.implicitWidth
+                implicitHeight: 26
 
-            Row {
-                id: leftRow
-                anchors.centerIn: parent
-                height: 26
-                spacing: 7
+                // тонкая «орбита» за фазами — связывает индикаторы в цикл
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    height: 1
+                    color: Theme.alpha(Theme.accent, 0.10)
+                }
 
-                Repeater {
-                    model: 9
+                Row {
+                    id: wsRow
+                    anchors.centerIn: parent
+                    height: 26
+                    spacing: 7
 
-                    delegate: Rectangle {
-                        id: wsPill
-                        required property int index
-                        readonly property int wsId: index + 1
-                        readonly property var ws: root.wsFor(wsId)
-                        readonly property bool isFocused: root.focusedWs !== null && root.focusedWs.id === wsId
-                        readonly property bool isOccupied: ws !== null && ws.toplevels.values.length > 0
+                    Repeater {
+                        model: 9
 
-                        width: 28
-                        height: 26
-                        color: "transparent"
+                        delegate: Rectangle {
+                            id: wsPill
+                            required property int index
+                            readonly property int wsId: index + 1
+                            readonly property var ws: root.wsFor(wsId)
+                            readonly property bool isFocused: root.focusedWs !== null && root.focusedWs.id === wsId
+                            readonly property bool isOccupied: ws !== null && ws.toplevels.values.length > 0
 
-                        // тонкое кольцо-выделение активного стола
-                        Rectangle {
-                            anchors.centerIn: parent
-                            width: 24
-                            height: 24
-                            radius: 12
+                            width: 28
+                            height: 26
                             color: "transparent"
-                            border.width: 1
-                            border.color: Theme.alpha(Theme.accent, 0.55)
-                            visible: wsPill.isFocused
-                        }
 
-                        // только сама фаза; состояние — яркостью (активный — чистый белый)
-                        Image {
-                            anchors.centerIn: parent
-                            width: 16
-                            height: 16
-                            source: Qt.resolvedUrl("assets/moon-phases/phase_"
-                                + ("0" + (index + 1)).slice(-2) + ".svg")
-                            sourceSize: Qt.size(64, 64)
-                            fillMode: Image.PreserveAspectFit
-                            smooth: true
-                            mipmap: true
-                            opacity: wsPill.isFocused
-                                ? 1.0
-                                : (wsMouse.containsMouse ? 0.85 : (wsPill.isOccupied ? 0.78 : 0.26))
-                            scale: wsPill.isFocused
-                                ? 1.15
-                                : (wsMouse.containsMouse ? 1.1 : (wsPill.isOccupied ? 1.07 : 1.0))
-                            Behavior on opacity { NumberAnimation { duration: 120 } }
-                            Behavior on scale { NumberAnimation { duration: 120 } }
-                        }
+                            // тонкое кольцо-выделение активного стола
+                            Rectangle {
+                                anchors.centerIn: parent
+                                width: 24
+                                height: 24
+                                radius: 12
+                                color: "transparent"
+                                border.width: 1
+                                border.color: Theme.alpha(Theme.accent, 0.55)
+                                visible: wsPill.isFocused
+                            }
 
-                        MouseArea {
-                            id: wsMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            acceptedButtons: Qt.LeftButton
-                            onClicked: root.focusWs(wsPill.wsId)
+                            // только сама фаза; состояние — яркостью (активный — чистый белый)
+                            Image {
+                                anchors.centerIn: parent
+                                width: 16
+                                height: 16
+                                source: Qt.resolvedUrl("assets/moon-phases/phase_"
+                                    + ("0" + (index + 1)).slice(-2) + ".svg")
+                                sourceSize: Qt.size(64, 64)
+                                fillMode: Image.PreserveAspectFit
+                                smooth: true
+                                mipmap: true
+                                opacity: wsPill.isFocused
+                                    ? 1.0
+                                    : (wsMouse.containsMouse ? 0.85 : (wsPill.isOccupied ? 0.78 : 0.26))
+                                scale: wsPill.isFocused
+                                    ? 1.15
+                                    : (wsMouse.containsMouse ? 1.1 : (wsPill.isOccupied ? 1.07 : 1.0))
+                                Behavior on opacity { NumberAnimation { duration: 120 } }
+                                Behavior on scale { NumberAnimation { duration: 120 } }
+                            }
+
+                            MouseArea {
+                                id: wsMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                acceptedButtons: Qt.LeftButton
+                                onClicked: root.focusWs(wsPill.wsId)
+                            }
                         }
                     }
                 }
-
-                // статистика системы переехала в правый бок (statsPill)
             }
-        }
 
-        // ── MEDIA pill: «сейчас играет» (между столами и часами) ──
-        // Минимализм: иконка ноты + бегущая строка трека.
-        Rectangle {
-            id: mediaPill
-            anchors.left: leftPill.right
-            anchors.leftMargin: 6
-            anchors.verticalCenter: parent.verticalCenter
-            height: 32
-            radius: Theme.radiusL
-            color: root.pillBg
-            border.color: root.playing ? Theme.borderAccent : root.pillBorder
-            border.width: 1
-            width: mediaRow.implicitWidth + 18
-            visible: root.track.length > 0
-            Behavior on border.color { ColorAnimation { duration: 200 } }
+            // растяжка — часы держатся по центру
+            Item { Layout.fillWidth: true }
 
+            Sep {}
+
+            // ── часы ──
             Row {
-                id: mediaRow
-                anchors.centerIn: parent
-                height: 26
-                spacing: 8
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root.playing ? "󰏤" : "󰐊"
-                    color: root.playing ? Theme.accent : Theme.textFaint
-                    font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSize(13)
-                }
-
-                Text {
-                    width: 220
-                    height: 26
-                    verticalAlignment: Text.AlignVCenter
-                    clip: true
-                    text: root.marqueeText()
-                    color: root.playing ? Theme.text : Theme.textDim
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(12)
-                }
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: mediaPanelProc.running = true   // попап «сейчас играет»
-            }
-        }
-
-        // ── CENTER pill: clock ──
-        Rectangle {
-            id: centerPill
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.verticalCenter: parent.verticalCenter
-            height: 32
-            radius: Theme.radiusL
-            color: root.pillBg
-            border.color: root.pillBorder
-            border.width: 1
-            width: clockRow.implicitWidth + 30
-
-            Row {
-                id: clockRow
-                anchors.centerIn: parent
+                Layout.alignment: Qt.AlignVCenter
                 height: 26
                 spacing: 10
 
@@ -668,67 +618,94 @@ PanelWindow {
                     verticalAlignment: Text.AlignVCenter
                 }
             }
-        }
 
-        // ── NET pill: скорость сети (отдельным блоком перед иконкой сети) ──
-        // Не прячем: при простое цифры тускнеют. Клик — список сетей в Hub.
-        Rectangle {
-            id: netPill
-            anchors.right: statusPill.left
-            anchors.rightMargin: 6
-            anchors.verticalCenter: parent.verticalCenter
-            height: 32
-            radius: Theme.radiusL
-            color: root.pillBg
-            border.color: root.pillBorder
-            border.width: 1
-            width: netRow.implicitWidth + 18
+            Sep {}
 
-            Row {
-                id: netRow
-                anchors.centerIn: parent
-                height: 26
-                spacing: 8
+            Item { Layout.fillWidth: true }
 
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "󰁅" + root.netFmt(root.netDown)
-                    color: Theme.text
-                    font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSize(15)
+            // ── медиа «сейчас играет» (появляется при треке) ──
+            Item {
+                Layout.alignment: Qt.AlignVCenter
+                implicitHeight: 26
+                implicitWidth: root.track.length > 0 ? mediaRow.implicitWidth : 0
+                visible: root.track.length > 0
+
+                Row {
+                    id: mediaRow
+                    anchors.centerIn: parent
+                    height: 26
+                    spacing: 8
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: root.playing ? "󰏤" : "󰐊"
+                        color: root.playing ? Theme.accent : Theme.textFaint
+                        font.family: Theme.iconFont
+                        font.pixelSize: Theme.fontSize(13)
+                    }
+
+                    Text {
+                        width: 220
+                        height: 26
+                        verticalAlignment: Text.AlignVCenter
+                        clip: true
+                        text: root.marqueeText()
+                        color: root.playing ? Theme.text : Theme.textDim
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(12)
+                    }
                 }
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "󰁝" + root.netFmt(root.netUp)
-                    color: Theme.text
-                    font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSize(15)
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: mediaPanelProc.running = true   // попап «сейчас играет»
                 }
             }
 
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: root.openNetwork()
+            Sep { visible: root.track.length > 0 }
+
+            // ── скорость сети ──
+            Item {
+                Layout.alignment: Qt.AlignVCenter
+                implicitWidth: netRow.implicitWidth
+                implicitHeight: 26
+
+                Row {
+                    id: netRow
+                    anchors.centerIn: parent
+                    height: 26
+                    spacing: 8
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "󰁅" + root.netFmt(root.netDown)
+                        color: Theme.text
+                        font.family: Theme.iconFont
+                        font.pixelSize: Theme.fontSize(15)
+                    }
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "󰁝" + root.netFmt(root.netUp)
+                        color: Theme.text
+                        font.family: Theme.iconFont
+                        font.pixelSize: Theme.fontSize(15)
+                    }
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.openNetwork()
+                }
             }
-        }
 
-        // ── STATUS pill: сеть / раскладка / уведомления ──
-        Rectangle {
-            id: statusPill
-            anchors.right: actionPill.left
-            anchors.rightMargin: 6
-            anchors.verticalCenter: parent.verticalCenter
-            height: 32
-            radius: Theme.radiusL
-            color: root.pillBg
-            border.color: root.pillBorder
-            border.width: 1
-            width: statusRow.implicitWidth + 18
+            Sep {}
 
+            // ── статус: сеть / раскладка / уведомления ──
             Row {
                 id: statusRow
-                anchors.centerIn: parent
+                Layout.alignment: Qt.AlignVCenter
                 height: 26
                 spacing: 8
 
@@ -785,13 +762,6 @@ PanelWindow {
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
-                Rectangle {
-                    width: 1
-                    height: 16
-                    color: Theme.border
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
                 // уведомления / «не беспокоить» (клик — переключить)
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
@@ -818,24 +788,13 @@ PanelWindow {
                     font.bold: true
                 }
             }
-        }
 
-        // ── ACTION pill: Game Mode + запись экрана ──
-        Rectangle {
-            id: actionPill
-            anchors.right: statsPill.left
-            anchors.rightMargin: 6
-            anchors.verticalCenter: parent.verticalCenter
-            height: 32
-            radius: Theme.radiusL
-            color: root.pillBg
-            border.color: root.pillBorder
-            border.width: 1
-            width: actionRow.implicitWidth + 18
+            Sep {}
 
+            // ── действия: Game Mode / питание / запись ──
             Row {
                 id: actionRow
-                anchors.centerIn: parent
+                Layout.alignment: Qt.AlignVCenter
                 height: 26
                 spacing: 10
 
@@ -907,24 +866,13 @@ PanelWindow {
                     }
                 }
             }
-        }
 
-        // ── RIGHT-STATS pill: CPU / RAM / MEM / °C (переехало из левого бока) ──
-        Rectangle {
-            id: statsPill
-            anchors.right: rightPill.left
-            anchors.rightMargin: 6
-            anchors.verticalCenter: parent.verticalCenter
-            height: 32
-            radius: Theme.radiusL
-            color: root.pillBg
-            border.color: root.pillBorder
-            border.width: 1
-            width: statsRow.implicitWidth + 18
+            Sep {}
 
+            // ── статистика: CPU / RAM / °C / GPU ──
             Row {
                 id: statsRow
-                anchors.centerIn: parent
+                Layout.alignment: Qt.AlignVCenter
                 height: 26
                 spacing: 14
 
@@ -966,36 +914,17 @@ PanelWindow {
                     verticalAlignment: Text.AlignVCenter
                 }
             }
-        }
 
-        // ── RIGHT pill: mpris + volume + power ──
-        Rectangle {
-            id: rightPill
-            anchors.right: parent.right
-            anchors.rightMargin: 8
-            anchors.verticalCenter: parent.verticalCenter
-            height: 32
-            radius: Theme.radiusL
-            color: root.pillBg
-            border.color: root.pillBorder
-            border.width: 1
-            width: rightRow.implicitWidth + 20
+            Sep {}
 
+            // ── системный трей + громкость ──
             Row {
                 id: rightRow
-                anchors.centerIn: parent
+                Layout.alignment: Qt.AlignVCenter
                 height: 26
                 spacing: 10
 
-                // ── системный трей: до 3 значков, остальные — в списке ──
-                Rectangle {
-                    visible: SystemTray.items.values.length > 0
-                    width: 1
-                    height: 16
-                    color: Theme.border
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
+                // ── системный трей: до N значков, остальные — в списке ──
                 Item {
                     visible: SystemTray.items.values.length > 0
                     width: visible ? trayRow.implicitWidth : 0
