@@ -1083,8 +1083,9 @@ PanelWindow {
         anchors.verticalCenter: parent.verticalCenter
         height: 26
         visible: root.track.length > 0
-        x: leftBar.right + 12
-        width: Math.max(0, clockBox.x - 14 - x)
+        // внутри правого блока, с отступом от столов и от часов
+        x: rightBar.x + 18
+        width: Math.max(0, clockBox.x - 18 - x)
         readonly property real mqCharW: fm12.advanceWidth("0") > 0 ? fm12.advanceWidth("0") : 8
         readonly property int mqChars:
             Math.max(6, Math.floor((width - noteIcon.width - 8) / mqCharW))
