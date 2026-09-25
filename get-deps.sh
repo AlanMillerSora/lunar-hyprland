@@ -1,11 +1,20 @@
 #!/usr/bin/env bash
 # ════════════════════════════════════════════════════════════════
-#  Lunar Eclipse — зависимости (Arch / производные)
-#  Всё из официальных репозиториев, AUR не требуется.
+#  Lunar Eclipse — зависимости (Arch / производные).
+#  Всё из официальных репозиториев; AUR — только VS Code и Vencord.
+#  Обычно вызывает ./install.sh; отдельно: ./get-deps.sh
 # ════════════════════════════════════════════════════════════════
 set -euo pipefail
 
-say() { printf '\033[38;5;15m==>\033[0m %s\n' "$*"; }
+REPO="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=ui.sh
+source "$REPO/ui.sh"
+
+if [ "${LUNAR_EMBEDDED:-0}" != 1 ]; then
+  lunar_banner
+  say "зависимости · Arch   (pacman · AUR: VS Code, Vencord)"
+  lunar_hr
+fi
 
 # ── multilib: нужен для steam ──────────────────────────────────
 # На чистой Arch секция [multilib] закомментирована — без неё steam не
@@ -14,11 +23,14 @@ if ! pacman-conf --repo-list 2>/dev/null | grep -qx multilib; then
   say "multilib: включаю репозиторий (для steam)"
   sudo sed -i '/^#\[multilib\]/,/^#Include = \/etc\/pacman.d\/mirrorlist/ s/^#//' /etc/pacman.conf
   sudo pacman -Sy --noconfirm >/dev/null 2>&1 || true
+  ok "multilib включён"
+else
+  say "multilib уже включён"
 fi
 
 # ── базовые пакеты ─────────────────────────────────────────────
-say "pacman: пакеты"
-sudo pacman -S --needed --noconfirm \
+say "pacman: базовые пакеты"
+if sudo pacman -S --needed --noconfirm \
   git \
   hyprland hypridle \
   quickshell \
@@ -38,98 +50,96 @@ sudo pacman -S --needed --noconfirm \
   pciutils dmidecode pacman-contrib \
   librsvg curl \
   ttf-jetbrains-mono-nerd ttf-iosevka-nerd
-
+then
+  ok "базовые пакеты"
+else
+  warn "часть базовых пакетов не поставилась — см. вывод"
+fi
 # python3 — бинарь пакета python (выше); psutil/gobject — для скриптов
 # статуса и GTK-виджетов (шпаргалка, календарь).
 
 # ── обновления (Hub → Update, eclipse-update.sh) ───────────────
 # informant — блокирует обновление, пока не прочитаны новости Arch;
-# translate-shell (trans) — перевод новостей на русский (Google);
-# timeshift — снимки системы для отката (кнопка «Откат» в Hub).
-say "pacman: обновления и откат"
-# fwupd — обновление прошивок (SSD/мышь/док-станция) из Hub → Update.
-# Отдельного пакета fwupd-dummy-device в Arch/AUR нет — dummy-устройство
-# это тестовый плагин сборки, для реального железа не нужен.
+# translate-shell (trans) — перевод новостей; timeshift — снимки для отката;
+# fwupd — прошивки (отдельного fwupd-dummy-device в Arch нет).
+say "pacman: обновления, откат, прошивки"
 sudo pacman -S --needed --noconfirm \
   informant translate-shell timeshift cronie fwupd \
-  || say "часть пакетов обновлений не поставилась — см. вывод"
+  && ok "informant · timeshift · cronie · fwupd" \
+  || warn "часть пакетов обновлений не поставилась — см. вывод"
 
-# ── игры и медиа (часть риса: стол 01 — игры) ──────────────────
-# Игровое окружение и захват: Steam тянет Proton; gamescope/mangohud —
-# оверлеи и композитинг; gamemode — профиль производительности.
-# lutris/эмуляторы — по README (стол игр).
+# ── игры и медиа (стол 01 — игры) ──────────────────────────────
+# Steam тянет Proton; gamescope/mangohud — композитинг и оверлеи;
+# gamemode — профиль производительности; lutris/эмуляторы/obs — по README.
 say "pacman: игры и медиа"
 sudo pacman -S --needed --noconfirm \
   gamescope mangohud lib32-mangohud gamemode \
   lutris \
   retroarch dolphin-emu \
   obs-studio mpv \
-  || say "часть игровых пакетов не поставилась — см. вывод"
+  && ok "gamescope · mangohud · gamemode · lutris · obs" \
+  || warn "часть игровых пакетов не поставилась — см. вывод"
 
 # ── NVIDIA ─────────────────────────────────────────────────────
 # Ставим только если в системе реально есть карта NVIDIA (по sysfs).
-# На AMD/Intel этот блок пропускается — тестовому ноуту ничего не мешает.
-#
-# ВАЖНО: пакета nvidia/nvidia-dkms (проприетарный модуль) в Arch больше
-# нет — NVIDIA свернула его в ветке 615. Официальная замена —
-# nvidia-open-dkms (открытые модули ядра от самой NVIDIA, не nouveau).
-# User-space (nvidia-utils, nvidia-settings) остаётся проприетарным.
+# На AMD/Intel блок пропускается. Пакета nvidia/nvidia-dkms в Arch 615
+# больше нет — официальная замена nvidia-open-dkms (не nouveau).
 if grep -qi '0x10de' /sys/class/drm/card*/device/vendor 2>/dev/null; then
-  # Заголовки ядра под DKMS: у linux — linux-headers, у linux-zen — linux-zen-headers и т.д.
+  # Заголовки ядра под DKMS: у linux — linux-headers, у linux-zen — linux-zen-headers.
   KERNEL_PKG="$(cat "/usr/lib/modules/$(uname -r)/pkgbase" 2>/dev/null || echo linux)"
-  say "NVIDIA: nvidia-open-dkms $KERNEL_PKG-headers + nvidia-utils, nvidia-settings, libva-nvidia-driver, lib32-nvidia-utils"
+  say "NVIDIA: nvidia-open-dkms $KERNEL_PKG-headers + nvidia-utils, libva-nvidia-driver, lib32-nvidia-utils"
   sudo pacman -S --needed --noconfirm \
     nvidia-open-dkms "$KERNEL_PKG-headers" \
     nvidia-utils nvidia-settings libva-nvidia-driver \
-    lib32-nvidia-utils libva-utils
-  # lib32-nvidia-utils — 32-битные драйверные библиотеки (GL/Vulkan) для
-  # Steam/Proton: без них 32-битные игры на NVIDIA не запускаются.
-  # Версия подтягивается та же, что у nvidia-utils; нужен multilib (см. выше).
-  say "NVIDIA: после установки перезагрузись (см. раздел NVIDIA в README)"
+    lib32-nvidia-utils libva-utils \
+    && ok "NVIDIA-драйверы (после установки — перезагрузись)" \
+    || warn "NVIDIA-пакеты не поставились — см. вывод"
+  # lib32-nvidia-utils — 32-битные GL/Vulkan для Steam/Proton (нужен multilib).
 else
-  # AMD/Intel: VAAPI-энкодеры даёт mesa; libva-utils — для диагностики (vainfo).
   say "NVIDIA не найдена — драйверы NVIDIA пропущены (VAAPI через mesa)"
   sudo pacman -S --needed --noconfirm libva-utils mesa-vdpau 2>/dev/null || true
 fi
 
 # ── zapret: обход DPI (Discord / YouTube) ──────────────────────
-# Сам zapret ставится из исходников через ./install.sh (zapret/install-zapret.sh),
-# тут — только зависимости сборки (gcc/make) и работы (netfilter/nftables).
+# Сам zapret ставится из исходников через ./install.sh (zapret/install-zapret.sh);
+# тут — зависимости сборки (gcc/make) и работы (netfilter/nftables).
 say "pacman: зависимости zapret (сборка nfqws + netfilter)"
 sudo pacman -S --needed --noconfirm \
-  gcc make zlib libcap libnetfilter_queue libmnl systemd-libs nftables
+  gcc make zlib libcap libnetfilter_queue libmnl systemd-libs nftables \
+  && ok "zapret: зависимости" \
+  || warn "зависимости zapret не поставились — см. вывод"
 
 # ── VS Code (AUR) ──────────────────────────────────────────────
-# В репах есть только code (OSS-сборка). Для официального билда
-# Microsoft с полным маркетплейсом ставим visual-studio-code-bin из AUR.
+# В репах только code (OSS). Официальный билд Microsoft — visual-studio-code-bin.
 if command -v yay >/dev/null 2>&1; then
-  say "AUR: visual-studio-code-bin (VS Code)"
+  say "AUR: visual-studio-code-bin"
   yay -S --needed --noconfirm visual-studio-code-bin \
-    || say "VS Code не установился — вручную: yay -S visual-studio-code-bin"
+    && ok "VS Code" || warn "VS Code не установился — вручную: yay -S visual-studio-code-bin"
 elif command -v paru >/dev/null 2>&1; then
-  say "AUR: visual-studio-code-bin (VS Code)"
+  say "AUR: visual-studio-code-bin"
   paru -S --needed --noconfirm visual-studio-code-bin \
-    || say "VS Code не установился — вручную: paru -S visual-studio-code-bin"
+    && ok "VS Code" || warn "VS Code не установился — вручную: paru -S visual-studio-code-bin"
 else
-  say "yay/paru не найден — VS Code пропущен (вручную: yay -S visual-studio-code-bin)"
+  warn "yay/paru не найден — VS Code пропущен (yay -S visual-studio-code-bin)"
 fi
 
-say "Обои: живые — QML-сцена в Quickshell (LunarWallpaper.qml); статику под разрешение генерит eclipse-walls-gen.sh"
+say "обои: живые — QML-сцена в Quickshell (LunarWallpaper.qml); статику генерит eclipse-walls-gen.sh"
 
 # ── Vencord (AUR) ──────────────────────────────────────────────
-# Мод Discord: инсталлятор патчит app.asar. Сам патч применяется
-# скриптом eclipse-vencord.sh (или кнопкой в Hub → Network), потому
-# что после каждого обновления Discord его нужно накатывать заново.
+# Мод Discord: патчит app.asar; после обновления Discord патч накатывается заново.
 if command -v yay >/dev/null 2>&1; then
-  say "AUR: vencord-installer-bin (мод Vencord для Discord)"
+  say "AUR: vencord-installer-bin"
   yay -S --needed --noconfirm vencord-installer-bin \
-    || say "Vencord-инсталлятор не установился — вручную: yay -S vencord-installer-bin"
+    && ok "Vencord" || warn "Vencord не установился — вручную: yay -S vencord-installer-bin"
 elif command -v paru >/dev/null 2>&1; then
-  say "AUR: vencord-installer-bin (мод Vencord для Discord)"
+  say "AUR: vencord-installer-bin"
   paru -S --needed --noconfirm vencord-installer-bin \
-    || say "Vencord-инсталлятор не установился — вручную: paru -S vencord-installer-bin"
+    && ok "Vencord" || warn "Vencord не установился — вручную: paru -S vencord-installer-bin"
 else
-  say "yay/paru не найден — Vencord пропущен (вручную: yay -S vencord-installer-bin)"
+  warn "yay/paru не найден — Vencord пропущен (yay -S vencord-installer-bin)"
 fi
 
-say "Готово. Дальше: ./install.sh"
+if [ "${LUNAR_EMBEDDED:-0}" != 1 ]; then
+  say "дальше: ./install.sh (конфиги) или ./install.sh --deps-only"
+  lunar_done
+fi

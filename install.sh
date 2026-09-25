@@ -1,17 +1,58 @@
 #!/usr/bin/env bash
 # ════════════════════════════════════════════════════════════════
-#  Lunar Eclipse — установка конфигов
-#  Копирует .config/* в ~/.config, обои в ~/Pictures/EclipseWalls,
-#  ставит systemd-юнит и делает zsh шеллом по умолчанию.
-#  Зависимости: см. ./get-deps.sh
+#  Lunar Eclipse — единая установка.
+#
+#  1) зависимости (get-deps.sh): pacman + AUR (VS Code, Vencord);
+#  2) конфиги .config/* → ~/.config, обои, цвета KDE, Firefox;
+#  3) systemd --user, ddcutil (i2c), Wi-Fi (powersave/ASPM), sudoers, zsh.
+#
+#  Запуск:  ./install.sh [--no-deps] [--deps-only]
+#    без флагов   — всё: зависимости + конфиги
+#    --no-deps    — только конфиги (зависимости уже стоят)
+#    --deps-only  — только зависимости
+#
+#  Повторный запуск безопасен: локальные правки в ~/.config складываются
+#  в ~/.config-backup-<дата>/.
 # ════════════════════════════════════════════════════════════════
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")" && pwd)"
-say() { printf '\033[38;5;15m==>\033[0m %s\n' "$*"; }
+# shellcheck source=ui.sh
+source "$REPO/ui.sh"
 
-# ── конфиги ────────────────────────────────────────────────────
-say "Конфиги → ~/.config"
+WITH_DEPS=1
+DEPS_ONLY=0
+for a in "$@"; do
+  case "$a" in
+    --no-deps)   WITH_DEPS=0 ;;
+    --deps-only) DEPS_ONLY=1 ;;
+    -h|--help)   sed -n '2,18p' "$0"; exit 0 ;;
+    *) printf 'usage: %s [--no-deps|--deps-only]\n' "$0" >&2; exit 1 ;;
+  esac
+done
+
+LUNAR_TOTAL=14
+[ "$WITH_DEPS" = 1 ] || LUNAR_TOTAL=13
+
+lunar_banner
+
+# ── 1. зависимости ─────────────────────────────────────────────
+if [ "$WITH_DEPS" = 1 ]; then
+  step "зависимости (pacman + AUR)"
+  if LUNAR_EMBEDDED=1 "$REPO/get-deps.sh"; then
+    ok "зависимости установлены"
+  else
+    warn "часть зависимостей не поставилась — см. вывод, потом ./install.sh"
+  fi
+fi
+
+if [ "$DEPS_ONLY" = 1 ]; then
+  lunar_done
+  exit 0
+fi
+
+# ── 2. конфиги ─────────────────────────────────────────────────
+step "конфиги → ~/.config"
 
 # Безопасный повторный запуск: если в ~/.config есть файлы, которых нет в
 # репо (или которые отличаются), — не затираем молча. Показываем список и
@@ -30,9 +71,9 @@ done < <(find "$HOME/.config" -type f \
 
 if [ -n "$LOCAL_DIFF" ]; then
   BACKUP="$HOME/.config-backup-$(date +%Y%m%d-%H%M%S)"
-  say "ВНИМАНИЕ: в ~/.config есть локальные отличия от репо:"
+  warn "в ~/.config есть локальные отличия от репо:"
   printf '%s' "$LOCAL_DIFF" | head -20
-  say "Бэкап этих файлов → $BACKUP"
+  say "бэкап этих файлов → $BACKUP"
   mkdir -p "$BACKUP"
   printf '%s' "$LOCAL_DIFF" | sed 's/ (.*//' | while IFS= read -r rel; do
     [ -n "$rel" ] || continue
@@ -40,42 +81,43 @@ if [ -n "$LOCAL_DIFF" ]; then
     mkdir -p "$BACKUP/$(dirname "$rel")"
     cp -a "$HOME/.config/$rel" "$BACKUP/$rel" 2>/dev/null || true
   done
-  say "Продолжаю: конфиги будут перезаписаны из репо (бэкап сохранён)"
+  say "продолжаю: конфиги будут перезаписаны из репо (бэкап сохранён)"
 fi
 
 mkdir -p "$HOME/.config"
 cp -r "$REPO/.config/." "$HOME/.config/"
 chmod +x "$HOME"/.config/hypr/scripts/* 2>/dev/null || true
+ok "конфиги обновлены"
 
-# ── сайт-превью (генератор обоев под любое разрешение) ─────────
-say "Превью-сайт → ~/.config/lunar/sait"
+# ── 3. сайт-превью (генератор обоев под любое разрешение) ───────
+step "превью-сайт → ~/.config/lunar/sait"
 mkdir -p "$HOME/.config/lunar/sait"
 cp "$REPO"/sait/* "$HOME/.config/lunar/sait/" 2>/dev/null || true
+ok "sait скопирован"
 
-# ── обои ───────────────────────────────────────────────────────
-say "Обои → ~/Pictures/EclipseWalls"
+# ── 4. обои ────────────────────────────────────────────────────
+step "обои → ~/Pictures/EclipseWalls"
 mkdir -p "$HOME/Pictures/EclipseWalls"
 cp "$REPO"/wallpapers/*.png "$HOME/Pictures/EclipseWalls/" 2>/dev/null || true
+ok "обои на месте"
 
-# ── KDE: цветовая схема (kdeglobals идут через .config) ────────
-say "Цветовая схема KDE → ~/.local/share/color-schemes"
+# ── 5. KDE: цветовая схема ─────────────────────────────────────
+step "цветовая схема KDE → ~/.local/share/color-schemes"
 mkdir -p "$HOME/.local/share/color-schemes"
 cp "$REPO"/color-schemes/*.colors "$HOME/.local/share/color-schemes/" 2>/dev/null || true
+ok "kdeglobals + схема"
 
-# ── Firefox: тема, стили и префы ───────────────────────────────
-# Firefox сам выбирает профиль через свою секцию [Install…] в
-# profiles.ini, поэтому применяем тему ко ВСЕМ реальным профилям
-# (где уже есть prefs.js). Если профилей ещё нет — запусти Firefox
-# один раз и повтори ./install.sh.
+# ── 6. Firefox: тема, стили и префы ────────────────────────────
+step "Firefox: тема, префы, новая вкладка"
 if [ -d "$REPO/.config/firefox/chrome" ]; then
   FF_ROOT="$HOME/.mozilla/firefox"
   FF_PROFS="$(find "$FF_ROOT" -maxdepth 2 -name prefs.js -printf '%h\n' 2>/dev/null || true)"
 
   if [ -z "$FF_PROFS" ]; then
-    say "Firefox: профиль ещё не создан — запусти Firefox и повтори ./install.sh"
+    warn "профиль ещё не создан — запусти Firefox и повтори ./install.sh"
   else
     for P in $FF_PROFS; do
-      say "Firefox: тема → $P"
+      say "тема → $P"
       mkdir -p "$P/chrome"
       cp "$REPO"/.config/firefox/chrome/*.css "$P/chrome/" 2>/dev/null || true
       sed "s|__LUNAR_HOME__|file://$HOME/.config/lunar/firefox-home.html|g" \
@@ -87,7 +129,7 @@ if [ -d "$REPO/.config/firefox/chrome" ]; then
         mkdir -p "$P/extensions"
         curl -sL -o "$P/extensions/newtaboverride@agenedia.com.xpi" \
           "https://addons.mozilla.org/firefox/downloads/latest/new-tab-override/latest.xpi" \
-          2>/dev/null || say "New Tab Override не скачался (не критично)"
+          2>/dev/null || warn "New Tab Override не скачался (не критично)"
       fi
     done
 
@@ -109,56 +151,58 @@ if [ -d "$REPO/.config/firefox/chrome" ]; then
   }
 }
 JSON
-      say "Firefox: новая вкладка → lunar (managed storage)"
+      ok "новая вкладка → lunar (managed storage)"
     fi
   fi
 fi
 
-# ── Firefox: иконка приложения (наш logo) ──────────────────────
+# ── 7. Firefox: иконка и браузер по умолчанию ──────────────────
+step "Firefox: иконка приложения и браузер по умолчанию"
 if command -v rsvg-convert >/dev/null 2>&1 && [ -f "$REPO/assets/lunar-icon.svg" ]; then
-  say "Иконка приложений → ~/.local/share/icons (lunar-eclipse)"
   for s in 512 256 128 64 48 32; do
     d="$HOME/.local/share/icons/hicolor/${s}x${s}/apps"
     mkdir -p "$d"
     rsvg-convert -w "$s" -h "$s" -o "$d/lunar-eclipse.png" "$REPO/assets/lunar-icon.svg" 2>/dev/null || true
   done
   gtk-update-icon-cache -f -t "$HOME/.local/share/icons/hicolor" 2>/dev/null || true
+  ok "иконка lunar-eclipse"
 fi
-# desktop-файл Firefox с нашей иконкой (перекрывает системный)
 if [ -f /usr/share/applications/firefox.desktop ]; then
   mkdir -p "$HOME/.local/share/applications"
   sed 's|^Icon=firefox$|Icon=lunar-eclipse|' /usr/share/applications/firefox.desktop \
     > "$HOME/.local/share/applications/firefox.desktop"
+  ok "desktop-файл Firefox"
 fi
-
-# ── Firefox: браузер по умолчанию ──────────────────────────────
 if command -v xdg-settings >/dev/null 2>&1; then
   xdg-settings set default-web-browser firefox.desktop 2>/dev/null \
-    && say "Firefox: браузер по умолчанию" \
-    || say "Firefox: не удалось назначить браузером по умолчанию (не критично)"
+    && ok "Firefox — браузер по умолчанию" \
+    || warn "не удалось назначить браузером по умолчанию (не критично)"
 fi
 
-# ── курсор Bibata (монохромный, в тему) ────────────────────────
+# ── 8. курсор Bibata ───────────────────────────────────────────
+step "курсор Bibata-Modern-Ice"
 if [ ! -d "$HOME/.local/share/icons/Bibata-Modern-Ice" ]; then
-  say "Курсор Bibata → ~/.local/share/icons"
   mkdir -p "$HOME/.local/share/icons"
   curl -sL "https://github.com/ful1e5/Bibata_Cursor/releases/download/v2.0.7/Bibata-Modern-Ice.tar.xz" \
     | tar xJ -C "$HOME/.local/share/icons/" 2>/dev/null \
-    && say "Bibata установлен" \
-    || say "Bibata не скачался (не критично — будет системный курсор)"
+    && ok "Bibata установлен" \
+    || warn "Bibata не скачался (будет системный курсор)"
+else
+  ok "Bibata уже установлен"
 fi
 
-# ── zapret: обход DPI (Discord / YouTube) ──────────────────────
-# Ставит оригинальный zapret (bol-van) в /opt/zapret и поднимает
-# systemd-юнит zapret.service. Идемпотентно: повторный запуск не ломает.
+# ── 9. zapret ──────────────────────────────────────────────────
+step "zapret → /opt/zapret (обход DPI: Discord/YouTube)"
 if [ -x "$REPO/zapret/install-zapret.sh" ]; then
-  say "zapret → /opt/zapret (обход DPI: Discord/YouTube)"
-  "$REPO/zapret/install-zapret.sh" install || say "zapret не установился — см. вывод выше"
+  "$REPO/zapret/install-zapret.sh" install && ok "zapret.service" \
+    || warn "zapret не установился — см. вывод выше"
+else
+  say "установщик zapret не найден (не критично)"
 fi
 
-# ── systemd --user (wifi-guard, локальная страница Firefox) ────
+# ── 10. systemd --user ─────────────────────────────────────────
+step "systemd --user: wifi-guard, homepage"
 if [ -d "$REPO/systemd" ]; then
-  say "systemd --user → lunar-wifi-guard, lunar-homepage, lunar-quickshell"
   mkdir -p "$HOME/.config/systemd/user"
   cp "$REPO"/systemd/*.service "$HOME/.config/systemd/user/"
   systemctl --user daemon-reload 2>/dev/null || true
@@ -167,61 +211,61 @@ if [ -d "$REPO/systemd" ]; then
   # quickshell НЕ включаем в автозапуск: его стартует hyprland.lua после
   # композитора (иначе юнит поднимется раньше Wayland и будет падать).
   systemctl --user disable lunar-quickshell.service 2>/dev/null || true
+  ok "юниты поставлены (quickshell стартует из Hyprland)"
 fi
 
-# ── i2c-dev: внешние мониторы через ddcutil (яркость DDC/CI) ───
-# Нужно только там, где есть внешний монитор; на ноуте безвредно.
-# Ставим модуль в автозагрузку и добавляем пользователя в группу i2c,
-# иначе ddcutil не видит шину (см. README → «Яркость»).
+# ── 11. i2c-dev: внешние мониторы через ddcutil ────────────────
+step "i2c-dev → /etc/modules-load.d (ddcutil, яркость DDC/CI)"
 if command -v ddcutil >/dev/null 2>&1; then
   if [ ! -f /etc/modules-load.d/i2c-dev.conf ]; then
-    say "i2c-dev → автозагрузка модуля"
     printf 'i2c-dev\n' | sudo tee /etc/modules-load.d/i2c-dev.conf >/dev/null 2>&1 || true
+    ok "модуль i2c-dev в автозагрузке"
+  else
+    ok "i2c-dev уже в автозагрузке"
   fi
   sudo modprobe i2c-dev 2>/dev/null || true
   if ! id -nG "$USER" 2>/dev/null | tr ' ' '\n' | grep -qx i2c; then
-    say "i2c: пользователь → группа i2c (нужен перелогин)"
     sudo usermod -aG i2c "$USER" 2>/dev/null || true
+    warn "пользователь добавлен в группу i2c (нужен перелогин)"
+  else
+    ok "группа i2c уже есть"
   fi
+else
+  say "ddcutil нет — шаг пропущен"
 fi
 
-# ── Wi-Fi: энергосбережение выключено всегда ───────────────────
-# Ноут всегда на зарядке, десктопу powersave не нужен. NM с backend
-# iwd игнорирует 802-11-wireless.powersave, поэтому выключаем
-# на уровне драйвера через dispatcher при каждом поднятии wlan.
+# ── 12. Wi-Fi: powersave off + ASPM ────────────────────────────
+step "Wi-Fi: powersave off + mt7921e ASPM"
 if [ -f "$REPO/systemd/10-lunar-wifi-powersave-off.sh" ]; then
-  say "Wi-Fi: powersave off → /etc/NetworkManager/dispatcher.d"
   sudo install -m 0755 -o root -g root \
     "$REPO/systemd/10-lunar-wifi-powersave-off.sh" \
     /etc/NetworkManager/dispatcher.d/10-lunar-wifi-powersave-off.sh 2>/dev/null \
-    || say "dispatcher не установлен (нужен sudo) — см. systemd/"
+    && ok "dispatcher: powersave выключен навсегда" \
+    || warn "dispatcher не установлен (нужен sudo)"
 fi
-
-# ASPM L1 у mt7921e (MT7902) вызывает провалы задержки до секунд и падение
-# скорости приёма; отключаем на уровне модуля (см. systemd/mt7921e-no-aspm.conf).
 if [ -f "$REPO/systemd/mt7921e-no-aspm.conf" ]; then
-  say "Wi-Fi: mt7921e disable_aspm → /etc/modprobe.d"
   sudo install -m 0644 -o root -g root \
     "$REPO/systemd/mt7921e-no-aspm.conf" \
     /etc/modprobe.d/mt7921e-no-aspm.conf 2>/dev/null \
-    || say "modprobe-конфиг не установлен (нужен sudo) — см. systemd/"
+    && ok "mt7921e: disable_aspm=1" \
+    || warn "modprobe-конфиг не установлен (нужен sudo)"
 fi
 
-# ── sudo для агента чата (OpenCode): белый список ──────────────
-# Агент может без пароля только доверенные команды (systemctl,
-# hyprctl-скрипты, pacman -Syu, логи). Всё остальное — через
-# подтверждение в чате. Файл кладём с правами 0440 (требование sudo).
+# ── 13. sudo: белый список агента (OpenCode) ───────────────────
+step "sudo: белый список агента → /etc/sudoers.d/lunar-agent"
 if [ -f "$REPO/systemd/lunar-agent.sudoers" ]; then
-  say "sudo: белый список для агента → /etc/sudoers.d/lunar-agent"
   sudo install -m 0440 -o root -g root \
     "$REPO/systemd/lunar-agent.sudoers" /etc/sudoers.d/lunar-agent 2>/dev/null \
-    || say "sudoers не установлен (нужен sudo) — см. systemd/lunar-agent.sudoers"
+    && ok "sudoers.d/lunar-agent" \
+    || warn "sudoers не установлен (нужен sudo)"
 fi
 
-# ── shell по умолчанию ─────────────────────────────────────────
+# ── 14. shell по умолчанию ─────────────────────────────────────
+step "shell по умолчанию"
 if command -v zsh >/dev/null 2>&1 && [ "${SHELL:-}" != "$(command -v zsh)" ]; then
-  say "zsh как шелл по умолчанию"
-  chsh -s "$(command -v zsh)" || true
+  chsh -s "$(command -v zsh)" && ok "zsh" || warn "не удалось сменить shell"
+else
+  ok "zsh уже (или не установлен)"
 fi
 
-say "Готово. Перезайди в Hyprland: hyprctl reload (или перелогинься)"
+lunar_done
