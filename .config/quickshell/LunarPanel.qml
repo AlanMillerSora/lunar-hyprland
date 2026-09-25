@@ -9,11 +9,11 @@ import QtQuick
 import QtQuick.Layouts
 
 // ────────────────────────────────────────────────────────────────
-//  Lunar top bar — монохромный HUD (скруглённые "таблетки")
-//    слева   : рабочие столы 01–08 + CPU/RAM/темп
-//    центр   : часы
-//    справа  : mpris-маркиза, громкость, питание
-//  Панель резервирует место (exclusiveZone), окна не заходят под неё.
+//  Lunar top bar — монохромный HUD (две скруглённые части)
+//    слева  : LUNAR + фазы 9 рабочих столов
+//    справа : от конца столов до правого края; часы — ровно по центру
+//             экрана, а медиа/сеть/статус/действия/CPU-RAM-°C-GPU/трей/звук
+//    Панель резервирует место (exclusiveZone), окна не заходят под неё.
 // ────────────────────────────────────────────────────────────────
 PanelWindow {
     id: root
@@ -435,9 +435,9 @@ PanelWindow {
     }
 
     // ───────────────────────────── layout ─────────────────────────────
-    // Единый цельный блок во всю ширину: слева «LUNAR + фазы столов»,
-    // по центру — часы, справа — телеметрия и управление. Внутренние
-    // секции разделены тонкими 1px-разделителями (Sep).
+    // Две части бара: слева «LUNAR + фазы столов», справа — блок от конца
+    // столов до правого края. Часы в правом блоке держатся ровно по
+    // центру экрана, телеметрия — у правого края. Секции разделены 1px (Sep).
     component Sep: Rectangle {
         Layout.alignment: Qt.AlignVCenter
         Layout.preferredWidth: 1
@@ -447,21 +447,21 @@ PanelWindow {
         color: Theme.border
     }
 
+    // ── ЛЕВАЯ ЧАСТЬ: марка LUNAR + рабочие столы ──
     Rectangle {
-        id: bar
+        id: leftBar
         anchors.left: parent.left
-        anchors.right: parent.right
         anchors.leftMargin: 8
-        anchors.rightMargin: 8
         anchors.verticalCenter: parent.verticalCenter
         height: 32
         radius: Theme.radiusL
         color: root.pillBg
         border.color: root.pillBorder
         border.width: 1
-        clip: true
+        width: leftLayout.implicitWidth + 28
 
         RowLayout {
+            id: leftLayout
             anchors.fill: parent
             anchors.leftMargin: 14
             anchors.rightMargin: 14
@@ -577,93 +577,31 @@ PanelWindow {
                     }
                 }
             }
+        }
+    }
 
-            // растяжка — часы держатся по центру
-            Item { Layout.fillWidth: true }
+    // ── ПРАВАЯ ЧАСТЬ: от конца столов до правого края ──
+    // Часы — ровно по центру экрана, телеметрия/управление — у правого края.
+    Rectangle {
+        id: rightBar
+        anchors.left: leftBar.right
+        anchors.leftMargin: 6
+        anchors.right: parent.right
+        anchors.rightMargin: 8
+        anchors.verticalCenter: parent.verticalCenter
+        height: 32
+        radius: Theme.radiusL
+        color: root.pillBg
+        border.color: root.pillBorder
+        border.width: 1
+        clip: true
 
-            Sep {}
-
-            // ── часы ──
-            Row {
-                Layout.alignment: Qt.AlignVCenter
-                height: 26
-                spacing: 10
-
-                Text {
-                    id: clockLabel
-                    text: root.clockText
-                    color: Theme.text
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(15)
-                    font.bold: true
-                    font.letterSpacing: 1
-                    height: 26
-                    verticalAlignment: Text.AlignVCenter
-                }
-
-                Rectangle {
-                    width: 1
-                    height: 16
-                    color: Theme.border
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                Text {
-                    id: dayLabel
-                    text: root.dayText + " " + root.dateText
-                    color: Theme.textDim
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(13)
-                    height: 26
-                    verticalAlignment: Text.AlignVCenter
-                }
-            }
-
-            Sep {}
-
-            Item { Layout.fillWidth: true }
-
-            // ── медиа «сейчас играет» (появляется при треке) ──
-            Item {
-                Layout.alignment: Qt.AlignVCenter
-                implicitHeight: 26
-                implicitWidth: root.track.length > 0 ? mediaRow.implicitWidth : 0
-                visible: root.track.length > 0
-
-                Row {
-                    id: mediaRow
-                    anchors.centerIn: parent
-                    height: 26
-                    spacing: 8
-
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: root.playing ? "󰏤" : "󰐊"
-                        color: root.playing ? Theme.accent : Theme.textFaint
-                        font.family: Theme.iconFont
-                        font.pixelSize: Theme.fontSize(13)
-                    }
-
-                    Text {
-                        width: 220
-                        height: 26
-                        verticalAlignment: Text.AlignVCenter
-                        clip: true
-                        text: root.marqueeText()
-                        color: root.playing ? Theme.text : Theme.textDim
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize(12)
-                    }
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: mediaPanelProc.running = true   // попап «сейчас играет»
-                }
-            }
-
-            Sep { visible: root.track.length > 0 }
+        // ── телеметрия и управление: прижаты к правому краю ──
+        RowLayout {
+            anchors.right: parent.right
+            anchors.rightMargin: 14
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 0
 
             // ── скорость сети ──
             Item {
@@ -1068,6 +1006,91 @@ PanelWindow {
                     }
                 }
             }
+        }
+    }
+    // ── часы: жёстко по центру экрана ──
+    Item {
+        id: clockBox
+        width: clockRow.implicitWidth
+        height: 26
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: parent.verticalCenter
+
+        Row {
+            id: clockRow
+            anchors.centerIn: parent
+            height: 26
+            spacing: 10
+
+            Text {
+                id: clockLabel
+                text: root.clockText
+                color: Theme.text
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize(15)
+                font.bold: true
+                font.letterSpacing: 1
+                height: 26
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            Rectangle {
+                width: 1
+                height: 16
+                color: Theme.border
+                anchors.verticalCenter: parent.verticalCenter
+            }
+
+            Text {
+                id: dayLabel
+                text: root.dayText + " " + root.dateText
+                color: Theme.textDim
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize(13)
+                height: 26
+                verticalAlignment: Text.AlignVCenter
+            }
+        }
+    }
+
+    // медиа «сейчас играет» (появляется при треке)
+    Item {
+        anchors.verticalCenter: parent.verticalCenter
+        height: 26
+        width: root.track.length > 0 ? mediaRow.implicitWidth : 0
+        x: clockBox.x - width - 14
+        visible: root.track.length > 0
+
+        Row {
+            id: mediaRow
+            anchors.centerIn: parent
+            height: 26
+            spacing: 8
+
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: root.playing ? "󰏤" : "󰐊"
+                color: root.playing ? Theme.accent : Theme.textFaint
+                font.family: Theme.iconFont
+                font.pixelSize: Theme.fontSize(13)
+            }
+
+            Text {
+                width: 220
+                height: 26
+                verticalAlignment: Text.AlignVCenter
+                clip: true
+                text: root.marqueeText()
+                color: root.playing ? Theme.text : Theme.textDim
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize(12)
+            }
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: mediaPanelProc.running = true   // попап «сейчас играет»
         }
     }
 }
