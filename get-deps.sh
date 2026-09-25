@@ -17,15 +17,17 @@ if [ "${LUNAR_EMBEDDED:-0}" != 1 ]; then
 fi
 
 # ── новости Arch (informant) ───────────────────────────────────
-# Хук 00-informant.hook блокирует ЛЮБУЮ транзакцию pacman, пока есть
-# непрочитанные новости. Показываем заголовки и отмечаем прочитанными,
-# иначе установка пакетов молча падала бы на «failed to run hooks».
-if command -v informant >/dev/null 2>&1 && ! informant check >/dev/null 2>&1; then
-  warn "есть непрочитанные новости Arch — показываю и отмечаю прочитанными:"
-  informant list --unread 2>/dev/null | head -10 || true
-  informant read --all >/dev/null 2>&1 \
-    && ok "новости отмечены прочитанными" \
-    || warn "не удалось отметить — вручную: informant read"
+# Хук 00-informant.hook работает от root и блокирует ЛЮБУЮ транзакцию pacman,
+# пока есть непрочитанные новости. Читать надо тоже от root (пользовательский
+# informant read возвращает 255) — иначе установка падает на hooks.
+if command -v informant >/dev/null 2>&1; then
+  if ! sudo informant check >/dev/null 2>&1; then
+    warn "есть непрочитанные новости Arch — показываю и отмечаю прочитанными:"
+    sudo informant list --unread 2>/dev/null | head -10 || true
+    sudo informant read --all >/dev/null 2>&1 \
+      && ok "новости отмечены прочитанными" \
+      || warn "не удалось отметить — вручную: sudo informant read --all"
+  fi
 fi
 
 # ── multilib: нужен для steam ──────────────────────────────────
