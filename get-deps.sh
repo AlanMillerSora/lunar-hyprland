@@ -31,7 +31,7 @@ fi
 # ── базовые пакеты ─────────────────────────────────────────────
 say "pacman: базовые пакеты"
 if sudo pacman -S --needed --noconfirm \
-  git \
+  git base-devel \
   hyprland hypridle \
   quickshell \
   xdg-desktop-portal-hyprland xdg-desktop-portal-gtk \
@@ -108,6 +108,23 @@ sudo pacman -S --needed --noconfirm \
   gcc make zlib libcap libnetfilter_queue libmnl systemd-libs nftables \
   && ok "zapret: зависимости" \
   || warn "зависимости zapret не поставились — см. вывод"
+
+# ── yay (AUR-помощник) ─────────────────────────────────────────
+# Ставим сами, если нет ни yay, ни paru: иначе VS Code и Vencord (оба из
+# AUR) на чистой системе просто пропустятся. base-devel — в списке выше.
+if ! command -v yay >/dev/null 2>&1 && ! command -v paru >/dev/null 2>&1; then
+  say "AUR: ставлю yay (помощник для AUR)"
+  _tmp="$(mktemp -d)"
+  if git clone --depth=1 https://aur.archlinux.org/yay-bin.git "$_tmp/yay-bin" >/dev/null 2>&1 \
+     && (cd "$_tmp/yay-bin" && makepkg -si --noconfirm); then
+    ok "yay установлен"
+  else
+    warn "yay не установился — AUR-пакеты пропущены (вручную: makepkg -si)"
+  fi
+  rm -rf "$_tmp"
+else
+  say "AUR-помощник уже есть: $(command -v yay >/dev/null 2>&1 && echo yay || echo paru)"
+fi
 
 # ── VS Code (AUR) ──────────────────────────────────────────────
 # В репах только code (OSS). Официальный билд Microsoft — visual-studio-code-bin.
