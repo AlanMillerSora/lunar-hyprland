@@ -28,7 +28,7 @@ sudo pacman -S --needed --noconfirm \
   mako firefox discord steam \
   yazi bat ffmpeg 7zip jq fd ripgrep zoxide fzf \
   poppler imagemagick fontconfig \
-  playerctl brightnessctl ddcutil jq cliphist wl-clipboard \
+  playerctl brightnessctl ddcutil iw jq cliphist wl-clipboard \
   grim slurp wf-recorder \
   pipewire pipewire-pulse wireplumber pavucontrol \
   power-profiles-daemon polkit polkit-kde-agent \

@@ -185,6 +185,18 @@ if command -v ddcutil >/dev/null 2>&1; then
   fi
 fi
 
+# ── Wi-Fi: энергосбережение выключено всегда ───────────────────
+# Ноут всегда на зарядке, десктопу powersave не нужен. NM с backend
+# iwd игнорирует 802-11-wireless.powersave, поэтому выключаем
+# на уровне драйвера через dispatcher при каждом поднятии wlan.
+if [ -f "$REPO/systemd/10-lunar-wifi-powersave-off.sh" ]; then
+  say "Wi-Fi: powersave off → /etc/NetworkManager/dispatcher.d"
+  sudo install -m 0755 -o root -g root \
+    "$REPO/systemd/10-lunar-wifi-powersave-off.sh" \
+    /etc/NetworkManager/dispatcher.d/10-lunar-wifi-powersave-off.sh 2>/dev/null \
+    || say "dispatcher не установлен (нужен sudo) — см. systemd/"
+fi
+
 # ── sudo для агента чата (OpenCode): белый список ──────────────
 # Агент может без пароля только доверенные команды (systemctl,
 # hyprctl-скрипты, pacman -Syu, логи). Всё остальное — через
