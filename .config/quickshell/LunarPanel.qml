@@ -180,15 +180,22 @@ PanelWindow {
         onTriggered: root.mqPos = (root.mqPos + 1) % (root.track.length + 6)
     }
 
-    function marqueeText() {
+    // len — сколько символов показать (по ширине поля «сейчас играет»)
+    function marqueeText(len) {
         if (!root.track)
             return ""
+        if (!isFinite(len) || len < 4)
+            len = 4
+        if (len > 240)
+            len = 240
         if (!root.playing)
-            return root.track.length > 30 ? root.track.substring(0, 30) + "…" : root.track
+            return root.track.length > len ? root.track.substring(0, len - 1) + "…" : root.track
         var s = root.track + "      "
-        var doubled = s + s
         var o = root.mqPos % s.length
-        return doubled.substring(o, o + 30)
+        var big = ""
+        while (big.length < o + len + 1)
+            big += s
+        return big.substring(o, o + len)
     }
 
     // ─────────────── power ───────────────
@@ -450,11 +457,11 @@ PanelWindow {
     // Метрики моношрифта: по ним считаем ширины числовых полей, чтобы
     // цифры при скачках значений не дёргали раскладку.
     FontMetrics { id: fm11; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSize(11) }
+    FontMetrics { id: fm12; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSize(12) }
     FontMetrics { id: fm13; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSize(13) }
     FontMetrics { id: fm14; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSize(14) }
     FontMetrics { id: fm15; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSize(15) }
     // иконки из разных наборов Nerd Font бывают разной ширины — тоже чиним
-    FontMetrics { id: fmIcon13; font.family: Theme.iconFont; font.pixelSize: Theme.fontSize(13) }
     FontMetrics { id: fmIcon15; font.family: Theme.iconFont; font.pixelSize: Theme.fontSize(15) }
     FontMetrics { id: fmIcon17; font.family: Theme.iconFont; font.pixelSize: Theme.fontSize(17) }
     FontMetrics { id: fmIcon19; font.family: Theme.iconFont; font.pixelSize: Theme.fontSize(19) }
@@ -1069,35 +1076,43 @@ PanelWindow {
         }
     }
 
-    // медиа «сейчас играет» (появляется при треке)
+    // медиа «сейчас играет»: занимает всё свободное место между столами
+    // и часами (левый край — сразу за блоком столов, правый — перед часами)
     Item {
+        id: mediaBox
         anchors.verticalCenter: parent.verticalCenter
         height: 26
-        width: root.track.length > 0 ? mediaRow.implicitWidth : 0
-        x: clockBox.x - width - 14
         visible: root.track.length > 0
+        x: leftBar.right + 12
+        width: Math.max(0, clockBox.x - 14 - x)
+        readonly property real mqCharW: fm12.advanceWidth("0") > 0 ? fm12.advanceWidth("0") : 8
+        readonly property int mqChars:
+            Math.max(6, Math.floor((width - noteIcon.width - 8) / mqCharW))
 
         Row {
-            id: mediaRow
-            anchors.centerIn: parent
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
             height: 26
             spacing: 8
 
             Text {
-                anchors.verticalCenter: parent.verticalCenter
-                width: Math.max(fmIcon13.advanceWidth("󰏤"), fmIcon13.advanceWidth("󰐊"))
-                text: root.playing ? "󰏤" : "󰐊"
+                id: noteIcon
+                width: 18
+                height: 26
+                verticalAlignment: Text.AlignVCenter
+                horizontalAlignment: Text.AlignHCenter
+                text: root.playing ? "\uf04c" : "\uf04b"
                 color: root.playing ? Theme.accent : Theme.textFaint
                 font.family: Theme.iconFont
                 font.pixelSize: Theme.fontSize(13)
             }
 
             Text {
-                width: 220
+                width: Math.max(0, mediaBox.width - noteIcon.width - 8)
                 height: 26
                 verticalAlignment: Text.AlignVCenter
                 clip: true
-                text: root.marqueeText()
+                text: root.marqueeText(mediaBox.mqChars)
                 color: root.playing ? Theme.text : Theme.textDim
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSize(12)
