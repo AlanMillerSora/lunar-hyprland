@@ -37,6 +37,13 @@ QtObject {
     //   false = NORMAL   — полный блюр/тени, обои ~60 fps
     property bool optimizeMode: true
 
+    // Блюр (Hub → Interface): size 0..12 и число проходов.
+    //   -1 = пользователь ещё не трогал — рулит пресет NORMAL/OPTIMIZE
+    // (eclipse-perf.sh). Как только выставлено — значение переживает
+    // hyprctl reload и перезапуск шелла: ползунок главнее пресета.
+    property int blurSize: -1
+    property int blurPasses: 3
+
     // попап громкости открыт — центральный OSD не показываем (без дубля)
     property bool volumePopupOpen: false
 
@@ -83,6 +90,8 @@ QtObject {
             property int trayVisible: 3
             property bool wallpaperLive: true
             property bool optimizeMode: true
+            property int blurSize: -1
+            property int blurPasses: 3
 
             // файл → UI
             onInterfaceOpacityChanged: theme.interfaceOpacity = interfaceOpacity
@@ -90,6 +99,8 @@ QtObject {
             onTrayVisibleChanged: theme.trayVisible = trayVisible
             onWallpaperLiveChanged: theme.wallpaperLive = wallpaperLive
             onOptimizeModeChanged: theme.optimizeMode = optimizeMode
+            onBlurSizeChanged: theme.blurSize = blurSize
+            onBlurPassesChanged: theme.blurPasses = blurPasses
         }
     }
 
@@ -99,6 +110,35 @@ QtObject {
     onTrayVisibleChanged: uiAdapter.trayVisible = trayVisible
     onWallpaperLiveChanged: uiAdapter.wallpaperLive = wallpaperLive
     onOptimizeModeChanged: uiAdapter.optimizeMode = optimizeMode
+    onBlurSizeChanged: { uiAdapter.blurSize = blurSize; blurApply.restart() }
+    onBlurPassesChanged: { uiAdapter.blurPasses = blurPasses; blurApply.restart() }
+
+    // Ползунок блюра: применяем с задержкой — size и passes могут прийти
+    // по очереди (загрузка сохранённого состояния, перетаскивание).
+    property Timer blurApply: Timer {
+        id: blurApply
+        interval: 60
+        onTriggered: theme.applyBlur()
+    }
+
+    // Применить текущий блюр к Hyprland (ползунок Hub → Interface).
+    // size = 0 выключает блюр. Если пользователь ещё не выставлял
+    // значение (blurSize < 0) — не трогаем, рулит пресет.
+    function applyBlur() {
+        if (blurSize < 0)
+            return
+        var size = Math.max(0, Math.min(12, blurSize))
+        Quickshell.execDetached(["hyprctl", "eval",
+            "hl.config({decoration = {blur = {enabled = " + (size > 0)
+            + ", size = " + size + ", passes = " + Math.max(1, blurPasses) + "}}})"])
+    }
+
+    // Выставить и запомнить блюр: из ползунка и из пресетов NORMAL/OPTIMIZE.
+    // Сам вызов hyprctl делает blurApply (см. выше).
+    function setBlur(size, passes) {
+        blurSize = size
+        blurPasses = passes
+    }
 
     function alpha(c, a) {
         return Qt.rgba(c.r, c.g, c.b, a)

@@ -19,7 +19,8 @@ Item {
         command: ["bash", "-c", "hyprctl -j getoption decoration:blur:size 2>/dev/null | jq -r '.int // 0'"]
         stdout: StdioCollector {
             onStreamFinished: {
-                var s = parseInt(text.trim())
+                // если ползунок уже выставляли — он главнее текущего Hyprland
+                var s = (Theme.blurSize >= 0) ? Theme.blurSize : parseInt(text.trim())
                 if (!isNaN(s)) {
                     page.blurValue = Math.max(0, Math.min(1, s / 12))
                     page.blurReady = true
@@ -27,8 +28,6 @@ Item {
             }
         }
     }
-
-    Process { id: blurProc; running: false }
 
     Timer {
         id: blurDebounce
@@ -38,12 +37,8 @@ Item {
 
     function applyBlur() {
         var size = Math.round(blurValue * 12)
-        var enabled = size > 0
         var passes = size >= 6 ? 4 : 3
-        blurProc.command = ["hyprctl", "eval",
-            "hl.config({decoration = {blur = {enabled = " + enabled
-            + ", size = " + size + ", passes = " + passes + "}}})"]
-        blurProc.running = true
+        Theme.setBlur(size, passes)   // запоминает в Theme и применяет
     }
 
     Flickable {

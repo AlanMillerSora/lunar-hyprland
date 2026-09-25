@@ -35,8 +35,25 @@ PanelWindow {
     // Профиль производительности (Theme.optimizeMode): на лету переключает
     // блюр/тени Hyprland (eclipse-perf.sh) и темп анимации обоев (40/16 мс).
     readonly property bool optimize: Theme.optimizeMode
-    onOptimizeChanged: applyPerf()
+    onOptimizeChanged: {
+        applyPerf()
+        // пресет сбрасывает ползунок блюра к своему значению
+        // (NORMAL 6/3, OPTIMIZE 5/2) — как в eclipse-perf.sh
+        Theme.blurSize = root.optimize ? 5 : 6
+        Theme.blurPasses = root.optimize ? 2 : 3
+    }
     Component.onCompleted: applyPerf()
+
+    // hyprctl reload возвращает decoration из hyprland.lua: заново применяем
+    // пресет производительности, а после него — пользовательский блюр
+    // (это делает perfProc.onExited, то есть ползунок главнее пресета).
+    Connections {
+        target: Hyprland
+        function onRawEvent(event) {
+            if (event.name === "configreloaded")
+                root.applyPerf()
+        }
+    }
 
     // команду задаём явно перед запуском (binding не успевал обновиться
     // к моменту running=true, и режимы переключались наоборот)
@@ -49,6 +66,8 @@ PanelWindow {
     Process {
         id: perfProc
         running: false
+        // пресет применён — возвращаем блюр ползунка (если он выставлен)
+        onExited: if (Theme.blurSize >= 0) Theme.applyBlur()
     }
 
     LunarWallpaperScene {
