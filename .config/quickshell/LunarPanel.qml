@@ -442,8 +442,8 @@ PanelWindow {
         Layout.alignment: Qt.AlignVCenter
         Layout.preferredWidth: 1
         Layout.preferredHeight: 16
-        Layout.leftMargin: 6
-        Layout.rightMargin: 6
+        Layout.leftMargin: 5
+        Layout.rightMargin: 5
         color: Theme.border
     }
 
@@ -619,7 +619,7 @@ PanelWindow {
         // ── телеметрия и управление: прижаты к правому краю ──
         RowLayout {
             anchors.right: parent.right
-            anchors.rightMargin: 12
+            anchors.rightMargin: 11
             anchors.verticalCenter: parent.verticalCenter
             spacing: 0
 
@@ -769,7 +769,7 @@ PanelWindow {
                 id: statsRow
                 Layout.alignment: Qt.AlignVCenter
                 height: 26
-                spacing: 8
+                spacing: 7
 
                 // каждое поле — фиксированной ширины, цифры не дёргают строку
                 Text {
@@ -815,18 +815,18 @@ PanelWindow {
                 }
             }
 
-            // ── трей: появляется при приложениях (до 3 значков) ──
-            Sep { visible: SystemTray.items.values.length > 0 }
+            // ── трей: место под 3 значка зарезервировано всегда ──
+            Sep {}
 
             Item {
                 Layout.alignment: Qt.AlignVCenter
-                visible: SystemTray.items.values.length > 0
-                implicitWidth: trayRow.implicitWidth
+                implicitWidth: root.trayMax * 20 + Math.max(0, root.trayMax - 1) * 9
                 implicitHeight: 26
 
                 Row {
                     id: trayRow
-                    anchors.centerIn: parent
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
                     height: 26
                     spacing: 9
 
@@ -913,8 +913,6 @@ PanelWindow {
                     }
                 }
             }
-
-            Sep {}
 
             // ── раскладка · уведомления · громкость — у самого края ──
             Row {
