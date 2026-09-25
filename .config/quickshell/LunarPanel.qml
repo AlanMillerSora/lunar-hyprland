@@ -626,6 +626,7 @@ PanelWindow {
             // ── сеть: скорость + иконка подключения (клик — сети в Hub) ──
             Item {
                 Layout.alignment: Qt.AlignVCenter
+                Layout.rightMargin: 10
                 implicitWidth: netRow.implicitWidth
                 implicitHeight: 26
 
