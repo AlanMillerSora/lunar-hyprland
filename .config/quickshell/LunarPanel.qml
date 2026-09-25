@@ -623,7 +623,7 @@ PanelWindow {
             anchors.verticalCenter: parent.verticalCenter
             spacing: 0
 
-            // ── скорость сети ──
+            // ── сеть: скорость + иконка подключения (клик — сети в Hub) ──
             Item {
                 Layout.alignment: Qt.AlignVCenter
                 implicitWidth: netRow.implicitWidth
@@ -666,103 +666,20 @@ PanelWindow {
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSize(15)
                     }
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: Math.max(fmIcon17.advanceWidth("󰈀"), fmIcon17.advanceWidth("\uf1eb"))
+                        text: root.netKind === "eth" ? "󰈀" : "\uf1eb"
+                        color: root.netKind === "off" ? Theme.textFaint : Theme.text
+                        font.family: Theme.iconFont
+                        font.pixelSize: Theme.fontSize(17)
+                    }
                 }
 
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     onClicked: root.openNetwork()
-                }
-            }
-
-            Sep {}
-
-            // ── статус: сеть / раскладка / уведомления ──
-            Row {
-                id: statusRow
-                Layout.alignment: Qt.AlignVCenter
-                height: 26
-                spacing: 7
-
-                // сеть (клик — список сетей в Hub)
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: Math.max(fmIcon17.advanceWidth("󰈀"), fmIcon17.advanceWidth("\uf1eb"))
-                    text: root.netKind === "eth" ? "󰈀" : "\uf1eb"
-                    color: root.netKind === "off" ? Theme.textFaint : Theme.text
-                    font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSize(17)
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.openNetwork()
-                    }
-                }
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: fm13.advanceWidth("100%")
-                    text: root.netKind === "wifi" ? root.netSignal + "%" : ""
-                    color: Theme.textDim
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(13)
-                }
-
-                Rectangle {
-                    width: 1
-                    height: 16
-                    color: Theme.border
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                // раскладка (клик — переключить)
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root.kbLayout
-                    color: Theme.text
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(14)
-                    font.bold: true
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.switchLayout()
-                    }
-                }
-
-                Rectangle {
-                    width: 1
-                    height: 16
-                    color: Theme.border
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                // уведомления / «не беспокоить» (клик — переключить)
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: Math.max(fmIcon15.advanceWidth("\uf1f6"), fmIcon15.advanceWidth("\uf0f3"))
-                    text: root.dnd ? "\uf1f6" : "\uf0f3"
-                    color: root.dnd
-                        ? Theme.textFaint
-                        : (root.notifCount > 0 ? Theme.text : Theme.textDim)
-                    font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSize(15)
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.toggleDnd()
-                    }
-                }
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: fm13.advanceWidth("999")
-                    text: root.notifCount > 0 ? root.notifCount : ""
-                    color: Theme.accent
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(13)
-                    font.bold: true
                 }
             }
 
@@ -814,9 +731,9 @@ PanelWindow {
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
-                // запись экрана — с явной подписью, чтобы было понятно
+                // запись экрана
                 Rectangle {
-                    width: fm11.advanceWidth("● ЗАПИСЬ") + 20
+                    width: fm11.advanceWidth("● REC") + 20
                     height: 24
                     radius: Theme.radius
                     anchors.verticalCenter: parent.verticalCenter
@@ -829,7 +746,7 @@ PanelWindow {
                     Text {
                         id: recLabel
                         anchors.centerIn: parent
-                        text: root.recording ? "■ СТОП" : "● ЗАПИСЬ"
+                        text: root.recording ? "■ REC" : "● REC"
                         color: root.recording ? Theme.danger : Theme.textDim
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSize(11)
@@ -852,7 +769,7 @@ PanelWindow {
                 id: statsRow
                 Layout.alignment: Qt.AlignVCenter
                 height: 26
-                spacing: 10
+                spacing: 8
 
                 // каждое поле — фиксированной ширины, цифры не дёргают строку
                 Text {
@@ -876,8 +793,8 @@ PanelWindow {
                 // температура — вместе с CPU/RAM
                 Text {
                     visible: root.tempC > 0
-                    width: fm14.advanceWidth("100°C")
-                    text: root.padNum(root.tempC + "°C", 5)
+                    width: fm14.advanceWidth("58°C")
+                    text: root.padNum(root.tempC + "°C", 4)
                     color: Theme.textDim
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(14)
@@ -898,109 +815,161 @@ PanelWindow {
                 }
             }
 
+            // ── трей: появляется при приложениях (до 3 значков) ──
+            Sep { visible: SystemTray.items.values.length > 0 }
+
+            Item {
+                Layout.alignment: Qt.AlignVCenter
+                visible: SystemTray.items.values.length > 0
+                implicitWidth: trayRow.implicitWidth
+                implicitHeight: 26
+
+                Row {
+                    id: trayRow
+                    anchors.centerIn: parent
+                    height: 26
+                    spacing: 9
+
+                    Repeater {
+                        model: SystemTray.items.values.slice(0, root.trayMax)
+
+                        delegate: Item {
+                            required property var modelData
+                            width: 20
+                            height: 26
+
+                            Image {
+                                id: trayImg
+                                anchors.centerIn: parent
+                                source: root.trayIconSource(modelData)
+                                sourceSize.width: 18
+                                sourceSize.height: 18
+                                smooth: true
+                                fillMode: Image.PreserveAspectFit
+                                visible: source != "" && status !== Image.Error
+                            }
+
+                            // если у приложения нет иконки — точка-фолбэк
+                            Text {
+                                anchors.centerIn: parent
+                                visible: !trayImg.visible
+                                text: "\uf111"
+                                color: Theme.textFaint
+                                font.family: Theme.iconFont
+                                font.pixelSize: Theme.fontSize(8)
+                            }
+
+                            MouseArea {
+                                id: trayIconMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+                                cursorShape: Qt.PointingHandCursor
+                                onEntered: root.showTrayTip(modelData, trayIconMouse)
+                                onExited: Theme.tooltipShown = false
+                                onClicked: function (m) {
+                                    if (m.button === Qt.MiddleButton) {
+                                        modelData.secondaryActivate()
+                                    } else if (m.button === Qt.RightButton || modelData.onlyMenu) {
+                                        root.trayMenu(modelData, trayIconMouse, m.x, m.y)
+                                    } else {
+                                        modelData.activate()
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // сколько значков не влезло — открыть список
+                    Rectangle {
+                        visible: SystemTray.items.values.length > root.trayMax
+                        width: moreText.implicitWidth + 12
+                        height: 22
+                        radius: Theme.radius
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: moreMouse.containsMouse ? Theme.alpha(Theme.accent, 0.12) : "transparent"
+                        border.width: 1
+                        border.color: moreMouse.containsMouse ? Theme.accent : Theme.borderAccent
+
+                        Text {
+                            id: moreText
+                            anchors.centerIn: parent
+                            text: "+" + (SystemTray.items.values.length - root.trayMax)
+                            color: moreMouse.containsMouse ? Theme.accent : Theme.textDim
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize(10)
+                            font.bold: true
+                        }
+
+                        MouseArea {
+                            id: moreMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onEntered: root.showTip("свёрнутые приложения", moreMouse)
+                            onExited: Theme.tooltipShown = false
+                            onClicked: root.openTrayPanel()
+                        }
+                    }
+                }
+            }
+
             Sep {}
 
-            // ── системный трей + громкость ──
+            // ── раскладка · уведомления · громкость — у самого края ──
             Row {
                 id: rightRow
                 Layout.alignment: Qt.AlignVCenter
                 height: 26
                 spacing: 9
 
-                // ── системный трей: до N значков, остальные — в списке ──
-                Item {
-                    visible: SystemTray.items.values.length > 0
-                    width: visible ? trayRow.implicitWidth : 0
-                    height: 26
-
-                    Row {
-                        id: trayRow
-                        anchors.centerIn: parent
-                        height: 26
-                        spacing: 9
-
-                        Repeater {
-                            model: SystemTray.items.values.slice(0, root.trayMax)
-
-                            delegate: Item {
-                                required property var modelData
-                                width: 20
-                                height: 26
-
-                                Image {
-                                    id: trayImg
-                                    anchors.centerIn: parent
-                                    source: root.trayIconSource(modelData)
-                                    sourceSize.width: 18
-                                    sourceSize.height: 18
-                                    smooth: true
-                                    fillMode: Image.PreserveAspectFit
-                                    visible: source != "" && status !== Image.Error
-                                }
-
-                                // если у приложения нет иконки — точка-фолбэк
-                                Text {
-                                    anchors.centerIn: parent
-                                    visible: !trayImg.visible
-                                    text: "\uf111"
-                                    color: Theme.textFaint
-                                    font.family: Theme.iconFont
-                                    font.pixelSize: Theme.fontSize(8)
-                                }
-
-                                MouseArea {
-                                    id: trayIconMouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-                                    cursorShape: Qt.PointingHandCursor
-                                    onEntered: root.showTrayTip(modelData, trayIconMouse)
-                                    onExited: Theme.tooltipShown = false
-                                    onClicked: function (m) {
-                                        if (m.button === Qt.MiddleButton) {
-                                            modelData.secondaryActivate()
-                                        } else if (m.button === Qt.RightButton || modelData.onlyMenu) {
-                                            root.trayMenu(modelData, trayIconMouse, m.x, m.y)
-                                        } else {
-                                            modelData.activate()
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        // сколько значков не влезло — открыть список
-                        Rectangle {
-                            visible: SystemTray.items.values.length > root.trayMax
-                            width: moreText.implicitWidth + 12
-                            height: 22
-                            radius: Theme.radius
-                            anchors.verticalCenter: parent.verticalCenter
-                            color: moreMouse.containsMouse ? Theme.alpha(Theme.accent, 0.12) : "transparent"
-                            border.width: 1
-                            border.color: moreMouse.containsMouse ? Theme.accent : Theme.borderAccent
-
-                            Text {
-                                id: moreText
-                                anchors.centerIn: parent
-                                text: "+" + (SystemTray.items.values.length - root.trayMax)
-                                color: moreMouse.containsMouse ? Theme.accent : Theme.textDim
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSize(10)
-                                font.bold: true
-                            }
-
-                            MouseArea {
-                                id: moreMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onEntered: root.showTip("свёрнутые приложения", moreMouse)
-                                onExited: Theme.tooltipShown = false
-                                onClicked: root.openTrayPanel()
-                            }
-                        }
+                // раскладка (клик — переключить)
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: fm14.advanceWidth("EN")
+                    text: root.kbLayout
+                    color: Theme.text
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(14)
+                    font.bold: true
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.switchLayout()
                     }
+                }
+
+                // уведомления / «не беспокоить» (клик — переключить)
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: Math.max(fmIcon15.advanceWidth("\uf1f6"), fmIcon15.advanceWidth("\uf0f3"))
+                    text: root.dnd ? "\uf1f6" : "\uf0f3"
+                    color: root.dnd
+                        ? Theme.textFaint
+                        : (root.notifCount > 0 ? Theme.text : Theme.textDim)
+                    font.family: Theme.iconFont
+                    font.pixelSize: Theme.fontSize(15)
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.toggleDnd()
+                    }
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: fm13.advanceWidth("999")
+                    text: root.notifCount > 0 ? root.notifCount : ""
+                    color: Theme.accent
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(13)
+                    font.bold: true
+                }
+
+                Rectangle {
+                    width: 1
+                    height: 16
+                    color: Theme.border
+                    anchors.verticalCenter: parent.verticalCenter
                 }
 
                 // volume
