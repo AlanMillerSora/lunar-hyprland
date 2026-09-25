@@ -74,11 +74,14 @@ sudo pacman -S --needed --noconfirm \
 if grep -qi '0x10de' /sys/class/drm/card*/device/vendor 2>/dev/null; then
   # Заголовки ядра под DKMS: у linux — linux-headers, у linux-zen — linux-zen-headers и т.д.
   KERNEL_PKG="$(cat "/usr/lib/modules/$(uname -r)/pkgbase" 2>/dev/null || echo linux)"
-  say "NVIDIA: nvidia-open-dkms $KERNEL_PKG-headers + nvidia-utils, nvidia-settings, libva-nvidia-driver"
+  say "NVIDIA: nvidia-open-dkms $KERNEL_PKG-headers + nvidia-utils, nvidia-settings, libva-nvidia-driver, lib32-nvidia-utils"
   sudo pacman -S --needed --noconfirm \
     nvidia-open-dkms "$KERNEL_PKG-headers" \
     nvidia-utils nvidia-settings libva-nvidia-driver \
-    libva-utils
+    lib32-nvidia-utils libva-utils
+  # lib32-nvidia-utils — 32-битные драйверные библиотеки (GL/Vulkan) для
+  # Steam/Proton: без них 32-битные игры на NVIDIA не запускаются.
+  # Версия подтягивается та же, что у nvidia-utils; нужен multilib (см. выше).
   say "NVIDIA: после установки перезагрузись (см. раздел NVIDIA в README)"
 else
   # AMD/Intel: VAAPI-энкодеры даёт mesa; libva-utils — для диагностики (vainfo).

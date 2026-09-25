@@ -242,6 +242,7 @@ cd ~/rice
 
 ```
 nvidia-open-dkms  <ядро>-headers  nvidia-utils  nvidia-settings  libva-nvidia-driver  libva-utils
+lib32-nvidia-utils
 ```
 
 `libva-nvidia-driver` — VAAPI-прослойка поверх NVENC: именно через неё
@@ -251,6 +252,10 @@ nvidia-open-dkms  <ядро>-headers  nvidia-utils  nvidia-settings  libva-nvidi
 ```bash
 vainfo | grep -i Encoder      # должны быть H264/HEVC Encoder
 ```
+
+`lib32-nvidia-utils` — те же драйверные библиотеки, но 32-битные: нужны
+Steam/Proton для 32-битных игр (версия совпадает с `nvidia-utils`, нужен
+включённый репозиторий multilib).
 
 - Turing и новее (GTX 16xx / RTX 20xx+) — `nvidia-open-dkms`, поддерживается.
 - Pascal (GTX 10xx) и старше — только legacy `nvidia-580xx-dkms` из AUR.
