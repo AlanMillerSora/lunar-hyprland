@@ -197,6 +197,16 @@ if [ -f "$REPO/systemd/10-lunar-wifi-powersave-off.sh" ]; then
     || say "dispatcher не установлен (нужен sudo) — см. systemd/"
 fi
 
+# ASPM L1 у mt7921e (MT7902) вызывает провалы задержки до секунд и падение
+# скорости приёма; отключаем на уровне модуля (см. systemd/mt7921e-no-aspm.conf).
+if [ -f "$REPO/systemd/mt7921e-no-aspm.conf" ]; then
+  say "Wi-Fi: mt7921e disable_aspm → /etc/modprobe.d"
+  sudo install -m 0644 -o root -g root \
+    "$REPO/systemd/mt7921e-no-aspm.conf" \
+    /etc/modprobe.d/mt7921e-no-aspm.conf 2>/dev/null \
+    || say "modprobe-конфиг не установлен (нужен sudo) — см. systemd/"
+fi
+
 # ── sudo для агента чата (OpenCode): белый список ──────────────
 # Агент может без пароля только доверенные команды (systemctl,
 # hyprctl-скрипты, pacman -Syu, логи). Всё остальное — через
