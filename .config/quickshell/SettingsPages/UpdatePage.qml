@@ -18,6 +18,7 @@ Item {
     property string pending: "—"
     property string newsText: ""
     property var newsItems: []
+    property bool newsLoaded: false
 
     component ActionButton: Rectangle {
         property string label: ""
@@ -52,7 +53,7 @@ Item {
             hoverEnabled: true
             cursorShape: enabledBtn ? Qt.PointingHandCursor : Qt.ArrowCursor
             enabled: enabledBtn
-            onClicked: clicked()
+            onClicked: parent.clicked()
         }
     }
 
@@ -66,7 +67,7 @@ Item {
                 var t = text.trim()
                 page.log = t
                 var age = t.match(/(\d+)\s*дн\./)
-                if (age) page.newestAge = age[1] + " дн."
+                if (age) page.newestAge = (age[1] === "999") ? "нет данных" : (age[1] + " дн.")
                 var pk = t.match(/пакетов к обновлению:\s*(\S+)/)
                 if (pk) page.pending = pk[1]
             }
@@ -95,6 +96,7 @@ Item {
                     else if (L.indexOf("EN:") === 0) cur.en = L.substring(3).trim()
                 }
                 page.newsItems = items
+                page.newsLoaded = true
             }
         }
     }
@@ -306,7 +308,9 @@ Item {
 
             Text {
                 visible: page.newsItems.length === 0
-                text: "новости загружаются…"
+                text: page.newsLoaded
+                    ? "новости не загрузились (проверь сеть) — нажми ПРОВЕРИТЬ"
+                    : "новости загружаются…"
                 color: Theme.textFaint
                 font.family: Theme.fontFamily
                 font.pixelSize: 11
