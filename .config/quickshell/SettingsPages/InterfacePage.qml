@@ -263,8 +263,8 @@ Item {
                 CustomSlider {
                     width: parent.width
                     value: page.blurValue
-                    onValueChanged: {
-                        page.blurValue = value
+                    onMoved: function(v) {
+                        page.blurValue = v
                         blurDebounce.restart()
                     }
                 }
@@ -414,6 +414,8 @@ Item {
         property real value: 0.5
         property real minValue: 0
         property real maxValue: 1
+        // только от пользователя (программная установка value сюда не шлёт)
+        signal moved(real v)
         height: 24
         radius: 12
         color: Theme.trackBg
@@ -437,11 +439,13 @@ Item {
                 if (pressed) {
                     var v = Math.max(0, Math.min(1, mouse.x / width))
                     slider.value = v
+                    slider.moved(v)
                 }
             }
             onPressed: function(mouse) {
                 var v = Math.max(0, Math.min(1, mouse.x / width))
                 slider.value = v
+                slider.moved(v)
             }
         }
     }
