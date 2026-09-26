@@ -132,6 +132,15 @@ PanelWindow {
     property string clockText: Qt.formatTime(new Date(), "HH:mm")
     property string dayText: dayNames[new Date().getDay()]
     property string dateText: Qt.formatDate(new Date(), "dd.MM")
+    property bool colonOn: true
+
+    // живое двоеточие: плавно гаснет и зажигается
+    Timer {
+        interval: 500
+        running: true
+        repeat: true
+        onTriggered: root.colonOn = !root.colonOn
+    }
 
     Timer {
         interval: 1000
@@ -1141,16 +1150,46 @@ PanelWindow {
             height: 26
             spacing: 10
 
-            Text {
-                id: clockLabel
-                text: root.clockText
-                color: Theme.text
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize(15)
-                font.bold: true
-                font.letterSpacing: 1
+            Row {
+                anchors.verticalCenter: parent.verticalCenter
                 height: 26
-                verticalAlignment: Text.AlignVCenter
+                spacing: 0
+
+                Text {
+                    id: clockLabel
+                    text: root.clockText.substring(0, 2)
+                    color: Theme.text
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(15)
+                    font.bold: true
+                    font.letterSpacing: 1
+                    height: 26
+                    verticalAlignment: Text.AlignVCenter
+                }
+                Text {
+                    id: clockColon
+                    text: ":"
+                    color: Theme.text
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(15)
+                    font.bold: true
+                    font.letterSpacing: 1
+                    height: 26
+                    verticalAlignment: Text.AlignVCenter
+                    opacity: root.colonOn ? 1.0 : 0.15
+                    Behavior on opacity { NumberAnimation { duration: 480; easing.type: Easing.InOutSine } }
+                }
+                Text {
+                    id: clockMin
+                    text: root.clockText.substring(3)
+                    color: Theme.text
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(15)
+                    font.bold: true
+                    font.letterSpacing: 1
+                    height: 26
+                    verticalAlignment: Text.AlignVCenter
+                }
             }
 
             Rectangle {
