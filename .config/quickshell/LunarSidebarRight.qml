@@ -28,6 +28,24 @@ PanelWindow {
     function closePanel() { collapsed = true }
     function toggle() { collapsed = !collapsed }
 
+    // ── крупный спектр cava во вкладке «музыка» ──
+    readonly property bool mediaPlaying: player !== null && player !== undefined && player.isPlaying
+    readonly property int barCount: 40
+    property var barValues: []
+
+    function feedCava(line) {
+        var t = ("" + line).trim()
+        if (t.length === 0)
+            return
+        var parts = t.split(/\s+/)
+        var out = []
+        for (var i = 0; i < root.barCount; i++) {
+            var v = parseInt(parts[i] === undefined ? "0" : parts[i]) || 0
+            out.push(Math.max(0, Math.min(1, v / 1000)))
+        }
+        root.barValues = out
+    }
+
     // добавление события из формы календаря
     function addCalEvent() {
         if (!cal.selected) return
@@ -55,6 +73,18 @@ PanelWindow {
         id: cheatsheetProc
         command: ["bash", "-c", "$HOME/.config/hypr/scripts/eclipse-cheatsheet.py"]
         running: false
+    }
+
+    // cava для вкладки «музыка»: только когда вкладка видна и реально играет
+    Process {
+        id: cavaProc
+        running: root.tabIndex === 1 && root.mediaPlaying && !root.collapsed
+        command: ["cava", "-p", Quickshell.shellPath("cava-lunar.conf")]
+        stdout: SplitParser {
+            splitMarker: "\n"
+            onRead: (line) => root.feedCava(line)
+        }
+        stderr: StdioCollector {}
     }
 
     mask: Region {
@@ -182,38 +212,62 @@ PanelWindow {
             }
 
             // ── вкладки ──
-            RowLayout {
-                spacing: 4
-                Repeater {
-                    model: ["уведомления", "музыка", "календарь", "запись"]
-                    delegate: Rectangle {
-                        required property int index
-                        required property string modelData
-                        Layout.fillWidth: true
-                        height: 36
-                        radius: Theme.radius
-                        color: root.tabIndex === index
-                            ? Theme.alpha(Theme.accent, 0.12)
-                            : (tabMouse.containsMouse ? Theme.alpha(Theme.accent, 0.06) : "transparent")
-                        border.color: root.tabIndex === index ? Theme.borderAccent : "transparent"
-                        border.width: 1
-                        Text {
-                            anchors.centerIn: parent
-                            text: modelData
+            Item {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 36
+
+                RowLayout {
+                    id: rightTabRow
+                    anchors.fill: parent
+                    spacing: 4
+                    Repeater {
+                        id: rightTabRep
+                        model: ["уведомления", "музыка", "календарь", "запись"]
+                        delegate: Rectangle {
+                            required property int index
+                            required property string modelData
+                            Layout.fillWidth: true
+                            height: 36
+                            radius: Theme.radius
                             color: root.tabIndex === index
-                                ? Theme.accent
-                                : (tabMouse.containsMouse ? Theme.text : Theme.textDim)
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(13)
-                        }
-                        MouseArea {
-                            id: tabMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.tabIndex = index
+                                ? Theme.alpha(Theme.accent, 0.12)
+                                : (tabMouse.containsMouse ? Theme.alpha(Theme.accent, 0.06) : "transparent")
+                            border.color: root.tabIndex === index ? Theme.borderAccent : "transparent"
+                            border.width: 1
+                            Behavior on color { ColorAnimation { duration: Theme.animFast } }
+                            Text {
+                                anchors.centerIn: parent
+                                text: modelData
+                                color: root.tabIndex === index
+                                    ? Theme.accent
+                                    : (tabMouse.containsMouse ? Theme.text : Theme.textDim)
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSize(13)
+                                Behavior on color { ColorAnimation { duration: Theme.animFast } }
+                            }
+                            MouseArea {
+                                id: tabMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.tabIndex = index
+                            }
                         }
                     }
+                }
+
+                // плавный индикатор активной вкладки
+                Rectangle {
+                    readonly property var active: rightTabRep.count > 0 ? rightTabRep.itemAt(root.tabIndex) : null
+                    visible: active !== null
+                    x: active ? active.x : 0
+                    y: rightTabRow.height - 2
+                    width: active ? active.width : 0
+                    height: 2
+                    radius: 1
+                    color: Theme.accent
+                    Behavior on x { NumberAnimation { duration: Theme.animMed; easing.type: Easing.OutCubic } }
+                    Behavior on width { NumberAnimation { duration: Theme.animMed; easing.type: Easing.OutCubic } }
                 }
             }
 
@@ -231,7 +285,7 @@ PanelWindow {
 
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: 12
+                        anchors.margins: 14
                         spacing: 8
 
                         RowLayout {
@@ -383,7 +437,7 @@ PanelWindow {
 
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: 16
+                        anchors.margins: 14
                         spacing: 10
 
                         Text {
@@ -395,12 +449,43 @@ PanelWindow {
 
                         Item { Layout.fillHeight: true }
 
-                        Text {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: "\uf001"
-                            color: root.player ? Theme.accent : Theme.textFaint
-                            font.family: Theme.iconFont
-                            font.pixelSize: Theme.fontSize(52)
+                        // крупный спектр cava, пока играет; иначе — нота
+                        Item {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 128
+
+                            Text {
+                                anchors.centerIn: parent
+                                visible: !root.mediaPlaying
+                                text: "\uf001"
+                                color: root.player ? Theme.accent : Theme.textFaint
+                                font.family: Theme.iconFont
+                                font.pixelSize: Theme.fontSize(52)
+                            }
+
+                            Row {
+                                visible: root.mediaPlaying
+                                anchors.fill: parent
+                                spacing: 2
+
+                                Repeater {
+                                    model: root.barCount
+                                    delegate: Item {
+                                        required property int index
+                                        width: Math.max(1, (parent.width - (root.barCount - 1) * 2) / root.barCount)
+                                        height: parent.height
+                                        Rectangle {
+                                            anchors.horizontalCenter: parent.horizontalCenter
+                                            anchors.bottom: parent.bottom
+                                            width: parent.width
+                                            height: 2 + (root.barValues[index] || 0) * (parent.height - 4)
+                                            radius: 1
+                                            color: Theme.alpha(Theme.accent, 0.3 + 0.7 * (root.barValues[index] || 0))
+                                            Behavior on height { NumberAnimation { duration: 80 } }
+                                        }
+                                    }
+                                }
+                            }
                         }
 
                         Text {
@@ -512,14 +597,17 @@ PanelWindow {
                         }
 
 
-                        Flickable {
-                            id: monthFlick
+                        Item {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
-                            clip: true
-                            contentWidth: width
-                            contentHeight: monthsColumn.height
-                            boundsBehavior: Flickable.StopAtBounds
+
+                            Flickable {
+                                id: monthFlick
+                                anchors.fill: parent
+                                clip: true
+                                contentWidth: width
+                                contentHeight: monthsColumn.height
+                                boundsBehavior: Flickable.StopAtBounds
 
                             Column {
                                 id: monthsColumn
@@ -543,6 +631,14 @@ PanelWindow {
                                             font.bold: true
                                             font.letterSpacing: 1
                                             horizontalAlignment: Text.AlignHCenter
+                                        }
+
+                                        // тонкая черта под месяцем — HUD-разделитель
+                                        Rectangle {
+                                            anchors.horizontalCenter: parent.horizontalCenter
+                                            width: 34
+                                            height: 1
+                                            color: Theme.alpha(Theme.accent, 0.35)
                                         }
 
                                         Row {
@@ -574,23 +670,27 @@ PanelWindow {
                                                     height: 42
                                                     radius: Theme.radius
                                                     readonly property bool isSel: modelData.day > 0 && cal.selected === modelData.date
+                                                    readonly property bool isToday: modelData.day > 0 && modelData.today === true
+                                                    readonly property bool isHover: cellMouse.containsMouse && modelData.day > 0
 
-                                                    color: modelData.today
-                                                        ? Theme.alpha(Theme.accent, 0.14)
-                                                        : (isSel ? Theme.alpha(Theme.accent, 0.10)
-                                                        : (cellMouse.containsMouse && modelData.day > 0
-                                                            ? Theme.alpha(Theme.accent, 0.06) : "transparent"))
-                                                    border.width: (modelData.today || isSel) ? 1 : 0
-                                                    border.color: Theme.borderAccent
+                                                    // сегодня — кольцо, выбранный — заливка
+                                                    color: isSel ? Theme.alpha(Theme.accent, 0.16)
+                                                        : (isToday ? Theme.alpha(Theme.accent, 0.05)
+                                                        : (isHover ? Theme.alpha(Theme.accent, 0.08) : "transparent"))
+                                                    border.width: (isToday || isHover) ? 1 : 0
+                                                    border.color: isToday ? Theme.accent : Theme.borderAccent
+                                                    Behavior on color { ColorAnimation { duration: Theme.animFast } }
+                                                    Behavior on border.color { ColorAnimation { duration: Theme.animFast } }
                                                     Text {
                                                         anchors.centerIn: parent
                                                         text: modelData.day > 0 ? modelData.day : ""
                                                         color: modelData.day === 0
                                                             ? "transparent"
-                                                            : (modelData.today ? Theme.accent : Theme.text)
+                                                            : ((isToday || isSel) ? Theme.accent : Theme.text)
                                                         font.family: Theme.fontFamily
                                                         font.pixelSize: Theme.fontSize(15)
-                                                        font.bold: modelData.today
+                                                        font.bold: isToday || isSel
+                                                        Behavior on color { ColorAnimation { duration: Theme.animFast } }
                                                     }
                                                     // точка: на этот день есть события
                                                     Rectangle {
@@ -598,7 +698,7 @@ PanelWindow {
                                                         width: 5
                                                         height: 5
                                                         radius: 3
-                                                        color: modelData.today ? Theme.accent : Theme.textDim
+                                                        color: (isToday || isSel) ? Theme.accent : Theme.textDim
                                                         anchors.horizontalCenter: parent.horizontalCenter
                                                         anchors.bottom: parent.bottom
                                                         anchors.bottomMargin: 3
@@ -615,6 +715,27 @@ PanelWindow {
                                             }
                                         }
                                     }
+                                }
+                            }
+                        }
+
+                            // мягкое затухание сверху/снизу — видно, что список листается
+                            Rectangle {
+                                anchors { top: parent.top; left: parent.left; right: parent.right }
+                                height: 16
+                                visible: monthFlick.contentY > 1
+                                gradient: Gradient {
+                                    GradientStop { position: 0.0; color: Theme.bgCard }
+                                    GradientStop { position: 1.0; color: "transparent" }
+                                }
+                            }
+                            Rectangle {
+                                anchors { bottom: parent.bottom; left: parent.left; right: parent.right }
+                                height: 16
+                                visible: monthFlick.contentY < monthFlick.contentHeight - monthFlick.height - 1
+                                gradient: Gradient {
+                                    GradientStop { position: 0.0; color: "transparent" }
+                                    GradientStop { position: 1.0; color: Theme.bgCard }
                                 }
                             }
                         }
@@ -787,7 +908,7 @@ PanelWindow {
 
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: 12
+                        anchors.margins: 14
                         spacing: 8
 
                         RowLayout {

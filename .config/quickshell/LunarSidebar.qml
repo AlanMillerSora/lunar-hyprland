@@ -33,7 +33,7 @@ PanelWindow {
         function toggle(): void { root.toggle() }
         function open(): void { root.openPanel() }
         function close(): void { root.closePanel() }
-        function tab(idx: int): void { root.tabIndex = Math.max(0, Math.min(2, idx)) }
+        function tab(idx: int): void { root.tabIndex = Math.max(0, Math.min(1, idx)) }
     }
 
     mask: Region {
@@ -139,39 +139,63 @@ PanelWindow {
                 color: Theme.border
             }
 
-            RowLayout {
-                spacing: 4
-                Repeater {
-                    model: ["чат", "буфер", "заметки"]
-                    delegate: Rectangle {
-                        required property int index
-                        required property string modelData
-                        Layout.fillWidth: true
-                        height: 36
-                        radius: Theme.radius
-                        color: tabIndex === index
-                            ? Theme.alpha(Theme.accent, 0.12)
-                            : (tabMouse.containsMouse ? Theme.alpha(Theme.accent, 0.06) : "transparent")
-                        border.color: tabIndex === index ? Theme.borderAccent : "transparent"
-                        border.width: 1
+            Item {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 36
 
-                        Text {
-                            anchors.centerIn: parent
-                            text: modelData
+                RowLayout {
+                    id: leftTabRow
+                    anchors.fill: parent
+                    spacing: 4
+                    Repeater {
+                        id: leftTabRep
+                        model: ["чат", "заметки"]
+                        delegate: Rectangle {
+                            required property int index
+                            required property string modelData
+                            Layout.fillWidth: true
+                            height: 36
+                            radius: Theme.radius
                             color: tabIndex === index
-                                ? Theme.accent
-                                : (tabMouse.containsMouse ? Theme.text : Theme.textDim)
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(13)
-                        }
-                        MouseArea {
-                            id: tabMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: tabIndex = index
+                                ? Theme.alpha(Theme.accent, 0.12)
+                                : (tabMouse.containsMouse ? Theme.alpha(Theme.accent, 0.06) : "transparent")
+                            border.color: tabIndex === index ? Theme.borderAccent : "transparent"
+                            border.width: 1
+                            Behavior on color { ColorAnimation { duration: Theme.animFast } }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: modelData
+                                color: tabIndex === index
+                                    ? Theme.accent
+                                    : (tabMouse.containsMouse ? Theme.text : Theme.textDim)
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSize(13)
+                                Behavior on color { ColorAnimation { duration: Theme.animFast } }
+                            }
+                            MouseArea {
+                                id: tabMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: tabIndex = index
+                            }
                         }
                     }
+                }
+
+                // плавный индикатор активной вкладки
+                Rectangle {
+                    readonly property var active: leftTabRep.count > 0 ? leftTabRep.itemAt(root.tabIndex) : null
+                    visible: active !== null
+                    x: active ? active.x : 0
+                    y: leftTabRow.height - 2
+                    width: active ? active.width : 0
+                    height: 2
+                    radius: 1
+                    color: Theme.accent
+                    Behavior on x { NumberAnimation { duration: Theme.animMed; easing.type: Easing.OutCubic } }
+                    Behavior on width { NumberAnimation { duration: Theme.animMed; easing.type: Easing.OutCubic } }
                 }
             }
 
@@ -187,7 +211,7 @@ PanelWindow {
                     border.width: 1
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: 10
+                        anchors.margins: 14
                         spacing: 8
 
                         RowLayout {
@@ -389,126 +413,7 @@ PanelWindow {
                     border.width: 1
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: 10
-                        spacing: 8
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 6
-                            Text {
-                                text: "буфер обмена"
-                                color: Theme.textDim
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSize(13)
-                            }
-                            Item { Layout.fillWidth: true }
-
-                            // очистить всю историю
-                            Rectangle {
-                                Layout.preferredWidth: 46
-                                Layout.preferredHeight: 26
-                                radius: Theme.radius
-                                color: wipeMouse.containsMouse ? Theme.alpha(Theme.danger, 0.12) : "transparent"
-                                border.width: wipeMouse.containsMouse ? 1 : 0
-                                border.color: Theme.danger
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "очистить"
-                                    color: wipeMouse.containsMouse ? Theme.danger : Theme.textFaint
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSize(10)
-                                }
-                                MouseArea {
-                                    id: wipeMouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        wipeProc.command = ["bash", "-c", "cliphist wipe"]
-                                        wipeProc.running = true
-                                    }
-                                }
-                            }
-
-                            // обновить список
-                            Rectangle {
-                                Layout.preferredWidth: 32
-                                Layout.preferredHeight: 26
-                                radius: Theme.radius
-                                color: refreshMouse.containsMouse ? Theme.alpha(Theme.accent, 0.08) : "transparent"
-                                border.width: refreshMouse.containsMouse ? 1 : 0
-                                border.color: Theme.borderAccent
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "↻"
-                                    color: Theme.textDim
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSize(13)
-                                }
-                                MouseArea {
-                                    id: refreshMouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: clipModel.load()
-                                }
-                            }
-                        }
-                        ListView {
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            clip: true
-                            spacing: 2
-                            model: clipModel.items
-                            delegate: Rectangle {
-                                required property var modelData
-                                required property int index
-                                width: ListView.view.width
-                                height: 42
-                                radius: Theme.radius
-                                color: mouse.containsMouse ? Theme.alpha(Theme.accent, 0.08) : "transparent"
-                                Text {
-                                    anchors.fill: parent
-                                    anchors.margins: 6
-                                    text: modelData.preview
-                                    color: Theme.text
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSize(13)
-                                    elide: Text.ElideRight
-                                    verticalAlignment: Text.AlignVCenter
-                                }
-                                MouseArea {
-                                    id: mouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    acceptedButtons: Qt.LeftButton | Qt.RightButton
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: function (m) {
-                                        if (m.button === Qt.RightButton) {
-                                            clipDeleteProc.command = ["bash", "-c",
-                                                "cliphist list | grep -P '^" + modelData.id + "\\t' | cliphist delete"]
-                                            clipDeleteProc.running = true
-                                        } else {
-                                            clipSelectProc.command = ["bash", "-c",
-                                                "cliphist decode " + modelData.id + " | wl-copy"]
-                                            clipSelectProc.running = true
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                Rectangle {
-                    color: Theme.bgCard
-                    radius: Theme.radius
-                    border.color: Theme.border
-                    border.width: 1
-                    ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: 10
+                        anchors.margins: 14
                         spacing: 8
                         RowLayout {
                             Layout.fillWidth: true
@@ -551,7 +456,7 @@ PanelWindow {
                                 wrapMode: TextArea.WordWrap
                                 clip: true
                                 selectByMouse: true
-                                focus: root.tabIndex === 2 && !root.collapsed
+                                focus: root.tabIndex === 1 && !root.collapsed
                                 background: Rectangle { color: "transparent" }
                                 onTextChanged: notesSaveTimer.restart()
                             }
@@ -681,54 +586,7 @@ PanelWindow {
     }
 
     Process { id: sessionsProc; running: false }
-    Process {
-        id: clipSelectProc
-        running: false
-        onExited: clipModel.load()
-    }
-    Process {
-        id: clipDeleteProc
-        running: false
-        onExited: clipModel.load()
-    }
-    Process {
-        id: wipeProc
-        running: false
-        onExited: clipModel.load()
-    }
     Process { id: notesSaveProc; running: false }
-
-    QtObject {
-        id: clipModel
-        property var items: []
-        Component.onCompleted: load()
-        function load() {
-            clipProc.command = ["bash", "-c", "cliphist list | head -40"]
-            clipProc.running = true
-        }
-    }
-
-    Process {
-        id: clipProc
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                var lines = text.split("\n")
-                var out = []
-                for (var i = 0; i < lines.length; i++) {
-                    var line = lines[i].trim()
-                    if (!line) continue
-                    var idx = line.indexOf("\t")
-                    if (idx < 0) idx = line.indexOf("  ")
-                    var id = idx >= 0 ? line.substring(0, idx).trim() : line
-                    var preview = idx >= 0 ? line.substring(idx + 1).trim() : ""
-                    if (preview.length > 80) preview = preview.substring(0, 80) + "…"
-                    out.push({ id: id, preview: preview })
-                }
-                clipModel.items = out
-            }
-        }
-    }
 
     Process {
         id: sysStats
