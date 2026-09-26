@@ -469,7 +469,7 @@ Item {
             Behavior on opacity { NumberAnimation { duration: 700 } }
         }
 
-        // мягкое внешнее дыхание солнца (.sun-glow-outer 310px)
+        // мягкое внешнее гало солнца (.sun-glow-outer 310px)
         RadialCanvas {
             id: sunGlowOuter
             x: -155 * scene.unit
@@ -478,9 +478,9 @@ Item {
             height: 310 * scene.unit
             stops: scene.sunGlowStops
             opacity: scene.sunOps[scene.p] * scene.sunHaloMask
-            // дыхание солнца (период 5 с) от общего времени — без анимации на кадр.
-            // В OPTIMIZE дыхание выключено: меньше перерисовок.
-            scale: scene.optimize ? 1 : 1 + 0.045 * (0.5 + 0.5 * Math.sin(scene.t * 1.2566))
+            // «дыхание» убрано: масштаб градиента каждый кадр давал
+            // видимые белые «переходы»/ступени. Гало статично.
+            scale: 1
         }
 
         // корона — тонкое кольцо вокруг луны (Canvas, без ступеней)
