@@ -416,6 +416,16 @@ Item {
         property real maxValue: 1
         // только от пользователя (программная установка value сюда не шлёт)
         signal moved(real v)
+        // «заполнение» при появлении: старт с нуля → плавно к value
+        property real shown: 0
+        property bool primed: false
+        onValueChanged: if (primed) shown = value
+        Component.onCompleted: primeTimer.restart()
+        Timer {
+            id: primeTimer
+            interval: 60
+            onTriggered: { slider.shown = slider.value; slider.primed = true }
+        }
         height: 24
         radius: 12
         color: Theme.trackBg
@@ -427,7 +437,7 @@ Item {
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             anchors.margins: 2
-            width: 2 + (parent.width - 20) * slider.value
+            width: 2 + (parent.width - 20) * slider.shown
             radius: 10
             color: Theme.accent
             // плавное заполнение, как у полос в «Памяти»

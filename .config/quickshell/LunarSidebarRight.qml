@@ -525,9 +525,22 @@ PanelWindow {
 
                         // прогресс
                         Item {
+                            id: progBox
                             Layout.fillWidth: true
                             Layout.preferredHeight: 18
                             visible: root.player && root.player.length > 0
+
+                            readonly property real target: root.player && root.player.length > 0
+                                ? Math.min(1, root.player.position / root.player.length) : 0
+                            property real shown: 0
+                            property bool primed: false
+                            onTargetChanged: if (primed) shown = target
+                            Component.onCompleted: primeTimer.restart()
+                            Timer {
+                                id: primeTimer
+                                interval: 60
+                                onTriggered: { progBox.shown = progBox.target; progBox.primed = true }
+                            }
 
                             Rectangle {
                                 anchors.verticalCenter: parent.verticalCenter
@@ -536,8 +549,7 @@ PanelWindow {
                                 radius: 2
                                 color: Theme.trackBg
                                 Rectangle {
-                                    width: parent.width * (root.player && root.player.length > 0
-                                        ? Math.min(1, root.player.position / root.player.length) : 0)
+                                    width: parent.width * progBox.shown
                                     height: parent.height
                                     radius: 2
                                     color: Theme.accent

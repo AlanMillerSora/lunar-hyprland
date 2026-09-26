@@ -216,6 +216,17 @@ PanelWindow {
 
                 property real dragFrac: 0
                 readonly property real frac: seekArea.pressed ? dragFrac : root.progress
+                // заполнение с нуля при открытии (как полосы в «Памяти»)
+                property real shown: 0
+                property bool primed: false
+                readonly property real useFrac: seekArea.pressed ? dragFrac : shown
+                onFracChanged: if (primed) shown = frac
+                Component.onCompleted: primeTimer.restart()
+                Timer {
+                    id: primeTimer
+                    interval: 60
+                    onTriggered: { seek.shown = seek.frac; seek.primed = true }
+                }
 
                 Rectangle {
                     id: seekBg
@@ -228,7 +239,7 @@ PanelWindow {
 
                     Rectangle {
                         id: seekFill
-                        width: parent.width * seek.frac
+                        width: parent.width * seek.useFrac
                         height: parent.height
                         radius: parent.radius
                         color: root.seekable ? Theme.accent : Theme.textDim
@@ -245,7 +256,7 @@ PanelWindow {
                         height: 12
                         radius: 6
                         anchors.verticalCenter: parent.verticalCenter
-                        x: Math.max(0, Math.min(seekBg.width, seekBg.width * seek.frac)) - width / 2
+                        x: Math.max(0, Math.min(seekBg.width, seekBg.width * seek.useFrac)) - width / 2
                         color: Theme.text
                         border.color: Theme.accent
                         border.width: 2

@@ -23,7 +23,17 @@ Item {
     // значение во время перетаскивания (не трогаем value, чтобы не рвать
     // привязку вызывающей стороны — иначе ползунок «застревает»)
     property real dragValue: 0
-    readonly property real displayValue: dragArea.pressed ? root.dragValue : root.value
+    // «заполнение» при появлении: старт с нуля → плавно к value (как в «Памяти»)
+    property real shown: 0
+    property bool primed: false
+    onValueChanged: if (primed) shown = value
+    Component.onCompleted: primeTimer.restart()
+    Timer {
+        id: primeTimer
+        interval: 60
+        onTriggered: { root.shown = root.value; root.primed = true }
+    }
+    readonly property real displayValue: dragArea.pressed ? root.dragValue : root.shown
 
     signal moved(real value)
     signal committed(real value)

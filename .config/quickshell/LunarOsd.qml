@@ -32,6 +32,12 @@ PanelWindow {
 
     readonly property int segments: 20
     readonly property real frac: (muted || volume <= 0) ? 0 : Math.min(volume / 100, 1)
+
+    // плавное заполнение делений при показе и при изменении (как в «Памяти»)
+    property real shownFrac: 0
+    Behavior on shownFrac { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+    onShowingChanged: shownFrac = showing ? frac : 0
+    onFracChanged: if (showing) shownFrac = frac
     readonly property string label: muted ? "mute" : volume + "%"
     // FontAwesome: mute / volume-low / volume-high
     readonly property string icon: muted ? "\uf026" : (volume < 50 ? "\uf027" : "\uf028")
@@ -145,7 +151,7 @@ PanelWindow {
 
                     delegate: Rectangle {
                         required property int index
-                        readonly property bool on: index < Math.round(root.frac * root.segments)
+                        readonly property bool on: index < Math.round(root.shownFrac * root.segments)
 
                         width: Math.max(2, (segRow.width - (root.segments - 1) * 3) / root.segments)
                         height: 12
