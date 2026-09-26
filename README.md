@@ -21,63 +21,7 @@
 
 <div align="center">
 
-[Скриншоты](#скриншоты) · [Столы](#столы) · [Обои](#обои) · [Установка](#установка) · [Загрузка](#загрузка) · [Экран входа](#экран-входа) · [Zapret и Vencord](#zapret-и-vencord) · [Игры](#игры-game-mode) · [NVIDIA](#nvidia) · [Чат](#чат-opencode) · [Календарь](#календарь) · [Обновления](#обновления) · [Горячие клавиши](#горячие-клавиши) · [Тема](#тема)
-
-</div>
-
----
-
-<h2 align="center" id="скриншоты">Скриншоты</h2>
-
-<h3 align="center">Рабочий стол — фазы затмения</h3>
-
-<div align="center">
-
-Фаза привязана к активному столу; рендер — QtQuick.
-
-| Частичное | Полное | Открытая луна |
-|:---:|:---:|:---:|
-| ![Частичное](assets/screens/desktop-partial.png) | ![Полное](assets/screens/desktop-total.png) | ![Открытая](assets/screens/desktop-full.png) |
-
-</div>
-
-<h3 align="center">Hub — лаунчер и настройки</h3>
-
-<div align="center">
-
-| Launch | System | Interface |
-|:---:|:---:|:---:|
-| ![Launch](assets/screens/hub-launch.png) | ![System](assets/screens/hub-system.png) | ![Interface](assets/screens/hub-interface.png) |
-| Update | Network | Wallpapers |
-| ![Update](assets/screens/hub-update.png) | ![Network](assets/screens/hub-network.png) | ![Wallpapers](assets/screens/hub-wallpapers.png) |
-
-</div>
-
-<h3 align="center">Приложения</h3>
-
-<div align="center">
-
-| kitty | btop | yazi | Firefox |
-|:---:|:---:|:---:|:---:|
-| ![kitty](assets/screens/kitty.png) | ![btop](assets/screens/btop.png) | ![yazi](assets/screens/yazi.png) | ![Firefox](assets/screens/firefox.png) |
-
-</div>
-
-<h3 align="center">Панели и чат</h3>
-
-<div align="center">
-
-| Чат (OpenCode) | Панель справа | Календарь |
-|:---:|:---:|:---:|
-| ![Сайдбар слева](assets/screens/sidebar-left.png) | ![Сайдбар справа](assets/screens/sidebar-right.png) | ![Календарь](assets/screens/sidebar-calendar.png) |
-
-</div>
-
-<h3 align="center">Шпаргалка · <code>SUPER + /</code></h3>
-
-<div align="center">
-
-![Шпаргалка](assets/screens/cheatsheet.png)
+[Столы](#столы) · [Обои](#обои) · [Установка](#установка) · [Загрузка](#загрузка) · [Экран входа](#экран-входа) · [Zapret и Vencord](#zapret-и-vencord) · [Игры](#игры-game-mode) · [NVIDIA](#nvidia) · [Чат](#чат-opencode) · [Календарь](#календарь) · [Обновления](#обновления) · [Горячие клавиши](#горячие-клавиши) · [Тема](#тема)
 
 </div>
 
@@ -111,6 +55,16 @@
 Живые обои рисует Quickshell (`LunarWallpaper.qml`) — фоновый слой QtQuick, без внешних движков. Фаза = активный стол (1..9): луна идёт слева направо, на 5 — полное затмение (кольцо, пыль, метеоры). Тумблер **живые / лёгкий режим** — **Hub → Wallpapers**.
 
 Превью сцены без Hyprland: `qml6 .config/quickshell/preview.qml` (1..9 — фазы, `L` — лёгкий режим).
+
+</div>
+
+<h3 align="center">Фазы — по активному столу</h3>
+
+<div align="center">
+
+| Частичное | Полное | Открытая луна |
+|:---:|:---:|:---:|
+| ![Частичное](assets/screens/desktop-partial.png) | ![Полное](assets/screens/desktop-total.png) | ![Открытая](assets/screens/desktop-full.png) |
 
 </div>
 
@@ -343,6 +297,38 @@ lib32-nvidia-utils
 
 </div>
 
+<h3 align="center">Hub — лаунчер и настройки</h3>
+
+<div align="center">
+
+| Launch | System | Interface |
+|:---:|:---:|:---:|
+| ![Launch](assets/screens/hub-launch.png) | ![System](assets/screens/hub-system.png) | ![Interface](assets/screens/hub-interface.png) |
+| Update | Network | Wallpapers |
+| ![Update](assets/screens/hub-update.png) | ![Network](assets/screens/hub-network.png) | ![Wallpapers](assets/screens/hub-wallpapers.png) |
+
+</div>
+
+<h3 align="center">Панели</h3>
+
+<div align="center">
+
+| Чат (OpenCode) | Панель справа | Календарь |
+|:---:|:---:|:---:|
+| ![Сайдбар слева](assets/screens/sidebar-left.png) | ![Сайдбар справа](assets/screens/sidebar-right.png) | ![Календарь](assets/screens/sidebar-calendar.png) |
+
+</div>
+
+<h3 align="center">Приложения</h3>
+
+<div align="center">
+
+| kitty | btop | yazi | Firefox |
+|:---:|:---:|:---:|:---:|
+| ![kitty](assets/screens/kitty.png) | ![btop](assets/screens/btop.png) | ![yazi](assets/screens/yazi.png) | ![Firefox](assets/screens/firefox.png) |
+
+</div>
+
 <details>
 <summary>Полная таблица компонентов</summary>
 
@@ -402,6 +388,15 @@ lib32-nvidia-utils
 | `SUPER + R` | Перезагрузить Hyprland |
 
 </details>
+
+<div align="center">
+
+Сжимаемая шпаргалка по всем хоткеям — <code>SUPER + /</code>.
+
+<br>
+<img src="assets/screens/cheatsheet.png" width="80%" alt="Шпаргалка — горячие клавиши"/>
+
+</div>
 
 ---
 
