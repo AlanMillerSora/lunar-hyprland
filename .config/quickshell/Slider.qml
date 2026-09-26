@@ -100,7 +100,7 @@ Item {
                         enabled: !dragArea.pressed
 
                         NumberAnimation {
-                            duration: Theme.animFast
+                            duration: 200
                         }
                     }
 

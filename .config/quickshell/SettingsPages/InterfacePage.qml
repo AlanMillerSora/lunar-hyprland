@@ -430,9 +430,15 @@ Item {
             width: 2 + (parent.width - 20) * slider.value
             radius: 10
             color: Theme.accent
+            // плавное заполнение, как у полос в «Памяти»
+            Behavior on width {
+                enabled: !sliderDrag.pressed
+                NumberAnimation { duration: 200 }
+            }
         }
 
         MouseArea {
+            id: sliderDrag
             cursorShape: Qt.PointingHandCursor
             anchors.fill: parent
             onPositionChanged: function(mouse) {

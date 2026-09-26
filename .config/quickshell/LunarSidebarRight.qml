@@ -541,6 +541,7 @@ PanelWindow {
                                     height: parent.height
                                     radius: 2
                                     color: Theme.accent
+                                    Behavior on width { NumberAnimation { duration: 200 } }
                                 }
                             }
                         }

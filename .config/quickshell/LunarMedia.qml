@@ -234,7 +234,7 @@ PanelWindow {
                         color: root.seekable ? Theme.accent : Theme.textDim
                         Behavior on width {
                             enabled: !seekArea.pressed
-                            NumberAnimation { duration: Theme.animFast }
+                            NumberAnimation { duration: 200 }
                         }
                     }
 

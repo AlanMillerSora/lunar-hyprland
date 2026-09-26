@@ -249,6 +249,7 @@ Item {
                             height: parent.height
                             radius: 3
                             color: Theme.textDim
+                            Behavior on width { NumberAnimation { duration: 200 } }
                         }
                     }
                     Text {
