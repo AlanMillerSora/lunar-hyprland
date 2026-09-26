@@ -598,12 +598,16 @@ PanelWindow {
                             readonly property bool isFocused: root.focusedWs !== null && root.focusedWs.id === wsId
                             readonly property bool isOccupied: ws !== null && ws.toplevels.values.length > 0
 
+                            // импульс кольца при переходе на этот стол
+                            onIsFocusedChanged: if (isFocused) focusPulse.restart()
+
                             width: 28
                             height: 26
                             color: "transparent"
 
                             // тонкое кольцо-выделение активного стола
                             Rectangle {
+                                id: focusRing
                                 anchors.centerIn: parent
                                 width: 24
                                 height: 24
@@ -611,7 +615,41 @@ PanelWindow {
                                 color: "transparent"
                                 border.width: 1
                                 border.color: Theme.alpha(Theme.accent, 0.55)
+                                opacity: 0.55
                                 visible: wsPill.isFocused
+                            }
+
+                            // короткий импульс: вспышка + лёгкое расширение
+                            ParallelAnimation {
+                                id: focusPulse
+                                SequentialAnimation {
+                                    NumberAnimation {
+                                        target: focusRing
+                                        property: "scale"
+                                        from: 1.0
+                                        to: 1.4
+                                        duration: 140
+                                        easing.type: Easing.OutCubic
+                                    }
+                                    NumberAnimation {
+                                        target: focusRing
+                                        property: "scale"
+                                        from: 1.4
+                                        to: 1.0
+                                        duration: 160
+                                        easing.type: Easing.InCubic
+                                    }
+                                }
+                                SequentialAnimation {
+                                    NumberAnimation {
+                                        target: focusRing
+                                        property: "opacity"
+                                        from: 1.0
+                                        to: 0.55
+                                        duration: 300
+                                        easing.type: Easing.OutCubic
+                                    }
+                                }
                             }
 
                             // только сама фаза; состояние — яркостью (активный — чистый белый)
