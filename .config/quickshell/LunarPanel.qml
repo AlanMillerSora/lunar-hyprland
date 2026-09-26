@@ -71,60 +71,59 @@ PanelWindow {
             Hyprland.dispatch("workspace " + id)
     }
 
-    // ─────────────── system stats ───────────────
+    // ─────────────── system stats (нативно, без процессов) ───────────────
     property int cpuPct: -1
     property int ramPct: -1
-    property int tempC: -1
+    property int tempC: -1          // приходит из eclipse-status.sh (ctmp)
     property real _prevIdle: -1
     property real _prevTotal: -1
 
-    function applySys(t) {
-        var lines = t.trim().split("\n")
-        var i
-        if (lines.length > 0 && lines[0].indexOf("cpu") === 0) {
-            var parts = lines[0].trim().split(/\s+/).slice(1).map(Number)
-            var idle = (parts[3] || 0) + (parts[4] || 0)
-            var total = 0
-            for (i = 0; i < parts.length; i++)
-                total += parts[i]
-            if (root._prevTotal >= 0 && total > root._prevTotal)
-                root.cpuPct = Math.max(0, Math.min(100,
-                    Math.round(100 * (1 - (idle - root._prevIdle) / (total - root._prevTotal)))))
-            root._prevIdle = idle
-            root._prevTotal = total
-        }
-        var memTotal = 0, memAvail = 0, temp = -1
-        for (i = 0; i < lines.length; i++) {
-            var l = lines[i]
-            if (l.indexOf("MemTotal:") === 0)
-                memTotal = parseInt(l.split(/\s+/)[1])
-            else if (l.indexOf("MemAvailable:") === 0)
-                memAvail = parseInt(l.split(/\s+/)[1])
-            else if (/^\d+$/.test(l.trim()))
-                temp = Math.round(parseInt(l.trim()) / 1000)
+    function applyCpu(t) {
+        var line = t.split("\n")[0]
+        if (line.indexOf("cpu") !== 0)
+            return
+        var parts = line.trim().split(/\s+/).slice(1).map(Number)
+        var idle = (parts[3] || 0) + (parts[4] || 0)
+        var total = 0
+        for (var i = 0; i < parts.length; i++)
+            total += parts[i]
+        if (root._prevTotal >= 0 && total > root._prevTotal)
+            root.cpuPct = Math.max(0, Math.min(100,
+                Math.round(100 * (1 - (idle - root._prevIdle) / (total - root._prevTotal)))))
+        root._prevIdle = idle
+        root._prevTotal = total
+    }
+
+    function applyMem(t) {
+        var lines = t.split("\n"), memTotal = 0, memAvail = 0
+        for (var i = 0; i < lines.length; i++) {
+            if (lines[i].indexOf("MemTotal:") === 0)
+                memTotal = parseInt(lines[i].split(/\s+/)[1])
+            else if (lines[i].indexOf("MemAvailable:") === 0)
+                memAvail = parseInt(lines[i].split(/\s+/)[1])
         }
         if (memTotal > 0)
             root.ramPct = Math.round(100 * (memTotal - memAvail) / memTotal)
-        if (temp > 0)
-            root.tempC = temp
     }
 
-    Process {
-        id: sysProc
-        running: false
-        command: ["bash", "-c",
-            "head -1 /proc/stat; " +
-            "grep -E '^MemTotal:|^MemAvailable:' /proc/meminfo; " +
-            "for h in /sys/class/hwmon/hwmon*; do " +
-            "n=$(cat \"$h/name\" 2>/dev/null); " +
-            "[ \"$n\" = k10temp ] && cat \"$h/temp1_input\"; done"]
-        stdout: StdioCollector { onStreamFinished: root.applySys(text) }
+    // /proc читаем внутри процесса Quickshell (FileView), без запуска bash/cat
+    FileView {
+        id: statFile
+        path: "/proc/stat"
+        onLoaded: root.applyCpu(statFile.text())
+        onFileChanged: root.applyCpu(statFile.text())
+    }
+    FileView {
+        id: memFile
+        path: "/proc/meminfo"
+        onLoaded: root.applyMem(memFile.text())
+        onFileChanged: root.applyMem(memFile.text())
     }
     Timer {
         interval: 1000
         running: true
         repeat: true
-        onTriggered: sysProc.running = true
+        onTriggered: { statFile.reload(); memFile.reload() }
     }
 
     // ─────────────── clock ───────────────
@@ -356,6 +355,8 @@ PanelWindow {
                         root.gpuLoad = v
                     } else if (k === "gput") {
                         root.gpuTemp = v
+                    } else if (k === "ctmp") {
+                        root.tempC = v ? parseInt(v) : -1
                     } else if (k === "gm") {
                         root.gameMode = (v === "1")
                     } else if (k === "pp") {
@@ -377,54 +378,53 @@ PanelWindow {
 
     // ── скорость сети (байт/с) из /proc/net/dev ───────────────
     // /proc/net/dev отдаёт счётчики байт с момента загрузки. Читаем
-    // снимок мгновенно (cat), храним предыдущий снимок и время, дельту
-    // и скорость считаем в QML. Так всплески между замерами не теряются
-    // (окно — ровно интервал таймера), и нет спящего процесса.
+    // снимок через FileView (без процессов), храним предыдущий снимок и
+    // время, дельту и скорость считаем в QML.
     property double netRxPrev: -1
     property double netTxPrev: -1
     property double netTimePrev: 0
 
-    Process {
-        id: netProc
-        running: false
-        command: ["cat", "/proc/net/dev"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                var lines = text.split("\n")
-                if (lines.length < 3)
-                    return
-                var rx = 0, tx = 0
-                for (var i = 2; i < lines.length; i++) {
-                    var line = lines[i]
-                    var c = line.indexOf(":")
-                    if (c < 0)
-                        continue
-                    if (line.substring(0, c).trim() === "lo")
-                        continue
-                    var p = line.substring(c + 1).trim().split(/\s+/)
-                    if (p.length < 9)
-                        continue
-                    rx += parseInt(p[0]) || 0
-                    tx += parseInt(p[8]) || 0
-                }
-                var now = Date.now()
-                if (root.netRxPrev >= 0 && now > root.netTimePrev) {
-                    var dt = (now - root.netTimePrev) / 1000
-                    root.netDown = Math.max(0, (rx - root.netRxPrev) / dt)
-                    root.netUp = Math.max(0, (tx - root.netTxPrev) / dt)
-                }
-                root.netRxPrev = rx
-                root.netTxPrev = tx
-                root.netTimePrev = now
-            }
+    function applyNet(t) {
+        var lines = t.split("\n")
+        if (lines.length < 3)
+            return
+        var rx = 0, tx = 0
+        for (var i = 2; i < lines.length; i++) {
+            var line = lines[i]
+            var c = line.indexOf(":")
+            if (c < 0)
+                continue
+            if (line.substring(0, c).trim() === "lo")
+                continue
+            var p = line.substring(c + 1).trim().split(/\s+/)
+            if (p.length < 9)
+                continue
+            rx += parseInt(p[0]) || 0
+            tx += parseInt(p[8]) || 0
         }
+        var now = Date.now()
+        if (root.netRxPrev >= 0 && now > root.netTimePrev) {
+            var dt = (now - root.netTimePrev) / 1000
+            root.netDown = Math.max(0, (rx - root.netRxPrev) / dt)
+            root.netUp = Math.max(0, (tx - root.netTxPrev) / dt)
+        }
+        root.netRxPrev = rx
+        root.netTxPrev = tx
+        root.netTimePrev = now
+    }
+
+    FileView {
+        id: netFile
+        path: "/proc/net/dev"
+        onLoaded: root.applyNet(netFile.text())
+        onFileChanged: root.applyNet(netFile.text())
     }
 
     Timer {
         interval: 1000
         running: true
         repeat: true
-        onTriggered: if (!netProc.running) netProc.running = true
+        onTriggered: netFile.reload()
     }
 
     // человекочитаемая скорость: КБ/с и МБ/с одной буквой, без дубля единицы
