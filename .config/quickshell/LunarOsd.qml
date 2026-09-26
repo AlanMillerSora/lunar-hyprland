@@ -5,12 +5,9 @@ import QtQuick
 import QtQuick.Layouts
 
 // ════════════════════════════════════════════════════════════════
-//  LunarOsd — единый индикатор: громкость и яркость в одном месте.
-//  Вид: иконка + число + деления (сегментная шкала).
-//
-//  Громкость показывается сама при изменении (опрос wpctl).
-//  Яркость — по IPC:  qs ipc call brightness open|toggle
-//  Значение яркости берём из eclipse-brightness.sh (brightnessctl/ddcutil).
+//  LunarOsd — индикатор громкости: иконка + число + деления
+//  (сегментная шкала). Показывается сам при изменении звука
+//  (опрос wpctl). Пока открыт попап громкости — OSD прячем, без дубля.
 // ════════════════════════════════════════════════════════════════
 PanelWindow {
     id: root
@@ -26,30 +23,19 @@ PanelWindow {
         item: root.showing ? flyout : null
     }
 
-    property string kind: "volume"      // "volume" | "brightness"
     property int volume: -1
     property bool muted: false
-    property int level: -1
     property bool showing: false
 
     readonly property int segments: 20
+    readonly property real frac: (muted || volume <= 0) ? 0 : Math.min(volume / 100, 1)
+    readonly property string label: muted ? "mute" : volume + "%"
+    // FontAwesome: mute / volume-low / volume-high
+    readonly property string icon: muted ? "\uf026" : (volume < 50 ? "\uf027" : "\uf028")
 
-    readonly property real frac: {
-        if (kind === "brightness")
-            return level >= 0 ? Math.min(Math.max(level / 100, 0), 1) : 0
-        return (muted || volume <= 0) ? 0 : Math.min(volume / 100, 1)
-    }
-    readonly property string label: kind === "brightness"
-        ? level + "%"
-        : (muted ? "mute" : volume + "%")
-    // глифы FontAwesome: mute/volume-low/volume-high и солнце
-    readonly property string icon: kind === "brightness"
-        ? "\uf185"
-        : (muted ? "\uf026" : (volume < 50 ? "\uf027" : "\uf028"))
-
-    function showOsd(k) {
-        kind = k
-        if (k === "volume" && Theme.volumePopupOpen) {
+    function showOsd() {
+        // попап громкости открыт — OSD не нужен (иначе дубль по центру)
+        if (Theme.volumePopupOpen) {
             showing = false
             return
         }
@@ -57,11 +43,10 @@ PanelWindow {
         hideTimer.restart()
     }
 
-    // попап громкости открыт — OSD прячем, чтобы не было дубля по центру
     Connections {
         target: Theme
         function onVolumePopupOpenChanged() {
-            if (Theme.volumePopupOpen && root.kind === "volume")
+            if (Theme.volumePopupOpen)
                 root.showing = false
         }
     }
@@ -72,7 +57,6 @@ PanelWindow {
         onTriggered: root.showing = false
     }
 
-    // ── громкость: следим за значением ──
     Process {
         id: volProc
         command: ["bash", "-c", "wpctl get-volume @DEFAULT_AUDIO_SINK@"]
@@ -86,7 +70,7 @@ PanelWindow {
                 if (newVol !== root.volume || newMuted !== root.muted) {
                     root.volume = newVol
                     root.muted = newMuted
-                    root.showOsd("volume")
+                    root.showOsd()
                 }
             }
         }
@@ -96,30 +80,6 @@ PanelWindow {
         running: true
         repeat: true
         onTriggered: volProc.running = true
-    }
-
-    // ── яркость: по IPC ──
-    Process {
-        id: brightProc
-        command: ["bash", "-c", "$HOME/.config/hypr/scripts/eclipse-brightness.sh get | head -1"]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                var v = parseInt(text.trim())
-                if (!isNaN(v)) {
-                    root.level = v
-                    root.showOsd("brightness")
-                } else {
-                    root.showing = false
-                }
-            }
-        }
-    }
-
-    IpcHandler {
-        target: "brightness"
-        function open(): void { brightProc.running = true }
-        function toggle(): void { brightProc.running = true }
     }
 
     Rectangle {
@@ -149,7 +109,7 @@ PanelWindow {
             // иконка
             Text {
                 text: root.icon
-                color: (root.kind === "volume" && root.muted) ? Theme.textDim : Theme.accent
+                color: root.muted ? Theme.textDim : Theme.accent
                 font.family: Theme.iconFont
                 font.pixelSize: 17
             }
@@ -177,12 +137,11 @@ PanelWindow {
                     delegate: Rectangle {
                         required property int index
                         readonly property bool on: index < Math.round(root.frac * root.segments)
-                        readonly property bool dim: root.kind === "volume" && root.muted
 
                         width: Math.max(2, (segRow.width - (root.segments - 1) * 3) / root.segments)
                         height: 12
                         radius: 1
-                        color: dim ? Theme.alpha(Theme.textDim, 0.45)
+                        color: root.muted ? Theme.alpha(Theme.textDim, 0.45)
                              : on ? Theme.accent
                              : Theme.alpha(Theme.text, 0.10)
                         Behavior on color { ColorAnimation { duration: 100 } }

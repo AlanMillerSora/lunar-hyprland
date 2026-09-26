@@ -64,7 +64,7 @@ if sudo pacman -S --needed --noconfirm \
   mako firefox discord steam \
   yazi bat ffmpeg 7zip jq fd ripgrep zoxide fzf \
   poppler imagemagick fontconfig \
-  playerctl brightnessctl ddcutil iw jq cliphist wl-clipboard \
+  playerctl iw jq cliphist wl-clipboard \
   grim slurp wf-recorder \
   pipewire pipewire-pulse wireplumber pavucontrol cava \
   power-profiles-daemon polkit polkit-kde-agent \

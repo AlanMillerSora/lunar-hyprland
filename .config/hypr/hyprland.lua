@@ -350,10 +350,6 @@ hl.bind("XF86AudioLowerVolume", dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SI
 hl.bind("XF86AudioMute",        dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"))
 hl.bind("XF86AudioMicMute",     dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"))
 
--- яркость (ноут — backlight, внешние мониторы — ddcutil) + OSD
-hl.bind("XF86MonBrightnessUp",   dsp.exec_cmd("sh -c '~/.config/hypr/scripts/eclipse-brightness.sh up; qs ipc call brightness open'"))
-hl.bind("XF86MonBrightnessDown", dsp.exec_cmd("sh -c '~/.config/hypr/scripts/eclipse-brightness.sh down; qs ipc call brightness open'"))
-
 -- ─────────────────────────────── Автозапуск ─────────────────────────
 hl.on("hyprland.start", function()
   -- Живые обои — в Quickshell (LunarWallpaper.qml, фоновый слой):

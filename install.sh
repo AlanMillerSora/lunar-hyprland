@@ -4,7 +4,7 @@
 #
 #  1) зависимости (get-deps.sh): pacman + AUR (VS Code, Vencord);
 #  2) конфиги .config/* → ~/.config, обои, цвета KDE, Firefox;
-#  3) systemd --user, ddcutil (i2c), Wi-Fi (powersave/ASPM), sudoers, zsh.
+#  3) systemd --user, Wi-Fi (powersave/ASPM), sudoers, zsh.
 #
 #  Запуск:  ./install.sh [--no-deps] [--deps-only]
 #    без флагов   — всё: зависимости + конфиги
@@ -226,27 +226,7 @@ if [ -d "$REPO/systemd" ]; then
   ok "юниты поставлены (quickshell стартует из Hyprland)"
 fi
 
-# ── 11. i2c-dev: внешние мониторы через ddcutil ────────────────
-step "i2c-dev → /etc/modules-load.d (ddcutil, яркость DDC/CI)"
-if command -v ddcutil >/dev/null 2>&1; then
-  if [ ! -f /etc/modules-load.d/i2c-dev.conf ]; then
-    printf 'i2c-dev\n' | sudo tee /etc/modules-load.d/i2c-dev.conf >/dev/null 2>&1 || true
-    ok "модуль i2c-dev в автозагрузке"
-  else
-    ok "i2c-dev уже в автозагрузке"
-  fi
-  sudo modprobe i2c-dev 2>/dev/null || true
-  if ! id -nG "$USER" 2>/dev/null | tr ' ' '\n' | grep -qx i2c; then
-    sudo usermod -aG i2c "$USER" 2>/dev/null || true
-    warn "пользователь добавлен в группу i2c (нужен перелогин)"
-  else
-    ok "группа i2c уже есть"
-  fi
-else
-  say "ddcutil нет — шаг пропущен"
-fi
-
-# ── 12. Wi-Fi: powersave off + ASPM ────────────────────────────
+# ── 11. Wi-Fi: powersave off + ASPM ────────────────────────────
 step "Wi-Fi: powersave off + mt7921e ASPM"
 if [ -f "$REPO/systemd/10-lunar-wifi-powersave-off.sh" ]; then
   sudo install -m 0755 -o root -g root \
@@ -263,7 +243,7 @@ if [ -f "$REPO/systemd/mt7921e-no-aspm.conf" ]; then
     || warn "modprobe-конфиг не установлен (нужен sudo)"
 fi
 
-# ── 13. sudo: белый список агента (OpenCode) ───────────────────
+# ── 12. sudo: белый список агента (OpenCode) ───────────────────
 step "sudo: белый список агента → /etc/sudoers.d/lunar-agent"
 if [ -f "$REPO/systemd/lunar-agent.sudoers" ]; then
   sudo install -m 0440 -o root -g root \
@@ -272,7 +252,7 @@ if [ -f "$REPO/systemd/lunar-agent.sudoers" ]; then
     || warn "sudoers не установлен (нужен sudo)"
 fi
 
-# ── 14. shell по умолчанию ─────────────────────────────────────
+# ── 13. shell по умолчанию ─────────────────────────────────────
 step "shell по умолчанию"
 if command -v zsh >/dev/null 2>&1 && [ "${SHELL:-}" != "$(command -v zsh)" ]; then
   chsh -s "$(command -v zsh)" && ok "zsh" || warn "не удалось сменить shell"

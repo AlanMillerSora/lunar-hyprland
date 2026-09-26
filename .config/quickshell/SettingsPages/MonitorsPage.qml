@@ -7,7 +7,6 @@ Item {
 
     property var monitors: []
     property int rightMargin: 36
-    property real brightnessValue: 0.6
     property real nightlightValue: 0.5
     property bool nightlightEnabled: false
     property string monitorSequence: ""
@@ -37,33 +36,6 @@ Item {
     }
     function monOffsetY(aw, ah) {
         return (ah - monitorBounds.h * monScale(aw, ah)) / 2
-    }
-
-    // Яркость: встроенная панель (brightnessctl) или внешний монитор (ddcutil).
-    // Выбор устройства и DDC/CI — внутри eclipse-brightness.sh.
-    Process {
-        id: brightnessGet
-        command: ["sh", "-c", "$HOME/.config/hypr/scripts/eclipse-brightness.sh get"]
-
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const pct = parseInt(text.trim())
-                if (!isNaN(pct))
-                    page.brightnessValue = pct / 100
-            }
-        }
-    }
-
-    Process { id: brightnessSet }
-
-    function commitBrightness(value) {
-        brightnessSet.command = [
-            "sh",
-            "-c",
-            "$HOME/.config/hypr/scripts/eclipse-brightness.sh set " +
-            Math.round(value * 100)
-        ]
-        brightnessSet.running = true
     }
 
     Process { id: nightlightProcess }
@@ -588,22 +560,6 @@ Item {
         Item {
             width: parent.width
             height: 58
-
-            Slider {
-                anchors.fill: parent
-                label: "BRIGHTNESS"
-                icon: "\uf185"
-                value: page.brightnessValue
-                accentColor: Theme.accent2
-
-                onCommitted: value =>
-                    page.commitBrightness(value)
-            }
-        }
-
-        Item {
-            width: parent.width
-            height: 58
             property int controlMargin: 25
 
             Row {
@@ -920,7 +876,6 @@ Item {
     }
 
     Component.onCompleted: {
-        brightnessGet.running = true
         tearingProc.running = true
     }
 }
