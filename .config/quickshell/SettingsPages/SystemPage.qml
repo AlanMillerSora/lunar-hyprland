@@ -560,7 +560,7 @@ Item {
                     Image {
                         anchors.centerIn: parent
                         source: page.homeDir
-                            ? "file://" + page.homeDir + "/.config/quickshell/pfp3.png"
+                            ? "file://" + page.homeDir + "/.config/avatars/avatar.png"
                             : ""
 
                         width: 140
