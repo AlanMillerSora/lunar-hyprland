@@ -7,6 +7,10 @@
 #    · AMD/Intel — через VAAPI (родной драйвер);
 #    · если GPU-кодек не завёлся — падаем на libx264 (софт).
 #
+#  Качество/битрейт/герцовку задают переключатели в Hub → Monitors
+#  (файл ~/.config/lunar/record.json). Изменения применяются со
+#  следующей записи. Дефолты: QP 24, 12 Мбит/с, герцовка по экрану.
+#
 #  Запуск:  eclipse-record.sh start|stop|toggle|status|probe
 #  Файлы:   ~/Videos/lunar-ГГГГММДД-ЧЧММСС.mp4
 # ════════════════════════════════════════════════════════════════
@@ -16,8 +20,23 @@ DIR="$HOME/Videos"
 mkdir -p "$DIR"
 PIDFILE="${XDG_RUNTIME_DIR:-/tmp}/lunar-record.pid"
 CODECFILE="${XDG_RUNTIME_DIR:-/tmp}/lunar-record.codec"
+CONF="$HOME/.config/lunar/record.json"
 
 running() { pgrep -x wf-recorder >/dev/null 2>&1; }
+
+# настройки из Hub (--bitrate в JSON — Мбит/с, qp — постоянное качество)
+rec_qp=24
+rec_bitrate=12
+rec_fps=auto
+
+load_conf() {
+  [ -r "$CONF" ] || return 0
+  command -v jq >/dev/null 2>&1 || return 0
+  local v
+  v="$(jq -r '.qp // 24' "$CONF" 2>/dev/null)";        [ -n "$v" ] && [ "$v" != null ] && rec_qp="$v"
+  v="$(jq -r '.bitrate // 12' "$CONF" 2>/dev/null)";   [ -n "$v" ] && [ "$v" != null ] && rec_bitrate="$v"
+  v="$(jq -r '.fps // "auto"' "$CONF" 2>/dev/null)";   [ -n "$v" ] && [ "$v" != null ] && rec_fps="$v"
+}
 
 # ближайший render-узел (на ПК с NVIDIA — обычно renderD128)
 render_node() {
@@ -45,36 +64,45 @@ vaapi_works() {
   return 1
 }
 
-# Подбираем параметры кодека: печатает "-c <codec> -d <dev>" либо "" (софт).
-pick_codec() {
-  local dev
-  dev="$(render_node)" || { echo ""; return; }
-  if vaapi_works "$dev"; then
-    echo "-c h264_vaapi -d $dev"
-  else
-    echo ""
-  fi
+# Параметры VAAPI-энкодера: постоянное качество (QP) + потолок битрейта.
+vaapi_params() {  # vaapi_params <render-node>
+  local p="-c h264_vaapi -d $1 -p rc_mode=CQP -p qp=$rec_qp"
+  p="$p -p maxrate=${rec_bitrate}M -p buffersize=$((rec_bitrate * 2))M"
+  [ "$rec_fps" != auto ] && p="$p -r $rec_fps"
+  echo "$p"
+}
+
+# Параметры софт-энкодера (fallback). CRF ≈ QP − 6.
+soft_params() {
+  local crf=$((rec_qp - 6)); [ "$crf" -lt 0 ] && crf=0
+  local p="-c libx264 -p preset=veryfast -p crf=$crf"
+  [ "$rec_fps" != auto ] && p="$p -r $rec_fps"
+  echo "$p"
 }
 
 # Человекочитаемое имя выбранного пути (для notify/статуса).
-codec_label() {
-  local params="$1"
-  if [[ "$params" == *h264_vaapi* ]]; then
-    if lspci 2>/dev/null | grep -qi nvidia; then
-      echo "NVENC (VAAPI)"
-    else
-      echo "GPU (VAAPI)"
-    fi
+vaapi_label() {
+  if lspci 2>/dev/null | grep -qi nvidia; then
+    echo "NVENC (VAAPI)"
   else
-    echo "софт (libx264)"
+    echo "GPU (VAAPI)"
   fi
 }
 
 start() {
   if running; then echo "уже пишу"; return 0; fi
-  local params; params="$(pick_codec)"
-  local label; label="$(codec_label "$params")"
+  load_conf
+  local dev params label
+  dev="$(render_node)" || dev=""
   local out="$DIR/lunar-$(date +%Y%m%d-%H%M%S).mp4"
+
+  if [ -n "$dev" ] && vaapi_works "$dev"; then
+    params="$(vaapi_params "$dev")"
+    label="$(vaapi_label)"
+  else
+    params="$(soft_params)"
+    label="софт (libx264)"
+  fi
 
   # shellcheck disable=SC2086
   setsid wf-recorder -f "$out" $params >/dev/null 2>&1 </dev/null &
@@ -82,7 +110,9 @@ start() {
   if ! running; then
     # кодек не завёлся — падаем на софт
     label="софт (libx264)"
-    setsid wf-recorder -f "$out" >/dev/null 2>&1 </dev/null &
+    params="$(soft_params)"
+    # shellcheck disable=SC2086
+    setsid wf-recorder -f "$out" $params >/dev/null 2>&1 </dev/null &
     sleep 0.6
   fi
   pgrep -x wf-recorder | head -1 >"$PIDFILE"
@@ -99,11 +129,27 @@ stop() {
   echo "stopped"
 }
 
+probe() {
+  load_conf
+  local dev params label
+  dev="$(render_node)" || dev=""
+  if [ -n "$dev" ] && vaapi_works "$dev"; then
+    params="$(vaapi_params "$dev")"
+    label="$(vaapi_label)"
+  else
+    params="$(soft_params)"
+    label="софт (libx264)"
+  fi
+  echo "кодек: $label"
+  echo "настройки: QP $rec_qp · ${rec_bitrate} Мбит/с · герцовка $rec_fps"
+  echo "параметры: $params"
+}
+
 case "${1:-toggle}" in
   start)  start ;;
   stop)   stop ;;
   toggle) if running; then stop; else start; fi ;;
   status) running && echo 1 || echo 0 ;;
-  probe)  params="$(pick_codec)"; echo "кодек: $(codec_label "$params")  ${params:-—}" ;;
+  probe)  probe ;;
   *) echo "usage: $0 start|stop|toggle|status|probe" >&2; exit 1 ;;
 esac

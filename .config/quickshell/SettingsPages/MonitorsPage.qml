@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import Quickshell.Io
 import "../"
 
@@ -11,6 +12,44 @@ Item {
     property bool nightlightEnabled: false
     property string monitorSequence: ""
     property int monitorStep: 0
+
+    // ── запись экрана (качество/битрейт/герцовка) ──
+    // Значения хранятся в ~/.config/lunar/record.json и читаются
+    // скриптом eclipse-record.sh (Hub → Monitors).
+    property bool recReady: false
+    property int recQp: 24
+    property int recBitrate: 12
+    property string recFps: "auto"
+
+    property FileView recFile: FileView {
+        path: Quickshell.env("HOME") + "/.config/lunar/record.json"
+        watchChanges: true
+        atomicWrites: true
+        onFileChanged: reload()
+        onAdapterUpdated: { if (page.recReady) writeAdapter() }
+        onLoaded: {
+            page.recQp = recAdapter.qp
+            page.recBitrate = recAdapter.bitrate
+            page.recFps = recAdapter.fps
+            page.recReady = true
+        }
+        onLoadFailed: (error) => {
+            if (error === FileViewError.FileNotFound)
+                writeAdapter()
+            page.recReady = true
+        }
+
+        JsonAdapter {
+            id: recAdapter
+            property int qp: 24
+            property int bitrate: 12
+            property string fps: "auto"
+        }
+    }
+
+    onRecQpChanged: if (recReady) recAdapter.qp = recQp
+    onRecBitrateChanged: if (recReady) recAdapter.bitrate = recBitrate
+    onRecFpsChanged: if (recReady) recAdapter.fps = recFps
 
     // ── превью раскладки: общий bounding box мониторов (логические px) ──
     readonly property var monitorBounds: {
@@ -396,7 +435,8 @@ Item {
         }
     }
 
-    Column {
+    Flickable {
+        id: pageScroll
         anchors {
             left: parent.left
             right: parent.right
@@ -404,472 +444,661 @@ Item {
             top: parent.top
             bottom: parent.bottom
         }
-        spacing: 13
-
-        Row {
-            width: parent.width
-
-            Text {
-                text: "MONITORS"
-                color: Theme.text
-                font.family: Theme.fontFamily
-                font.pixelSize: 18
-                font.letterSpacing: 3
-            }
-
-            Item {
-                width: parent.width - 150
-                height: 1
-            }
-
-            Text {
-                text: "󰑐"
-                color: Theme.accent
-                font.family: Theme.fontFamily
-                font.pixelSize: 22
-
-                MouseArea {
-                    cursorShape: Qt.PointingHandCursor
-                    anchors.fill: parent
-                    onClicked: page.refresh()
-                }
-            }
-        }
-
-        Rectangle {
-            width: parent.width
-            height: 1
-            color: Theme.border
-        }
-
-        // ── превью раскладки мониторов (пропорционально) ──
-        Item {
-            id: monPreview
-            width: parent.width
-            height: 170
-            visible: page.monitors.length > 0
-            clip: true
-
-            Repeater {
-                model: page.monitors
-
-                delegate: Rectangle {
-                    required property var modelData
-                    readonly property real s: page.monScale(monPreview.width, monPreview.height)
-                    x: page.monOffsetX(monPreview.width, monPreview.height)
-                       + (modelData.x - page.monitorBounds.x) * s
-                    y: page.monOffsetY(monPreview.width, monPreview.height)
-                       + (modelData.y - page.monitorBounds.y) * s
-                    width: Math.max(2, modelData.width * s)
-                    height: Math.max(2, modelData.height * s)
-                    radius: 4
-                    color: Theme.hover
-                    border.width: 1
-                    border.color: Theme.borderAccent
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: modelData.name + "\n" + modelData.width + "×" + modelData.height
-                        color: Theme.textDim
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 11
-                        horizontalAlignment: Text.AlignHCenter
-                    }
-                }
-            }
-        }
-
-        Rectangle {
-            width: parent.width
-            height: 1
-            color: Theme.border
-        }
+        clip: true
+        contentWidth: width
+        contentHeight: pageCol.implicitHeight
+        boundsBehavior: Flickable.StopAtBounds
+        flickableDirection: Flickable.VerticalFlick
 
         Column {
+            id: pageCol
             width: parent.width
-            spacing: 10
-
-            Text {
-                text: "MONITOR MODE"
-                color: Theme.text
-                font.family: Theme.fontFamily
-                font.pixelSize: 12
-                font.bold: true
-                font.letterSpacing: 2
-            }
+            spacing: 13
 
             Row {
                 width: parent.width
-                spacing: 10
 
-                Repeater {
-                    model: [
-                        { name: "FIRST", mode: "first" },
-                        { name: "SECOND", mode: "second" },
-                        { name: "EXTEND", mode: "extend" },
-                        { name: "DUPLICATE", mode: "duplicate" }
-                    ]
-
-                    delegate: Rectangle {
-                        required property var modelData
-
-                        width: (parent.width - parent.spacing * 3) / 4
-                        height: 42
-                        radius: Theme.radius
-                        color: "#00000000"
-                        border.width: 1
-                        border.color: Theme.border
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: modelData.name
-                            color: Theme.text
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 10
-                            font.bold: true
-                            font.letterSpacing: 1
-                        }
-
-                        MouseArea {
-                            cursorShape: Qt.PointingHandCursor
-                            anchors.fill: parent
-                            hoverEnabled: true
-
-                            onEntered: {
-                                parent.color = Theme.alpha(
-                                    Theme.accent,
-                                    0.08
-                                )
-                                parent.border.color = Theme.accent
-                            }
-
-                            onExited: {
-                                parent.color = "#00000000"
-                                parent.border.color = Theme.border
-                            }
-
-                            onClicked: page.applyMonitorMode(
-                                modelData.mode
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        Item {
-            width: parent.width
-            height: 58
-            property int controlMargin: 25
-
-            Row {
-                anchors.fill: parent
-                spacing: parent.controlMargin
-
-                Slider {
-                    width: parent.width - 70 - parent.spacing
-                    height: parent.height
-                    label: "NIGHT LIGHT"
-                    icon: "\uf186"
-                    value: page.nightlightValue
-                    accentColor: "#ffffff"
-
-                    onMoved: value =>
-                        page.commitNightlight(value)
+                Text {
+                    text: "MONITORS"
+                    color: Theme.text
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 18
+                    font.letterSpacing: 3
                 }
 
-                Rectangle {
-                    width: 74
-                    height: 38
-                    radius: Theme.radius
-                    anchors.verticalCenter: parent.verticalCenter
+                Item {
+                    width: parent.width - 150
+                    height: 1
+                }
 
-                    color: page.nightlightEnabled
-                        ? Theme.active
-                        : Theme.alpha("#A0A0A0", 0.15)
-
-                    border.width: 1
-                    border.color: page.nightlightEnabled
-                        ? Theme.accent
-                        : "#A0A0A0"
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: page.nightlightEnabled ? "ON" : "OFF"
-                        color: page.nightlightEnabled
-                            ? Theme.accent
-                            : "#A0A0A0"
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 11
-                        font.bold: true
-                    }
+                Text {
+                    text: "󰑐"
+                    color: Theme.accent
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 22
 
                     MouseArea {
                         cursorShape: Qt.PointingHandCursor
                         anchors.fill: parent
-
-                        onClicked: page.nightlightEnabled
-                            ? page.nightlightOff()
-                            : page.nightlightOn()
+                        onClicked: page.refresh()
                     }
                 }
             }
-        }
 
-        Column {
-            width: parent.width
-            spacing: 16
+            Rectangle {
+                width: parent.width
+                height: 1
+                color: Theme.border
+            }
 
-            Repeater {
-                model: page.monitors
+            // ── превью раскладки мониторов (пропорционально) ──
+            Item {
+                id: monPreview
+                width: parent.width
+                height: 170
+                visible: page.monitors.length > 0
+                clip: true
 
-                delegate: Rectangle {
-                    id: monCard
-                    required property var modelData
+                Repeater {
+                    model: page.monitors
 
+                    delegate: Rectangle {
+                        required property var modelData
+                        readonly property real s: page.monScale(monPreview.width, monPreview.height)
+                        x: page.monOffsetX(monPreview.width, monPreview.height)
+                           + (modelData.x - page.monitorBounds.x) * s
+                        y: page.monOffsetY(monPreview.width, monPreview.height)
+                           + (modelData.y - page.monitorBounds.y) * s
+                        width: Math.max(2, modelData.width * s)
+                        height: Math.max(2, modelData.height * s)
+                        radius: 4
+                        color: Theme.hover
+                        border.width: 1
+                        border.color: Theme.borderAccent
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: modelData.name + "\n" + modelData.width + "×" + modelData.height
+                            color: Theme.textDim
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 11
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                width: parent.width
+                height: 1
+                color: Theme.border
+            }
+
+            Column {
+                width: parent.width
+                spacing: 10
+
+                Text {
+                    text: "MONITOR MODE"
+                    color: Theme.text
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 12
+                    font.bold: true
+                    font.letterSpacing: 2
+                }
+
+                Row {
                     width: parent.width
-                    height: 176
-                    radius: Theme.radius
-                    color: "#00000000"
-                    border.width: 1
-                    border.color: modelData.focused
-                        ? "#454545"
-                        : Theme.border
+                    spacing: 10
 
-                    Column {
-                        anchors.fill: parent
-                        anchors.margins: 14
-                        spacing: 10
+                    Repeater {
+                        model: [
+                            { name: "FIRST", mode: "first" },
+                            { name: "SECOND", mode: "second" },
+                            { name: "EXTEND", mode: "extend" },
+                            { name: "DUPLICATE", mode: "duplicate" }
+                        ]
 
-                        Row {
-                            spacing: 10
+                        delegate: Rectangle {
+                            required property var modelData
+
+                            width: (parent.width - parent.spacing * 3) / 4
+                            height: 42
+                            radius: Theme.radius
+                            color: "#00000000"
+                            border.width: 1
+                            border.color: Theme.border
 
                             Text {
+                                anchors.centerIn: parent
                                 text: modelData.name
                                 color: Theme.text
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 14
-                                font.bold: true
-                            }
-
-                            Text {
-                                text: modelData.width +
-                                      "x" +
-                                      modelData.height +
-                                      " @ " +
-                                      Math.round(
-                                          modelData.refreshRate
-                                      ) +
-                                      "Hz"
-
-                                color: Theme.textDim
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 12
-                            }
-
-                            Text {
-                                visible: modelData.focused
-                                text: "ACTIVE"
-                                color: Theme.accent2
-                                font.family: Theme.fontFamily
                                 font.pixelSize: 10
+                                font.bold: true
+                                font.letterSpacing: 1
+                            }
+
+                            MouseArea {
+                                cursorShape: Qt.PointingHandCursor
+                                anchors.fill: parent
+                                hoverEnabled: true
+
+                                onEntered: {
+                                    parent.color = Theme.alpha(
+                                        Theme.accent,
+                                        0.08
+                                    )
+                                    parent.border.color = Theme.accent
+                                }
+
+                                onExited: {
+                                    parent.color = "#00000000"
+                                    parent.border.color = Theme.border
+                                }
+
+                                onClicked: page.applyMonitorMode(
+                                    modelData.mode
+                                )
                             }
                         }
+                    }
+                }
+            }
 
-                        // частота обновления (FPS монитора)
-                        Row {
-                            spacing: 6
+            Item {
+                width: parent.width
+                height: 58
+                property int controlMargin: 25
 
-                            Text {
-                                text: "ЧАСТОТА"
-                                color: Theme.textDim
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 10
-                                anchors.verticalCenter: parent.verticalCenter
+                Row {
+                    anchors.fill: parent
+                    spacing: parent.controlMargin
+
+                    Slider {
+                        width: parent.width - 70 - parent.spacing
+                        height: parent.height
+                        label: "NIGHT LIGHT"
+                        icon: "\uf186"
+                        value: page.nightlightValue
+                        accentColor: "#ffffff"
+
+                        onMoved: value =>
+                            page.commitNightlight(value)
+                    }
+
+                    Rectangle {
+                        width: 74
+                        height: 38
+                        radius: Theme.radius
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        color: page.nightlightEnabled
+                            ? Theme.active
+                            : Theme.alpha("#A0A0A0", 0.15)
+
+                        border.width: 1
+                        border.color: page.nightlightEnabled
+                            ? Theme.accent
+                            : "#A0A0A0"
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: page.nightlightEnabled ? "ON" : "OFF"
+                            color: page.nightlightEnabled
+                                ? Theme.accent
+                                : "#A0A0A0"
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 11
+                            font.bold: true
+                        }
+
+                        MouseArea {
+                            cursorShape: Qt.PointingHandCursor
+                            anchors.fill: parent
+
+                            onClicked: page.nightlightEnabled
+                                ? page.nightlightOff()
+                                : page.nightlightOn()
+                        }
+                    }
+                }
+            }
+
+            Column {
+                width: parent.width
+                spacing: 16
+
+                Repeater {
+                    model: page.monitors
+
+                    delegate: Rectangle {
+                        id: monCard
+                        required property var modelData
+
+                        width: parent.width
+                        height: 176
+                        radius: Theme.radius
+                        color: "#00000000"
+                        border.width: 1
+                        border.color: modelData.focused
+                            ? "#454545"
+                            : Theme.border
+
+                        Column {
+                            anchors.fill: parent
+                            anchors.margins: 14
+                            spacing: 10
+
+                            Row {
+                                spacing: 10
+
+                                Text {
+                                    text: modelData.name
+                                    color: Theme.text
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 14
+                                    font.bold: true
+                                }
+
+                                Text {
+                                    text: modelData.width +
+                                          "x" +
+                                          modelData.height +
+                                          " @ " +
+                                          Math.round(
+                                              modelData.refreshRate
+                                          ) +
+                                          "Hz"
+
+                                    color: Theme.textDim
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 12
+                                }
+
+                                Text {
+                                    visible: modelData.focused
+                                    text: "ACTIVE"
+                                    color: Theme.accent2
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 10
+                                }
                             }
 
-                            Repeater {
-                                model: page.ratesFor(monCard.modelData)
+                            // частота обновления (FPS монитора)
+                            Row {
+                                spacing: 6
 
-                                delegate: Rectangle {
-                                    required property var modelData
-                                    readonly property bool active:
-                                        Math.abs(parseFloat(modelData) - monCard.modelData.refreshRate) < 0.6
-                                    width: 62
-                                    height: 26
+                                Text {
+                                    text: "ЧАСТОТА"
+                                    color: Theme.textDim
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 10
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+
+                                Repeater {
+                                    model: page.ratesFor(monCard.modelData)
+
+                                    delegate: Rectangle {
+                                        required property var modelData
+                                        readonly property bool active:
+                                            Math.abs(parseFloat(modelData) - monCard.modelData.refreshRate) < 0.6
+                                        width: 62
+                                        height: 26
+                                        radius: Theme.radius
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        color: active
+                                            ? Theme.active
+                                            : (rateMouse.containsMouse ? Theme.hover : "transparent")
+                                        border.width: 1
+                                        border.color: active ? Theme.accent : Theme.border
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: Math.round(parseFloat(modelData)) + " Hz"
+                                            color: active ? Theme.accent : Theme.textDim
+                                            font.family: Theme.fontFamily
+                                            font.pixelSize: 10
+                                        }
+                                        MouseArea {
+                                            id: rateMouse
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: page.setRate(monCard.modelData, modelData)
+                                        }
+                                    }
+                                }
+                            }
+
+                            // VRR (FreeSync/GSync)
+                            Row {
+                                spacing: 8
+
+                                Text {
+                                    text: "VRR"
+                                    color: Theme.textDim
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 10
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+
+                                Rectangle {
+                                    width: 58
+                                    height: 30
                                     radius: Theme.radius
                                     anchors.verticalCenter: parent.verticalCenter
-                                    color: active
-                                        ? Theme.active
-                                        : (rateMouse.containsMouse ? Theme.hover : "transparent")
+                                    color: monCard.modelData.vrr
+                                        ? Theme.active : "transparent"
                                     border.width: 1
-                                    border.color: active ? Theme.accent : Theme.border
+                                    border.color: monCard.modelData.vrr ? Theme.accent : Theme.border
                                     Text {
                                         anchors.centerIn: parent
-                                        text: Math.round(parseFloat(modelData)) + " Hz"
-                                        color: active ? Theme.accent : Theme.textDim
+                                        text: monCard.modelData.vrr ? "ON" : "OFF"
+                                        color: monCard.modelData.vrr ? Theme.accent : Theme.textDim
                                         font.family: Theme.fontFamily
                                         font.pixelSize: 10
+                                        font.bold: true
                                     }
                                     MouseArea {
-                                        id: rateMouse
                                         anchors.fill: parent
-                                        hoverEnabled: true
                                         cursorShape: Qt.PointingHandCursor
-                                        onClicked: page.setRate(monCard.modelData, modelData)
+                                        onClicked: page.setVrr(monCard.modelData, !monCard.modelData.vrr)
+                                    }
+                                }
+
+                                Text {
+                                    text: "FreeSync / GSync"
+                                    color: Theme.textFaint
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 10
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                            }
+
+                            // масштаб — кнопками (слайдер работал криво)
+                            Row {
+                                spacing: 6
+
+                                Text {
+                                    text: "МАСШТАБ"
+                                    color: Theme.textDim
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 10
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+
+                                Repeater {
+                                    model: [1.0, 1.25, 1.5, 1.75, 2.0]
+
+                                    delegate: Rectangle {
+                                        required property var modelData
+                                        readonly property bool active:
+                                            Math.abs(monCard.modelData.scale - modelData) < 0.01
+                                        width: 62
+                                        height: 30
+                                        radius: Theme.radius
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        color: active
+                                            ? Theme.active
+                                            : (scaleMouse.containsMouse ? Theme.hover : "transparent")
+                                        border.width: 1
+                                        border.color: active ? Theme.accent : Theme.border
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: modelData.toFixed(2)
+                                            color: active ? Theme.accent : Theme.textDim
+                                            font.family: Theme.fontFamily
+                                            font.pixelSize: 10
+                                        }
+                                        MouseArea {
+                                            id: scaleMouse
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: page.setScale(monCard.modelData, modelData)
+                                        }
                                     }
                                 }
                             }
                         }
+                    }
+                }
 
-                        // VRR (FreeSync/GSync)
-                        Row {
-                            spacing: 8
+                // tearing — глобально (меньше задержка, возможны разрывы)
+                Rectangle {
+                    width: parent.width
+                    height: 46
+                    radius: Theme.radius
+                    color: "#00000000"
+                    border.width: 1
+                    border.color: Theme.border
 
+                    Row {
+                        anchors.left: parent.left
+                        anchors.leftMargin: 14
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 10
+
+                        Text {
+                            text: "TEARING"
+                            color: Theme.text
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 12
+                            font.bold: true
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        Rectangle {
+                            width: 58
+                            height: 30
+                            radius: Theme.radius
+                            anchors.verticalCenter: parent.verticalCenter
+                            color: page.tearing ? Theme.active : "transparent"
+                            border.width: 1
+                            border.color: page.tearing ? Theme.accent : Theme.border
                             Text {
-                                text: "VRR"
-                                color: Theme.textDim
+                                anchors.centerIn: parent
+                                text: page.tearing ? "ON" : "OFF"
+                                color: page.tearing ? Theme.accent : Theme.textDim
                                 font.family: Theme.fontFamily
                                 font.pixelSize: 10
-                                anchors.verticalCenter: parent.verticalCenter
+                                font.bold: true
                             }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: page.toggleTearing()
+                            }
+                        }
 
-                            Rectangle {
-                                width: 58
-                                height: 30
+                        Text {
+                            text: "меньше задержка (для игр)"
+                            color: Theme.textFaint
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 10
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+                }
+            }
+
+            // ── запись экрана: качество / битрейт / герцовка ──
+            Rectangle {
+                width: parent.width
+                height: 1
+                color: Theme.border
+            }
+
+            Row {
+                width: parent.width
+
+                Text {
+                    text: "ЗАПИСЬ"
+                    color: Theme.text
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 14
+                    font.bold: true
+                    font.letterSpacing: 2
+                }
+
+                Item {
+                    width: parent.width - 150
+                    height: 1
+                }
+
+                Text {
+                    text: "SUPER + SHIFT + R"
+                    color: Theme.textFaint
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 10
+                }
+            }
+
+            Column {
+                width: parent.width
+                spacing: 10
+
+                Row {
+                    width: parent.width
+                    spacing: 10
+
+                    Text {
+                        width: 110
+                        text: "КАЧЕСТВО"
+                        color: Theme.textDim
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 11
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Row {
+                        spacing: 8
+
+                        Repeater {
+                            model: [
+                                { t: "ЭКОНОМ", q: 34 },
+                                { t: "ОБЫЧНОЕ", q: 28 },
+                                { t: "ВЫСОКОЕ", q: 24 },
+                                { t: "МАКСИМУМ", q: 20 }
+                            ]
+
+                            delegate: Rectangle {
+                                required property var modelData
+                                readonly property bool active: page.recQp === modelData.q
+
+                                width: 106
+                                height: 32
                                 radius: Theme.radius
-                                anchors.verticalCenter: parent.verticalCenter
-                                color: monCard.modelData.vrr
-                                    ? Theme.active : "transparent"
+                                color: active ? Theme.active : "transparent"
                                 border.width: 1
-                                border.color: monCard.modelData.vrr ? Theme.accent : Theme.border
+                                border.color: active ? Theme.accent : Theme.border
+
                                 Text {
                                     anchors.centerIn: parent
-                                    text: monCard.modelData.vrr ? "ON" : "OFF"
-                                    color: monCard.modelData.vrr ? Theme.accent : Theme.textDim
+                                    text: modelData.t
+                                    color: active ? Theme.accent : Theme.textDim
                                     font.family: Theme.fontFamily
                                     font.pixelSize: 10
                                     font.bold: true
                                 }
+
                                 MouseArea {
                                     anchors.fill: parent
                                     cursorShape: Qt.PointingHandCursor
-                                    onClicked: page.setVrr(monCard.modelData, !monCard.modelData.vrr)
-                                }
-                            }
-
-                            Text {
-                                text: "FreeSync / GSync"
-                                color: Theme.textFaint
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 10
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
-                        }
-
-                        // масштаб — кнопками (слайдер работал криво)
-                        Row {
-                            spacing: 6
-
-                            Text {
-                                text: "МАСШТАБ"
-                                color: Theme.textDim
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 10
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
-
-                            Repeater {
-                                model: [1.0, 1.25, 1.5, 1.75, 2.0]
-
-                                delegate: Rectangle {
-                                    required property var modelData
-                                    readonly property bool active:
-                                        Math.abs(monCard.modelData.scale - modelData) < 0.01
-                                    width: 62
-                                    height: 30
-                                    radius: Theme.radius
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    color: active
-                                        ? Theme.active
-                                        : (scaleMouse.containsMouse ? Theme.hover : "transparent")
-                                    border.width: 1
-                                    border.color: active ? Theme.accent : Theme.border
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: modelData.toFixed(2)
-                                        color: active ? Theme.accent : Theme.textDim
-                                        font.family: Theme.fontFamily
-                                        font.pixelSize: 10
-                                    }
-                                    MouseArea {
-                                        id: scaleMouse
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: page.setScale(monCard.modelData, modelData)
-                                    }
+                                    onClicked: page.recQp = modelData.q
                                 }
                             }
                         }
                     }
                 }
-            }
-
-            // tearing — глобально (меньше задержка, возможны разрывы)
-            Rectangle {
-                width: parent.width
-                height: 46
-                radius: Theme.radius
-                color: "#00000000"
-                border.width: 1
-                border.color: Theme.border
 
                 Row {
-                    anchors.left: parent.left
-                    anchors.leftMargin: 14
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 10
+                    width: parent.width
+                    height: 58
+                    spacing: 25
+
+                    Slider {
+                        width: parent.width - 130 - parent.spacing
+                        height: parent.height
+                        label: "BITRATE"
+                        icon: "\uf03d"
+                        value: (page.recBitrate - 2) / 48
+                        accentColor: "#ffffff"
+
+                        onMoved: value =>
+                            page.recBitrate = Math.round(2 + value * 48)
+                    }
 
                     Text {
-                        text: "TEARING"
+                        width: 120
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: page.recBitrate + " Мбит/с"
                         color: Theme.text
                         font.family: Theme.fontFamily
                         font.pixelSize: 12
-                        font.bold: true
-                        anchors.verticalCenter: parent.verticalCenter
                     }
+                }
 
-                    Rectangle {
-                        width: 58
-                        height: 30
-                        radius: Theme.radius
-                        anchors.verticalCenter: parent.verticalCenter
-                        color: page.tearing ? Theme.active : "transparent"
-                        border.width: 1
-                        border.color: page.tearing ? Theme.accent : Theme.border
-                        Text {
-                            anchors.centerIn: parent
-                            text: page.tearing ? "ON" : "OFF"
-                            color: page.tearing ? Theme.accent : Theme.textDim
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 10
-                            font.bold: true
-                        }
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: page.toggleTearing()
-                        }
-                    }
+                Row {
+                    width: parent.width
+                    spacing: 10
 
                     Text {
-                        text: "меньше задержка (для игр)"
-                        color: Theme.textFaint
+                        width: 110
+                        text: "ГЕРЦОВКА"
+                        color: Theme.textDim
                         font.family: Theme.fontFamily
-                        font.pixelSize: 10
+                        font.pixelSize: 11
                         anchors.verticalCenter: parent.verticalCenter
                     }
+
+                    Row {
+                        spacing: 8
+
+                        Repeater {
+                            model: [
+                                { t: "АВТО", v: "auto" },
+                                { t: "30", v: "30" },
+                                { t: "60", v: "60" },
+                                { t: "120", v: "120" }
+                            ]
+
+                            delegate: Rectangle {
+                                required property var modelData
+                                readonly property bool active: page.recFps === modelData.v
+
+                                width: 78
+                                height: 32
+                                radius: Theme.radius
+                                color: active ? Theme.active : "transparent"
+                                border.width: 1
+                                border.color: active ? Theme.accent : Theme.border
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: modelData.t
+                                    color: active ? Theme.accent : Theme.textDim
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 10
+                                    font.bold: true
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: page.recFps = modelData.v
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Text {
+                    text: "качество — QP (постоянное); битрейт — потолок; применяется со следующей записи"
+                    color: Theme.textFaint
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 10
                 }
             }
         }
