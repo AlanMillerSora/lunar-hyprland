@@ -23,6 +23,12 @@ QtObject {
 
     property color trackBg: "#161616"
 
+    // ── токены «ритма» интерфейса (Hub и панели) ──
+    property color hover: Qt.rgba(accent.r, accent.g, accent.b, 0.06)        // наведение: строки, карточки
+    property color hoverStrong: Qt.rgba(accent.r, accent.g, accent.b, 0.08)  // наведение: кнопки, чипы
+    property color active: Qt.rgba(accent.r, accent.g, accent.b, 0.12)       // выбранное/включённое
+    property color fill: Qt.rgba(text.r, text.g, text.b, 0.03)               // покой (фон карточек/строк)
+
     property string fontFamily: "JetBrains Mono"
     property string iconFont: "JetBrainsMono Nerd Font"
 

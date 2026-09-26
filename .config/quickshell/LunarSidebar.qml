@@ -112,7 +112,7 @@ PanelWindow {
                     width: 28
                     height: 22
                     radius: Theme.radius
-                    color: closeMouse.containsMouse ? Theme.alpha(Theme.accent, 0.08) : "transparent"
+                    color: closeMouse.containsMouse ? Theme.hoverStrong : "transparent"
                     border.width: closeMouse.containsMouse ? 1 : 0
                     border.color: Theme.borderAccent
 
@@ -157,8 +157,8 @@ PanelWindow {
                             height: 36
                             radius: Theme.radius
                             color: tabIndex === index
-                                ? Theme.alpha(Theme.accent, 0.12)
-                                : (tabMouse.containsMouse ? Theme.alpha(Theme.accent, 0.06) : "transparent")
+                                ? Theme.active
+                                : (tabMouse.containsMouse ? Theme.hover : "transparent")
                             border.color: tabIndex === index ? Theme.borderAccent : "transparent"
                             border.width: 1
                             Behavior on color { ColorAnimation { duration: Theme.animFast } }
@@ -260,8 +260,8 @@ PanelWindow {
                                         height: msgText.implicitHeight + 16
                                         radius: Theme.radius
                                         color: modelData.role === "user"
-                                            ? Theme.alpha(Theme.accent, 0.10)
-                                            : Theme.alpha(Theme.text, 0.03)
+                                            ? Theme.active
+                                            : Theme.fill
                                         border.width: 1
                                         border.color: Theme.border
 
@@ -325,8 +325,8 @@ PanelWindow {
                                 height: 36
                                 radius: Theme.radius
                                 color: sendMouse.containsMouse
-                                    ? Theme.alpha(Theme.accent, 0.16)
-                                    : Theme.alpha(Theme.accent, 0.08)
+                                    ? Theme.active
+                                    : Theme.hoverStrong
                                 border.color: Theme.borderAccent
                                 border.width: 1
                                 Text {
@@ -375,7 +375,7 @@ PanelWindow {
                                 Layout.preferredWidth: 40
                                 height: 36
                                 radius: Theme.radius
-                                color: tuiMouse.containsMouse ? Theme.alpha(Theme.accent, 0.12) : "transparent"
+                                color: tuiMouse.containsMouse ? Theme.active : "transparent"
                                 border.width: 1
                                 border.color: tuiMouse.containsMouse ? Theme.accent : Theme.border
                                 Text {

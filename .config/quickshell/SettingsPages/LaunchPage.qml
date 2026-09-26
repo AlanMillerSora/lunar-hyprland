@@ -59,8 +59,8 @@ Item {
                 Layout.preferredHeight: 42
                 radius: Theme.radius
                 color: refreshMouse.containsMouse
-                    ? Theme.alpha(Theme.accent, 0.10)
-                    : Theme.alpha(Theme.text, 0.025)
+                    ? Theme.active
+                    : Theme.fill
                 border.width: 1
                 border.color: refreshMouse.containsMouse ? Theme.borderAccent : Theme.border
 
@@ -102,8 +102,8 @@ Item {
                 height: 96
                 radius: Theme.radius
                 color: index === grid.currentIndex
-                    ? Theme.alpha(Theme.accent, 0.12)
-                    : (mouse.containsMouse ? Theme.alpha(Theme.accent, 0.06) : Theme.alpha(Theme.text, 0.025))
+                    ? Theme.active
+                    : (mouse.containsMouse ? Theme.hover : Theme.fill)
                 border.color: index === grid.currentIndex ? Theme.accent : Theme.border
                 border.width: 1
 
@@ -115,7 +115,7 @@ Item {
                         width: 46
                         height: 46
                         radius: Theme.radius
-                        color: Theme.alpha(Theme.accent, 0.08)
+                        color: Theme.hoverStrong
                         border.color: Theme.borderAccent
                         border.width: 1
                         anchors.horizontalCenter: parent.horizontalCenter

@@ -114,8 +114,8 @@ PanelWindow {
             anchors.fill: parent
             radius: 3
             color: row.active
-                ? Theme.alpha(Theme.accent, 0.10)
-                : (rowMouse.containsMouse ? Theme.alpha(Theme.accent, 0.06) : "transparent")
+                ? Theme.active
+                : (rowMouse.containsMouse ? Theme.hover : "transparent")
         }
 
         RowLayout {

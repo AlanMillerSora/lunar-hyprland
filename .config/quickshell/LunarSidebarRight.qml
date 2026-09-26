@@ -166,7 +166,7 @@ PanelWindow {
                     width: 30
                     height: 22
                     radius: Theme.radius
-                    color: helpMouse.containsMouse ? Theme.alpha(Theme.accent, 0.08) : "transparent"
+                    color: helpMouse.containsMouse ? Theme.hoverStrong : "transparent"
                     border.width: helpMouse.containsMouse ? 1 : 0
                     border.color: Theme.borderAccent
                     Text {
@@ -189,7 +189,7 @@ PanelWindow {
                     width: 28
                     height: 22
                     radius: Theme.radius
-                    color: closeMouse.containsMouse ? Theme.alpha(Theme.accent, 0.08) : "transparent"
+                    color: closeMouse.containsMouse ? Theme.hoverStrong : "transparent"
                     border.width: closeMouse.containsMouse ? 1 : 0
                     border.color: Theme.borderAccent
                     Text {
@@ -234,8 +234,8 @@ PanelWindow {
                             height: 36
                             radius: Theme.radius
                             color: root.tabIndex === index
-                                ? Theme.alpha(Theme.accent, 0.12)
-                                : (tabMouse.containsMouse ? Theme.alpha(Theme.accent, 0.06) : "transparent")
+                                ? Theme.active
+                                : (tabMouse.containsMouse ? Theme.hover : "transparent")
                             border.color: root.tabIndex === index ? Theme.borderAccent : "transparent"
                             border.width: 1
                             Behavior on color { ColorAnimation { duration: Theme.animFast } }
@@ -370,7 +370,7 @@ PanelWindow {
                                 height: bodyCol.implicitHeight + 16
                                 radius: Theme.radius
                                 color: itemMouse.containsMouse
-                                    ? Theme.alpha(Theme.accent, 0.06)
+                                    ? Theme.hover
                                     : "transparent"
                                 border.width: 1
                                 border.color: Theme.border
@@ -686,9 +686,9 @@ PanelWindow {
                                                     readonly property bool isHover: cellMouse.containsMouse && modelData.day > 0
 
                                                     // сегодня — кольцо, выбранный — заливка
-                                                    color: isSel ? Theme.alpha(Theme.accent, 0.16)
-                                                        : (isToday ? Theme.alpha(Theme.accent, 0.05)
-                                                        : (isHover ? Theme.alpha(Theme.accent, 0.08) : "transparent"))
+                                                    color: isSel ? Theme.active
+                                                        : (isToday ? Theme.hover
+                                                        : (isHover ? Theme.hoverStrong : "transparent"))
                                                     border.width: (isToday || isHover) ? 1 : 0
                                                     border.color: isToday ? Theme.accent : Theme.borderAccent
                                                     Behavior on color { ColorAnimation { duration: Theme.animFast } }
@@ -941,7 +941,7 @@ PanelWindow {
                                 radius: Theme.radius
                                 color: root.recording
                                     ? Theme.alpha(Theme.danger, 0.16)
-                                    : Theme.alpha(Theme.accent, 0.10)
+                                    : Theme.active
                                 border.width: 1
                                 border.color: root.recording ? Theme.danger : Theme.borderAccent
 
@@ -964,7 +964,7 @@ PanelWindow {
                                 Layout.preferredWidth: 36
                                 Layout.preferredHeight: 30
                                 radius: Theme.radius
-                                color: recRefreshMouse.containsMouse ? Theme.alpha(Theme.accent, 0.08) : "transparent"
+                                color: recRefreshMouse.containsMouse ? Theme.hoverStrong : "transparent"
                                 border.width: recRefreshMouse.containsMouse ? 1 : 0
                                 border.color: Theme.borderAccent
                                 Text {
@@ -1006,7 +1006,7 @@ PanelWindow {
                                 width: recList.width
                                 height: 54
                                 radius: Theme.radius
-                                color: recMouse.containsMouse ? Theme.alpha(Theme.accent, 0.06) : "transparent"
+                                color: recMouse.containsMouse ? Theme.hover : "transparent"
                                 border.width: 1
                                 border.color: Theme.border
 

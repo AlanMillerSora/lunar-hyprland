@@ -145,8 +145,8 @@ Item {
                             width: perfText.implicitWidth + 28
                             height: 30
                             radius: Theme.radius
-                            color: active ? Theme.alpha(Theme.accent, 0.12)
-                                 : (perfMouse.containsMouse ? Theme.alpha(Theme.accent, 0.08) : "transparent")
+                            color: active ? Theme.active
+                                 : (perfMouse.containsMouse ? Theme.hoverStrong : "transparent")
                             border.width: 1
                             border.color: active ? Theme.accent
                                         : (perfMouse.containsMouse ? Theme.borderAccent : Theme.border)
@@ -361,7 +361,7 @@ Item {
                             height: 30
                             radius: Theme.radius
                             color: Theme.trayVisible === modelData
-                                ? Theme.alpha(Theme.accent, 0.12)
+                                ? Theme.active
                                 : "transparent"
                             border.width: 1
                             border.color: Theme.trayVisible === modelData

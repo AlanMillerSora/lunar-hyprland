@@ -192,7 +192,7 @@ Item {
         radius: Theme.radius
 
         color: btnArea.containsMouse
-            ? Theme.alpha(Theme.accent, 0.12)
+            ? Theme.active
             : "transparent"
 
         border.width: 1

@@ -77,7 +77,7 @@ Item {
 
                 color: page.muted
                     ? Theme.alpha(Theme.danger, 0.15)
-                    : Theme.alpha(Theme.accent, 0.10)
+                    : Theme.active
 
                 border.width: 1
                 border.color: page.muted
@@ -184,7 +184,7 @@ Item {
                         page.sink.id === output.id
 
                     color: active
-                        ? Theme.alpha(Theme.accent, 0.10)
+                        ? Theme.active
                         : "transparent"
 
                     border.width: 1
@@ -344,7 +344,7 @@ Item {
 
                             color: streamMuted
                                 ? Theme.alpha(Theme.danger, 0.15)
-                                : Theme.alpha(Theme.accent, 0.10)
+                                : Theme.active
 
                             border.width: 1
                             border.color: streamMuted

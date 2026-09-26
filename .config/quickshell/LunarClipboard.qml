@@ -268,8 +268,8 @@ PanelWindow {
                         height: 40
                         radius: Theme.radius
                         color: root.selectedIndex === index
-                            ? Theme.alpha(Theme.accent, 0.12)
-                            : (rowMouse.containsMouse ? Theme.alpha(Theme.accent, 0.06) : "transparent")
+                            ? Theme.active
+                            : (rowMouse.containsMouse ? Theme.hover : "transparent")
                         border.width: root.selectedIndex === index ? 1 : 0
                         border.color: Theme.borderAccent
 

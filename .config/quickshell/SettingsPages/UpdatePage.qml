@@ -29,8 +29,8 @@ Item {
         width: Math.max(120, btnText.implicitWidth + 34)
         height: 36
         radius: Theme.radius
-        color: !enabledBtn ? Theme.alpha(Theme.text, 0.02)
-             : btnArea.containsMouse ? Theme.alpha(Theme.accent, 0.12)
+        color: !enabledBtn ? Theme.fill
+             : btnArea.containsMouse ? Theme.active
              : "transparent"
         border.width: 1
         border.color: !enabledBtn ? Theme.border
@@ -267,7 +267,7 @@ Item {
                     width: col.width
                     height: newsCol.implicitHeight + 24
                     radius: Theme.radius
-                    color: Theme.alpha(Theme.text, 0.025)
+                    color: Theme.fill
                     border.width: 1
                     border.color: Theme.border
 

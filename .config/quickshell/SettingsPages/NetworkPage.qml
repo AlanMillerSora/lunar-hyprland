@@ -32,7 +32,7 @@ Item {
         width: 104
         height: 32
         radius: Theme.radius
-        color: zbtn.containsMouse ? Theme.alpha(Theme.accent, 0.12) : "transparent"
+        color: zbtn.containsMouse ? Theme.active : "transparent"
         border.width: 1
         border.color: zbtn.containsMouse ? Theme.accent : Theme.border
 
@@ -293,8 +293,8 @@ Item {
                     height: 38
                     radius: Theme.radius
                     color: scanMouse.containsMouse
-                        ? Theme.alpha(Theme.accent, 0.08)
-                        : Theme.alpha(Theme.text, 0.03)
+                        ? Theme.hoverStrong
+                        : Theme.fill
                     border.width: 1
                     border.color: scanMouse.containsMouse ? Theme.borderAccent : Theme.border
 
@@ -320,7 +320,7 @@ Item {
                     width: 76
                     height: 38
                     radius: Theme.radius
-                    color: page.wifiEnabled ? Theme.alpha(Theme.accent, 0.1) : Theme.alpha("#A0A0A0", 0.15)
+                    color: page.wifiEnabled ? Theme.active : Theme.alpha("#A0A0A0", 0.15)
                     border.width: 1
                     border.color: page.wifiEnabled ? Theme.accent : "#A0A0A0"
 
@@ -530,7 +530,7 @@ Item {
                                 width: parent.width
                                 height: 46
                                 radius: Theme.radius
-                                color: modelData.connected ? Theme.alpha(Theme.accent, 0.10) : "#00000000"
+                                color: modelData.connected ? Theme.active : "#00000000"
                                 border.width: 1
                                 border.color: modelData.connected ? Theme.accent : Theme.border
 

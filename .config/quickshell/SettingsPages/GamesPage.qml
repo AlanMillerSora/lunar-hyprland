@@ -81,8 +81,8 @@ Item {
                 height: 52
                 radius: Theme.radius
                 color: rowMouse.containsMouse
-                    ? Theme.alpha(Theme.accent, 0.08)
-                    : Theme.alpha(Theme.text, 0.025)
+                    ? Theme.hoverStrong
+                    : Theme.fill
                 border.width: 1
                 border.color: rowMouse.containsMouse ? Theme.borderAccent : Theme.border
 

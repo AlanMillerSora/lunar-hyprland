@@ -110,8 +110,8 @@ Item {
                             height: 24
                             radius: Theme.radius
                             color: page.shownPhase === ph
-                                ? Theme.alpha(Theme.accent, 0.16)
-                                : (phMouse.containsMouse ? Theme.alpha(Theme.accent, 0.08) : Theme.alpha(Theme.text, 0.03))
+                                ? Theme.active
+                                : (phMouse.containsMouse ? Theme.hoverStrong : Theme.fill)
                             border.width: 1
                             border.color: page.shownPhase === ph ? Theme.accent : Theme.border
 

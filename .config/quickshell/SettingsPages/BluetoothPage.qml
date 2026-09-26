@@ -146,7 +146,7 @@ Item {
                 width: 76
                 height: 38
                 radius: Theme.radius
-                color: page.powered ? Theme.alpha(Theme.accent, 0.1) : Theme.alpha("#A0A0A0", 0.15)
+                color: page.powered ? Theme.active : Theme.alpha("#A0A0A0", 0.15)
                 border.width: 1
                 border.color: page.powered ? Theme.accent : "#A0A0A0"
                 Text {
@@ -278,8 +278,8 @@ Item {
                         height: visible ? 52 : 0
                         radius: Theme.radius
                         color: isConnected
-                            ? Theme.alpha(Theme.accent, 0.10)
-                            : Theme.alpha(Theme.text, 0.025)
+                            ? Theme.active
+                            : Theme.fill
                         border.width: 1
                         border.color: isConnected ? Theme.accent : Theme.border
                         Row {

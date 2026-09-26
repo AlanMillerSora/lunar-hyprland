@@ -28,7 +28,7 @@ Item {
         radius: Theme.radius
 
         color: btnMouse.containsMouse
-            ? Theme.alpha(Theme.accent, 0.12)
+            ? Theme.active
             : "transparent"
 
         border.width: 1
@@ -175,8 +175,8 @@ Item {
                     radius: Theme.radius
 
                     color: quickMouse.containsMouse
-                        ? Theme.alpha(Theme.accent, 0.08)
-                        : Theme.alpha(Theme.text, 0.025)
+                        ? Theme.hoverStrong
+                        : Theme.fill
 
                     border.width: 1
                     border.color: quickMouse.containsMouse
@@ -230,8 +230,8 @@ Item {
                 radius: Theme.radius
 
                 color: rowMouse.containsMouse
-                    ? Theme.alpha(Theme.accent, 0.08)
-                    : Theme.alpha(Theme.text, 0.025)
+                    ? Theme.hoverStrong
+                    : Theme.fill
 
                 border.width: 1
                 border.color: rowMouse.containsMouse
@@ -257,7 +257,7 @@ Item {
                         Layout.preferredWidth: 30
                         Layout.preferredHeight: 30
                         radius: Theme.radius
-                        color: Theme.alpha(Theme.accent, 0.08)
+                        color: Theme.hoverStrong
                         border.width: 1
                         border.color: Theme.border
 
@@ -458,8 +458,8 @@ Item {
                         radius: Theme.radius
 
                         color: modelData.current
-                            ? Theme.alpha(Theme.accent, 0.14)
-                            : Theme.alpha(Theme.text, 0.03)
+                            ? Theme.active
+                            : Theme.fill
 
                         border.width: 1
                         border.color: modelData.current
@@ -531,7 +531,7 @@ Item {
                     Layout.preferredHeight: 36
                     radius: Theme.radius
                     color: commitMouse.containsMouse
-                        ? Theme.alpha(Theme.accent, 0.14)
+                        ? Theme.active
                         : "transparent"
                     border.width: 1
                     border.color: commitMouse.containsMouse
@@ -578,7 +578,7 @@ Item {
                         radius: Theme.radius
 
                         color: actMouse.containsMouse
-                            ? Theme.alpha(Theme.accent, 0.10)
+                            ? Theme.active
                             : "transparent"
 
                         border.width: 1

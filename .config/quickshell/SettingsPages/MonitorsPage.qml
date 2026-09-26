@@ -463,7 +463,7 @@ Item {
                     width: Math.max(2, modelData.width * s)
                     height: Math.max(2, modelData.height * s)
                     radius: 4
-                    color: Theme.alpha(Theme.accent, 0.05)
+                    color: Theme.hover
                     border.width: 1
                     border.color: Theme.borderAccent
 
@@ -585,7 +585,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
 
                     color: page.nightlightEnabled
-                        ? Theme.alpha(Theme.accent, 0.1)
+                        ? Theme.active
                         : Theme.alpha("#A0A0A0", 0.15)
 
                     border.width: 1
@@ -700,8 +700,8 @@ Item {
                                     radius: Theme.radius
                                     anchors.verticalCenter: parent.verticalCenter
                                     color: active
-                                        ? Theme.alpha(Theme.accent, 0.14)
-                                        : (rateMouse.containsMouse ? Theme.alpha(Theme.accent, 0.06) : "transparent")
+                                        ? Theme.active
+                                        : (rateMouse.containsMouse ? Theme.hover : "transparent")
                                     border.width: 1
                                     border.color: active ? Theme.accent : Theme.border
                                     Text {
@@ -740,7 +740,7 @@ Item {
                                 radius: Theme.radius
                                 anchors.verticalCenter: parent.verticalCenter
                                 color: monCard.modelData.vrr
-                                    ? Theme.alpha(Theme.accent, 0.14) : "transparent"
+                                    ? Theme.active : "transparent"
                                 border.width: 1
                                 border.color: monCard.modelData.vrr ? Theme.accent : Theme.border
                                 Text {
@@ -791,8 +791,8 @@ Item {
                                     radius: Theme.radius
                                     anchors.verticalCenter: parent.verticalCenter
                                     color: active
-                                        ? Theme.alpha(Theme.accent, 0.14)
-                                        : (scaleMouse.containsMouse ? Theme.alpha(Theme.accent, 0.06) : "transparent")
+                                        ? Theme.active
+                                        : (scaleMouse.containsMouse ? Theme.hover : "transparent")
                                     border.width: 1
                                     border.color: active ? Theme.accent : Theme.border
                                     Text {
@@ -845,7 +845,7 @@ Item {
                         height: 30
                         radius: Theme.radius
                         anchors.verticalCenter: parent.verticalCenter
-                        color: page.tearing ? Theme.alpha(Theme.accent, 0.14) : "transparent"
+                        color: page.tearing ? Theme.active : "transparent"
                         border.width: 1
                         border.color: page.tearing ? Theme.accent : Theme.border
                         Text {

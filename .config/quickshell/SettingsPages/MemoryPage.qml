@@ -289,7 +289,7 @@ Item {
                     Layout.preferredHeight: 28
                     radius: Theme.radius
                     color: page.isOn(modelData.key)
-                        ? Theme.alpha(Theme.accent, 0.06)
+                        ? Theme.hover
                         : "transparent"
                     border.width: 1
                     border.color: optMouse.containsMouse ? Theme.borderAccent : Theme.border
@@ -353,8 +353,8 @@ Item {
                 Layout.preferredHeight: 38
                 radius: Theme.radius
                 color: page.running
-                    ? Theme.alpha(Theme.accent, 0.05)
-                    : (runMouse.containsMouse ? Theme.alpha(Theme.accent, 0.16) : Theme.alpha(Theme.accent, 0.10))
+                    ? Theme.hover
+                    : (runMouse.containsMouse ? Theme.active : Theme.active)
                 border.width: 1
                 border.color: Theme.accent
 

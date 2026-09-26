@@ -35,7 +35,7 @@ PanelWindow {
     //   «прозрачность интерфейса»), рамки — Theme.border,
     //   акценты — Theme.accent через Theme.alpha().
     readonly property color pillBg: Theme.bg
-    readonly property color pillHover: Theme.alpha(Theme.accent, 0.08)
+    readonly property color pillHover: Theme.hoverStrong
     readonly property color pillBorder: Theme.border
 
     // ─────────────── workspaces (Hyprland) ───────────────
@@ -497,7 +497,7 @@ PanelWindow {
     component HoverBg: Rectangle {
         anchors.fill: parent
         radius: 4
-        color: Theme.alpha(Theme.accent, 0.07)
+        color: Theme.hoverStrong
         opacity: hh.hovered ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 120 } }
         HoverHandler { id: hh }
@@ -587,7 +587,7 @@ PanelWindow {
                     anchors.left: parent.left
                     anchors.right: parent.right
                     height: 1
-                    color: Theme.alpha(Theme.accent, 0.10)
+                    color: Theme.active
                 }
 
                 Row {
@@ -1128,7 +1128,7 @@ PanelWindow {
                         height: 22
                         radius: Theme.radius
                         anchors.verticalCenter: parent.verticalCenter
-                        color: moreMouse.containsMouse ? Theme.alpha(Theme.accent, 0.12) : "transparent"
+                        color: moreMouse.containsMouse ? Theme.active : "transparent"
                         border.width: 1
                         border.color: moreMouse.containsMouse ? Theme.accent : Theme.borderAccent
 

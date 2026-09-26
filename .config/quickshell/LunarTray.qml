@@ -168,7 +168,7 @@ PanelWindow {
                     width: col.width
                     height: 34
                     radius: Theme.radius
-                    color: rowMouse.containsMouse ? Theme.alpha(Theme.accent, 0.07) : "transparent"
+                    color: rowMouse.containsMouse ? Theme.hoverStrong : "transparent"
                     border.width: rowMouse.containsMouse ? 1 : 0
                     border.color: Theme.border
 

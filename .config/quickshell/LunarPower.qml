@@ -145,7 +145,7 @@ PanelWindow {
                     Layout.fillWidth: true
                     height: 48
                     radius: Theme.radius
-                    color: rowMouse.containsMouse ? Theme.alpha(Theme.accent, 0.08) : "transparent"
+                    color: rowMouse.containsMouse ? Theme.hoverStrong : "transparent"
                     border.width: rowMouse.containsMouse ? 1 : 0
                     border.color: Theme.borderAccent
 
