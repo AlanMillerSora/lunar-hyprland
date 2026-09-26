@@ -4,11 +4,12 @@ import Quickshell.Wayland
 import Quickshell.Services.Mpris
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Effects
 
 // ════════════════════════════════════════════════════════════════
 //  LunarMedia — попап «сейчас играет» (клик по треку на панели):
-//  крупно трек/исполнитель, прогресс и управление
-//  (назад / пауза / вперёд). Источник — MPRIS.
+//  обложка в монохроме (дуотон), крупный спектр cava, мягкий seek
+//  со временем и управление (назад / пауза / вперёд). Источник — MPRIS.
 //  IPC:  qs ipc call media toggle|open|close
 // ════════════════════════════════════════════════════════════════
 PanelWindow {
@@ -43,16 +44,49 @@ PanelWindow {
             if (ps[i].isPlaying) return ps[i]
         return ps.length > 0 ? ps[0] : null
     }
-    readonly property string track: player
-        ? ((player.trackTitle || "—") + (player.trackArtist ? "\n" + player.trackArtist : ""))
-        : "ничего не играет"
+    readonly property bool playing: player ? player.isPlaying : false
+    readonly property string title: player && player.trackTitle ? player.trackTitle : "ничего не играет"
+    readonly property string artist: player && player.trackArtist ? player.trackArtist : ""
+    readonly property string art: player && player.trackArtUrl ? player.trackArtUrl : ""
     readonly property real pos: player && player.position ? player.position : 0
     readonly property real len: player && player.length ? player.length : 0
     readonly property real progress: len > 0 ? Math.min(1, pos / len) : 0
+    readonly property bool seekable: player !== null && player.canSeek === true && len > 0
+
+    // спектр cava — только когда попап открыт и реально играет
+    readonly property bool vizActive: root.showing && root.playing && root.title.length > 0
+    readonly property int barCount: 44
+    property var barValues: []
+
+    function feedCava(line) {
+        var t = ("" + line).trim()
+        if (t.length === 0)
+            return
+        var parts = t.split(/\s+/)
+        var out = []
+        for (var i = 0; i < root.barCount; i++) {
+            var v = parseInt(parts[i] === undefined ? "0" : parts[i]) || 0
+            out.push(Math.max(0, Math.min(1, v / 1000)))
+        }
+        root.barValues = out
+    }
+
+    Process {
+        id: cavaProc
+        running: root.vizActive
+        command: ["cava", "-p", Quickshell.shellPath("cava-lunar.conf")]
+        stdout: SplitParser {
+            splitMarker: "\n"
+            onRead: (line) => root.feedCava(line)
+        }
+        stderr: StdioCollector {}
+    }
 
     function fmt(s) {
-        if (!s || s < 0) s = 0
-        var m = Math.floor(s / 60), sec = Math.floor(s % 60)
+        if (!s || s < 0 || !isFinite(s))
+            s = 0
+        var m = Math.floor(s / 60)
+        var sec = Math.floor(s % 60)
         return m + ":" + (sec < 10 ? "0" : "") + sec
     }
 
@@ -67,8 +101,8 @@ PanelWindow {
 
     Rectangle {
         id: card
-        width: 380
-        height: 176
+        width: 460
+        height: 382
         anchors.top: parent.top
         anchors.topMargin: 52
         anchors.right: parent.right
@@ -89,34 +123,33 @@ PanelWindow {
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 16
-            spacing: 10
+            anchors.margins: 18
+            spacing: 14
 
+            // ── шапка ──
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 8
 
                 Text {
-                    text: root.player && root.player.isPlaying ? "󰏤" : "󰐊"
-                    color: root.player && root.player.isPlaying ? Theme.accent : Theme.textDim
+                    text: root.playing ? "\uf04c" : "\uf04b"
+                    color: root.playing ? Theme.accent : Theme.textDim
                     font.family: Theme.iconFont
-                    font.pixelSize: 16
+                    font.pixelSize: Theme.fontSize(13)
                 }
-
                 Text {
                     Layout.fillWidth: true
                     text: "СЕЙЧАС ИГРАЕТ"
                     color: Theme.textFaint
                     font.family: Theme.fontFamily
-                    font.pixelSize: 10
+                    font.pixelSize: Theme.fontSize(10)
                     font.letterSpacing: 2
                 }
-
                 Text {
                     text: "\uf00d"
                     color: closeMouse.containsMouse ? Theme.danger : Theme.textFaint
                     font.family: Theme.iconFont
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.fontSize(11)
                     MouseArea {
                         id: closeMouse
                         anchors.fill: parent
@@ -127,62 +160,221 @@ PanelWindow {
                 }
             }
 
-            Text {
-                Layout.fillWidth: true
-                text: root.track
-                color: Theme.text
-                font.family: Theme.fontFamily
-                font.pixelSize: 15
-                wrapMode: Text.Wrap
-                maximumLineCount: 2
-                elide: Text.ElideRight
-            }
-
-            // прогресс
-            Rectangle {
-                Layout.fillWidth: true
-                height: 4
-                radius: 2
-                color: Theme.alpha(Theme.text, 0.12)
-
-                Rectangle {
-                    width: parent.width * root.progress
-                    height: parent.height
-                    radius: 2
-                    color: Theme.accent
-                }
-            }
-
+            // ── обложка + трек ──
             RowLayout {
                 Layout.fillWidth: true
-                Text {
-                    text: root.fmt(root.pos)
-                    color: Theme.textFaint
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 10
+                spacing: 16
+
+                // обложка: монохром/лёгкий дуотон (или заглушка)
+                Item {
+                    Layout.preferredWidth: 128
+                    Layout.preferredHeight: 128
+                    clip: true
+
+                    Image {
+                        id: coverImg
+                        anchors.fill: parent
+                        source: root.art
+                        fillMode: Image.PreserveAspectCrop
+                        asynchronous: true
+                        visible: false
+                    }
+
+                    MultiEffect {
+                        anchors.fill: parent
+                        source: coverImg
+                        visible: root.art.length > 0
+                        saturation: -1.0
+                        brightness: 0.04
+                        colorization: 0.28
+                        colorizationColor: Theme.accent
+                    }
+
+                    Rectangle {
+                        anchors.fill: parent
+                        visible: root.art.length === 0
+                        color: Theme.bgCard
+                        border.color: Theme.border
+                        border.width: 1
+                        Text {
+                            anchors.centerIn: parent
+                            text: "\uf001"
+                            color: Theme.textFaint
+                            font.family: Theme.iconFont
+                            font.pixelSize: 40
+                        }
+                    }
                 }
-                Item { Layout.fillWidth: true }
-                Text {
-                    text: root.fmt(root.len)
-                    color: Theme.textFaint
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 10
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignTop
+                    spacing: 8
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: root.title
+                        color: Theme.text
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(17)
+                        font.bold: true
+                        wrapMode: Text.Wrap
+                        maximumLineCount: 2
+                        elide: Text.ElideRight
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        visible: root.artist.length > 0
+                        text: root.artist
+                        color: Theme.textDim
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(12)
+                        wrapMode: Text.Wrap
+                        maximumLineCount: 1
+                        elide: Text.ElideRight
+                    }
+                    Item { Layout.fillHeight: true }
                 }
             }
 
-            Item { Layout.fillHeight: true }
+            // ── спектр cava ──
+            Item {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 62
 
-            // управление
+                Rectangle {
+                    visible: !root.vizActive
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width
+                    height: 1
+                    color: Theme.alpha(Theme.accent, 0.18)
+                }
+
+                Row {
+                    visible: root.vizActive
+                    anchors.fill: parent
+                    spacing: 2
+
+                    Repeater {
+                        model: root.barCount
+                        delegate: Item {
+                            required property int index
+                            width: Math.max(1, (parent.width - (root.barCount - 1) * 2) / root.barCount)
+                            height: parent.height
+                            Rectangle {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.bottom: parent.bottom
+                                width: parent.width
+                                height: 2 + (root.barValues[index] || 0) * (parent.height - 4)
+                                radius: 1
+                                color: Theme.alpha(Theme.accent, 0.35 + 0.65 * (root.barValues[index] || 0))
+                                Behavior on height { NumberAnimation { duration: 80 } }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ── мягкий seek со временем ──
+            Item {
+                id: seek
+                Layout.fillWidth: true
+                Layout.preferredHeight: 30
+
+                property real dragFrac: 0
+                readonly property real frac: seekArea.pressed ? dragFrac : root.progress
+
+                Rectangle {
+                    id: seekBg
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.verticalCenterOffset: -6
+                    width: parent.width
+                    height: 5
+                    radius: 2.5
+                    color: Theme.alpha(Theme.text, 0.12)
+
+                    Rectangle {
+                        id: seekFill
+                        width: parent.width * seek.frac
+                        height: parent.height
+                        radius: parent.radius
+                        color: root.seekable ? Theme.accent : Theme.textDim
+                        Behavior on width {
+                            enabled: !seekArea.pressed
+                            NumberAnimation { duration: Theme.animFast }
+                        }
+                    }
+
+                    // «мягкая» ручка — появляется на наведении/перетаскивании
+                    Rectangle {
+                        id: seekHandle
+                        width: 12
+                        height: 12
+                        radius: 6
+                        anchors.verticalCenter: parent.verticalCenter
+                        x: Math.max(0, Math.min(seekBg.width, seekBg.width * seek.frac)) - width / 2
+                        color: Theme.text
+                        border.color: Theme.accent
+                        border.width: 2
+                        opacity: (seekArea.pressed || seekArea.containsMouse) && root.seekable ? 1 : 0
+                        scale: seekArea.pressed ? 1.15 : 1.0
+                        Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
+                        Behavior on scale { NumberAnimation { duration: Theme.animFast } }
+                    }
+                }
+
+                // время: слева — текущее, справа — длительность
+                RowLayout {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: seekBg.bottom
+                    anchors.topMargin: 7
+                    Text {
+                        text: root.fmt(seekArea.pressed ? seek.dragFrac * root.len : root.pos)
+                        color: Theme.textDim
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(10)
+                    }
+                    Item { Layout.fillWidth: true }
+                    Text {
+                        text: root.fmt(root.len)
+                        color: Theme.textFaint
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(10)
+                    }
+                }
+
+                MouseArea {
+                    id: seekArea
+                    anchors.fill: parent
+                    anchors.margins: -8
+                    preventStealing: true
+                    hoverEnabled: true
+                    enabled: root.seekable
+                    cursorShape: root.seekable ? Qt.PointingHandCursor : Qt.ArrowCursor
+                    function setFromX(px) {
+                        seek.dragFrac = Math.max(0, Math.min(1, px / seekBg.width))
+                    }
+                    onPressed: (mouse) => setFromX(mouse.x)
+                    onPositionChanged: (mouse) => { if (pressed) setFromX(mouse.x) }
+                    onReleased: {
+                        if (root.seekable && root.player && root.len > 0)
+                            root.player.position = Math.max(0, Math.min(1, seek.dragFrac)) * root.len
+                    }
+                }
+            }
+
+            // ── управление ──
             RowLayout {
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignHCenter
-                spacing: 24
+                spacing: 28
 
                 Text {
-                    text: "󰒮"
+                    text: "\uf048"
                     color: prevMouse.containsMouse ? Theme.accent : Theme.textDim
                     font.family: Theme.iconFont
-                    font.pixelSize: 24
+                    font.pixelSize: Theme.fontSize(22)
                     MouseArea {
                         id: prevMouse
                         anchors.fill: parent
@@ -192,10 +384,10 @@ PanelWindow {
                     }
                 }
                 Text {
-                    text: root.player && root.player.isPlaying ? "󰏤" : "󰐊"
+                    text: root.playing ? "\uf04c" : "\uf04b"
                     color: playMouse.containsMouse ? Theme.accent : Theme.text
                     font.family: Theme.iconFont
-                    font.pixelSize: 30
+                    font.pixelSize: Theme.fontSize(30)
                     MouseArea {
                         id: playMouse
                         anchors.fill: parent
@@ -205,10 +397,10 @@ PanelWindow {
                     }
                 }
                 Text {
-                    text: "󰒭"
+                    text: "\uf051"
                     color: nextMouse.containsMouse ? Theme.accent : Theme.textDim
                     font.family: Theme.iconFont
-                    font.pixelSize: 24
+                    font.pixelSize: Theme.fontSize(22)
                     MouseArea {
                         id: nextMouse
                         anchors.fill: parent
