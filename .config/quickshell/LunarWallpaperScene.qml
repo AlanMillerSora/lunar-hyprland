@@ -14,15 +14,18 @@ import QtQuick
 //  Фаза 1..9 (по активному столу), все зеркально симметричны (1↔9,
 //  2↔8, 3↔7, 4↔6):
 //    · луна едет слева направо;
-//    · 5 — ПОЛНОЕ затмение: кольцо, свечение горизонта, пыль, метеоры;
+//    · 5 — ПОЛНОЕ затмение: тонкая корона, свечение горизонта, пыль, метеоры;
 //    · чем дальше от 5, тем бледнее гало и полутень.
 //  live=false — «лёгкий режим»: без звёзд/метеоров/пыли.
+//  optimize=true — реже звёзды, без пыли/метеоров и «дыхания» (см. LunarWallpaper).
 // ════════════════════════════════════════════════════════════════
 Item {
     id: scene
 
     property int phase: 5
     property bool live: true
+    // OPTIMIZE: небо реже, без пыли/метеоров/«дыхания» (см. LunarWallpaper).
+    property bool optimize: false
 
     // ── общее время сцены, обновляется ~25 раз/с ───────────────
     // Все анимации (звёзды, пыль, метеоры, дыхание, серп) считаются от `t`,
@@ -50,12 +53,16 @@ Item {
     // (кольцо, метеоры, пыль, свечение горизонта) — фаза 5.
     readonly property var moonOffsets: [0, -339, -288, -230, -107, 0, 107, 230, 288, 339]
     readonly property var sunOps:      [0, 1, 1, 0.95, 0.88, 0.95, 0.88, 0.95, 1, 1]
-    readonly property var moonGlowOps: [0, 0.2, 0, 0.2, 0.35, 0.6, 0.35, 0.2, 0, 0.2]
+    readonly property var moonGlowOps: [0, 0.2, 0, 0.2, 0.35, 0.22, 0.35, 0.2, 0, 0.2]
     readonly property var penumbraOps: [0, 0.5, 0, 0.5, 0.9, 1, 0.9, 0.5, 0, 0.5]
     readonly property var dustOps:     [0, 0, 0, 0, 0, 0.9, 0, 0, 0, 0]
     readonly property var horizonOps:  [0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
 
     readonly property bool fullEclipse: p === 5
+
+    // На пике солнце скрыто луной — его широкое внешнее свечение глушим,
+    // чтобы «шуба» не спорила с тонкой короной (иначе видны ступени).
+    readonly property real sunHaloMask: fullEclipse ? 0.35 : 1.0
 
     // ═══════════════ фон по фазам (CSS #eclipse-bg) ═══════════════
     function bgStops(ph) {
@@ -95,11 +102,11 @@ Item {
     ]
 
     // ── луна и её гало ─────────────────────────────────────────
-    // .moon-glow 360px — голубоватое кольцо 63..88%
+    // .moon-glow 360px — нейтральное (монохром) кольцо 63..88%
     readonly property var moonGlowStops: [
         { p: 0, c: "rgba(255,255,255,0)" }, { p: 0.63, c: "rgba(255,255,255,0)" },
-        { p: 0.68, c: "rgba(180,200,255,0.10)" }, { p: 0.73, c: "rgba(150,180,255,0.24)" },
-        { p: 0.80, c: "rgba(170,200,255,0.12)" }, { p: 0.88, c: "rgba(255,255,255,0)" },
+        { p: 0.68, c: "rgba(255,255,255,0.10)" }, { p: 0.73, c: "rgba(235,240,250,0.22)" },
+        { p: 0.80, c: "rgba(255,255,255,0.10)" }, { p: 0.88, c: "rgba(255,255,255,0)" },
         { p: 1, c: "rgba(255,255,255,0)" }
     ]
     // .penumbra 300px — тёмная полутень (ребёнок луны)
@@ -116,23 +123,10 @@ Item {
     ]
 
     // ── корона ─────────────────────────────────────────────────
-    // .corona 260px (радиус 130) + внешние box-shadow:
-    //   3/5 — 40/90px, 4 — 12/32/66px. Бокс 440px, чтобы свечение
-    //   (130..220) не обрезалось диском луны (радиус 123).
-    readonly property var coronaStops: fullEclipse
-        ? [{ p: 0, c: "rgba(255,255,255,0)" }, { p: 0.54, c: "rgba(255,255,255,0)" },
-           { p: 0.57, c: "rgba(255,255,255,0.30)" }, { p: 0.68, c: "rgba(255,255,255,0.16)" },
-           { p: 0.85, c: "rgba(255,255,255,0.06)" }, { p: 1, c: "rgba(255,255,255,0)" }]
-        : [{ p: 0, c: "rgba(255,255,255,0)" }, { p: 0.57, c: "rgba(255,255,255,0)" },
-           { p: 0.60, c: "rgba(255,255,255,0.50)" }, { p: 0.67, c: "rgba(255,255,255,0.28)" },
-           { p: 0.82, c: "rgba(255,255,255,0.12)" }, { p: 1, c: "rgba(255,255,255,0)" }]
-    // .corona-glow 380px
-    readonly property var coronaGlowStops: fullEclipse
-        ? [{ p: 0, c: "rgba(255,255,255,0.06)" }, { p: 0.45, c: "rgba(255,255,255,0.06)" },
-           { p: 0.72, c: "rgba(255,255,255,0)" }, { p: 1, c: "rgba(255,255,255,0)" }]
-        : [{ p: 0, c: "rgba(255,255,255,0.16)" }, { p: 0.30, c: "rgba(255,255,255,0.16)" },
-           { p: 0.52, c: "rgba(255,255,255,0.07)" }, { p: 0.74, c: "rgba(255,255,255,0)" },
-           { p: 1, c: "rgba(255,255,255,0)" }]
+    // Рисуется отдельным Canvas-компонентом (см. CoronaCanvas ниже):
+    // тонкое монохромное кольцо у края диска + плавный спад наружу.
+    // Прежние слои corona/corona-glow давали видимые ступени.
+
 
     // ── горизонт ───────────────────────────────────────────────
     readonly property var horizonStops: [
@@ -145,12 +139,12 @@ Item {
     function makeStars() {
         var a = [], s = 20240924
         function rnd() { s = (s * 1103515245 + 12345) % 2147483648; return s / 2147483648 }
-        for (var i = 0; i < 150; i++) {
+        for (var i = 0; i < 170; i++) {
             a.push({
                 x: rnd(), y: rnd(),
-                size: rnd() < 0.08 ? 2 : 1,
-                dur: 2000 + rnd() * 4000,
-                max: 0.3 + rnd() * 0.7,
+                size: rnd() < 0.07 ? 2 : 1,
+                dur: 1600 + rnd() * 5200,
+                max: 0.25 + rnd() * 0.75,
                 delay: rnd() * 4000,
                 ph: rnd() * 6.28318
             })
@@ -173,12 +167,12 @@ Item {
     function makeDust() {
         var a = [], s = 4242
         function rnd() { s = (s * 1103515245 + 12345) % 2147483648; return s / 2147483648 }
-        for (var i = 0; i < 15; i++) {
+        for (var i = 0; i < 20; i++) {
             a.push({
                 x: rnd(), y: rnd(),
-                size: 1 + rnd() * 2,
-                dur: 10000 + rnd() * 20000,
-                drift: rnd() * 100 - 50,
+                size: 1 + rnd() * 2.2,
+                dur: 9000 + rnd() * 22000,
+                drift: rnd() * 140 - 70,
                 delay: rnd() * 15000,
                 ph: rnd() * 6.28318
             })
@@ -197,6 +191,14 @@ Item {
     readonly property var starData: makeStars()
     readonly property var meteorData: makeMeteors()
     readonly property var dustData: makeDust()
+
+    // OPTIMIZE: та же карта неба, но каждая третья звезда — небо реже.
+    readonly property var starDataOpt: {
+        var a = []
+        for (var i = 0; i < starData.length; i += 3)
+            a.push(starData[i])
+        return a
+    }
 
     // ═══════════════ переиспользуемые рисовалки ═══════════════
     // Радиальный градиент, запекается один раз (перерисовка — при
@@ -224,6 +226,56 @@ Item {
         }
     }
 
+    // ── корона (Canvas) ────────────────────────────────────────
+    // Тонкое монохромное кольцо у края диска луны плюс гладкий спад
+    // наружу. Профиль считается по формуле и раскладывается в 96 стопов
+    // градиента — без резких ступеней и наложений слоёв, которые давали
+    // видимые «белые» кольца. Лёгкий псевдослучайный разброс стопов
+    // дополнительно маскирует 8-битный бандинг.
+    component CoronaCanvas: Canvas {
+        id: cc
+        property real moonR: 123 * scene.unit
+        property real ringW: 10 * scene.unit
+        property real ringA: 0.85
+        property real glowA: 0.28
+        property real glowK: 62 * scene.unit
+        readonly property int steps: 96
+
+        onWidthChanged: requestPaint()
+        onHeightChanged: requestPaint()
+        onMoonRChanged: requestPaint()
+        onPaint: {
+            var ctx = getContext("2d")
+            ctx.clearRect(0, 0, width, height)
+            var R = Math.max(width, height) / 2
+            var cx = width / 2, cy = height / 2
+            var g = ctx.createRadialGradient(cx, cy, 0, cx, cy, R)
+            var n = cc.steps
+            var s = 2654435761
+            function hash() { s = (s * 1103515245 + 12345) % 2147483648; return s / 2147483648 }
+            for (var i = 0; i <= n; i++) {
+                var p = i / n
+                var r = p * R
+                var a
+                if (r < cc.moonR) {
+                    a = 0
+                } else {
+                    var d = r - cc.moonR
+                    a = cc.ringA * Math.exp(-Math.pow(d / cc.ringW, 2))
+                      + cc.glowA * Math.exp(-d / cc.glowK)
+                    // плавно в ноль к краю бокса (иначе видна кромка)
+                    var t = Math.min(1, Math.max(0, (p - 0.5) / 0.5))
+                    a *= 1 - t * t * (3 - 2 * t)
+                    // разброс против идеально ровных колец
+                    a *= 0.98 + 0.04 * hash()
+                }
+                g.addColorStop(p, "rgba(255,255,255," + a.toFixed(4) + ")")
+            }
+            ctx.fillStyle = g
+            ctx.fillRect(0, 0, width, height)
+        }
+    }
+
     // ── фон ────────────────────────────────────────────────────
     RadialCanvas {
         anchors.fill: parent
@@ -232,7 +284,7 @@ Item {
 
     // ── звёзды ─────────────────────────────────────────────────
     Repeater {
-        model: scene.live ? scene.starData : []
+        model: scene.live ? (scene.optimize ? scene.starDataOpt : scene.starData) : []
         delegate: Rectangle {
             required property var modelData
             x: modelData.x * scene.width
@@ -255,7 +307,7 @@ Item {
     Item {
         id: dustWrap
         anchors.fill: parent
-        opacity: scene.dustOps[scene.p]
+        opacity: scene.optimize ? 0 : scene.dustOps[scene.p]
         visible: opacity > 0.001
         Behavior on opacity { NumberAnimation { duration: 1200 } }
 
@@ -275,20 +327,22 @@ Item {
                     ctx.fillRect(0, 0, width, height)
                 }
                 blob(0.24, 0.28, "rgba(255,255,255,0.07)", width * 0.35)
-                blob(0.78, 0.20, "rgba(230,238,255,0.05)", width * 0.32)
+                blob(0.78, 0.20, "rgba(245,248,255,0.05)", width * 0.32)
                 blob(0.70, 0.72, "rgba(255,255,255,0.06)", width * 0.38)
-                blob(0.18, 0.66, "rgba(220,232,255,0.04)", width * 0.32)
+                blob(0.18, 0.66, "rgba(240,245,255,0.04)", width * 0.32)
                 blob(0.52, 0.42, "rgba(255,255,255,0.05)", width * 0.35)
             }
         }
 
-        // лёгкое «дыхание» дымки от общего времени (без отдельной анимации)
-        scale: 1 + 0.05 * (0.5 + 0.5 * Math.sin(scene.t * 0.9))
+        // лёгкое «дыхание» дымки убрано: масштаб полноэкранного слоя
+        // заставлял перерисовывать весь кадр каждый тик. Дымка статична,
+        // живость дают дрейфующие пылинки и мерцание звёзд.
+        scale: 1
     }
 
     // ── пылинки (мелкие точки, дрейф) ──────────────────────────
     Repeater {
-        model: (scene.live && scene.dustOps[scene.p] > 0) ? scene.dustData : []
+        model: (scene.live && !scene.optimize && scene.dustOps[scene.p] > 0) ? scene.dustData : []
         delegate: Rectangle {
             required property var modelData
             width: modelData.size
@@ -352,9 +406,9 @@ Item {
         Behavior on opacity { NumberAnimation { duration: 900 } }
     }
 
-    // ── метеоры (только кровавая луна, фаза 4) ─────────────────
+    // ── метеоры (только полное затмение, фаза 5) ───────────────
     Repeater {
-        model: (scene.live && scene.fullEclipse) ? scene.meteorData : []
+        model: (scene.live && !scene.optimize && scene.fullEclipse) ? scene.meteorData : []
         delegate: Item {
             required property var modelData
             readonly property real pr: (scene.live && scene.fullEclipse) ? scene.meteorPhase(modelData) : -1
@@ -364,7 +418,7 @@ Item {
             x: modelData.x * scene.width - 0.45 * scene.width * Math.max(0, pr)
             y: modelData.y * scene.height + 0.34 * scene.height * Math.max(0, pr)
 
-            // хвост
+            // хвост (монохром)
             Rectangle {
                 x: 1; y: -1
                 width: 150 * scene.unit
@@ -374,9 +428,9 @@ Item {
                 transformOrigin: Item.Left
                 gradient: Gradient {
                     orientation: Gradient.Horizontal
-                    GradientStop { position: 0; color: "#FFF0F8FF" }
-                    GradientStop { position: 0.45; color: "#99BED7FF" }
-                    GradientStop { position: 1; color: "#00BED7FF" }
+                    GradientStop { position: 0; color: "#FFFFFFFF" }
+                    GradientStop { position: 0.45; color: "#99FFFFFF" }
+                    GradientStop { position: 1; color: "#00FFFFFF" }
                 }
             }
             // головка с ореолом
@@ -389,7 +443,7 @@ Item {
                 x: -4; y: -4
                 color: "transparent"
                 border.width: 2
-                border.color: "#66BED7FF"
+                border.color: "#66FFFFFF"
             }
 
         }
@@ -403,14 +457,15 @@ Item {
         width: 0
         height: 0
 
-        // внешнее свечение солнца (box-shadow 36/80/150px)
+        // внешнее свечение солнца (box-shadow 36/80/150px).
+        // На пике солнце скрыто — глушим (sunHaloMask), иначе «шуба».
         RadialCanvas {
             x: -275 * scene.unit
             y: -275 * scene.unit
             width: 550 * scene.unit
             height: 550 * scene.unit
             stops: scene.sunOuterStops
-            opacity: scene.sunOps[scene.p]
+            opacity: scene.sunOps[scene.p] * scene.sunHaloMask
             Behavior on opacity { NumberAnimation { duration: 700 } }
         }
 
@@ -422,32 +477,19 @@ Item {
             width: 310 * scene.unit
             height: 310 * scene.unit
             stops: scene.sunGlowStops
-            opacity: scene.sunOps[scene.p]
-            // дыхание солнца (период 5 с) от общего времени — без анимации на кадр
-            scale: 1 + 0.045 * (0.5 + 0.5 * Math.sin(scene.t * 1.2566))
+            opacity: scene.sunOps[scene.p] * scene.sunHaloMask
+            // дыхание солнца (период 5 с) от общего времени — без анимации на кадр.
+            // В OPTIMIZE дыхание выключено: меньше перерисовок.
+            scale: scene.optimize ? 1 : 1 + 0.045 * (0.5 + 0.5 * Math.sin(scene.t * 1.2566))
         }
 
-        // гало короны (внешнее, .corona-glow 380px)
-        RadialCanvas {
-            id: coronaGlow
-            x: -190 * scene.unit
-            y: -190 * scene.unit
-            width: 380 * scene.unit
-            height: 380 * scene.unit
-            stops: scene.coronaGlowStops
-            opacity: scene.fullEclipse ? 0.9 : 0
-            visible: opacity > 0.001
-            Behavior on opacity { NumberAnimation { duration: 800 } }
-        }
-
-        // корона — кольцо вокруг луны (.corona 260px + внешнее свечение)
-        RadialCanvas {
+        // корона — тонкое кольцо вокруг луны (Canvas, без ступеней)
+        CoronaCanvas {
             id: corona
-            x: -220 * scene.unit
-            y: -220 * scene.unit
-            width: 440 * scene.unit
-            height: 440 * scene.unit
-            stops: scene.coronaStops
+            x: -300 * scene.unit
+            y: -300 * scene.unit
+            width: 600 * scene.unit
+            height: 600 * scene.unit
             opacity: scene.fullEclipse ? 1 : 0
             visible: opacity > 0.001
             Behavior on opacity { NumberAnimation { duration: 800 } }

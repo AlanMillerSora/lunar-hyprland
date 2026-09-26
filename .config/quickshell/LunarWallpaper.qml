@@ -74,6 +74,7 @@ PanelWindow {
         anchors.fill: parent
         phase: Math.max(1, Math.min(9, root.wsId))
         live: Theme.wallpaperLive
+        optimize: root.optimize
         tickMs: root.optimize ? 40 : 16
     }
 }
