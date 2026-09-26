@@ -15,6 +15,9 @@ PanelWindow {
 
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: root.showing ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+    // Отдельный namespace: убирает блюр Hyprland именно у Hub
+    // (правило layer_rule блюрит namespace "quickshell").
+    WlrLayershell.namespace: "lunar-hub"
 
     // Only actually grab input/paint when open - mirrors the OSD's mask trick
     // so the window is a no-op on the compositor while closed.
