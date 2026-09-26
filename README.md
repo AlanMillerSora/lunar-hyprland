@@ -115,15 +115,11 @@
 </div>
 
 <details>
-<summary>Статические фазы (фолбэк) — генератор из <code>sait/</code></summary>
+<summary>Превью сцены без Hyprland</summary>
 
 <br>
 
-```bash
-hypr/scripts/eclipse-walls-gen.sh                 # кадры под текущий монитор
-hypr/scripts/eclipse-walls-gen.sh 3440x1440       # явное разрешение
-hypr/scripts/eclipse-walls.sh set ~/.local/share/lunar/walls/3440x1440
-```
+Требуется только Qt6: `qml6 .config/quickshell/preview.qml` — клавиши `1..9` переключают фазы, `L` — лёгкий режим.
 
 </details>
 

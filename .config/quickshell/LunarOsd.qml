@@ -26,6 +26,9 @@ PanelWindow {
     property int volume: -1
     property bool muted: false
     property bool showing: false
+    // первый успешный замер — только запоминаем значение, OSD не показываем
+    // (иначе при запуске/перезапуске шелла всплывает ползунок под часами)
+    property bool primed: false
 
     readonly property int segments: 20
     readonly property real frac: (muted || volume <= 0) ? 0 : Math.min(volume / 100, 1)
@@ -65,13 +68,19 @@ PanelWindow {
             onStreamFinished: {
                 var t = text.trim()
                 var m = t.match(/Volume:\s*([0-9.]+)/)
-                var newVol = m ? Math.round(parseFloat(m[1]) * 100) : root.volume
+                if (!m)
+                    return
+                var newVol = Math.round(parseFloat(m[1]) * 100)
                 var newMuted = t.includes("[MUTED]")
-                if (newVol !== root.volume || newMuted !== root.muted) {
-                    root.volume = newVol
-                    root.muted = newMuted
-                    root.showOsd()
+                var changed = newVol !== root.volume || newMuted !== root.muted
+                root.volume = newVol
+                root.muted = newMuted
+                if (!root.primed) {
+                    root.primed = true
+                    return
                 }
+                if (changed)
+                    root.showOsd()
             }
         }
     }

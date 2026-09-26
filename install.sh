@@ -66,7 +66,6 @@ while IFS= read -r f; do
     LOCAL_DIFF="${LOCAL_DIFF}${rel} (изменён локально)"$'\n'
   fi
 done < <(find "$HOME/.config" -type f \
-           -not -path "*/.config/lunar/sait/*" \
            -not -path "*/.config/systemd/*" \
            -not -path "*/.config/chromium*" \
            -not -path "*/.config/google-chrome*" \
@@ -101,25 +100,13 @@ cp -r "$REPO/.config/." "$HOME/.config/"
 chmod +x "$HOME"/.config/hypr/scripts/* 2>/dev/null || true
 ok "конфиги обновлены"
 
-# ── 3. сайт-превью (генератор обоев под любое разрешение) ───────
-step "превью-сайт → ~/.config/lunar/sait"
-mkdir -p "$HOME/.config/lunar/sait"
-cp "$REPO"/sait/* "$HOME/.config/lunar/sait/" 2>/dev/null || true
-ok "sait скопирован"
-
-# ── 4. обои ────────────────────────────────────────────────────
-step "обои → ~/Pictures/EclipseWalls"
-mkdir -p "$HOME/Pictures/EclipseWalls"
-cp "$REPO"/wallpapers/*.png "$HOME/Pictures/EclipseWalls/" 2>/dev/null || true
-ok "обои на месте"
-
-# ── 5. KDE: цветовая схема ─────────────────────────────────────
+# ── 3. KDE: цветовая схема ─────────────────────────────────────
 step "цветовая схема KDE → ~/.local/share/color-schemes"
 mkdir -p "$HOME/.local/share/color-schemes"
 cp "$REPO"/color-schemes/*.colors "$HOME/.local/share/color-schemes/" 2>/dev/null || true
 ok "kdeglobals + схема"
 
-# ── 6. Firefox: тема, стили и префы ────────────────────────────
+# ── 4. Firefox: тема, стили и префы ────────────────────────────
 step "Firefox: тема, префы, новая вкладка"
 if [ -d "$REPO/.config/firefox/chrome" ]; then
   FF_ROOT="$HOME/.mozilla/firefox"
@@ -168,7 +155,7 @@ JSON
   fi
 fi
 
-# ── 7. Firefox: иконка и браузер по умолчанию ──────────────────
+# ── 5. Firefox: иконка и браузер по умолчанию ──────────────────
 step "Firefox: иконка приложения и браузер по умолчанию"
 if command -v rsvg-convert >/dev/null 2>&1 && [ -f "$REPO/assets/lunar-icon.svg" ]; then
   for s in 512 256 128 64 48 32; do
@@ -191,7 +178,7 @@ if command -v xdg-settings >/dev/null 2>&1; then
     || warn "не удалось назначить браузером по умолчанию (не критично)"
 fi
 
-# ── 8. курсор Bibata ───────────────────────────────────────────
+# ── 6. курсор Bibata ───────────────────────────────────────────
 step "курсор Bibata-Modern-Ice"
 if [ ! -d "$HOME/.local/share/icons/Bibata-Modern-Ice" ]; then
   mkdir -p "$HOME/.local/share/icons"
@@ -203,7 +190,7 @@ else
   ok "Bibata уже установлен"
 fi
 
-# ── 9. zapret ──────────────────────────────────────────────────
+# ── 7. zapret ──────────────────────────────────────────────────
 step "zapret → /opt/zapret (обход DPI: Discord/YouTube)"
 if [ -x "$REPO/zapret/install-zapret.sh" ]; then
   "$REPO/zapret/install-zapret.sh" install && ok "zapret.service" \
@@ -212,7 +199,7 @@ else
   say "установщик zapret не найден (не критично)"
 fi
 
-# ── 10. systemd --user ─────────────────────────────────────────
+# ── 8. systemd --user ─────────────────────────────────────────
 step "systemd --user: wifi-guard, homepage"
 if [ -d "$REPO/systemd" ]; then
   mkdir -p "$HOME/.config/systemd/user"
@@ -226,7 +213,7 @@ if [ -d "$REPO/systemd" ]; then
   ok "юниты поставлены (quickshell стартует из Hyprland)"
 fi
 
-# ── 11. Wi-Fi: powersave off + ASPM ────────────────────────────
+# ── 9. Wi-Fi: powersave off + ASPM ────────────────────────────
 step "Wi-Fi: powersave off + mt7921e ASPM"
 if [ -f "$REPO/systemd/10-lunar-wifi-powersave-off.sh" ]; then
   sudo install -m 0755 -o root -g root \
@@ -243,7 +230,7 @@ if [ -f "$REPO/systemd/mt7921e-no-aspm.conf" ]; then
     || warn "modprobe-конфиг не установлен (нужен sudo)"
 fi
 
-# ── 12. sudo: белый список агента (OpenCode) ───────────────────
+# ── 10. sudo: белый список агента (OpenCode) ───────────────────
 step "sudo: белый список агента → /etc/sudoers.d/lunar-agent"
 if [ -f "$REPO/systemd/lunar-agent.sudoers" ]; then
   sudo install -m 0440 -o root -g root \
@@ -252,7 +239,7 @@ if [ -f "$REPO/systemd/lunar-agent.sudoers" ]; then
     || warn "sudoers не установлен (нужен sudo)"
 fi
 
-# ── 13. shell по умолчанию ─────────────────────────────────────
+# ── 11. shell по умолчанию ─────────────────────────────────────
 step "shell по умолчанию"
 if command -v zsh >/dev/null 2>&1 && [ "${SHELL:-}" != "$(command -v zsh)" ]; then
   chsh -s "$(command -v zsh)" && ok "zsh" || warn "не удалось сменить shell"
