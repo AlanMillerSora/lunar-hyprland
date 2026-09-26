@@ -1,0 +1,81 @@
+# Lunar Eclipse — монохромная заставка при загрузке.
+# Тёмный фон #050505, кольцо-корона с диском Луны, надпись LUNAR ECLIPSE
+# и тонкая полоса прогресса под ней.
+
+Window.SetBackgroundTopColor(0.0196, 0.0196, 0.0196);
+Window.SetBackgroundBottomColor(0.0196, 0.0196, 0.0196);
+
+# масштаб под высоту экрана: за 1080p принят 1.0
+factor = Window.GetHeight() / 1080;
+if (factor < 0.6)
+  {
+    factor = 0.6;
+  }
+
+# — логотип (затмение) —
+logo.src = Image("logo.png");
+logo.size = Math.Int(400 * factor);
+logo.image = logo.src.Scale(logo.size, logo.size);
+logo.sprite = Sprite(logo.image);
+logo.x = Window.GetX() + Window.GetWidth() / 2 - logo.size / 2;
+logo.y = Window.GetY() + Window.GetHeight() / 2 - logo.size / 2 - Math.Int(70 * factor);
+logo.sprite.SetPosition(logo.x, logo.y, 10);
+
+# — надпись LUNAR ECLIPSE —
+wordmark.src = Image("wordmark.png");
+wordmark.w = Math.Int(wordmark.src.GetWidth() * factor);
+wordmark.h = Math.Int(wordmark.src.GetHeight() * factor);
+wordmark.image = wordmark.src.Scale(wordmark.w, wordmark.h);
+wordmark.sprite = Sprite(wordmark.image);
+wordmark.x = Window.GetX() + Window.GetWidth() / 2 - wordmark.w / 2;
+wordmark.y = logo.y + logo.size + Math.Int(64 * factor);
+wordmark.sprite.SetPosition(wordmark.x, wordmark.y, 10);
+
+# — полоса прогресса —
+bar.w = Math.Int(640 * factor);
+bar.h = Math.Int(3 * factor);
+if (bar.h < 2)
+  {
+    bar.h = 2;
+  }
+bar.x = Window.GetX() + Window.GetWidth() / 2 - bar.w / 2;
+bar.y = Window.GetY() + Window.GetHeight() * 0.82;
+
+bar.box_src = Image("progress_box.png");
+bar.box_image = bar.box_src.Scale(bar.w, bar.h);
+bar.box_sprite = Sprite(bar.box_image);
+bar.box_sprite.SetPosition(bar.x, bar.y, 5);
+
+bar.fill_src = Image("progress_bar.png");
+bar.fill_image = bar.fill_src.Scale(1, bar.h);
+bar.fill_sprite = Sprite(bar.fill_image);
+bar.fill_sprite.SetPosition(bar.x, bar.y, 6);
+
+fun update_progress(duration, progress)
+  {
+    if (progress < 0)
+      {
+        progress = 0;
+      }
+    if (progress > 1)
+      {
+        progress = 1;
+      }
+    bar.fill_w = Math.Int(bar.w * progress);
+    if (bar.fill_w < 1)
+      {
+        bar.fill_w = 1;
+      }
+    bar.fill_image = bar.fill_src.Scale(bar.fill_w, bar.h);
+    bar.fill_sprite.SetImage(bar.fill_image);
+  }
+
+Plymouth.SetBootProgressFunction(update_progress);
+
+fun on_quit()
+  {
+    logo.sprite.SetOpacity(1);
+    wordmark.sprite.SetOpacity(1);
+  }
+
+Plymouth.SetQuitFunction(on_quit);

@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Lunar Eclipse
+Description=Monochrome lunar eclipse boot splash
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/lunar
+ScriptFile=/usr/share/plymouth/themes/lunar/lunar.script
