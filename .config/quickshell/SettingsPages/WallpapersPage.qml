@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell.Io
+import Quickshell.Hyprland
 import "../"
 
 // ════════════════════════════════════════════════════════════════
@@ -14,6 +15,12 @@ Item {
 
     property string mono: "JetBrainsMono Nerd Font"
     property int rightMargin: 36
+
+    // живое превью обоев: показываем фазу активного стола (или выбранную)
+    readonly property var ws: Hyprland.activeWorkspace || Hyprland.focusedWorkspace
+    readonly property int activePhase: (ws && ws.id > 0) ? Math.max(1, Math.min(9, ws.id)) : 5
+    property int previewPhase: -1
+    readonly property int shownPhase: previewPhase > 0 ? previewPhase : activePhase
 
     // ── состояние ─────────────────────────────────────────────
     property string curRes: "—"           // разрешение текущего монитора
@@ -165,6 +172,85 @@ Item {
                 font.family: page.mono
                 font.pixelSize: 18
                 font.letterSpacing: 3
+            }
+
+            Rectangle { width: parent.width; height: 1; color: Theme.border }
+
+            // ── блок: живое превью обоев ──
+            Column {
+                width: parent.width
+                spacing: 10
+
+                Text {
+                    text: previewPhase > 0
+                        ? "ПРЕВЬЮ · фаза " + shownPhase
+                        : "ПРЕВЬЮ · фаза " + shownPhase + " (текущий стол)"
+                    color: Theme.textFaint
+                    font.family: page.mono
+                    font.pixelSize: 10
+                    font.letterSpacing: 2
+                }
+
+                // 16:9 мини-экран с живой сценой
+                Item {
+                    width: Math.min(parent.width, 512)
+                    height: width * 9 / 16
+                    clip: true
+
+                    LunarWallpaperScene {
+                        anchors.fill: parent
+                        phase: page.shownPhase
+                        live: true
+                        optimize: true
+                        tickMs: 33
+                    }
+
+                    Rectangle {
+                        anchors.fill: parent
+                        color: "transparent"
+                        radius: Theme.radius
+                        border.color: Theme.border
+                        border.width: 1
+                    }
+                }
+
+                // выбор фазы (1..9) — какой стол показать в превью
+                Row {
+                    spacing: 6
+
+                    Repeater {
+                        model: 9
+
+                        delegate: Rectangle {
+                            required property int index
+                            readonly property int ph: index + 1
+                            width: 30
+                            height: 24
+                            radius: Theme.radius
+                            color: page.shownPhase === ph
+                                ? Theme.alpha(Theme.accent, 0.16)
+                                : (phMouse.containsMouse ? Theme.alpha(Theme.accent, 0.08) : Theme.alpha(Theme.text, 0.03))
+                            border.width: 1
+                            border.color: page.shownPhase === ph ? Theme.accent : Theme.border
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: index + 1
+                                color: page.shownPhase === ph ? Theme.accent : Theme.textDim
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 11
+                            }
+
+                            MouseArea {
+                                id: phMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: page.previewPhase = page.previewPhase === ph ? -1 : ph
+                            }
+                        }
+                    }
+                }
             }
 
             Rectangle { width: parent.width; height: 1; color: Theme.border }

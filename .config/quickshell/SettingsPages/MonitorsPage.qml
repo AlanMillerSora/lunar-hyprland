@@ -13,6 +13,32 @@ Item {
     property string monitorSequence: ""
     property int monitorStep: 0
 
+    // ── превью раскладки: общий bounding box мониторов (логические px) ──
+    readonly property var monitorBounds: {
+        var l = 0, t = 0, r = 0, b = 0, first = true
+        for (var i = 0; i < monitors.length; i++) {
+            var m = monitors[i]
+            if (first) {
+                l = m.x; t = m.y; r = m.x + m.width; b = m.y + m.height; first = false
+            } else {
+                l = Math.min(l, m.x); t = Math.min(t, m.y)
+                r = Math.max(r, m.x + m.width); b = Math.max(b, m.y + m.height)
+            }
+        }
+        return { x: l, y: t, w: Math.max(1, r - l), h: Math.max(1, b - t) }
+    }
+
+    function monScale(aw, ah) {
+        var bb = monitorBounds
+        return Math.min((aw - 28) / bb.w, (ah - 28) / bb.h)
+    }
+    function monOffsetX(aw, ah) {
+        return (aw - monitorBounds.w * monScale(aw, ah)) / 2
+    }
+    function monOffsetY(aw, ah) {
+        return (ah - monitorBounds.h * monScale(aw, ah)) / 2
+    }
+
     // Яркость: встроенная панель (brightnessctl) или внешний монитор (ddcutil).
     // Выбор устройства и DDC/CI — внутри eclipse-brightness.sh.
     Process {
@@ -434,6 +460,49 @@ Item {
                     cursorShape: Qt.PointingHandCursor
                     anchors.fill: parent
                     onClicked: page.refresh()
+                }
+            }
+        }
+
+        Rectangle {
+            width: parent.width
+            height: 1
+            color: Theme.border
+        }
+
+        // ── превью раскладки мониторов (пропорционально) ──
+        Item {
+            id: monPreview
+            width: parent.width
+            height: 170
+            visible: page.monitors.length > 0
+            clip: true
+
+            Repeater {
+                model: page.monitors
+
+                delegate: Rectangle {
+                    required property var modelData
+                    readonly property real s: page.monScale(monPreview.width, monPreview.height)
+                    x: page.monOffsetX(monPreview.width, monPreview.height)
+                       + (modelData.x - page.monitorBounds.x) * s
+                    y: page.monOffsetY(monPreview.width, monPreview.height)
+                       + (modelData.y - page.monitorBounds.y) * s
+                    width: Math.max(2, modelData.width * s)
+                    height: Math.max(2, modelData.height * s)
+                    radius: 4
+                    color: Theme.alpha(Theme.accent, 0.05)
+                    border.width: 1
+                    border.color: Theme.borderAccent
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: modelData.name + "\n" + modelData.width + "×" + modelData.height
+                        color: Theme.textDim
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 11
+                        horizontalAlignment: Text.AlignHCenter
+                    }
                 }
             }
         }

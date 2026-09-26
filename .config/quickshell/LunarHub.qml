@@ -291,7 +291,7 @@ PanelWindow {
 
                                     color: root.selectedIndex === index
                                         ? Theme.alpha(Theme.accent, 0.12)
-                                        : "transparent"
+                                        : (navMouse.containsMouse ? Theme.alpha(Theme.accent, 0.06) : "transparent")
 
                                     border.width: root.selectedIndex === index ? 1 : 0
                                     border.color: Theme.accent
@@ -331,7 +331,9 @@ PanelWindow {
                                     }
 
                                     MouseArea {
+                                        id: navMouse
                                         cursorShape: Qt.PointingHandCursor
+                                        hoverEnabled: true
                                         anchors.fill: parent
                                         onClicked: root.selectedIndex = index
                                     }
