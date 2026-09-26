@@ -21,7 +21,7 @@
 
 <div align="center">
 
-[Скриншоты](#скриншоты) · [Столы](#столы) · [Обои](#обои) · [Установка](#установка) · [Zapret и Vencord](#zapret-и-vencord) · [Игры](#игры-game-mode) · [NVIDIA](#nvidia) · [Чат](#чат-opencode) · [Календарь](#календарь) · [Обновления](#обновления) · [Горячие клавиши](#горячие-клавиши) · [Тема](#тема)
+[Скриншоты](#скриншоты) · [Столы](#столы) · [Обои](#обои) · [Установка](#установка) · [Загрузка](#загрузка) · [Экран входа](#экран-входа) · [Zapret и Vencord](#zapret-и-vencord) · [Игры](#игры-game-mode) · [NVIDIA](#nvidia) · [Чат](#чат-opencode) · [Календарь](#календарь) · [Обновления](#обновления) · [Горячие клавиши](#горячие-клавиши) · [Тема](#тема)
 
 </div>
 
@@ -150,6 +150,71 @@ cd ~/rice
 
 ---
 
+<h2 align="center" id="загрузка">Загрузка (Plymouth)</h2>
+
+<div align="center">
+
+Заставку при загрузке рисует своя тема Plymouth — `lunar`: кольцо-корона, диск Луны и надпись **LUNAR ECLIPSE** с полосой прогресса. Включена через hook `plymouth`, `quiet splash` в `/etc/kernel/cmdline` и пересборку UKI. На случай проблем в меню GRUB есть пункт **«Lunar Eclipse (без заставки)»** — система грузится без неё.
+
+</div>
+
+```bash
+sudo plymouth/eclipse-plymouth.sh status    # тема, hook, cmdline, GRUB
+sudo plymouth/eclipse-plymouth.sh install   # установить тему и hook
+sudo plymouth/eclipse-plymouth.sh enable    # включить
+sudo plymouth/eclipse-plymouth.sh disable   # выключить
+sudo plymouth/eclipse-plymouth.sh rescue    # резервный пункт «без заставки»
+```
+
+<div align="center">
+
+Тема — `plymouth/lunar/`. Скрипт сам гасит лишний пункт `10_linux` (на UKI-машине он создаёт пункт без initramfs): после обновления пакета `grub` права могут сброситься — тогда прогнать `enable` заново.
+
+</div>
+
+---
+
+<h2 align="center" id="экран-входа">Экран входа (SDDM)</h2>
+
+<div align="center">
+
+Тема входа — `lunar` (JetBrains Mono, палитра риса): крупный аватар врезается в карточку, **WELCOME <имя>**, строка пароля с подчёркиванием, индикатор раскладки (клик — переключить) и **CAPS LOCK**, часы, русская дата, кнопка **ВОЙТИ →**, выбор сессии и питание.
+
+<br>
+<img src="assets/screens/sddm.png" width="80%" alt="Экран входа"/>
+
+</div>
+
+```bash
+sudo sddm/eclipse-sddm.sh status               # состояние темы
+sudo sddm/eclipse-sddm.sh enable               # включить тему lunar
+sudo sddm/eclipse-sddm.sh disable              # вернуть штатную тему
+sudo sddm/eclipse-sddm.sh avatar /путь/к.png   # аватар на экране входа
+```
+
+<div align="center">
+
+Предпросмотр без риска: `sddm-greeter --test-mode --theme /usr/share/sddm/themes/lunar`.
+
+</div>
+
+<details>
+<summary>Единый аватар</summary>
+
+<br>
+
+Аватар один на всё: `~/.config/avatars/avatar.png` — используется в **Hub → User**, **Hub → System** и на экране входа SDDM. Смена — в **Hub → User → СМЕНИТЬ АВАТАР** (выбор и обрезка) или скриптом:
+
+- `eclipse-avatar.sh pick` — выбрать файл через zenity;
+- `eclipse-avatar.sh apply <cs> <cx> <cy>` — обрезать и скруглить в круг;
+- `eclipse-avatar.sh /путь/картинка.png` — поставить готовый файл (авто-кроп по центру).
+
+Синхронизация с темой SDDM идёт через узкое NOPASSWD-правило `/etc/sudoers.d/lunar-agent`.
+
+</details>
+
+---
+
 <h2 align="center" id="zapret-и-vencord">Zapret и Vencord</h2>
 
 <h3 align="center">Zapret — обход DPI</h3>
@@ -216,7 +281,7 @@ Turing и новее — `nvidia-open-dkms`; Pascal и старше — legacy `
 </div>
 
 <details>
-<summary>Пакеты, KMS, яркость и гибридная графика</summary>
+<summary>Пакеты, KMS и гибридная графика</summary>
 
 <br>
 
@@ -228,8 +293,6 @@ lib32-nvidia-utils
 `libva-nvidia-driver` — VAAPI поверх NVENC (аппаратная запись экрана); проверка: `vainfo | grep -i Encoder`. `lib32-nvidia-utils` — те же библиотеки для 32-битных игр Steam/Proton.
 
 **KMS.** С nvidia-utils 560.35.03 DRM включён по умолчанию (`modeset`/`fbdev` = `Y`); иначе kernel-параметр `nvidia_drm.modeset=1`. Нужен драйвер **555+**.
-
-**Яркость.** Встроенная панель — `brightnessctl`, внешние мониторы — `ddcutil` (DDC/CI); `install.sh` включает `i2c-dev` и добавляет пользователя в группу `i2c`.
 
 **Гибридная графика** автоматически не настраивается: если вывод идёт через iGPU, переменные NVIDIA не включаются. Для принудительного вывода — `AQ_DRM_DEVICES` (Hyprland Wiki → Nvidia).
 
@@ -288,7 +351,7 @@ lib32-nvidia-utils
 |---|---|---|
 | **Обои** | `quickshell/LunarWallpaper.qml`, `LunarWallpaperScene.qml` | Живая сцена затмения на QtQuick (фоновый слой): фаза по столу 1–9, звёзды/метеоры/пыль. Превью — `preview.qml` |
 | **Панель** | `quickshell/LunarPanel.qml` | 42px сверху. Лого+фаза, столы `01–09`; справа — пилюля **скорости сети** (Б/К/М), сеть/раскладка/уведомления, Game Mode, питание, CPU/RAM/°C/GPU, mpris, трей, громкость |
-| **Hub** | `quickshell/LunarHub.qml` | Лаунчер + настройки (980×640): Launch, System, Sound, Monitors, Network, Bluetooth, Interface, Memory, Games, Dev, Wallpapers, Update |
+| **Hub** | `quickshell/LunarHub.qml` | Лаунчер + настройки (980×640): Launch, System, Sound, Monitors, Network, Bluetooth, Interface, Memory, Games, Dev, Wallpapers, User, Update |
 | **Sidebar** | `quickshell/LunarSidebar.qml` | Слева (560px): чат OpenCode, буфер cliphist (ПКМ — удалить), заметки |
 | **Sidebar R** | `quickshell/LunarSidebarRight.qml` | Справа: уведомления (mako), «сейчас играет» (mpris), календарь (локальные события и напоминания), запись экрана |
 | **Очистка/Система** | `SettingsPages/MemoryPage.qml`, `hypr/scripts/eclipse-cleanup.sh` | RAM/SWAP и кнопка «ОЧИСТИТЬ»: сироты, кэш, журнал, tmpfiles |
@@ -335,7 +398,6 @@ lib32-nvidia-utils
 | `SUPER + ESC` | Меню питания (Quickshell) |
 | `PRINT` / `SUPER + PRINT` | Скриншот: область / весь экран (в буфер) |
 | `SUPER + SHIFT + PRINT` | Скриншот всего экрана в файл |
-| `XF86MonBrightness ±` | Яркость + OSD |
 | `SUPER + R` | Перезагрузить Hyprland |
 
 </details>
