@@ -154,9 +154,10 @@ Item {
 
             Text {
                 text: "OUTPUT"
-                color: Theme.accent
+                color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: 15
+                font.pixelSize: 12
+                font.bold: true
                 font.letterSpacing: 2
                 anchors.verticalCenter: parent.verticalCenter
             }
@@ -276,9 +277,10 @@ Item {
             Text {
                 text: "PLAYING APPS"
 
-                color: Theme.accent
+                color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: 14
+                font.pixelSize: 12
+                font.bold: true
                 font.letterSpacing: 2
 
                 anchors.verticalCenter: parent.verticalCenter

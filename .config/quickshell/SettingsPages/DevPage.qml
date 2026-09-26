@@ -381,7 +381,8 @@ Item {
                     text: page.gitProject ? page.gitProject.name : ""
                     color: Theme.text
                     font.family: Theme.fontFamily
-                    font.pixelSize: 15
+                    font.pixelSize: 12
+                    font.bold: true
                     font.letterSpacing: 2
                 }
 
@@ -435,9 +436,10 @@ Item {
             // ветки
             Text {
                 text: "ВЕТКИ"
-                color: Theme.accent
+                color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: 10
+                font.pixelSize: 12
+                font.bold: true
                 font.letterSpacing: 2
             }
 
@@ -619,9 +621,10 @@ Item {
             // вывод git
             Text {
                 text: "ВЫВОД"
-                color: Theme.accent
+                color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: 10
+                font.pixelSize: 12
+                font.bold: true
                 font.letterSpacing: 2
             }
 

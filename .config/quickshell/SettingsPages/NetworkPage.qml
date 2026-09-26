@@ -388,6 +388,7 @@ Item {
                                     color: Theme.text
                                     font.family: Theme.fontFamily
                                     font.pixelSize: 12
+                                    font.bold: true
                                     font.letterSpacing: 2
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
@@ -458,6 +459,7 @@ Item {
                                     color: Theme.text
                                     font.family: Theme.fontFamily
                                     font.pixelSize: 12
+                                    font.bold: true
                                     font.letterSpacing: 2
                                     anchors.verticalCenter: parent.verticalCenter
                                 }

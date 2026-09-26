@@ -493,7 +493,7 @@ Item {
                 text: "MONITOR MODE"
                 color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: 15
+                font.pixelSize: 12
                 font.bold: true
                 font.letterSpacing: 2
             }
