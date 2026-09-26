@@ -1,5 +1,7 @@
 // Lunar Eclipse — экран входа SDDM.
-// Продолжение заставки Plymouth: то же затмение и надпись, монохром, JetBrains Mono.
+// Монохром, JetBrains Mono, палитра риса.
+// Компоновка: аватар сверху, под ним WELCOME, ниже — строка пароля,
+// «выходящая» из круга аватара (круг врезается в верх карточки).
 
 import QtQuick 2.0
 import QtQuick.Window 2.0
@@ -21,6 +23,12 @@ Rectangle {
     // масштаб под высоту экрана: за 1080p принят 1.0
     readonly property real k: Math.min(width / 1920, height / 1080)
 
+    // размеры блока входа
+    readonly property int avSize: Math.round(150 * k)
+    readonly property int cardW:  Math.round(400 * k)
+    readonly property int cardH:  Math.round(134 * k)
+    readonly property int notch:  Math.round(34 * k)   // насколько круг врезается в карточку
+
     FontLoader { id: fReg;  source: "fonts/JetBrainsMono-Regular.ttf" }
     FontLoader { id: fBold; source: "fonts/JetBrainsMono-Bold.ttf" }
 
@@ -33,7 +41,6 @@ Rectangle {
         onTriggered: root.now = new Date()
     }
 
-    // русская дата без зависимости от локали greeter'а
     function ruDate(d) {
         var days = ["воскресенье", "понедельник", "вторник", "среда",
                     "четверг", "пятница", "суббота"]
@@ -43,7 +50,7 @@ Rectangle {
                 + months[d.getMonth()] + " " + d.getFullYear()
     }
 
-    // ── вход ──
+    // логин без поля имени: берём последнего пользователя
     function doLogin() {
         if (passInput.text.length === 0) {
             err.text = "ВВЕДИТЕ ПАРОЛЬ"
@@ -51,7 +58,7 @@ Rectangle {
             return
         }
         err.text = ""
-        sddm.login(userInput.text, passInput.text, sessionBox.index)
+        sddm.login(userModel.lastUser, passInput.text, sessionBox.index)
     }
 
     Connections {
@@ -66,23 +73,15 @@ Rectangle {
 
     // ── центральная колонка ──
     Column {
-        id: col
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
-        spacing: Math.round(24 * k)
+        spacing: Math.round(22 * k)
 
-        Image {
-            anchors.horizontalCenter: parent.horizontalCenter
-            source: "assets/logo.png"
-            sourceSize.width: Math.round(150 * k)
-            sourceSize.height: Math.round(150 * k)
-            smooth: true
-        }
-
+        // бренд
         Image {
             anchors.horizontalCenter: parent.horizontalCenter
             source: "assets/wordmark.png"
-            sourceSize.height: Math.round(20 * k)
+            sourceSize.height: Math.round(16 * k)
             smooth: true
         }
 
@@ -107,153 +106,230 @@ Rectangle {
             }
         }
 
-        // форма
-        Column {
+        // ── аватар + карточка пароля ──
+        Item {
+            id: formBlock
+            width: root.cardW
+            height: root.avSize + root.cardH - root.notch
             anchors.horizontalCenter: parent.horizontalCenter
-            spacing: Math.round(12 * k)
 
-            Row {
-                anchors.horizontalCenter: parent.horizontalCenter
-                spacing: Math.round(14 * k)
-
-                // круглый аватар: круг и тонкое кольцо рисует шейдер
-                // (Rectangle.radius в этой сборке greeter'а не скругляет)
-                Item {
-                    width: Math.round(64 * k)
-                    height: width
-
-                    Image {
-                        id: avSrc
-                        source: "assets/avatar.png"
-                        visible: false
-                        sourceSize.width: Math.round(160 * k)
-                        sourceSize.height: Math.round(160 * k)
-                    }
-                    ShaderEffect {
-                        anchors.fill: parent
-                        property variant src: avSrc
-                        property real px: 1.5 / width
-                        fragmentShader: "
-                            varying highp vec2 qt_TexCoord0;
-                            uniform sampler2D src;
-                            uniform lowp float qt_Opacity;
-                            uniform highp float px;
-                            void main() {
-                                highp vec2 p = qt_TexCoord0 - vec2(0.5, 0.5);
-                                highp float d = length(p);
-                                highp float rImg = 0.5 - 2.0 * px;
-                                lowp vec4 c = texture2D(src, qt_TexCoord0);
-                                highp float aImg = 1.0 - smoothstep(rImg - px, rImg, d);
-                                highp float ring = 1.0 - smoothstep(0.0, 1.4 * px, abs(d - (0.5 - 1.2 * px)));
-                                lowp vec3 rgb = mix(c.rgb, vec3(0.29, 0.29, 0.29), ring);
-                                lowp float alpha = max(c.a * aImg, ring);
-                                gl_FragColor = vec4(rgb * alpha, alpha) * qt_Opacity;
-                            }"
-                    }
-                }
-
-                Column {
-                    spacing: Math.round(12 * k)
-
-                    // пользователь
-                    Rectangle {
-                        width: Math.round(300 * k)
-                        height: Math.round(42 * k)
-                        color: cField
-                        radius: Math.round(6 * k)
-                        border.width: 1
-                        border.color: userInput.activeFocus ? cText : cFaint
-                        Behavior on border.color { ColorAnimation { duration: 120 } }
-                        TextInput {
-                            id: userInput
-                            anchors.fill: parent
-                            anchors.leftMargin: Math.round(12 * k)
-                            anchors.rightMargin: Math.round(12 * k)
-                            verticalAlignment: TextInput.AlignVCenter
-                            color: cText
-                            selectionColor: cFaint
-                            selectedTextColor: cText
-                            font.family: fReg.name
-                            font.pixelSize: Math.round(15 * k)
-                            text: userModel.lastUser
-                            selectByMouse: true
-                            KeyNavigation.tab: passInput
-                            KeyNavigation.backtab: passInput
-                        }
-                    }
-
-                    // пароль
-                    Rectangle {
-                        width: Math.round(300 * k)
-                        height: Math.round(42 * k)
-                        color: cField
-                        radius: Math.round(6 * k)
-                        border.width: 1
-                        border.color: passInput.activeFocus ? cText : cFaint
-                        Behavior on border.color { ColorAnimation { duration: 120 } }
-                        TextInput {
-                            id: passInput
-                            anchors.fill: parent
-                            anchors.leftMargin: Math.round(12 * k)
-                            anchors.rightMargin: Math.round(12 * k)
-                            verticalAlignment: TextInput.AlignVCenter
-                            color: cText
-                            selectionColor: cFaint
-                            selectedTextColor: cText
-                            echoMode: TextInput.Password
-                            passwordCharacter: "•"
-                            font.family: fReg.name
-                            font.pixelSize: Math.round(15 * k)
-                            KeyNavigation.tab: userInput
-                            KeyNavigation.backtab: userInput
-                            Keys.onPressed: {
-                                if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                                    root.doLogin()
-                                    event.accepted = true
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // ошибка (место зарезервировано)
-            Text {
-                id: err
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: ""
-                color: cDanger
-                height: Math.round(18 * k)
-                font.family: fReg.name
-                font.pixelSize: Math.round(13 * k)
-                font.letterSpacing: Math.round(1 * k)
-            }
-
-            // кнопка входа
+            // карточка: WELCOME и строка пароля
             Rectangle {
-                anchors.horizontalCenter: parent.horizontalCenter
-                width: Math.round(300 * k)
-                height: Math.round(42 * k)
-                radius: Math.round(6 * k)
-                color: loginArea.containsMouse ? cText : "transparent"
+                id: card
+                x: 0
+                y: root.avSize - root.notch
+                width: root.cardW
+                height: root.cardH
+                radius: Math.round(16 * k)
+                color: cField
                 border.width: 1
-                border.color: cText
-                Behavior on color { ColorAnimation { duration: 120 } }
+                border.color: passInput.activeFocus ? cText : cFaint
+                Behavior on border.color { ColorAnimation { duration: 120 } }
+
+                // WELCOME — между кругом и строкой
+                Row {
+                    id: welcomeRow
+                    anchors.top: parent.top
+                    anchors.topMargin: root.notch + Math.round(14 * k)
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: Math.round(8 * k)
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "WELCOME"
+                        color: cFaint
+                        font.family: fReg.name
+                        font.pixelSize: Math.round(13 * k)
+                        font.letterSpacing: Math.round(3 * k)
+                    }
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: userModel.lastUser
+                        color: cText
+                        font.family: fBold.name
+                        font.pixelSize: Math.round(16 * k)
+                        font.letterSpacing: Math.round(1 * k)
+                    }
+                }
+
+                // строка пароля
+                TextInput {
+                    id: passInput
+                    anchors.top: welcomeRow.bottom
+                    anchors.topMargin: Math.round(12 * k)
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: parent.width - Math.round(80 * k)
+                    height: Math.round(30 * k)
+                    horizontalAlignment: TextInput.AlignHCenter
+                    verticalAlignment: TextInput.AlignVCenter
+                    color: cText
+                    selectionColor: cFaint
+                    selectedTextColor: cText
+                    echoMode: TextInput.Password
+                    passwordCharacter: "•"
+                    font.family: fReg.name
+                    font.pixelSize: Math.round(18 * k)
+                    font.letterSpacing: Math.round(4 * k)
+                    KeyNavigation.tab: loginArea
+                    KeyNavigation.backtab: loginArea
+                    Keys.onPressed: {
+                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                            root.doLogin()
+                            event.accepted = true
+                        }
+                    }
+                }
+
+                // подчёркивание под строкой пароля
+                Rectangle {
+                    anchors.left: passInput.left
+                    anchors.right: passInput.right
+                    anchors.top: passInput.bottom
+                    height: 1
+                    color: passInput.activeFocus ? cText : cFaint
+                }
+
+                // раскладка клавиатуры (клик — переключить)
+                ComboBox {
+                    id: layoutBox
+                    anchors.right: parent.right
+                    anchors.rightMargin: Math.round(18 * k)
+                    anchors.top: parent.top
+                    anchors.topMargin: Math.round(10 * k)
+                    width: Math.round(66 * k)
+                    height: Math.round(24 * k)
+                    model: keyboard.layouts
+                    index: keyboard.currentLayout
+                    onValueChanged: keyboard.currentLayout = id
+                    color: "transparent"
+                    borderColor: cFaint
+                    focusColor: cText
+                    hoverColor: cText
+                    menuColor: "#0d0d0d"
+                    textColor: cText
+                    arrowColor: "transparent"
+                    arrowIcon: "assets/chevron.png"
+                    rowDelegate: Text {
+                        anchors.fill: parent
+                        anchors.margins: Math.round(3 * k)
+                        verticalAlignment: Text.AlignVCenter
+                        color: root.cText
+                        font.family: fReg.name
+                        font.pixelSize: Math.round(12 * k)
+                        font.letterSpacing: Math.round(2 * k)
+                        text: {
+                            var mi = parent.modelItem
+                            if (!mi)
+                                return ""
+                            var sn = ""
+                            if (mi.modelData && mi.modelData.shortName !== undefined)
+                                sn = mi.modelData.shortName
+                            else if (mi.shortName !== undefined)
+                                sn = mi.shortName
+                            return sn ? sn.toString().toUpperCase() : ""
+                        }
+                    }
+                }
+
+                // Caps Lock
                 Text {
-                    anchors.centerIn: parent
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: Math.round(8 * k)
+                    visible: keyboard.capsLock
+                    text: "CAPS LOCK"
+                    color: cDanger
+                    font.family: fReg.name
+                    font.pixelSize: Math.round(11 * k)
+                    font.letterSpacing: Math.round(2 * k)
+                }
+            }
+
+            // аватар поверх карточки — врезается в неё сверху
+            Item {
+                id: avatar
+                x: (root.cardW - root.avSize) / 2
+                y: 0
+                width: root.avSize
+                height: root.avSize
+
+                Image {
+                    id: avSrc
+                    source: "assets/avatar.png"
+                    visible: false
+                    sourceSize.width: Math.round(root.avSize * 1.1)
+                    sourceSize.height: Math.round(root.avSize * 1.1)
+                }
+                ShaderEffect {
+                    anchors.fill: parent
+                    property variant src: avSrc
+                    property real px: 1.5 / width
+                    fragmentShader: "
+                        varying highp vec2 qt_TexCoord0;
+                        uniform sampler2D src;
+                        uniform lowp float qt_Opacity;
+                        uniform highp float px;
+                        void main() {
+                            highp vec2 p = qt_TexCoord0 - vec2(0.5, 0.5);
+                            highp float d = length(p);
+                            highp float rImg = 0.5 - 2.0 * px;
+                            lowp vec4 c = texture2D(src, qt_TexCoord0);
+                            highp float aImg = 1.0 - smoothstep(rImg - px, rImg, d);
+                            highp float ring = 1.0 - smoothstep(0.0, 1.4 * px, abs(d - (0.5 - 1.2 * px)));
+                            lowp vec3 rgb = mix(c.rgb, vec3(0.29, 0.29, 0.29), ring);
+                            lowp float alpha = max(c.a * aImg, ring);
+                            gl_FragColor = vec4(rgb * alpha, alpha) * qt_Opacity;
+                        }"
+                }
+            }
+        }
+
+        // ошибка (место зарезервировано)
+        Text {
+            id: err
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: ""
+            color: cDanger
+            height: Math.round(18 * k)
+            font.family: fReg.name
+            font.pixelSize: Math.round(13 * k)
+            font.letterSpacing: Math.round(1 * k)
+        }
+
+        // кнопка входа со стрелкой
+        Rectangle {
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: Math.round(300 * k)
+            height: Math.round(44 * k)
+            radius: Math.round(6 * k)
+            color: loginArea.containsMouse ? cText : "transparent"
+            border.width: 1
+            border.color: cText
+            Behavior on color { ColorAnimation { duration: 120 } }
+            Row {
+                anchors.centerIn: parent
+                spacing: Math.round(10 * k)
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
                     text: "ВОЙТИ"
                     color: loginArea.containsMouse ? "#050505" : cText
                     font.family: fBold.name
                     font.pixelSize: Math.round(15 * k)
                     font.letterSpacing: Math.round(3 * k)
                 }
-                MouseArea {
-                    id: loginArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.doLogin()
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "→"
+                    color: loginArea.containsMouse ? "#050505" : cText
+                    font.family: fReg.name
+                    font.pixelSize: Math.round(17 * k)
                 }
+            }
+            MouseArea {
+                id: loginArea
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.doLogin()
             }
         }
 
@@ -334,8 +410,5 @@ Rectangle {
         font.letterSpacing: Math.round(2 * k)
     }
 
-    Component.onCompleted: {
-        if (userInput.text.length > 0) passInput.forceActiveFocus()
-        else userInput.forceActiveFocus()
-    }
+    Component.onCompleted: passInput.forceActiveFocus()
 }
