@@ -1,0 +1,11 @@
+[SddmGreeterTheme]
+Name=Lunar Eclipse
+Description=Monochrome lunar eclipse login — продолжение заставки Plymouth
+Type=sddm-theme
+Author=AlanMillerSora
+Copyright=(c) 2026, AlanMillerSora
+License=MIT
+Version=1.0
+MainScript=Main.qml
+ConfigFile=theme.conf
+Theme-API=2.0
