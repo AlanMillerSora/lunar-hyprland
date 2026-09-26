@@ -9,6 +9,8 @@
 #  gpu/gput — загрузка и температура GPU (AMD sysfs или NVIDIA)
 #  gm   — 1 если включён Game Mode
 #  pp   — профиль питания (performance/balanced/power-saver)
+#  Без python3: JSON разбирает jq (в зависимостях), уведомления
+#  считаются по plain-выводу makoctl — питон в горячем пути не нужен.
 # ════════════════════════════════════════════════════════════════
 
 # ── сеть ──
@@ -22,30 +24,20 @@ elif grep -q '^wifi:connected' <<<"$dev_types"; then
 fi
 
 # ── раскладка ──
-read -r kb kbdev < <(hyprctl devices -j 2>/dev/null | python3 -c '
-import sys, json
-try:
-    d = json.load(sys.stdin)
-    ks = [x for x in d.get("keyboards", []) if x.get("main")] or d.get("keyboards", [])
-    if ks:
-        print(ks[0].get("active_keymap", "EN")[:2].upper(), ks[0].get("name", ""))
-    else:
-        print("EN", "")
-except Exception:
-    print("EN", "")
-')
+# Берём клавиатуру с флагом main, иначе первую. Разбор через jq.
+kb="EN"; kbdev=""
+if command -v jq >/dev/null 2>&1; then
+  read -r kb kbdev < <(hyprctl devices -j 2>/dev/null | jq -r '
+    ([.keyboards[] | select(.main)] + [.keyboards[0]])[0]
+    | "\(.active_keymap[:2] | ascii_upcase) \(.name)"' 2>/dev/null)
+fi
 
 # ── уведомления ──
 mode="$(makoctl mode 2>/dev/null)"
 grep -q '^do-not-disturb$' <<<"$mode" && dnd=1 || dnd=0
 
-notif="$(makoctl list -j 2>/dev/null | python3 -c '
-import sys, json
-try:
-    print(len(json.load(sys.stdin)))
-except Exception:
-    print(0)' 2>/dev/null)"
-[ -z "$notif" ] && notif=0
+# В plain-выводе makoctl каждое уведомление — строка «Notification N: …».
+notif="$(makoctl list 2>/dev/null | grep -c '^Notification ')"
 
 # ── GPU ──
 gpu=""
