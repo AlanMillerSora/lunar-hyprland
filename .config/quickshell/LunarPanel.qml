@@ -869,54 +869,188 @@ PanelWindow {
 
             Sep {}
 
-            // ── статистика: CPU / RAM / °C / GPU ──
+            // ── статистика: [CPU °] │ [RAM] │ [GPU °] ──
+            // Иконки (приглушённые) + значения (белые) + температуры (dim),
+            // группы разделены тонкими линиями. Числа — фикс. ширины.
             Row {
                 id: statsRow
                 Layout.alignment: Qt.AlignVCenter
                 height: 26
                 spacing: 7
 
-                // каждое поле — фиксированной ширины, цифры не дёргают строку
+                // — процессор: загрузка + температура —
+                Item {
+                    id: cpuGrp
+                    height: 26
+                    implicitWidth: cpuRow.implicitWidth
+
+                    Row {
+                        id: cpuRow
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 5
+
+                        Text {
+                            text: "\uf4bc"
+                            color: Theme.textFaint
+                            font.family: Theme.iconFont
+                            font.pixelSize: Theme.fontSize(14)
+                            height: 26
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        Text {
+                            width: fm14.advanceWidth("100%")
+                            text: root.padNum(root.cpuPct < 0 ? "--%" : root.cpuPct + "%", 4)
+                            color: Theme.text
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize(14)
+                            height: 26
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        Text {
+                            visible: root.tempC > 0
+                            text: "\uf2c8"
+                            color: Theme.textFaint
+                            font.family: Theme.iconFont
+                            font.pixelSize: Theme.fontSize(13)
+                            height: 26
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        Text {
+                            visible: root.tempC > 0
+                            width: fm14.advanceWidth("100°")
+                            text: root.padNum(root.tempC + "°", 4)
+                            color: Theme.textDim
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize(14)
+                            height: 26
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        acceptedButtons: Qt.NoButton
+                        onEntered: root.showTip("процессор: загрузка и температура", cpuGrp)
+                        onExited: Theme.tooltipShown = false
+                    }
+                }
+
                 Text {
-                    width: fm14.advanceWidth("CPU 100%")
-                    text: "CPU " + root.padNum(root.cpuPct < 0 ? "--" : root.cpuPct + "%", 4)
-                    color: Theme.textDim
+                    text: "│"
+                    color: Theme.textFaint
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(14)
                     height: 26
                     verticalAlignment: Text.AlignVCenter
                 }
-                Text {
-                    width: fm14.advanceWidth("RAM 100%")
-                    text: "RAM " + root.padNum(root.ramPct < 0 ? "--" : root.ramPct + "%", 4)
-                    color: Theme.textDim
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(14)
+
+                // — оперативная память —
+                Item {
+                    id: ramGrp
                     height: 26
-                    verticalAlignment: Text.AlignVCenter
+                    implicitWidth: ramRow.implicitWidth
+
+                    Row {
+                        id: ramRow
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 5
+
+                        Text {
+                            text: "\u{F035B}"
+                            color: Theme.textFaint
+                            font.family: Theme.iconFont
+                            font.pixelSize: Theme.fontSize(14)
+                            height: 26
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        Text {
+                            width: fm14.advanceWidth("100%")
+                            text: root.padNum(root.ramPct < 0 ? "--%" : root.ramPct + "%", 4)
+                            color: Theme.text
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize(14)
+                            height: 26
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        acceptedButtons: Qt.NoButton
+                        onEntered: root.showTip("оперативная память: занято", ramGrp)
+                        onExited: Theme.tooltipShown = false
+                    }
                 }
-                // температура — вместе с CPU/RAM
-                Text {
-                    visible: root.tempC > 0
-                    width: fm14.advanceWidth("58°C")
-                    text: root.padNum(root.tempC + "°C", 4)
-                    color: Theme.textDim
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(14)
-                    height: 26
-                    verticalAlignment: Text.AlignVCenter
-                }
-                // GPU: загрузка и температура
+
                 Text {
                     visible: root.gpuLoad !== ""
-                    width: fm14.advanceWidth("GPU 100% 100°C")
-                    text: "GPU " + root.padNum(root.gpuLoad + "%", 4)
-                        + " " + root.padNum(root.gpuTemp !== "" ? root.gpuTemp + "°C" : "--", 5)
-                    color: Theme.textDim
+                    text: "│"
+                    color: Theme.textFaint
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(14)
                     height: 26
                     verticalAlignment: Text.AlignVCenter
+                }
+
+                // — видеокарта: загрузка + температура —
+                Item {
+                    id: gpuGrp
+                    visible: root.gpuLoad !== ""
+                    height: 26
+                    implicitWidth: gpuRow.implicitWidth
+
+                    Row {
+                        id: gpuRow
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 5
+
+                        Text {
+                            text: "\uf108"
+                            color: Theme.textFaint
+                            font.family: Theme.iconFont
+                            font.pixelSize: Theme.fontSize(14)
+                            height: 26
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        Text {
+                            width: fm14.advanceWidth("100%")
+                            text: root.padNum(root.gpuLoad + "%", 4)
+                            color: Theme.text
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize(14)
+                            height: 26
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        Text {
+                            visible: root.gpuTemp !== ""
+                            text: "\uf2c8"
+                            color: Theme.textFaint
+                            font.family: Theme.iconFont
+                            font.pixelSize: Theme.fontSize(13)
+                            height: 26
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        Text {
+                            visible: root.gpuTemp !== ""
+                            width: fm14.advanceWidth("100°")
+                            text: root.padNum(root.gpuTemp + "°", 4)
+                            color: Theme.textDim
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize(14)
+                            height: 26
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        acceptedButtons: Qt.NoButton
+                        onEntered: root.showTip("видеокарта: загрузка и температура", gpuGrp)
+                        onExited: Theme.tooltipShown = false
+                    }
                 }
             }
 
