@@ -6,8 +6,7 @@ ShellRoot {
     LunarHub {}
     LunarSidebar {}
     LunarSidebarRight {}
-    LunarVolumeOsd {}
-    LunarBrightnessOsd {}
+    LunarOsd {}
     LunarVolume {}
     LunarMedia {}
     LunarTray {}
