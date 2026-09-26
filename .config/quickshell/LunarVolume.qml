@@ -6,9 +6,9 @@ import QtQuick
 import QtQuick.Layouts
 
 // ════════════════════════════════════════════════════════════════
-//  LunarVolume — попап громкости с крупным ползунком (клик по
-//  значку громкости на панели). Слева — mute, справа — микшер.
-//  IPC:  qs ipc call volume toggle|open|close
+//  LunarVolume — попап громкости (клик по значку на панели):
+//  крупный ползунок, выбор вывода (колонки/наушники/HDMI) и входа
+//  (микрофон). IPC: qs ipc call volume toggle|open|close
 // ════════════════════════════════════════════════════════════════
 PanelWindow {
     id: root
@@ -38,7 +38,7 @@ PanelWindow {
         function close(): void { root.closePanel() }
     }
 
-    PwObjectTracker { objects: [Pipewire.defaultAudioSink] }
+    PwObjectTracker { objects: [Pipewire.defaultAudioSink, Pipewire.defaultAudioSource] }
 
     readonly property var sink: Pipewire.defaultAudioSink
     readonly property real vol: (sink && sink.audio) ? sink.audio.volume : 0
@@ -54,6 +54,31 @@ PanelWindow {
     function toggleMute() {
         if (sink && sink.audio)
             sink.audio.muted = !sink.audio.muted
+    }
+
+    // ── устройства вывода / входа (без потоков и мониторов) ──
+    readonly property var sinks:
+        Pipewire.nodes.values.filter(n => n.isSink && !n.isStream && n.audio)
+    readonly property var sources:
+        Pipewire.nodes.values.filter(n => !n.isSink && !n.isStream && n.audio
+            && ("" + n.name).indexOf(".monitor") < 0)
+
+    function devName(n) {
+        return (n && (n.description || n.nickname || n.name)) || ""
+    }
+
+    function devIcon(n) {
+        if (root.sources.indexOf(n) >= 0)
+            return "\uf130"                                    // микрофон
+        var s = devName(n).toLowerCase()
+        if (s.indexOf("head") >= 0 || s.indexOf("науш") >= 0)
+            return "\uf025"                                    // наушники
+        if (s.indexOf("bluetooth") >= 0)
+            return "\uf293"                                    // bluetooth
+        if (s.indexOf("hdmi") >= 0 || s.indexOf("digital") >= 0
+                || s.indexOf("display") >= 0 || s.indexOf("spdif") >= 0)
+            return "\uf108"                                    // монитор/HDMI
+        return "\uf028"                                        // динамики
     }
 
     Process { id: mixerProc; running: false }
@@ -77,10 +102,58 @@ PanelWindow {
         }
     }
 
+    // строка устройства: иконка + имя, клик — выбрать
+    component DeviceRow: Item {
+        id: row
+        property var device
+        property bool active: false
+        signal picked()
+        implicitHeight: 22
+
+        Rectangle {
+            anchors.fill: parent
+            radius: 3
+            color: row.active
+                ? Theme.alpha(Theme.accent, 0.10)
+                : (rowMouse.containsMouse ? Theme.alpha(Theme.accent, 0.06) : "transparent")
+        }
+
+        RowLayout {
+            anchors.fill: parent
+            anchors.leftMargin: 6
+            anchors.rightMargin: 6
+            spacing: 8
+
+            Text {
+                text: root.devIcon(row.device)
+                color: row.active ? Theme.accent : Theme.textDim
+                font.family: Theme.iconFont
+                font.pixelSize: 14
+            }
+            Text {
+                Layout.fillWidth: true
+                text: root.devName(row.device)
+                color: row.active ? Theme.text : Theme.textDim
+                font.family: Theme.fontFamily
+                font.pixelSize: 11
+                elide: Text.ElideMiddle
+                verticalAlignment: Text.AlignVCenter
+            }
+        }
+
+        MouseArea {
+            id: rowMouse
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: row.picked()
+        }
+    }
+
     Rectangle {
         id: card
-        width: 340
-        height: 158
+        width: 360
+        height: col.implicitHeight + 32
         anchors.top: parent.top
         anchors.topMargin: 52
         anchors.right: parent.right
@@ -108,10 +181,12 @@ PanelWindow {
         }
 
         ColumnLayout {
+            id: col
             anchors.fill: parent
             anchors.margins: 16
             spacing: 10
 
+            // ── шапка: mute · процент · микшер · закрыть ──
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 8
@@ -172,7 +247,7 @@ PanelWindow {
                 }
             }
 
-            // крупный ползунок — им реально удобно пользоваться
+            // ── крупный ползунок ──
             Slider {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 66
@@ -181,6 +256,60 @@ PanelWindow {
                 value: root.muted ? 0 : root.vol
                 onMoved: (v) => root.setVol(v)
                 onCommitted: (v) => root.setVol(v)
+            }
+
+            // ── вывод звука (список, если есть из чего выбирать) ──
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 4
+                visible: root.sinks.length > 1
+
+                Text {
+                    text: "ВЫВОД"
+                    color: Theme.textFaint
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 9
+                    font.letterSpacing: 1
+                }
+
+                Repeater {
+                    model: root.sinks
+
+                    delegate: DeviceRow {
+                        required property var modelData
+                        Layout.fillWidth: true
+                        device: modelData
+                        active: modelData === Pipewire.defaultAudioSink
+                        onPicked: Pipewire.preferredDefaultAudioSink = modelData
+                    }
+                }
+            }
+
+            // ── вход: микрофон ──
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 4
+                visible: root.sources.length > 1
+
+                Text {
+                    text: "ВХОД"
+                    color: Theme.textFaint
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 9
+                    font.letterSpacing: 1
+                }
+
+                Repeater {
+                    model: root.sources
+
+                    delegate: DeviceRow {
+                        required property var modelData
+                        Layout.fillWidth: true
+                        device: modelData
+                        active: modelData === Pipewire.defaultAudioSource
+                        onPicked: Pipewire.preferredDefaultAudioSource = modelData
+                    }
+                }
             }
 
             Text {
