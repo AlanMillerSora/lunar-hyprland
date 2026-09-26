@@ -30,7 +30,7 @@ PanelWindow {
 
     // ── крупный спектр cava во вкладке «музыка» ──
     readonly property bool mediaPlaying: player !== null && player !== undefined && player.isPlaying
-    readonly property int barCount: 40
+    readonly property int barCount: 56
     property var barValues: []
 
     function feedCava(line) {
@@ -38,10 +38,14 @@ PanelWindow {
         if (t.length === 0)
             return
         var parts = t.split(/\s+/)
+        var prev = root.barValues
         var out = []
         for (var i = 0; i < root.barCount; i++) {
-            var v = parseInt(parts[i] === undefined ? "0" : parts[i]) || 0
-            out.push(Math.max(0, Math.min(1, v / 1000)))
+            var raw = (parseInt(parts[i] === undefined ? "0" : parts[i]) || 0) / 1000
+            raw = Math.max(0, Math.min(1, raw))
+            var p = prev[i] || 0
+            // быстрый подъём, плавный спад — столбики не «дёргаются»
+            out.push(raw > p ? p + (raw - p) * 0.55 : p * 0.80 + raw * 0.20)
         }
         root.barValues = out
     }
@@ -79,7 +83,7 @@ PanelWindow {
     Process {
         id: cavaProc
         running: root.tabIndex === 1 && root.mediaPlaying && !root.collapsed
-        command: ["cava", "-p", Quickshell.shellPath("cava-lunar.conf")]
+        command: ["cava", "-p", Quickshell.shellPath("cava-lunar-wide.conf")]
         stdout: SplitParser {
             splitMarker: "\n"
             onRead: (line) => root.feedCava(line)
@@ -478,10 +482,18 @@ PanelWindow {
                                             anchors.horizontalCenter: parent.horizontalCenter
                                             anchors.bottom: parent.bottom
                                             width: parent.width
-                                            height: 2 + (root.barValues[index] || 0) * (parent.height - 4)
-                                            radius: 1
-                                            color: Theme.alpha(Theme.accent, 0.3 + 0.7 * (root.barValues[index] || 0))
-                                            Behavior on height { NumberAnimation { duration: 80 } }
+                                            height: 2 + (root.barValues[index] || 0) * (parent.height - 6)
+                                            radius: 2
+                                            color: Theme.alpha(Theme.accent, 0.32 + 0.68 * (root.barValues[index] || 0))
+
+                                            // светлый «кончик» — столбики читаются мягче
+                                            Rectangle {
+                                                anchors { left: parent.left; right: parent.right; top: parent.top }
+                                                height: 2
+                                                radius: 1
+                                                color: Theme.accent
+                                                opacity: 0.25 + 0.75 * (root.barValues[index] || 0)
+                                            }
                                         }
                                     }
                                 }

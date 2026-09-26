@@ -53,35 +53,6 @@ PanelWindow {
     readonly property real progress: len > 0 ? Math.min(1, pos / len) : 0
     readonly property bool seekable: player !== null && player.canSeek === true && len > 0
 
-    // спектр cava — только когда попап открыт и реально играет
-    readonly property bool vizActive: root.showing && root.playing && root.title.length > 0
-    readonly property int barCount: 44
-    property var barValues: []
-
-    function feedCava(line) {
-        var t = ("" + line).trim()
-        if (t.length === 0)
-            return
-        var parts = t.split(/\s+/)
-        var out = []
-        for (var i = 0; i < root.barCount; i++) {
-            var v = parseInt(parts[i] === undefined ? "0" : parts[i]) || 0
-            out.push(Math.max(0, Math.min(1, v / 1000)))
-        }
-        root.barValues = out
-    }
-
-    Process {
-        id: cavaProc
-        running: root.vizActive
-        command: ["cava", "-p", Quickshell.shellPath("cava-lunar.conf")]
-        stdout: SplitParser {
-            splitMarker: "\n"
-            onRead: (line) => root.feedCava(line)
-        }
-        stderr: StdioCollector {}
-    }
-
     function fmt(s) {
         if (!s || s < 0 || !isFinite(s))
             s = 0
@@ -102,7 +73,7 @@ PanelWindow {
     Rectangle {
         id: card
         width: 460
-        height: 382
+        height: 306
         anchors.top: parent.top
         anchors.topMargin: 52
         anchors.right: parent.right
@@ -234,44 +205,6 @@ PanelWindow {
                         elide: Text.ElideRight
                     }
                     Item { Layout.fillHeight: true }
-                }
-            }
-
-            // ── спектр cava ──
-            Item {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 62
-
-                Rectangle {
-                    visible: !root.vizActive
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: parent.width
-                    height: 1
-                    color: Theme.alpha(Theme.accent, 0.18)
-                }
-
-                Row {
-                    visible: root.vizActive
-                    anchors.fill: parent
-                    spacing: 2
-
-                    Repeater {
-                        model: root.barCount
-                        delegate: Item {
-                            required property int index
-                            width: Math.max(1, (parent.width - (root.barCount - 1) * 2) / root.barCount)
-                            height: parent.height
-                            Rectangle {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                anchors.bottom: parent.bottom
-                                width: parent.width
-                                height: 2 + (root.barValues[index] || 0) * (parent.height - 4)
-                                radius: 1
-                                color: Theme.alpha(Theme.accent, 0.35 + 0.65 * (root.barValues[index] || 0))
-                                Behavior on height { NumberAnimation { duration: 80 } }
-                            }
-                        }
-                    }
                 }
             }
 
