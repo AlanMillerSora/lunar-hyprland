@@ -125,7 +125,7 @@ else
 fi
 
 # ── zapret: обход DPI (Discord / YouTube) ──────────────────────
-# Сам zapret ставится из исходников через ./install.sh (zapret/install-zapret.sh);
+# Сам zapret ставится из исходников через ./install.sh --zapret;
 # тут — зависимости сборки (gcc/make) и работы (netfilter/nftables).
 say "pacman: зависимости zapret (сборка nfqws + netfilter)"
 # systemd-libs отдельно не ставим — точечное обновление ломает systemd.

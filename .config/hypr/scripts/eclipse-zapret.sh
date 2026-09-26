@@ -2,7 +2,7 @@
 # ════════════════════════════════════════════════════════════════
 #  Lunar Eclipse — управление zapret (обход DPI: Discord / YouTube)
 #
-#  Обёртка над zapret.service. Установка — rice/zapret/install-zapret.sh
+#  Обёртка над zapret.service. Установка — ~/rice/install.sh --zapret
 #
 #  Использование:
 #    eclipse-zapret.sh status    # состояние (key=value, для Hub)
@@ -17,7 +17,7 @@ set -uo pipefail
 ZDIR=/opt/zapret
 UNIT=zapret.service
 
-# без пароля (sudoers-правило от install-zapret.sh), иначе — pkexec
+# без пароля (sudoers-правило от install.sh --zapret), иначе — pkexec
 priv() { sudo -n "$@" 2>/dev/null || pkexec "$@" ; }
 
 is_active()  { systemctl is-active  --quiet "$UNIT" 2>/dev/null; }

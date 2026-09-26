@@ -7,14 +7,15 @@ JetBrains Mono, палитра риса, фон `#050505`.
 
 ```
 sddm/
-├── lunar/                 тема SDDM (QML, QtQuick 2.0)
-│   ├── Main.qml           сцена экрана входа
-│   ├── theme.conf         конфиг темы (заглушка)
-│   ├── metadata.desktop   описание темы
-│   ├── assets/            logo.png, wordmark.png, chevron.png, avatar.png
-│   └── fonts/             JetBrains Mono (Regular, Bold)
-└── eclipse-sddm.sh        установка/включение/откат/аватар
+└── lunar/                 тема SDDM (QML, QtQuick 2.0)
+    ├── Main.qml           сцена экрана входа
+    ├── theme.conf         конфиг темы (заглушка)
+    ├── metadata.desktop   описание темы
+    ├── assets/            logo.png, wordmark.png, chevron.png, avatar.png
+    └── fonts/             JetBrains Mono (Regular, Bold)
 ```
+
+Установка и управление — общий `install.sh` (флаг `--sddm`).
 
 ## Заметки по реализации
 
@@ -32,12 +33,13 @@ sddm/
 ## Быстро
 
 ```bash
-sudo ./sddm/eclipse-sddm.sh install        # поставить тему
-sudo ./sddm/eclipse-sddm.sh enable         # выбрать её в SDDM
-sudo ./sddm/eclipse-sddm.sh avatar ~/me.png # аватар пользователя
-./sddm/eclipse-sddm.sh status
-sudo ./sddm/eclipse-sddm.sh disable        # вернуть штатную тему
+./install.sh --sddm               # поставить и включить тему lunar
+sudo ./install.sh --status        # состояние SDDM / Plymouth / zapret
+sudo ./install.sh --disable-sddm  # вернуть штатную тему
 ```
+
+Аватар — из **Hub → User → СМЕНИТЬ АВАТАР** или скриптом
+`~/.config/hypr/scripts/eclipse-avatar.sh` (пишет прямо в тему SDDM).
 
 ## Безопасный предпросмотр
 
@@ -49,7 +51,7 @@ sddm-greeter --test-mode --theme /usr/share/sddm/themes/lunar
 ## Откат, если тема не пустит в граф.вход
 
 1. `Ctrl+Alt+F3` (TTY), войти.
-2. `sudo ./sddm/eclipse-sddm.sh disable`
+2. `sudo ~/rice/install.sh --disable-sddm`
 3. `sudo systemctl restart sddm`
 
 Файл, который включает тему, — `/etc/sddm.conf.d/10-lunar-theme.conf`;

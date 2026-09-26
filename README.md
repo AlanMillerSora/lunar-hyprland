@@ -137,10 +137,13 @@
 git clone https://github.com/AlanMillerSora/lunar-hyprland.git ~/rice
 cd ~/rice
 
-./install.sh      # всё: зависимости + конфиги (HUD-стиль)
+./install.sh             # база: зависимости + конфиги
+./install.sh --sddm      # + тема экрана входа (SDDM)
+./install.sh --plymouth  # + заставка при загрузке (меняет загрузку)
+./install.sh --zapret    # + обход DPI (Discord/YouTube)
 ```
 
-Флаги: `--no-deps` — только конфиги, `--deps-only` — только зависимости. `./get-deps.sh` запускается и отдельно. Если `yay`/`paru` нет, установщик сам поставит `yay` (из AUR) — иначе VS Code и Vencord пропустятся.
+Системные темы и сервисы — **SDDM**, **Plymouth**, **zapret** — ставятся только по явному флагу; без них установщик трогает лишь `~/.config` и системные мелочи. Состояние: `./install.sh --status`; откат: `--disable-sddm` / `--disable-plymouth`. Флаги: `--no-deps` — только конфиги, `--deps-only` — только зависимости. `./get-deps.sh` запускается и отдельно. Если `yay`/`paru` нет, установщик сам поставит `yay` (из AUR) — иначе VS Code и Vencord пропустятся.
 
 <div align="center">
 
@@ -159,16 +162,15 @@ cd ~/rice
 </div>
 
 ```bash
-sudo plymouth/eclipse-plymouth.sh status    # тема, hook, cmdline, GRUB
-sudo plymouth/eclipse-plymouth.sh install   # установить тему и hook
-sudo plymouth/eclipse-plymouth.sh enable    # включить
-sudo plymouth/eclipse-plymouth.sh disable   # выключить
-sudo plymouth/eclipse-plymouth.sh rescue    # резервный пункт «без заставки»
+./install.sh --plymouth               # включить (hook + cmdline + пересборка)
+sudo ./install.sh --status            # состояние SDDM / Plymouth / zapret
+sudo ./install.sh --disable-plymouth  # выключить и вернуть загрузку
+sudo ./install.sh --plymouth-rescue   # (UKI) пункт меню «без заставки»
 ```
 
 <div align="center">
 
-Тема — `plymouth/lunar/`. Скрипт сам гасит лишний пункт `10_linux` (на UKI-машине он создаёт пункт без initramfs): после обновления пакета `grub` права могут сброситься — тогда прогнать `enable` заново.
+Тема — `plymouth/lunar/`. Установщик сам гасит лишний пункт `10_linux` (на UKI-машине он создаёт пункт без initramfs): после обновления пакета `grub` права могут сброситься — тогда прогнать `./install.sh --plymouth` заново.
 
 </div>
 
@@ -186,10 +188,9 @@ sudo plymouth/eclipse-plymouth.sh rescue    # резервный пункт «б
 </div>
 
 ```bash
-sudo sddm/eclipse-sddm.sh status               # состояние темы
-sudo sddm/eclipse-sddm.sh enable               # включить тему lunar
-sudo sddm/eclipse-sddm.sh disable              # вернуть штатную тему
-sudo sddm/eclipse-sddm.sh avatar /путь/к.png   # аватар на экране входа
+./install.sh --sddm               # поставить и включить тему lunar
+sudo ./install.sh --status        # состояние SDDM / Plymouth / zapret
+sudo ./install.sh --disable-sddm  # вернуть штатную тему
 ```
 
 <div align="center">
