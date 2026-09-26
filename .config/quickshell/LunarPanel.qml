@@ -484,6 +484,16 @@ PanelWindow {
         color: Theme.border
     }
 
+    // подсветка интерактивной секции при наведении
+    component HoverBg: Rectangle {
+        anchors.fill: parent
+        radius: 4
+        color: Theme.alpha(Theme.accent, 0.07)
+        opacity: hh.hovered ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 120 } }
+        HoverHandler { id: hh }
+    }
+
     // Метрики моношрифта: по ним считаем ширины числовых полей, чтобы
     // цифры при скачках значений не дёргали раскладку.
     FontMetrics { id: fm11; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSize(11) }
@@ -559,6 +569,8 @@ PanelWindow {
                 Layout.alignment: Qt.AlignVCenter
                 implicitWidth: wsRow.implicitWidth
                 implicitHeight: 26
+
+                HoverBg {}
 
                 // тонкая «орбита» за фазами — связывает индикаторы в цикл
                 Rectangle {
@@ -667,6 +679,8 @@ PanelWindow {
                 implicitWidth: netRow.implicitWidth
                 implicitHeight: 26
 
+                HoverBg {}
+
                 Row {
                     id: netRow
                     anchors.centerIn: parent
@@ -724,78 +738,84 @@ PanelWindow {
             Sep {}
 
             // ── действия: Game Mode / питание / запись ──
-            Row {
-                id: actionRow
+            Item {
                 Layout.alignment: Qt.AlignVCenter
-                height: 26
-                spacing: 8
+                implicitWidth: actionRow.implicitWidth
+                implicitHeight: 26
+                HoverBg {}
+                Row {
+                    id: actionRow
+                    anchors.centerIn: parent
+                    height: 26
+                    spacing: 8
 
-                // Game Mode (клик — переключить)
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "\uf11b"
-                    color: root.gameMode ? Theme.danger : Theme.textDim
-                    font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSize(17)
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.toggleGameMode()
-                    }
-                }
-
-                // профиль питания (клик — переключить performance/balanced/save)
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: fm13.advanceWidth("PERF")
-                    text: root.powerProfile === "performance"
-                        ? "PERF"
-                        : (root.powerProfile === "power-saver" ? "SAVE" : "BAL")
-                    color: root.powerProfile === "performance" ? Theme.accent : Theme.textDim
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(13)
-                    font.bold: true
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.cyclePower()
-                    }
-                }
-
-                Rectangle {
-                    width: 1
-                    height: 16
-                    color: Theme.border
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                // запись экрана
-                Rectangle {
-                    width: fm11.advanceWidth("● REC") + 20
-                    height: 24
-                    radius: Theme.radius
-                    anchors.verticalCenter: parent.verticalCenter
-                    color: root.recording
-                        ? Theme.alpha(Theme.danger, 0.16)
-                        : (recMouse.containsMouse ? Theme.alpha(Theme.danger, 0.08) : "transparent")
-                    border.width: 1
-                    border.color: root.recording ? Theme.danger : Theme.borderAccent
-
+                    // Game Mode (клик — переключить)
                     Text {
-                        id: recLabel
-                        anchors.centerIn: parent
-                        text: root.recording ? "■ REC" : "● REC"
-                        color: root.recording ? Theme.danger : Theme.textDim
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize(11)
-                        font.bold: root.recording
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "\uf11b"
+                        color: root.gameMode ? Theme.danger : Theme.textDim
+                        font.family: Theme.iconFont
+                        font.pixelSize: Theme.fontSize(17)
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.toggleGameMode()
+                        }
                     }
-                    MouseArea {
-                        id: recMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.toggleRecording()
+
+                    // профиль питания (клик — переключить performance/balanced/save)
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: fm13.advanceWidth("PERF")
+                        text: root.powerProfile === "performance"
+                            ? "PERF"
+                            : (root.powerProfile === "power-saver" ? "SAVE" : "BAL")
+                        color: root.powerProfile === "performance" ? Theme.accent : Theme.textDim
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(13)
+                        font.bold: true
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.cyclePower()
+                        }
+                    }
+
+                    Rectangle {
+                        width: 1
+                        height: 16
+                        color: Theme.border
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    // запись экрана
+                    Rectangle {
+                        width: fm11.advanceWidth("● REC") + 20
+                        height: 24
+                        radius: Theme.radius
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: root.recording
+                            ? Theme.alpha(Theme.danger, 0.16)
+                            : (recMouse.containsMouse ? Theme.alpha(Theme.danger, 0.08) : "transparent")
+                        border.width: 1
+                        border.color: root.recording ? Theme.danger : Theme.borderAccent
+
+                        Text {
+                            id: recLabel
+                            anchors.centerIn: parent
+                            text: root.recording ? "■ REC" : "● REC"
+                            color: root.recording ? Theme.danger : Theme.textDim
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize(11)
+                            font.bold: root.recording
+                        }
+                        MouseArea {
+                            id: recMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.toggleRecording()
+                        }
                     }
                 }
             }
@@ -860,6 +880,8 @@ PanelWindow {
                 Layout.alignment: Qt.AlignVCenter
                 implicitWidth: root.trayMax * 20 + Math.max(0, root.trayMax - 1) * 9
                 implicitHeight: 26
+
+                HoverBg { visible: SystemTray.items.values.length > 0 }
 
                 Row {
                     id: trayRow
@@ -953,108 +975,114 @@ PanelWindow {
             }
 
             // ── раскладка · уведомления · громкость — у самого края ──
-            Row {
-                id: rightRow
+            Item {
                 Layout.alignment: Qt.AlignVCenter
-                height: 26
-                spacing: 9
-
-                // раскладка (клик — переключить)
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: fm14.advanceWidth("EN")
-                    text: root.kbLayout
-                    color: Theme.text
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(14)
-                    font.bold: true
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.switchLayout()
-                    }
-                }
-
-                // уведомления / «не беспокоить» (клик — переключить)
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: Math.max(fmIcon15.advanceWidth("\uf1f6"), fmIcon15.advanceWidth("\uf0f3"))
-                    text: root.dnd ? "\uf1f6" : "\uf0f3"
-                    color: root.dnd
-                        ? Theme.textFaint
-                        : (root.notifCount > 0 ? Theme.text : Theme.textDim)
-                    font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSize(15)
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.toggleDnd()
-                    }
-                }
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: fm13.advanceWidth("999")
-                    text: root.notifCount > 0 ? root.notifCount : ""
-                    color: Theme.accent
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(13)
-                    font.bold: true
-                }
-
-                Rectangle {
-                    width: 1
-                    height: 16
-                    color: Theme.border
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                // volume
-                Item {
-                    width: volRow.implicitWidth
+                implicitWidth: rightRow.implicitWidth
+                implicitHeight: 26
+                HoverBg {}
+                Row {
+                    id: rightRow
+                    anchors.centerIn: parent
                     height: 26
+                    spacing: 9
 
-                    Row {
-                        id: volRow
-                        anchors.centerIn: parent
-                        height: 26
-                        spacing: 6
-
-                        Text {
-                            width: Math.max(fmIcon19.advanceWidth("󰖁"), fmIcon19.advanceWidth("󰕿"),
-                                            fmIcon19.advanceWidth("󰖀"), fmIcon19.advanceWidth("󰕾"))
-                            text: root.muted
-                                ? "󰖁"
-                                : (root.vol < 0.34 ? "󰕿" : (root.vol < 0.67 ? "󰖀" : "󰕾"))
-                            color: root.muted ? Theme.textFaint : Theme.text
-                            font.family: Theme.iconFont
-                            font.pixelSize: Theme.fontSize(19)
-                            height: 26
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        Text {
-                            width: fm14.advanceWidth("100%")
-                            text: root.muted ? "mute" : Math.round(root.vol * 100) + "%"
-                            color: Theme.textDim
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(14)
-                            height: 26
-                            verticalAlignment: Text.AlignVCenter
+                    // раскладка (клик — переключить)
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: fm14.advanceWidth("EN")
+                        text: root.kbLayout
+                        color: Theme.text
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(14)
+                        font.bold: true
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.switchLayout()
                         }
                     }
 
-                    MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        acceptedButtons: Qt.LeftButton | Qt.RightButton
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: function (mouse) {
-                            if (mouse.button === Qt.RightButton)
-                                root.openMixer()
-                            else
-                                root.openVolumePanel()
+                    // уведомления / «не беспокоить» (клик — переключить)
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: Math.max(fmIcon15.advanceWidth("\uf1f6"), fmIcon15.advanceWidth("\uf0f3"))
+                        text: root.dnd ? "\uf1f6" : "\uf0f3"
+                        color: root.dnd
+                            ? Theme.textFaint
+                            : (root.notifCount > 0 ? Theme.text : Theme.textDim)
+                        font.family: Theme.iconFont
+                        font.pixelSize: Theme.fontSize(15)
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.toggleDnd()
                         }
-                        onWheel: function (wheel) {
-                            root.bumpVol(wheel.angleDelta.y > 0 ? 0.05 : -0.05)
+                    }
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: fm13.advanceWidth("999")
+                        text: root.notifCount > 0 ? root.notifCount : ""
+                        color: Theme.accent
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(13)
+                        font.bold: true
+                    }
+
+                    Rectangle {
+                        width: 1
+                        height: 16
+                        color: Theme.border
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    // volume
+                    Item {
+                        width: volRow.implicitWidth
+                        height: 26
+
+                        Row {
+                            id: volRow
+                            anchors.centerIn: parent
+                            height: 26
+                            spacing: 6
+
+                            Text {
+                                width: Math.max(fmIcon19.advanceWidth("󰖁"), fmIcon19.advanceWidth("󰕿"),
+                                                fmIcon19.advanceWidth("󰖀"), fmIcon19.advanceWidth("󰕾"))
+                                text: root.muted
+                                    ? "󰖁"
+                                    : (root.vol < 0.34 ? "󰕿" : (root.vol < 0.67 ? "󰖀" : "󰕾"))
+                                color: root.muted ? Theme.textFaint : Theme.text
+                                font.family: Theme.iconFont
+                                font.pixelSize: Theme.fontSize(19)
+                                height: 26
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                            Text {
+                                width: fm14.advanceWidth("100%")
+                                text: root.muted ? "mute" : Math.round(root.vol * 100) + "%"
+                                color: Theme.textDim
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSize(14)
+                                height: 26
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: function (mouse) {
+                                if (mouse.button === Qt.RightButton)
+                                    root.openMixer()
+                                else
+                                    root.openVolumePanel()
+                            }
+                            onWheel: function (wheel) {
+                                root.bumpVol(wheel.angleDelta.y > 0 ? 0.05 : -0.05)
+                            }
                         }
                     }
                 }
