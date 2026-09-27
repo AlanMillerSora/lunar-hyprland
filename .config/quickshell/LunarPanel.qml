@@ -60,7 +60,7 @@ PanelWindow {
         id: luaCheck
         running: true
         command: ["bash", "-c",
-            "hyprctl -j status 2>/dev/null | grep -q '\"configProvider\": \"lua\"' && echo lua || echo legacy"]
+            "hyprctl -j status 2>/dev/null | jq -r '.configProvider // empty'"]
         stdout: StdioCollector { onStreamFinished: root.luaMode = (text.trim() === "lua") }
     }
 
@@ -317,6 +317,7 @@ PanelWindow {
     property bool dnd: false
     property int notifCount: 0
     property string gpuLoad: ""
+    property real gpuEma: -1          // сглаживание gpu_busy_percent (APU дёргается 0/100)
     property string gpuTemp: ""
     property bool gameMode: false
     property string powerProfile: ""
@@ -353,7 +354,11 @@ PanelWindow {
                     } else if (k === "notif") {
                         root.notifCount = parseInt(v) || 0
                     } else if (k === "gpu") {
-                        root.gpuLoad = v
+                        var g = parseInt(v)
+                        if (!isNaN(g)) {
+                            root.gpuEma = (root.gpuEma < 0) ? g : (root.gpuEma * 0.6 + g * 0.4)
+                            root.gpuLoad = String(Math.round(root.gpuEma))
+                        }
                     } else if (k === "gput") {
                         root.gpuTemp = v
                     } else if (k === "gm") {
@@ -369,7 +374,7 @@ PanelWindow {
     }
 
     Timer {
-        interval: 1500
+        interval: 3000
         running: true
         repeat: true
         onTriggered: statusProc.running = true

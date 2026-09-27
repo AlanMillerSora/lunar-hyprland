@@ -9,8 +9,9 @@
 #  gpu/gput — загрузка и температура GPU (AMD sysfs или NVIDIA)
 #  gm   — 1 если включён Game Mode
 #  pp   — профиль питания (performance/balanced/power-saver)
-#  Без python3: JSON разбирает jq (в зависимостях), уведомления
-#  считаются по plain-выводу makoctl — питон в горячем пути не нужен.
+#  Без python3: JSON разбирает jq (в зависимостях), уведомления — makoctl -j.
+#  GPU отдаём одним «сырым» замером, а сглаживание дёрганого gpu_busy_percent
+#  на APU делает панель (EMA) — без sleep-цикла в горячем пути.
 # ════════════════════════════════════════════════════════════════
 
 # ── сеть ──
@@ -19,7 +20,7 @@ dev_types="$(nmcli -t -f TYPE,STATE device status 2>/dev/null)"
 if grep -q '^ethernet:connected' <<<"$dev_types"; then
   net="eth"
 elif grep -q '^wifi:connected' <<<"$dev_types"; then
-  sig="$(nmcli -t -f IN-USE,SIGNAL device wifi 2>/dev/null | grep '^\*' | head -1 | cut -d: -f2)"
+  sig="$(nmcli -t -f IN-USE,SIGNAL device wifi list --rescan no 2>/dev/null | grep '^\*' | head -1 | cut -d: -f2)"
   net="wifi:${sig:-0}"
 fi
 
@@ -36,24 +37,18 @@ fi
 mode="$(makoctl mode 2>/dev/null)"
 grep -q '^do-not-disturb$' <<<"$mode" && dnd=1 || dnd=0
 
-# В plain-выводе makoctl каждое уведомление — строка «Notification N: …».
-notif="$(makoctl list 2>/dev/null | grep -c '^Notification ')"
+# makoctl -j отдаёт JSON-массив уведомлений — считаем его длину через jq
+notif="$(makoctl list -j 2>/dev/null | jq 'length' 2>/dev/null)"
+notif="${notif:-0}"
 
-# ── GPU ──
+# ── GPU (один замер; сглаживание — в панели) ──
 gpu=""
 gput=""
 if command -v nvidia-smi >/dev/null 2>&1; then
   read -r gpu gput < <(nvidia-smi --query-gpu=utilization.gpu,temperature.gpu \
     --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ' ' | tr ',' ' ')
 else
-  # AMD: gpu_busy_percent на APU «дёргается» 0/100 — усредняем несколько замеров
-  sum=0; n=0
-  for _ in 1 2 3 4 5 6 7 8; do
-    v="$(cat /sys/class/drm/card*/device/gpu_busy_percent 2>/dev/null | head -1)"
-    if [ -n "$v" ]; then sum=$((sum + v)); n=$((n + 1)); fi
-    sleep 0.05
-  done
-  [ "$n" -gt 0 ] && gpu=$((sum / n))
+  gpu="$(cat /sys/class/drm/card*/device/gpu_busy_percent 2>/dev/null | head -1)"
   for h in /sys/class/hwmon/hwmon*; do
     if [ "$(cat "$h/name" 2>/dev/null)" = "amdgpu" ]; then
       t="$(cat "$h/temp1_input" 2>/dev/null)"
