@@ -260,7 +260,7 @@ zapret_config() {
   sudo install -m 0644 "$ZAPRET_DIR/zapret-hosts-user.txt" "$ZAPRET_DST/ipset/zapret-hosts-user.txt"
 
   local tmp; tmp="$(mktemp)"
-  python3 - "$ZAPRET_DST" "$tmp" <<'PY'
+  if ! python3 - "$ZAPRET_DST" "$tmp" <<'PY'
 import re, sys
 zdir, out = sys.argv[1], sys.argv[2]
 s = open(zdir + '/config.default', encoding='utf-8').read()
@@ -279,13 +279,22 @@ opt = f'''NFQWS_OPT="
 
 s, n = re.subn(r'NFQWS_OPT="\n.*?\n"', opt, s, count=1, flags=re.S)
 assert n == 1, 'не найден NFQWS_OPT в config.default'
-s, _ = re.subn(r'^MODE_FILTER=.*$', 'MODE_FILTER=autohostlist', s, count=1, flags=re.M)
-s, _ = re.subn(r'^NFQWS_ENABLE=.*$', 'NFQWS_ENABLE=1', s, count=1, flags=re.M)
-s, _ = re.subn(r'^#FWTYPE=iptables.*$', 'FWTYPE=nftables', s, count=1, flags=re.M)
-s, _ = re.subn(r'^NFQWS_PORTS_TCP=.*$', 'NFQWS_PORTS_TCP=80,443,2053,2083,2087,2096,8443', s, count=1, flags=re.M)
-s, _ = re.subn(r'^NFQWS_PORTS_UDP=.*$', 'NFQWS_PORTS_UDP=443,19294-19344,50000-50100', s, count=1, flags=re.M)
+for pat, rep in [
+    (r'^MODE_FILTER=.*$', 'MODE_FILTER=autohostlist'),
+    (r'^NFQWS_ENABLE=.*$', 'NFQWS_ENABLE=1'),
+    (r'^#FWTYPE=iptables.*$', 'FWTYPE=nftables'),
+    (r'^NFQWS_PORTS_TCP=.*$', 'NFQWS_PORTS_TCP=80,443,2053,2083,2087,2096,8443'),
+    (r'^NFQWS_PORTS_UDP=.*$', 'NFQWS_PORTS_UDP=443,19294-19344,50000-50100'),
+]:
+    s, n = re.subn(pat, rep, s, count=1, flags=re.M)
+    assert n == 1, f'не найден шаблон {pat!r} в config.default'
 open(out, 'w', encoding='utf-8').write(s)
 PY
+  then
+    warn "zapret: не собрал конфиг (upstream изменился?) — старый config не трогаю"
+    rm -f "$tmp"
+    return 1
+  fi
   say "zapret: конфиг → $ZAPRET_DST/config"
   sudo install -m 0644 "$tmp" "$ZAPRET_DST/config"
   rm -f "$tmp"
@@ -603,13 +612,16 @@ if [ "$DO_ZAPRET" = 1 ]; then
     zapret_sources
     zapret_fake
     zapret_build
-    zapret_config
-    zapret_service
-    sudo systemctl enable "$ZAPRET_UNIT"
-    # именно restart: конфиг мог измениться, а enable --now уже запущенный не перезапускает
-    sudo systemctl restart "$ZAPRET_UNIT"
-    ok "zapret установлен и включён в автозапуск"
-    zapret_health
+    if zapret_config; then
+      zapret_service
+      sudo systemctl enable "$ZAPRET_UNIT"
+      # именно restart: конфиг мог измениться, а enable --now уже запущенный не перезапускает
+      sudo systemctl restart "$ZAPRET_UNIT"
+      ok "zapret установлен и включён в автозапуск"
+      zapret_health
+    else
+      warn "zapret: конфиг не собран — сервис не трогаю (прежний config остался)"
+    fi
   else
     warn "нет $ZAPRET_DIR/zapret.service — пропускаю"
   fi
