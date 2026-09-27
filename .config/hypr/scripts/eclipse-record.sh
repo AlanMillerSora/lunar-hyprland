@@ -13,6 +13,9 @@
 #
 #  Запуск:  eclipse-record.sh start|stop|toggle|status|probe
 #  Файлы:   ~/Videos/lunar-ГГГГММДД-ЧЧММСС.mp4
+#
+#  start/stop/toggle сериализуются локом, а stop трогает только свой
+#  процесс (по PIDFILE или по каталогу вывода) — чужие записи не бьём.
 # ════════════════════════════════════════════════════════════════
 set -uo pipefail
 
@@ -20,9 +23,36 @@ DIR="$HOME/Videos"
 mkdir -p "$DIR"
 PIDFILE="${XDG_RUNTIME_DIR:-/tmp}/lunar-record.pid"
 CODECFILE="${XDG_RUNTIME_DIR:-/tmp}/lunar-record.codec"
+LOCKFILE="${XDG_RUNTIME_DIR:-/tmp}/lunar-record.lock"
 CONF="$HOME/.config/lunar/record.json"
 
-running() { pgrep -x wf-recorder >/dev/null 2>&1; }
+# pid именно нашей записи: сначала PIDFILE, иначе — по каталогу вывода
+# ($DIR/lunar-…). Чужие wf-recorder не трогаем.
+rec_pid() {
+  local p
+  p="$(cat "$PIDFILE" 2>/dev/null || true)"
+  if [ -n "$p" ] && [ "$(cat "/proc/$p/comm" 2>/dev/null || true)" = "wf-recorder" ]; then
+    echo "$p"; return 0
+  fi
+  for p in $(pgrep -x wf-recorder); do
+    if tr '\0' ' ' <"/proc/$p/cmdline" 2>/dev/null | grep -qF -- "$DIR/lunar-"; then
+      echo "$p"; return 0
+    fi
+  done
+  return 1
+}
+
+running() { rec_pid >/dev/null 2>&1; }
+
+# start/stop/toggle сериализуем: два быстрых нажатия не поднимут две записи
+run_locked() {
+  exec 9>"$LOCKFILE"
+  if ! flock -n 9 2>/dev/null; then
+    echo "занято: другая операция с записью выполняется"
+    return 0
+  fi
+  "$@"
+}
 
 # настройки из Hub (--bitrate в JSON — Мбит/с, qp — постоянное качество)
 rec_qp=24
@@ -47,21 +77,21 @@ render_node() {
 }
 
 # Проверяем, реально ли энкодер запускается (не только «есть в ffmpeg»):
-# прогоняем 1 кадр через VAAPI и смотрим, вышел ли файл.
+# прогоняем 1 кадр через VAAPI и смотрим, вышел ли файл. Пишем в mktemp,
+# чтобы параллельные probe/start не затирали общий /tmp-файл.
 vaapi_works() {
-  local dev="$1"
+  local dev="$1" probe rc=1
   [[ -e "$dev" ]] || return 1
-  rm -f /tmp/.lunar-vaapi-probe.mp4
+  probe="$(mktemp --suffix=.mp4)" || return 1
   if ffmpeg -hide_banner -loglevel error -y \
        -init_hw_device "vaapi=va:$dev" \
        -f lavfi -i "testsrc=duration=1:size=320x240:rate=30" \
        -vf 'format=nv12,hwupload' -c:v h264_vaapi -frames:v 1 \
-       /tmp/.lunar-vaapi-probe.mp4 >/dev/null 2>&1 && [[ -s /tmp/.lunar-vaapi-probe.mp4 ]]; then
-    rm -f /tmp/.lunar-vaapi-probe.mp4
-    return 0
+       "$probe" >/dev/null 2>&1 && [[ -s "$probe" ]]; then
+    rc=0
   fi
-  rm -f /tmp/.lunar-vaapi-probe.mp4
-  return 1
+  rm -f -- "$probe"
+  return $rc
 }
 
 # Параметры VAAPI-энкодера: постоянное качество (QP) + потолок битрейта.
@@ -104,30 +134,47 @@ start() {
     label="софт (libx264)"
   fi
 
+  # 9>&- — не наследовать лок записью, иначе stop не сможет его взять
   # shellcheck disable=SC2086
-  setsid wf-recorder -f "$out" $params >/dev/null 2>&1 </dev/null &
+  setsid wf-recorder -f "$out" $params >/dev/null 2>&1 </dev/null 9>&- &
   sleep 0.6
-  if ! running; then
+  if [ -z "$(rec_pid 2>/dev/null || true)" ]; then
     # кодек не завёлся — падаем на софт
     label="софт (libx264)"
     params="$(soft_params)"
     # shellcheck disable=SC2086
-    setsid wf-recorder -f "$out" $params >/dev/null 2>&1 </dev/null &
+    setsid wf-recorder -f "$out" $params >/dev/null 2>&1 </dev/null 9>&- &
     sleep 0.6
   fi
-  pgrep -x wf-recorder | head -1 >"$PIDFILE"
+
+  local pid
+  pid="$(rec_pid 2>/dev/null || true)"
+  if [ -z "$pid" ]; then
+    rm -f "$PIDFILE" "$CODECFILE"
+    notify-send -a "Запись" "Запись не пошла — кодек не завёлся" 2>/dev/null
+    echo "запись не пошла"
+    return 1
+  fi
+
+  echo "$pid" >"$PIDFILE"
   echo "$label" >"$CODECFILE"
   notify-send -a "Запись" "Запись экрана пошла · $label" "$out" 2>/dev/null
   echo "$out · $label"
 }
 
 stop() {
-  if ! running; then echo "не пишу"; return 0; fi
-  pkill -INT -x wf-recorder 2>/dev/null
+  local pid
+  if ! pid="$(rec_pid 2>/dev/null)"; then
+    echo "не пишу"
+    return 0
+  fi
+  kill -INT "$pid" 2>/dev/null
   rm -f "$PIDFILE" "$CODECFILE"
   notify-send -a "Запись" "Запись остановлена" 2>/dev/null
   echo "stopped"
 }
+
+toggle() { if running; then stop; else start; fi; }
 
 probe() {
   load_conf
@@ -146,9 +193,9 @@ probe() {
 }
 
 case "${1:-toggle}" in
-  start)  start ;;
-  stop)   stop ;;
-  toggle) if running; then stop; else start; fi ;;
+  start)  run_locked start ;;
+  stop)   run_locked stop ;;
+  toggle) run_locked toggle ;;
   status) running && echo 1 || echo 0 ;;
   probe)  probe ;;
   *) echo "usage: $0 start|stop|toggle|status|probe" >&2; exit 1 ;;
