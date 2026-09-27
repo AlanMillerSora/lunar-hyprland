@@ -609,10 +609,16 @@ fi
 
 # ── shell по умолчанию ─────────────────────────────────────────
 step "shell по умолчанию"
-if command -v zsh >/dev/null 2>&1 && [ "${SHELL:-}" != "$(command -v zsh)" ]; then
-  chsh -s "$(command -v zsh)" && ok "zsh" || warn "не удалось сменить shell"
+ZSH_BIN="$(command -v zsh 2>/dev/null || true)"
+SHELL_TARGET="${SUDO_USER:-$USER}"
+if [ -z "$ZSH_BIN" ]; then
+  ok "zsh не установлен — пропускаю"
+elif [ "$(getent passwd "$SHELL_TARGET" | cut -d: -f7)" = "$ZSH_BIN" ]; then
+  ok "zsh уже у $SHELL_TARGET"
+elif [ ! -t 0 ]; then
+  warn "нет tty — shell не меняю; вручную: sudo chsh -s $ZSH_BIN $SHELL_TARGET"
 else
-  ok "zsh уже (или не установлен)"
+  chsh -s "$ZSH_BIN" "$SHELL_TARGET" && ok "zsh у $SHELL_TARGET" || warn "не удалось сменить shell"
 fi
 
 # ── опционально: SDDM ──────────────────────────────────────────
