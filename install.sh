@@ -460,10 +460,27 @@ if [ -n "$LOCAL_DIFF" ]; then
   say "продолжаю: конфиги будут перезаписаны из репо (бэкап сохранён)"
 fi
 
+# ротация бэкапов конфигов: держим 5 свежих
+ls -1dt "$HOME"/.config-backup-* 2>/dev/null | tail -n +6 | while IFS= read -r d; do
+  rm -rf -- "$d"
+done || true
+
 mkdir -p "$HOME/.config"
 cp -r "$REPO/.config/." "$HOME/.config/"
 chmod +x "$HOME"/.config/hypr/scripts/* 2>/dev/null || true
 ok "конфиги обновлены"
+
+# Hyprland: сразу проверяю, что новый конфиг принят (если работаем в живой сессии)
+if command -v hyprctl >/dev/null 2>&1 && [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
+  hyprctl reload >/dev/null 2>&1 || true
+  cfg_errs="$(hyprctl configerrors 2>/dev/null || true)"
+  if [ -n "$cfg_errs" ]; then
+    warn "hyprctl configerrors (проверь конфиг):"
+    printf '%s\n' "$cfg_errs"
+  else
+    ok "Hyprland: конфиг принят без ошибок"
+  fi
+fi
 
 # ── KDE: цветовая схема ────────────────────────────────────────
 step "цветовая схема KDE → ~/.local/share/color-schemes"
@@ -547,10 +564,17 @@ fi
 step "курсор Bibata-Modern-Ice"
 if [ ! -d "$HOME/.local/share/icons/Bibata-Modern-Ice" ]; then
   mkdir -p "$HOME/.local/share/icons"
-  curl -sL "https://github.com/ful1e5/Bibata_Cursor/releases/download/v2.0.7/Bibata-Modern-Ice.tar.xz" \
-    | tar xJ -C "$HOME/.local/share/icons/" 2>/dev/null \
-    && ok "Bibata установлен" \
-    || warn "Bibata не скачался (будет системный курсор)"
+  bt="$(mktemp -d)"
+  if curl -fsL "https://github.com/ful1e5/Bibata_Cursor/releases/download/v2.0.7/Bibata-Modern-Ice.tar.xz" \
+       -o "$bt/bibata.tar.xz" \
+     && tar xJf "$bt/bibata.tar.xz" -C "$bt" 2>/dev/null \
+     && [ -d "$bt/Bibata-Modern-Ice" ]; then
+    mv "$bt/Bibata-Modern-Ice" "$HOME/.local/share/icons/"
+    ok "Bibata установлен"
+  else
+    warn "Bibata не скачался (будет системный курсор)"
+  fi
+  rm -rf -- "$bt"
 else
   ok "Bibata уже установлен"
 fi
