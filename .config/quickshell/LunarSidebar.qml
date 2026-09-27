@@ -520,10 +520,34 @@ PanelWindow {
         property string status: "готов"
         property string sessionId: ""
 
+        // Витрина чата ограничена: и по числу сообщений, и по суммарной
+        // длине — длинный стрим не растит память бесконечно. Контекст
+        // агента живёт в сессии OpenCode (--session), а не здесь.
+        readonly property int maxMessages: 200
+        readonly property int maxChars: 180000
+
+        function capHistory(m) {
+            if (m.length > maxMessages)
+                m = m.slice(m.length - maxMessages)
+            var n = 0, i
+            for (i = 0; i < m.length; i++)
+                n += m[i].text.length
+            var start = 0
+            while (n > maxChars && (m.length - start) > 1) {
+                n -= m[start].text.length
+                start++
+            }
+            if (start > 0)
+                m = m.slice(start)
+            return m
+        }
+
         function send(text) {
             if (text.trim() === "" || busy) return
-            messages = messages.concat([{ role: "user", text: text }])
-            messages = messages.concat([{ role: "assistant", text: "" }])
+            messages = capHistory(messages.concat([
+                { role: "user", text: text },
+                { role: "assistant", text: "" }
+            ]))
             busy = true
             status = "opencode работает…"
             if (chatInput) chatInput.text = ""
@@ -536,10 +560,10 @@ PanelWindow {
         }
 
         function appendAssistant(chunk) {
+            if (messages.length === 0) return
             var m = messages.slice()
-            if (m.length === 0) return
             m[m.length - 1] = { role: "assistant", text: m[m.length - 1].text + chunk }
-            messages = m
+            messages = capHistory(m)
         }
 
         function newSession() {
