@@ -4,11 +4,19 @@ Description=Lunar Eclipse — Quickshell (панель, Hub, сайдбары, O
 # (не enable: иначе стартует раньше Wayland и падает).
 After=graphical-session.target
 PartOf=graphical-session.target
+# не молотить перезапусками, когда сессии/дисплея нет
+StartLimitIntervalSec=30
+StartLimitBurst=5
 
 [Service]
 Type=simple
+# Запускаемся, только если Wayland-сокет существует: иначе Quickshell
+# падает с «no Qt platform plugin» и плодит core dumps. $$ — чтобы $VAR
+# разворачивал shell, а не systemd.
+ExecStartPre=/usr/bin/sh -c 'test -S "$$XDG_RUNTIME_DIR/$$WAYLAND_DISPLAY"'
 ExecStart=/usr/bin/quickshell
-Restart=always
+# Перезапуск только при сбое (с лимитом выше) — чистый выход не поднимаем.
+Restart=on-failure
 RestartSec=2
 Nice=-5
 

@@ -355,9 +355,11 @@ hl.on("hyprland.start", function()
   -- Живые обои — в Quickshell (LunarWallpaper.qml, фоновый слой):
   -- поднимаются вместе с шеллом, отдельный демон (awww/mpvpaper) не нужен.
   -- waybar заменён верхней панелью Quickshell (LunarPanel.qml).
-  -- Шелл живёт под systemd-user (Restart=always): упал — поднимется сам.
-  -- Сначала отдаём юниту env сессии (иначе он не увидит WAYLAND_DISPLAY).
-  hl.exec_cmd("sh -c 'systemctl --user import-environment DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE; systemctl --user --no-block start lunar-quickshell.service'")
+  -- Шелл живёт под systemd-user (Restart=on-failure): упал — поднимется сам.
+  -- Отдаём юниту env сессии, включая HYPRLAND_INSTANCE_SIGNATURE — по ней
+  -- Quickshell находит IPC Hyprland (без неё шелл «глухой» после перелогина).
+  -- restart, а не start: чтобы пережившая сессию копия шелла перечитала env.
+  hl.exec_cmd("sh -c 'systemctl --user import-environment DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE HYPRLAND_INSTANCE_SIGNATURE; systemctl --user --no-block restart lunar-quickshell.service'")
   hl.exec_cmd("mako")
   hl.exec_cmd("hypridle")
   -- история буфера обмена (клипборд Quickshell, SUPER+V)
