@@ -15,6 +15,7 @@ QtObject {
     property var allApps: []
     property var apps: []
     property string filter: ""
+    property string lastRaw: ""      // сырой JSON прошлого скана — чтобы не пересобирать зря
 
     // приложение запущено — Hub может закрыться
     signal launched()
@@ -125,6 +126,9 @@ QtObject {
         running: false
         stdout: StdioCollector {
             onStreamFinished: {
+                if (text === appModel.lastRaw)
+                    return
+                appModel.lastRaw = text
                 try {
                     appModel.allApps = JSON.parse(text)
                     appModel.update()
@@ -199,7 +203,7 @@ print(json.dumps(apps))
 
     // список приложений обновляем сами (поставил/удалил — увидел)
     property Timer refreshTimer: Timer {
-        interval: 15000
+        interval: 60000
         running: true
         repeat: true
         onTriggered: appModel.load()
