@@ -6,23 +6,18 @@
 #    apply <cs> <cx> <cy>  — обрезать source в квадрат cs на (cx,cy), скруглить
 #                            в круг → ~/.config/avatars/avatar.png и синкнуться с SDDM
 #    /путь/картинка.png    — поставить готовый файл (авто-кроп по центру)
-#    без аргументов (root) — только синхронизация в тему SDDM (NOPASSWD)
+#  Синк в SDDM — root-хелпер /usr/local/lib/lunar/avatar-sync.sh (в sudoers, без аргументов).
 # ════════════════════════════════════════════════════════════════
 set -euo pipefail
 
-SDDM_AV="/usr/share/sddm/themes/lunar/assets/avatar.png"
 AV_DIR="$HOME/.config/avatars"
 AV="$AV_DIR/avatar.png"
 CACHE_DIR="$HOME/.cache/lunar"
 SRC="$CACHE_DIR/avatar-source"
 
-sync_root() {
-    local u="${SUDO_USER:-sora}"
-    local src="/home/$u/.config/avatars/avatar.png"
-    [[ -f "$src" ]] || exit 0
-    [[ -d "$(dirname "$SDDM_AV")" ]] || exit 0
-    cp -f "$src" "$SDDM_AV"
-    chmod 644 "$SDDM_AV"
+# синк аватара в тему SDDM — через root-хелпер (в sudoers, без пароля)
+sync_sddm() {
+    sudo -n /usr/local/lib/lunar/avatar-sync.sh >/dev/null 2>&1 || true
 }
 
 # квадрат → 512 → круглая маска
@@ -41,12 +36,12 @@ commit() {  # commit <infile>
     cp -f "$tmp" "$AV"
     chmod 644 "$AV"
     rm -f -- "$tmp"
-    sudo -n "$0" 2>/dev/null || true
+    sync_sddm
 }
 
 if [[ $EUID -eq 0 ]]; then
-    sync_root
-    exit 0
+    echo "запуск от root не нужен: синк делает /usr/local/lib/lunar/avatar-sync.sh" >&2
+    exit 1
 fi
 
 mode="${1:-pick}"

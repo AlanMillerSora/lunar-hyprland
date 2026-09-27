@@ -1,40 +1,94 @@
 # ════════════════════════════════════════════════════════════════
 #  Lunar Eclipse — sudo-права для агента в чате (OpenCode).
 #
-#  Белый список: агент может без пароля запускать только доверенные
-#  команды. Всё остальное — через подтверждение в чате OpenCode.
+#  Узкий белый список: без пароля запускается только перечисленное,
+#  всё остальное — с подтверждением в чате OpenCode.
 #
-#  Ставится из install.sh в /etc/sudoers.d/lunar-agent.
+#  Принципы:
+#    • только пользователь sora (раньше было %wheel — на всех админов);
+#    • чтение журналов/юнитов — с --no-pager (иначе less = побег в шелл);
+#    • менять можно только конкретные юниты, без путей и без --now;
+#    • pacman — только -Syu и -Syu --noconfirm (без -Sy и произвольных опций);
+#    • никаких масок по скриптам: root-хелперы лежат в /usr/local/lib/lunar/.
+#
+#  Ставится из install.sh в /etc/sudoers.d/lunar-agent (0440 root:root).
 #  Проверка: sudo -n -l
 # ════════════════════════════════════════════════════════════════
 
-# системное состояние и логи
+# чтение состояния (вывод в stdout, без пейджера)
 Cmnd_Alias LUNAR_READ = \
-  /usr/bin/journalctl, \
-  /usr/bin/systemctl status *, \
-  /usr/bin/systemctl list-units *, \
-  /usr/bin/systemctl --user status *, \
-  /usr/bin/systemctl --user list-units *, \
+  /usr/bin/journalctl --no-pager, \
+  /usr/bin/journalctl --no-pager *, \
+  /usr/bin/systemctl --no-pager status, \
+  /usr/bin/systemctl --no-pager status *, \
+  /usr/bin/systemctl --no-pager list-units, \
+  /usr/bin/systemctl --no-pager list-units *, \
   /usr/bin/dmidecode -t memory
 
-# службы (без произвольных unit-файлов — только start/stop/restart/enable/disable)
+# управление только этими юнитами (точные имена, без масок и путей)
 Cmnd_Alias LUNAR_SVC = \
-  /usr/bin/systemctl start *, /usr/bin/systemctl stop *, \
-  /usr/bin/systemctl restart *, /usr/bin/systemctl reload *, \
-  /usr/bin/systemctl enable *, /usr/bin/systemctl disable *, \
-  /usr/bin/systemctl --user start *, /usr/bin/systemctl --user stop *, \
-  /usr/bin/systemctl --user restart *, /usr/bin/systemctl --user reload *, \
-  /usr/bin/systemctl --user enable *, /usr/bin/systemctl --user disable *
+  /usr/bin/systemctl start zapret.service, \
+  /usr/bin/systemctl stop zapret.service, \
+  /usr/bin/systemctl restart zapret.service, \
+  /usr/bin/systemctl reload zapret.service, \
+  /usr/bin/systemctl enable zapret.service, \
+  /usr/bin/systemctl disable zapret.service, \
+  /usr/bin/systemctl start sddm.service, \
+  /usr/bin/systemctl stop sddm.service, \
+  /usr/bin/systemctl restart sddm.service, \
+  /usr/bin/systemctl reload sddm.service, \
+  /usr/bin/systemctl enable sddm.service, \
+  /usr/bin/systemctl disable sddm.service, \
+  /usr/bin/systemctl start NetworkManager.service, \
+  /usr/bin/systemctl stop NetworkManager.service, \
+  /usr/bin/systemctl restart NetworkManager.service, \
+  /usr/bin/systemctl reload NetworkManager.service, \
+  /usr/bin/systemctl enable NetworkManager.service, \
+  /usr/bin/systemctl disable NetworkManager.service, \
+  /usr/bin/systemctl start bluetooth.service, \
+  /usr/bin/systemctl stop bluetooth.service, \
+  /usr/bin/systemctl restart bluetooth.service, \
+  /usr/bin/systemctl reload bluetooth.service, \
+  /usr/bin/systemctl enable bluetooth.service, \
+  /usr/bin/systemctl disable bluetooth.service, \
+  /usr/bin/systemctl start docker.service, \
+  /usr/bin/systemctl stop docker.service, \
+  /usr/bin/systemctl restart docker.service, \
+  /usr/bin/systemctl reload docker.service, \
+  /usr/bin/systemctl enable docker.service, \
+  /usr/bin/systemctl disable docker.service, \
+  /usr/bin/systemctl start libvirtd.service, \
+  /usr/bin/systemctl stop libvirtd.service, \
+  /usr/bin/systemctl restart libvirtd.service, \
+  /usr/bin/systemctl reload libvirtd.service, \
+  /usr/bin/systemctl enable libvirtd.service, \
+  /usr/bin/systemctl disable libvirtd.service, \
+  /usr/bin/systemctl start lunar-quickshell.service, \
+  /usr/bin/systemctl stop lunar-quickshell.service, \
+  /usr/bin/systemctl restart lunar-quickshell.service, \
+  /usr/bin/systemctl reload lunar-quickshell.service, \
+  /usr/bin/systemctl enable lunar-quickshell.service, \
+  /usr/bin/systemctl disable lunar-quickshell.service, \
+  /usr/bin/systemctl start lunar-wifi-guard.service, \
+  /usr/bin/systemctl stop lunar-wifi-guard.service, \
+  /usr/bin/systemctl restart lunar-wifi-guard.service, \
+  /usr/bin/systemctl reload lunar-wifi-guard.service, \
+  /usr/bin/systemctl enable lunar-wifi-guard.service, \
+  /usr/bin/systemctl disable lunar-wifi-guard.service, \
+  /usr/bin/systemctl start lunar-homepage.service, \
+  /usr/bin/systemctl stop lunar-homepage.service, \
+  /usr/bin/systemctl restart lunar-homepage.service, \
+  /usr/bin/systemctl reload lunar-homepage.service, \
+  /usr/bin/systemctl enable lunar-homepage.service, \
+  /usr/bin/systemctl disable lunar-homepage.service
 
-# обновление системы (только эти формы)
+# пакеты: только обновление системы (без произвольных аргументов)
 Cmnd_Alias LUNAR_PKG = \
-  /usr/bin/pacman -Syu, /usr/bin/pacman -Syu *, \
-  /usr/bin/pacman -Sy, /usr/bin/pacman -Qu, /usr/bin/pacman -Qe
+  /usr/bin/pacman -Syu, \
+  /usr/bin/pacman -Syu --noconfirm
 
-# скрипты риса
-Cmnd_Alias LUNAR_RICE = \
-  /home/sora/rice/*.sh, \
-  /home/sora/.config/hypr/scripts/*.sh, \
-  /home/sora/.config/hypr/scripts/*.py
+# root-хелперы риса (root:root, пользователь их не редактирует)
+Cmnd_Alias LUNAR_HELP = \
+  /usr/local/lib/lunar/avatar-sync.sh
 
-%wheel ALL=(root) NOPASSWD: LUNAR_READ, LUNAR_SVC, LUNAR_PKG, LUNAR_RICE
+sora ALL=(root) NOPASSWD: LUNAR_READ, LUNAR_SVC, LUNAR_PKG, LUNAR_HELP

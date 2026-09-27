@@ -543,13 +543,25 @@ if [ -f "$REPO/systemd/mt7921e-no-aspm.conf" ]; then
     || warn "modprobe-конфиг не установлен (нужен sudo)"
 fi
 
-# ── sudo: белый список агента (OpenCode) ───────────────────────
+# ── sudo: белый список агента (OpenCode) + root-хелперы ────────
 step "sudo: белый список агента → /etc/sudoers.d/lunar-agent"
+if [ -f "$REPO/systemd/lunar-avatar-sync.sh" ]; then
+  sudo install -d -m 0755 -o root -g root /usr/local/lib/lunar 2>/dev/null \
+    && sudo install -m 0755 -o root -g root \
+         "$REPO/systemd/lunar-avatar-sync.sh" \
+         /usr/local/lib/lunar/avatar-sync.sh 2>/dev/null \
+    && ok "root-хелпер: /usr/local/lib/lunar/avatar-sync.sh" \
+    || warn "root-хелпер не установлен (нужен sudo)"
+fi
 if [ -f "$REPO/systemd/lunar-agent.sudoers" ]; then
-  sudo install -m 0440 -o root -g root \
-    "$REPO/systemd/lunar-agent.sudoers" /etc/sudoers.d/lunar-agent 2>/dev/null \
-    && ok "sudoers.d/lunar-agent" \
-    || warn "sudoers не установлен (нужен sudo)"
+  if sudo visudo -cf "$REPO/systemd/lunar-agent.sudoers" >/dev/null 2>&1; then
+    sudo install -m 0440 -o root -g root \
+      "$REPO/systemd/lunar-agent.sudoers" /etc/sudoers.d/lunar-agent 2>/dev/null \
+      && ok "sudoers.d/lunar-agent" \
+      || warn "sudoers не установлен (нужен sudo)"
+  else
+    warn "sudoers не прошёл visudo -cf — оставляю прежний"
+  fi
 fi
 
 # ── shell по умолчанию ─────────────────────────────────────────
