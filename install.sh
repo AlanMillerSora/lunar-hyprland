@@ -84,10 +84,19 @@ PLY_RESCUE_UKI="/boot/EFI/rescue/arch-linux-rescue.efi"
 PLY_RESCUE_CONF="/etc/mkinitcpio-rescue.conf"
 PLY_RESCUE_CMDLINE="/etc/kernel/cmdline.rescue"
 PLY_GRUB_CUSTOM="/etc/grub.d/40_custom"
+PLY_PARAMS="/etc/lunar-plymouth.params"
 
 ply_is_uki() { grep -rqsE '^[A-Za-z]+_uki=' /etc/mkinitcpio.d/ 2>/dev/null; }
 ply_cmdline_file() { if ply_is_uki; then echo /etc/kernel/cmdline; else echo /etc/default/grub; fi; }
 ply_hooks_has() { grep -qE '^HOOKS=\(.*\bplymouth\b.*\)' /etc/mkinitcpio.conf; }
+
+# какие параметры ядра добавил именно рис (чтобы --disable убирал только свои)
+ply_state_has() { sudo grep -qxF -- "$1" "$PLY_PARAMS" 2>/dev/null; }
+ply_state_add() { sudo touch "$PLY_PARAMS"; sudo grep -qxF -- "$1" "$PLY_PARAMS" 2>/dev/null || echo "$1" | sudo tee -a "$PLY_PARAMS" >/dev/null; }
+ply_state_del() { sudo sed -i "/^$1\$/d" "$PLY_PARAMS" 2>/dev/null || true; }
+
+# одноразовый бэкап файла перед правкой (прежний .bak не затираем)
+ply_backup() { sudo cp -n "$1" "$1.lunar.bak" 2>/dev/null || true; }
 
 ply_hooks_add() {
   ply_hooks_has && return 0
@@ -108,23 +117,34 @@ ply_hooks_del() {
   say "HOOKS: убран plymouth"
 }
 
-ply_param_add() {  # splash|quiet
+ply_param_add() {  # splash|quiet — добавляю и запоминаю, что добавил рис
   local p="$1" f; f="$(ply_cmdline_file)"
+  ply_backup "$f"
   if ply_is_uki; then
-    grep -qw -- "$p" "$f" 2>/dev/null || { sudo sed -i "s/\$/ $p/" "$f"; say "cmdline: + $p"; }
+    if ! grep -qw -- "$p" "$f" 2>/dev/null; then
+      sudo sed -i "s/\$/ $p/" "$f"; say "cmdline: + $p"; ply_state_add "$p"
+    fi
   else
-    grep -qE "^GRUB_CMDLINE_LINUX_DEFAULT=.*\b$p\b" "$f" || {
-      sudo sed -i -E "s/^(GRUB_CMDLINE_LINUX_DEFAULT=\"[^\"]*)\"/\1 $p\"/" "$f"; say "grub: + $p"; }
+    if ! grep -qE "^GRUB_CMDLINE_LINUX_DEFAULT=.*\b$p\b" "$f"; then
+      sudo sed -i -E "s/^(GRUB_CMDLINE_LINUX_DEFAULT=\"[^\"]*)\"/\1 $p\"/" "$f"
+      say "grub: + $p"; ply_state_add "$p"
+    fi
   fi
 }
 
-ply_param_del() {  # splash|quiet
+ply_param_del() {  # splash|quiet — убираю, только если добавлял рис
   local p="$1" f; f="$(ply_cmdline_file)"
+  if ! ply_state_has "$p"; then
+    say "cmdline: $p добавлял не рис — не трогаю"
+    return 0
+  fi
+  ply_backup "$f"
   if ply_is_uki; then
     sudo sed -i -E "s/ *\b$p\b//g" "$f"
   else
     sudo sed -i -E "s/(GRUB_CMDLINE_LINUX_DEFAULT=\"[^\"]*) *\b$p\b/\1/" "$f"
   fi
+  ply_state_del "$p"
   say "cmdline: - $p"
 }
 
@@ -173,13 +193,27 @@ ply_disable() {
 
 ply_rescue() {
   ply_is_uki || { warn "резервный образ рассчитан на режим UKI"; return 1; }
+
+  # предпроверки ДО любых изменений: иначе падаем после сборки и оставляем мусор
+  sudo test -f /etc/kernel/cmdline || { warn "нет /etc/kernel/cmdline — rescue не собираю"; return 1; }
+  sudo test -f /boot/vmlinuz-linux || { warn "нет /boot/vmlinuz-linux — rescue не собираю"; return 1; }
+  local boot_src uuid
+  boot_src="$(findmnt -no SOURCE /boot 2>/dev/null)"
+  [ -n "$boot_src" ] || { warn "не вижу загрузочный раздел /boot (findmnt пуст)"; return 1; }
+  uuid="$(sudo blkid -s UUID -o value "$boot_src" 2>/dev/null)"
+  [ -n "$uuid" ] || { warn "не определил UUID раздела $boot_src"; return 1; }
+
   sudo cp -f /etc/mkinitcpio.conf "$PLY_RESCUE_CONF"
   sudo cp -f /etc/kernel/cmdline "$PLY_RESCUE_CMDLINE"
   sudo sed -i -E 's/ *\bsplash\b//g; s/ *\bquiet\b//g' "$PLY_RESCUE_CMDLINE"
   sudo mkdir -p "$(dirname "$PLY_RESCUE_UKI")"
-  sudo mkinitcpio -c "$PLY_RESCUE_CONF" -k /boot/vmlinuz-linux -U "$PLY_RESCUE_UKI" \
-    --cmdline "$PLY_RESCUE_CMDLINE"
-  local uuid; uuid="$(blkid -s UUID -o value "$(findmnt -no SOURCE /boot)")"
+  if ! sudo mkinitcpio -c "$PLY_RESCUE_CONF" -k /boot/vmlinuz-linux -U "$PLY_RESCUE_UKI" \
+       --cmdline "$PLY_RESCUE_CMDLINE"; then
+    warn "сборка резервного UKI не удалась — убираю артефакты"
+    sudo rm -f "$PLY_RESCUE_UKI" "$PLY_RESCUE_CONF" "$PLY_RESCUE_CMDLINE"
+    return 1
+  fi
+
   if ! grep -q 'lunar-rescue' "$PLY_GRUB_CUSTOM" 2>/dev/null; then
     sudo cp -n "$PLY_GRUB_CUSTOM" "$PLY_GRUB_CUSTOM.bak" 2>/dev/null || true
     sudo tee -a "$PLY_GRUB_CUSTOM" >/dev/null <<EOF
