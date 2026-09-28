@@ -418,7 +418,12 @@ lib32-nvidia-utils
 ```bash
 systemctl --user restart lunar-quickshell.service   # перезапуск
 systemctl --user status  lunar-quickshell.service   # что случилось
+systemctl --user reset-failed lunar-quickshell.service   # если юнит не поднимается («start-limit-hit»)
 ```
+
+Юнит ловит серию падений (5 за 30 с) и по `OnFailure` пишет диагностику в
+`~/.cache/lunar/quickshell-failure.log` и в уведомление. Сброс — команда
+`reset-failed` выше (она же стоит в `hyprland.lua` перед перезапуском шелла).
 
 Не помогло — запусти вручную: `quickshell`. Откат: конфиги — `git -C ~/rice checkout -- .config`, система — снимком timeshift (Hub → Update → **ОТКАТ**).
 

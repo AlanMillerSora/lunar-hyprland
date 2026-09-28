@@ -1,0 +1,8 @@
+[Unit]
+Description=Lunar Eclipse — диагностика падения Quickshell
+# Запускается через OnFailure у lunar-quickshell.service: пишет лог и
+# подсказывает команду сброса. Это НЕ Restart=always — просто сообщение.
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/sh -c 'mkdir -p %h/.cache/lunar; echo "$(date "+%%F %%T") падение lunar-quickshell (failed)" >> %h/.cache/lunar/quickshell-failure.log; if command -v notify-send >/dev/null; then notify-send -a Quickshell "Quickshell не поднялся" "Проверь: systemctl --user status lunar-quickshell.service. Сброс: systemctl --user reset-failed lunar-quickshell.service" || true; fi'

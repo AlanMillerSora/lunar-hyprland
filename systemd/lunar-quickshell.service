@@ -7,6 +7,8 @@ PartOf=graphical-session.target
 # не молотить перезапусками, когда сессии/дисплея нет
 StartLimitIntervalSec=30
 StartLimitBurst=5
+# при падении/исчерпании лимита — отдельный юнит с логом и подсказкой
+OnFailure=lunar-quickshell-failure.service
 
 [Service]
 Type=simple

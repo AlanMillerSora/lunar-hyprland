@@ -359,7 +359,9 @@ hl.on("hyprland.start", function()
   -- Отдаём юниту env сессии, включая HYPRLAND_INSTANCE_SIGNATURE — по ней
   -- Quickshell находит IPC Hyprland (без неё шелл «глухой» после перелогина).
   -- restart, а не start: чтобы пережившая сессию копия шелла перечитала env.
-  hl.exec_cmd("sh -c 'systemctl --user import-environment DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE HYPRLAND_INSTANCE_SIGNATURE; systemctl --user --no-block restart lunar-quickshell.service'")
+  -- reset-failed перед restart: после серии падений юнит ловит start-limit-hit,
+  -- и без сброса restart из hyprland.start блокируется — стол остаётся без панели.
+  hl.exec_cmd("sh -c 'systemctl --user import-environment DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE HYPRLAND_INSTANCE_SIGNATURE; systemctl --user reset-failed lunar-quickshell.service 2>/dev/null; systemctl --user --no-block restart lunar-quickshell.service'")
   hl.exec_cmd("mako")
   hl.exec_cmd("hypridle")
   -- история буфера обмена (клипборд Quickshell, SUPER+V)
