@@ -255,7 +255,12 @@ ZAPRET_DIR="$REPO/zapret"
 ZAPRET_DST=/opt/zapret
 ZAPRET_UNIT=zapret.service
 ZAPRET_SUDOERS=/etc/sudoers.d/lunar-zapret
-ZAPRET_USER="${SUDO_USER:-${USER:-$(id -un)}}"
+ZAPRET_USER="${SUDO_USER:-$(id -un)}"
+# имя подставляется прямо в sudoers — принимаем только безопасную форму
+if [[ ! "$ZAPRET_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]; then
+  warn "zapret: некорректное имя пользователя — sudoers-правило пропускаю"
+  ZAPRET_USER=""
+fi
 
 zapret_deps() {
   say "zapret: зависимости (gcc/make, netfilter, nftables)"
@@ -340,6 +345,10 @@ zapret_service() {
   sudo systemctl daemon-reload
 
   # Узкое NOPASSWD-правило: только systemctl сервиса (переключатель в Hub).
+  if [ -z "$ZAPRET_USER" ]; then
+    warn "zapret: имя пользователя не определено — sudoers-правило не ставлю"
+    return 0
+  fi
   local tmp; tmp="$(mktemp)"
   cat > "$tmp" <<EOF
 # Lunar Eclipse: управление zapret без пароля (только systemctl сервиса)
@@ -625,14 +634,24 @@ if [ -d "$REPO/systemd" ]; then
       || warn "root-хелпер $h не установлен (нужен sudo)"
   done
 fi
+AGENT_USER="${SUDO_USER:-$(id -un)}"
 if [ -f "$REPO/systemd/lunar-agent.sudoers" ]; then
-  if sudo visudo -cf "$REPO/systemd/lunar-agent.sudoers" >/dev/null 2>&1; then
-    sudo install -m 0440 -o root -g root \
-      "$REPO/systemd/lunar-agent.sudoers" /etc/sudoers.d/lunar-agent 2>/dev/null \
-      && ok "sudoers.d/lunar-agent" \
-      || warn "sudoers не установлен (нужен sudo)"
+  if [[ ! "$AGENT_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]; then
+    warn "sudoers агента: некорректное имя пользователя — пропускаю"
   else
-    warn "sudoers не прошёл visudo -cf — оставляю прежний"
+    # В шаблоне имя прибито к sora — подставляем текущего пользователя,
+    # иначе правило уйдёт несуществующему логину, и sudo -n молча вернёт 1.
+    agent_tmp="$(mktemp)"
+    sed "s/^sora /$AGENT_USER /" "$REPO/systemd/lunar-agent.sudoers" > "$agent_tmp"
+    if sudo visudo -cf "$agent_tmp" >/dev/null 2>&1; then
+      sudo install -m 0440 -o root -g root \
+        "$agent_tmp" /etc/sudoers.d/lunar-agent 2>/dev/null \
+        && ok "sudoers.d/lunar-agent ($AGENT_USER)" \
+        || warn "sudoers не установлен (нужен sudo)"
+    else
+      warn "sudoers не прошёл visudo -cf — оставляю прежний"
+    fi
+    rm -f "$agent_tmp"
   fi
 fi
 
