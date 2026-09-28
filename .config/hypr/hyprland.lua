@@ -386,7 +386,9 @@ end)
 -- а флаг состояния остаётся — сбрасываем его, чтобы панель не показывала
 -- активный режим, которого уже нет.
 hl.on("config.reloaded", function()
-  hl.exec_cmd("sh -c 'rm -f \"$HOME/.cache/lunar/gamemode\"'")
+  -- reload вернул настройки Hyprland, но hypridle/DND/профиль/сервисы могли
+  -- остаться в состоянии Game Mode — гасим его штатно, если он был включён.
+  hl.exec_cmd("sh -c 'test -f \"$HOME/.cache/lunar/gamemode\" && \"$HOME/.config/hypr/scripts/eclipse-gamemode.sh\" off >/dev/null 2>&1 || true'")
 end)
 
 -- Проверка:  hyprctl configerrors

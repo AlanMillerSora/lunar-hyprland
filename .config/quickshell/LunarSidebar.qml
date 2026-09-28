@@ -663,7 +663,7 @@ PanelWindow {
         blockLoading: true
         atomicWrites: true
         // файла может ещё не быть — это не ошибка
-        __printErrors: false
+        printErrors: false
         onLoaded: {
             if (root.notesDirty) return
             notesArea.text = text()

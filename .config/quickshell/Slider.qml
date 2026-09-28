@@ -143,7 +143,7 @@ Item {
                     anchors.verticalCenter:
                         parent.verticalCenter
 
-                    x: Math.max(0, Math.min(fill.width - width, fill.width - width / 2))
+                    x: Math.max(0, Math.min(track.width - width, fill.width - width / 2))
 
                     color: Theme.text
 

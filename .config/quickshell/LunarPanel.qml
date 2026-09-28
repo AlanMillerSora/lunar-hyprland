@@ -363,7 +363,7 @@ PanelWindow {
         command: ["bash", "-c", "~/.config/hypr/scripts/eclipse-status.sh"]
         stdout: StdioCollector {
             onStreamFinished: {
-                var parts = text.trim().split(/\s+/)
+                var parts = text.trim().split("\u001f")
                 for (var i = 0; i < parts.length; i++) {
                     var kv = parts[i].split("=")
                     if (kv.length !== 2)

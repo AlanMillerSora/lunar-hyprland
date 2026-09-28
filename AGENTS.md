@@ -144,7 +144,7 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 │   │   ├── SettingsPages/ (13 страниц), assets/ (+moon-phases/, crop-frame.png), pfp3.png,
 │   │   │   cava-lunar.conf, cava-lunar-wide.conf
 │   ├── avatars/avatar.png       ← единый аватар (рис + экран входа)
-│   ├── lunar/{firefox-home.html, lunar.bash, gamemode-pause.conf}
+│   ├── lunar/{home/firefox-home.html, lunar.bash, gamemode-pause.conf}
 │   ├── bat/ Code/ yazi/ firefox/ hypridle/ mako/ kitty/ fastfetch/ btop/
 │   └── gtk-3.0/ gtk-4.0/ kdeglobals/ .zshrc starship.toml
 ├── systemd/  color-schemes/  assets/(+screens/)  zapret/

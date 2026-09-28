@@ -83,5 +83,5 @@ else
   done
 fi
 
-printf 'net=%s kb=%s kbdev=%s dnd=%d notif=%s gpu=%s gput=%s gm=%s pp=%s rec=%d\n' \
+printf 'net=%s\x1fkb=%s\x1fkbdev=%s\x1fdnd=%d\x1fnotif=%s\x1fgpu=%s\x1fgput=%s\x1fgm=%s\x1fpp=%s\x1frec=%d\n' \
   "$net" "${kb:-EN}" "$kbdev" "$dnd" "$notif" "${gpu:-}" "${gput:-}" "${gm:-0}" "${pp:-}" "$rec"

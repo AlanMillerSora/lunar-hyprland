@@ -50,7 +50,7 @@ PanelWindow {
     Connections {
         target: Hyprland
         function onRawEvent(event) {
-            if (event.name === "configreloaded")
+            if (event.name === "configreloaded" || event.name === "config.reloaded")
                 root.applyPerf()
         }
     }

@@ -208,9 +208,14 @@ show_news() {
 # ── проверка непрочитанных новостей через informant ─────────────
 informant_pending() {
   command -v informant >/dev/null 2>&1 || { echo 0; return; }
-  # state informant читается только от root — иначе check врёт нулём
-  sudo informant check >/dev/null 2>&1
-  echo $?   # >0 — есть непрочитанные
+  # state informant читается только от root. В GUI нет tty, а NOPASSWD для
+  # informant нет — sudo -n тогда падает; это НЕ «есть новости», иначе панель врёт.
+  local err rc
+  err="$(sudo -n informant check 2>&1 >/dev/null)"; rc=$?
+  if [ "$rc" -ne 0 ] && { [[ "$err" == *password* ]] || [[ "$err" == *terminal* ]]; }; then
+    echo 0; return
+  fi
+  echo "$rc"   # >0 — есть непрочитанные
 }
 
 # ── основной поток ──────────────────────────────────────────────
@@ -269,11 +274,11 @@ fi
 # новости: если informant есть — показываем и отмечаем прочитанными
 if [[ "$(informant_pending)" -gt 0 ]]; then
   say "Есть непрочитанные новости Arch — читаем (с переводом):"
-  informant list --unread 2>/dev/null | head -10 || true
+  sudo -n informant list --unread 2>/dev/null | head -10 || true
   echo
   show_news 3
   if command -v informant >/dev/null 2>&1; then
-    sudo informant read --all >/dev/null 2>&1 || true
+    sudo -n informant read --all >/dev/null 2>&1 || true
     say "новости отмечены прочитанными"
   fi
 fi

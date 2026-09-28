@@ -490,8 +490,9 @@ PanelWindow {
                     Loader {
                         id: pageLoader
                         anchors.fill: parent
-                        // X1: страница живёт только пока Hub открыт — её таймеры не крутятся впустую
-                        active: root.showing && root.currentPageFile !== ""
+                        // Страницу НЕ выгружаем при закрытии Hub: иначе её Process
+                        // убиваются (SIGKILL) посреди долгих операций (обновление
+                        // системы, смена аватара, git). Гейт таймеров — отдельно.
                         source: root.currentPageFile !== ""
                             ? "SettingsPages/" + root.currentPageFile + ".qml" : ""
 

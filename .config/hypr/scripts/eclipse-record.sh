@@ -23,9 +23,12 @@ DIR="$HOME/Videos"   # mkdir — только когда реально пише
 # приватный рантайм-каталог; общий /tmp для pid/лока не используем
 RUNTIME="${XDG_RUNTIME_DIR:-}"
 if [ -z "$RUNTIME" ]; then
-  RUNTIME="$(mktemp -d "${TMPDIR:-/tmp}/lunar-record.XXXXXX")" || {
-    echo "не удалось создать приватный каталог для записи" >&2; exit 1; }
-  chmod 700 "$RUNTIME"
+  # стабильный per-user каталог: свежий mktemp на каждый вызов ломал связку
+  # start/stop (pid писался в один каталог, stop читал другой)
+  RUNTIME="${TMPDIR:-/tmp}/lunar-record-$(id -u)"
+  mkdir -p "$RUNTIME" 2>/dev/null || true
+  chmod 700 "$RUNTIME" 2>/dev/null || true
+  [ -d "$RUNTIME" ] || { echo "нет каталога для pid/лока записи" >&2; exit 1; }
 fi
 PIDFILE="$RUNTIME/lunar-record.pid"
 CODECFILE="$RUNTIME/lunar-record.codec"

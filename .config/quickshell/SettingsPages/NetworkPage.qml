@@ -151,12 +151,14 @@ Item {
     }
 
     function connectOpen(ssid) {
+        if (pConnect.running) { page.connectMsg = "подождите — идёт другая операция"; return }
         page.connectMsg = ""
         pConnect.command = ["nmcli", "device", "wifi", "connect", ssid]
         pConnect.running = true
     }
 
     function connectSecured(ssid, password) {
+        if (pConnect.running) { page.connectMsg = "подождите — идёт другая операция"; return }
         page.connectMsg = ""
         // H23: пароль не попадает в argv — отдаём его nmcli через stdin (--ask)
         pConnect.command = ["nmcli", "--ask", "device", "wifi", "connect", ssid]
@@ -165,6 +167,7 @@ Item {
     }
 
     function disconnect(ssid) {
+        if (pConnect.running) { page.connectMsg = "подождите — идёт другая операция"; return }
         page.connectMsg = ""
         pConnect.command = ["nmcli", "connection", "down", "id", ssid]
         pConnect.running = true
