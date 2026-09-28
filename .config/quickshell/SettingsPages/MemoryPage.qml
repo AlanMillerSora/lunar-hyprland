@@ -495,7 +495,8 @@ Item {
 
     Timer {
         interval: 2000
-        running: true
+        // X1: пока Hub закрыт, страницы не видно — живой поллинг не нужен
+        running: page.visible
         repeat: true
         onTriggered: memProc.running = true
     }

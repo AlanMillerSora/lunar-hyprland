@@ -501,6 +501,13 @@ PanelWindow {
                         onSourceChanged: fadeIn.restart()
                         onActiveChanged: if (active) fadeIn.restart()
 
+                        // X1: страница живёт всегда (её Process не выгружаем —
+                        // иначе SIGKILL посреди долгих операций), но видимость
+                        // страницы = открыт ли Hub. По ней страницы гасят свои
+                        // таймеры-поллинг (Network/Bluetooth/Memory/System).
+                        onItemChanged: if (item)
+                            item.visible = Qt.binding(function() { return root.showing })
+
                         Behavior on opacity {
                             NumberAnimation {
                                 duration: Theme.animMed

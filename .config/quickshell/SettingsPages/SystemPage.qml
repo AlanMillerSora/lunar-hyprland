@@ -440,7 +440,8 @@ Item {
 
     Timer {
         interval: 1000
-        running: true
+        // X1: пока Hub закрыт, страницу не видно — поллинг не нужен
+        running: page.visible
         repeat: true
 
         onTriggered: {
@@ -453,7 +454,7 @@ Item {
 
     Timer {
         interval: 2000
-        running: true
+        running: page.visible
         repeat: true
 
         onTriggered: {
@@ -463,7 +464,7 @@ Item {
 
     Timer {
         interval: 5000
-        running: true
+        running: page.visible
         repeat: true
 
         onTriggered: {
