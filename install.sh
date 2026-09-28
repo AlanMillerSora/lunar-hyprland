@@ -117,20 +117,19 @@ ply_hooks_del() {
   say "HOOKS: убран plymouth"
 }
 
-ply_param_add() {  # splash|quiet — добавляю и всегда запоминаю (чтобы --disable убрал)
+ply_param_add() {  # splash|quiet — добавляю и запоминаю ТОЛЬКО фактически добавленное
   local p="$1" f; f="$(ply_cmdline_file)"
   ply_backup "$f"
   if ply_is_uki; then
     if ! grep -qw -- "$p" "$f" 2>/dev/null; then
-      sudo sed -i "s/\$/ $p/" "$f"; say "cmdline: + $p"
+      sudo sed -i "s/\$/ $p/" "$f"; say "cmdline: + $p"; ply_state_add "$p"
     fi
   else
     if ! grep -qE "^GRUB_CMDLINE_LINUX_DEFAULT=.*\b$p\b" "$f"; then
       sudo sed -i -E "s/^(GRUB_CMDLINE_LINUX_DEFAULT=\"[^\"]*)\"/\1 $p\"/" "$f"
-      say "grub: + $p"
+      say "grub: + $p"; ply_state_add "$p"
     fi
   fi
-  ply_state_add "$p"
 }
 
 ply_param_del() {  # splash|quiet — убираю, только если добавлял рис
@@ -569,9 +568,12 @@ if [ ! -d "$HOME/.local/share/icons/Bibata-Modern-Ice" ]; then
   if curl -fsL "https://github.com/ful1e5/Bibata_Cursor/releases/download/v2.0.7/Bibata-Modern-Ice.tar.xz" \
        -o "$bt/bibata.tar.xz" \
      && tar xJf "$bt/bibata.tar.xz" -C "$bt" 2>/dev/null \
-     && [ -d "$bt/Bibata-Modern-Ice" ] \
-     && mv "$bt/Bibata-Modern-Ice" "$HOME/.local/share/icons/" 2>/dev/null; then
-    ok "Bibata установлен"
+     && [ -d "$bt/Bibata-Modern-Ice" ]; then
+    if mv "$bt/Bibata-Modern-Ice" "$HOME/.local/share/icons/" 2>/dev/null; then
+      ok "Bibata установлен"
+    else
+      warn "Bibata распакован, но не переместился — проверь ~/.local/share/icons"
+    fi
   else
     warn "Bibata не скачался (будет системный курсор)"
   fi
