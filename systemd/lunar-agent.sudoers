@@ -6,26 +6,28 @@
 #
 #  Принципы:
 #    • только пользователь sora (раньше было %wheel — на всех админов);
-#    • чтение журналов/юнитов — с --no-pager (иначе less = побег в шелл);
-#    • менять можно только конкретные юниты, без путей и без --now;
-#    • pacman — только -Syu и -Syu --noconfirm (без -Sy и произвольных опций);
-#    • никаких масок по скриптам: root-хелперы лежат в /usr/local/lib/lunar/.
+#    • журнал читает root-хелпер journal-read.sh (в самом journalctl
+#      мутирующие режимы --vacuum/--rotate недоступны);
+#    • systemctl — только конкретные юниты, без путей и без масок;
+#    • pacman — только -Syu и -Syu --noconfirm;
+#    • из пользовательских каталогов — только root-хелперы /usr/local/lib/lunar/.
 #
 #  Ставится из install.sh в /etc/sudoers.d/lunar-agent (0440 root:root).
 #  Проверка: sudo -n -l
 # ════════════════════════════════════════════════════════════════
 
-# чтение состояния (вывод в stdout, без пейджера)
+# чтение журнала — через хелпер (он пропускает только читающие опции)
 Cmnd_Alias LUNAR_READ = \
-  /usr/bin/journalctl --no-pager, \
-  /usr/bin/journalctl --no-pager *, \
+  /usr/local/lib/lunar/journal-read.sh, \
+  /usr/local/lib/lunar/journal-read.sh *, \
   /usr/bin/systemctl --no-pager status, \
   /usr/bin/systemctl --no-pager status *, \
   /usr/bin/systemctl --no-pager list-units, \
   /usr/bin/systemctl --no-pager list-units *, \
   /usr/bin/dmidecode -t memory
 
-# управление только этими юнитами (точные имена, без масок и путей)
+# управление только этими юнитами (точные имена; user-юниты lunar-*
+# управляются без sudo — через systemctl --user)
 Cmnd_Alias LUNAR_SVC = \
   /usr/bin/systemctl start zapret.service, \
   /usr/bin/systemctl stop zapret.service, \
@@ -33,6 +35,8 @@ Cmnd_Alias LUNAR_SVC = \
   /usr/bin/systemctl reload zapret.service, \
   /usr/bin/systemctl enable zapret.service, \
   /usr/bin/systemctl disable zapret.service, \
+  /usr/bin/systemctl enable --now zapret.service, \
+  /usr/bin/systemctl disable --now zapret.service, \
   /usr/bin/systemctl start sddm.service, \
   /usr/bin/systemctl stop sddm.service, \
   /usr/bin/systemctl restart sddm.service, \
@@ -62,25 +66,7 @@ Cmnd_Alias LUNAR_SVC = \
   /usr/bin/systemctl restart libvirtd.service, \
   /usr/bin/systemctl reload libvirtd.service, \
   /usr/bin/systemctl enable libvirtd.service, \
-  /usr/bin/systemctl disable libvirtd.service, \
-  /usr/bin/systemctl start lunar-quickshell.service, \
-  /usr/bin/systemctl stop lunar-quickshell.service, \
-  /usr/bin/systemctl restart lunar-quickshell.service, \
-  /usr/bin/systemctl reload lunar-quickshell.service, \
-  /usr/bin/systemctl enable lunar-quickshell.service, \
-  /usr/bin/systemctl disable lunar-quickshell.service, \
-  /usr/bin/systemctl start lunar-wifi-guard.service, \
-  /usr/bin/systemctl stop lunar-wifi-guard.service, \
-  /usr/bin/systemctl restart lunar-wifi-guard.service, \
-  /usr/bin/systemctl reload lunar-wifi-guard.service, \
-  /usr/bin/systemctl enable lunar-wifi-guard.service, \
-  /usr/bin/systemctl disable lunar-wifi-guard.service, \
-  /usr/bin/systemctl start lunar-homepage.service, \
-  /usr/bin/systemctl stop lunar-homepage.service, \
-  /usr/bin/systemctl restart lunar-homepage.service, \
-  /usr/bin/systemctl reload lunar-homepage.service, \
-  /usr/bin/systemctl enable lunar-homepage.service, \
-  /usr/bin/systemctl disable lunar-homepage.service
+  /usr/bin/systemctl disable libvirtd.service
 
 # пакеты: только обновление системы (без произвольных аргументов)
 Cmnd_Alias LUNAR_PKG = \

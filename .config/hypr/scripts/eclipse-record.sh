@@ -169,6 +169,11 @@ stop() {
     return 0
   fi
   kill -INT "$pid" 2>/dev/null
+  # ждём выхода процесса: иначе следующий toggle примет его за живую запись
+  local i=0
+  while kill -0 "$pid" 2>/dev/null && [ "$i" -lt 50 ]; do
+    sleep 0.1; i=$((i + 1))
+  done
   rm -f "$PIDFILE" "$CODECFILE"
   notify-send -a "Запись" "Запись остановлена" 2>/dev/null
   echo "stopped"

@@ -39,7 +39,7 @@ sudo ./install.sh --disable-sddm  # вернуть штатную тему
 ```
 
 Аватар — из **Hub → User → СМЕНИТЬ АВАТАР** или скриптом
-`~/.config/hypr/scripts/eclipse-avatar.sh` (пишет прямо в тему SDDM).
+`~/.config/hypr/scripts/eclipse-avatar.sh` (синк в тему SDDM — root-хелпером `avatar-sync.sh`).
 
 ## Безопасный предпросмотр
 

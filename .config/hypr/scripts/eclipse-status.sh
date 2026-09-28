@@ -60,7 +60,18 @@ fi
 # ── Game Mode / профиль питания / запись ──
 gm="$(cat "$HOME/.cache/lunar/gamemode" 2>/dev/null || echo 0)"
 pp="$(powerprofilesctl get 2>/dev/null || echo "")"
-pgrep -x wf-recorder >/dev/null 2>&1 && rec=1 || rec=0
+rec=0
+rp="$(cat "${XDG_RUNTIME_DIR:-/tmp}/lunar-record.pid" 2>/dev/null || true)"
+if [ -n "$rp" ] && [ "$(cat "/proc/$rp/comm" 2>/dev/null)" = "wf-recorder" ]; then
+  rec=1
+else
+  # своего pid нет — считаем записью только wf-recorder, пишущий в наш каталог
+  for p in $(pgrep -x wf-recorder); do
+    if tr '\0' ' ' <"/proc/$p/cmdline" 2>/dev/null | grep -qF -- "$HOME/Videos/lunar-"; then
+      rec=1; break
+    fi
+  done
+fi
 
 printf 'net=%s kb=%s kbdev=%s dnd=%d notif=%s gpu=%s gput=%s gm=%s pp=%s rec=%d\n' \
   "$net" "${kb:-EN}" "$kbdev" "$dnd" "$notif" "${gpu:-}" "${gput:-}" "${gm:-0}" "${pp:-}" "$rec"

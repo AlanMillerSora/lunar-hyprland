@@ -117,19 +117,20 @@ ply_hooks_del() {
   say "HOOKS: убран plymouth"
 }
 
-ply_param_add() {  # splash|quiet — добавляю и запоминаю, что добавил рис
+ply_param_add() {  # splash|quiet — добавляю и всегда запоминаю (чтобы --disable убрал)
   local p="$1" f; f="$(ply_cmdline_file)"
   ply_backup "$f"
   if ply_is_uki; then
     if ! grep -qw -- "$p" "$f" 2>/dev/null; then
-      sudo sed -i "s/\$/ $p/" "$f"; say "cmdline: + $p"; ply_state_add "$p"
+      sudo sed -i "s/\$/ $p/" "$f"; say "cmdline: + $p"
     fi
   else
     if ! grep -qE "^GRUB_CMDLINE_LINUX_DEFAULT=.*\b$p\b" "$f"; then
       sudo sed -i -E "s/^(GRUB_CMDLINE_LINUX_DEFAULT=\"[^\"]*)\"/\1 $p\"/" "$f"
-      say "grub: + $p"; ply_state_add "$p"
+      say "grub: + $p"
     fi
   fi
+  ply_state_add "$p"
 }
 
 ply_param_del() {  # splash|quiet — убираю, только если добавлял рис
@@ -198,9 +199,9 @@ ply_rescue() {
   sudo test -f /etc/kernel/cmdline || { warn "нет /etc/kernel/cmdline — rescue не собираю"; return 1; }
   sudo test -f /boot/vmlinuz-linux || { warn "нет /boot/vmlinuz-linux — rescue не собираю"; return 1; }
   local boot_src uuid
-  boot_src="$(findmnt -no SOURCE /boot 2>/dev/null)"
+  boot_src="$(findmnt -no SOURCE /boot 2>/dev/null || true)"
   [ -n "$boot_src" ] || { warn "не вижу загрузочный раздел /boot (findmnt пуст)"; return 1; }
-  uuid="$(sudo blkid -s UUID -o value "$boot_src" 2>/dev/null)"
+  uuid="$(sudo blkid -s UUID -o value "$boot_src" 2>/dev/null || true)"
   [ -n "$uuid" ] || { warn "не определил UUID раздела $boot_src"; return 1; }
 
   sudo cp -f /etc/mkinitcpio.conf "$PLY_RESCUE_CONF"
@@ -343,7 +344,7 @@ zapret_service() {
   local tmp; tmp="$(mktemp)"
   cat > "$tmp" <<EOF
 # Lunar Eclipse: управление zapret без пароля (только systemctl сервиса)
-$ZAPRET_USER ALL=(root) NOPASSWD: /usr/bin/systemctl start $ZAPRET_UNIT, /usr/bin/systemctl stop $ZAPRET_UNIT, /usr/bin/systemctl restart $ZAPRET_UNIT, /usr/bin/systemctl enable $ZAPRET_UNIT, /usr/bin/systemctl disable $ZAPRET_UNIT
+$ZAPRET_USER ALL=(root) NOPASSWD: /usr/bin/systemctl start $ZAPRET_UNIT, /usr/bin/systemctl stop $ZAPRET_UNIT, /usr/bin/systemctl restart $ZAPRET_UNIT, /usr/bin/systemctl enable $ZAPRET_UNIT, /usr/bin/systemctl disable $ZAPRET_UNIT, /usr/bin/systemctl enable --now $ZAPRET_UNIT, /usr/bin/systemctl disable --now $ZAPRET_UNIT
 EOF
   if visudo -cf "$tmp" >/dev/null 2>&1; then
     sudo install -m 0440 -o root -g root "$tmp" "$ZAPRET_SUDOERS"
@@ -568,8 +569,8 @@ if [ ! -d "$HOME/.local/share/icons/Bibata-Modern-Ice" ]; then
   if curl -fsL "https://github.com/ful1e5/Bibata_Cursor/releases/download/v2.0.7/Bibata-Modern-Ice.tar.xz" \
        -o "$bt/bibata.tar.xz" \
      && tar xJf "$bt/bibata.tar.xz" -C "$bt" 2>/dev/null \
-     && [ -d "$bt/Bibata-Modern-Ice" ]; then
-    mv "$bt/Bibata-Modern-Ice" "$HOME/.local/share/icons/"
+     && [ -d "$bt/Bibata-Modern-Ice" ] \
+     && mv "$bt/Bibata-Modern-Ice" "$HOME/.local/share/icons/" 2>/dev/null; then
     ok "Bibata установлен"
   else
     warn "Bibata не скачался (будет системный курсор)"
@@ -612,13 +613,15 @@ fi
 
 # ── sudo: белый список агента (OpenCode) + root-хелперы ────────
 step "sudo: белый список агента → /etc/sudoers.d/lunar-agent"
-if [ -f "$REPO/systemd/lunar-avatar-sync.sh" ]; then
-  sudo install -d -m 0755 -o root -g root /usr/local/lib/lunar 2>/dev/null \
-    && sudo install -m 0755 -o root -g root \
-         "$REPO/systemd/lunar-avatar-sync.sh" \
-         /usr/local/lib/lunar/avatar-sync.sh 2>/dev/null \
-    && ok "root-хелпер: /usr/local/lib/lunar/avatar-sync.sh" \
-    || warn "root-хелпер не установлен (нужен sudo)"
+if [ -d "$REPO/systemd" ]; then
+  for h in lunar-avatar-sync.sh lunar-journal-read.sh; do
+    [ -f "$REPO/systemd/$h" ] || continue
+    sudo install -d -m 0755 -o root -g root /usr/local/lib/lunar 2>/dev/null \
+      && sudo install -m 0755 -o root -g root \
+           "$REPO/systemd/$h" "/usr/local/lib/lunar/${h#lunar-}" 2>/dev/null \
+      && ok "root-хелпер: /usr/local/lib/lunar/${h#lunar-}" \
+      || warn "root-хелпер $h не установлен (нужен sudo)"
+  done
 fi
 if [ -f "$REPO/systemd/lunar-agent.sudoers" ]; then
   if sudo visudo -cf "$REPO/systemd/lunar-agent.sudoers" >/dev/null 2>&1; then
@@ -637,6 +640,8 @@ ZSH_BIN="$(command -v zsh 2>/dev/null || true)"
 SHELL_TARGET="${SUDO_USER:-$USER}"
 if [ -z "$ZSH_BIN" ]; then
   ok "zsh не установлен — пропускаю"
+elif [ "$(id -u)" -eq 0 ] && [ -z "${SUDO_USER:-}" ]; then
+  warn "запуск от root без SUDO_USER — shell не меняю; вручную: chsh -s $ZSH_BIN <пользователь>"
 elif [ "$(getent passwd "$SHELL_TARGET" | cut -d: -f7)" = "$ZSH_BIN" ]; then
   ok "zsh уже у $SHELL_TARGET"
 elif [ ! -t 0 ]; then

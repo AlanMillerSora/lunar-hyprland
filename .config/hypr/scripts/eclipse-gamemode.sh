@@ -39,9 +39,13 @@ svc_pause() {
         && systemctl --user stop "$unit" 2>/dev/null \
         && echo "$unit" >>"$PAUSED_STATE"
     else
-      systemctl is-active --quiet "$unit" \
-        && sudo -n systemctl stop "$unit" 2>/dev/null \
-        && echo "system:$unit" >>"$PAUSED_STATE"
+      if systemctl is-active --quiet "$unit"; then
+        if sudo -n systemctl stop "$unit" 2>/dev/null; then
+          echo "system:$unit" >>"$PAUSED_STATE"
+        else
+          say "Game Mode: нет прав на $unit (sudo -n) — пропускаю"
+        fi
+      fi
     fi
   done <"$PAUSE_CONF"
   if [[ -s "$PAUSED_STATE" ]]; then
