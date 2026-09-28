@@ -385,7 +385,7 @@ end)
 -- hyprctl reload откатывает runtime-настройки Game Mode (анимации/blur/tearing),
 -- а флаг состояния остаётся — сбрасываем его, чтобы панель не показывала
 -- активный режим, которого уже нет.
-hl.on("configreloaded", function()
+hl.on("config.reloaded", function()
   hl.exec_cmd("sh -c 'rm -f \"$HOME/.cache/lunar/gamemode\"'")
 end)
 
