@@ -69,7 +69,11 @@ clean_cache_journal() {
 
   local jbefore jafter
   jbefore="$(journalctl --disk-usage 2>/dev/null | grep -o '[0-9.]*[MG]' | head -1)"
-  sudo -n /usr/local/lib/lunar/journal-vacuum.sh --size=200M >/dev/null 2>&1 || true
+  if [ -x /usr/local/lib/lunar/journal-vacuum.sh ]; then
+    sudo -n /usr/local/lib/lunar/journal-vacuum.sh --size=200M >/dev/null 2>&1 || true
+  else
+    say "журнал: vacuum-хелпер не установлен — запусти ./install.sh"
+  fi
   jafter="$(journalctl --disk-usage 2>/dev/null | grep -o '[0-9.]*[MG]' | head -1)"
   say "журнал systemd (--vacuum-size=200M): ${jbefore:-?} → ${jafter:-?}"
 }

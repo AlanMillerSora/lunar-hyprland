@@ -263,9 +263,9 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 - `cliphist delete` читает stdin: `cliphist list | grep -P '^ID\t' | cliphist delete`.
 - DND: `makoctl mode -t do-not-disturb`.
 - Круглая маска magick: `magick in -resize 512x512 \( -size 512x512 xc:black -fill white -draw "circle 256,256 256,2" \) -alpha off -compose CopyOpacity -composite PNG32:out`.
-- Root-хелперы риса (`/usr/local/lib/lunar/avatar-sync.sh`, `journal-read.sh`) ставит
-  `install.sh` (0755 root:root); в sudoers — только они (у хелперов аргументы
-  валидируются внутри), без масок по пользовательским скриптам.
+- Root-хелперы риса (`/usr/local/lib/lunar/`: `avatar-sync.sh`, `journal-read.sh`,
+  `journal-vacuum.sh`) ставит `install.sh` (0755 root:root); в sudoers — только они
+  (аргументы валидируются внутри), без масок по пользовательским скриптам.
   Журнал читать через `sudo -n /usr/local/lib/lunar/journal-read.sh …` — у raw
   `journalctl` отозваны мутирующие режимы (`--vacuum`/`--rotate`).
 - `eclipse-askpass.py` — интерактивный GTK-диалог пароля (не автоподстановка).

@@ -30,20 +30,27 @@ uid="$(id -u "$user")"
 python3 - "$real" "$SDDM_AV" "$uid" <<'PY'
 import os, stat, sys
 src, dst, uid = sys.argv[1], sys.argv[2], int(sys.argv[3])
-fd = os.open(src, os.O_RDONLY | os.O_NOFOLLOW)
+fd = os.open(src, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
 st = os.fstat(fd)
 if not stat.S_ISREG(st.st_mode):
     sys.exit("источник — не регулярный файл")
 if st.st_uid != uid:
     sys.exit("источник не принадлежит пользователю")
-with os.fdopen(fd, "rb") as fsrc, open(dst, "wb") as fdst:
-    while True:
-        chunk = fsrc.read(65536)
-        if not chunk:
-            break
-        fdst.write(chunk)
-os.chmod(dst, 0o644)
-os.chown(dst, 0, 0)
+tmp = dst + ".lunar-tmp"
+try:
+    with os.fdopen(fd, "rb") as fsrc, open(tmp, "wb") as fdst:
+        while True:
+            chunk = fsrc.read(65536)
+            if not chunk:
+                break
+            fdst.write(chunk)
+    os.chmod(tmp, 0o644)
+    os.chown(tmp, 0, 0)
+    os.replace(tmp, dst)   # атомарно, без перехода по симлинку назначения
+except BaseException:
+    try: os.unlink(tmp)
+    except OSError: pass
+    raise
 PY
 
 echo "аватар синхронизирован в SDDM"

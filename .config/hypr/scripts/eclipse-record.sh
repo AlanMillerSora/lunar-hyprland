@@ -175,8 +175,11 @@ stop() {
     sleep 0.1; i=$((i + 1))
   done
   # не вышел за 5 с — эскалируем, иначе снимем pidfile у живого процесса
-  kill -0 "$pid" 2>/dev/null && kill -TERM "$pid" 2>/dev/null && sleep 0.5
+  kill -0 "$pid" 2>/dev/null && kill -TERM "$pid" 2>/dev/null && sleep 1
   kill -0 "$pid" 2>/dev/null && kill -KILL "$pid" 2>/dev/null
+  if kill -0 "$pid" 2>/dev/null; then
+    echo "процесс $pid не завершился — запись могла остаться"
+  fi
   rm -f "$PIDFILE" "$CODECFILE"
   notify-send -a "Запись" "Запись остановлена" 2>/dev/null
   echo "stopped"

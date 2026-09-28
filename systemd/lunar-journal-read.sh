@@ -14,6 +14,7 @@
 set -euo pipefail
 
 isnum() { case "$1" in ''|*[!0-9]*) return 1 ;; esac; return 0; }
+islines() { local v="${1#+}"; [ "$v" = all ] && return 0; isnum "$v"; }
 
 out=()
 while [ "$#" -gt 0 ]; do
@@ -31,15 +32,15 @@ while [ "$#" -gt 0 ]; do
   name="${a%%=*}"
   hasval=0; [ "$name" != "$a" ] && hasval=1
   case "$name" in
-    -n[0-9]*)
+    -n[0-9]*|-n+[0-9]*)
       out+=("$a"); shift ;;
     -n|--lines)
       # у journalctl -n — ОПЦИОНАЛЬНЫЙ аргумент: не съедаем следующую опцию
       if [ "$hasval" -eq 1 ]; then
         v="${a#*=}"
-        if [ "$v" = all ] || isnum "$v"; then out+=("--lines=$v"); else echo "journal-read: -n ждёт число" >&2; exit 2; fi
+        if islines "$v"; then out+=("--lines=$v"); else echo "journal-read: -n ждёт число" >&2; exit 2; fi
         shift
-      elif [ "$#" -ge 2 ] && { [ "$2" = all ] || isnum "$2"; }; then
+      elif [ "$#" -ge 2 ] && islines "$2"; then
         out+=("--lines=$2"); shift 2
       else
         out+=("-n"); shift

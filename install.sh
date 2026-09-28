@@ -572,7 +572,7 @@ if [ ! -d "$HOME/.local/share/icons/Bibata-Modern-Ice" ]; then
     if mv "$bt/Bibata-Modern-Ice" "$HOME/.local/share/icons/" 2>/dev/null; then
       ok "Bibata установлен"
     else
-      warn "Bibata распакован, но не переместился — проверь ~/.local/share/icons"
+      warn "Bibata не установился — повторю при следующем запуске"
     fi
   else
     warn "Bibata не скачался (будет системный курсор)"
