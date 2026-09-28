@@ -20,16 +20,19 @@ say() { printf '\033[97m==>\033[0m %s\n' "$*"; }
 
 # ── снимок/восстановление булевых опций Hyprland ───────────────
 # gm_off должен вернуть то, что реально было (а не угаданный дефолт).
-opt_int()   { hyprctl -j getoption "$1" 2>/dev/null | jq -r '.int // empty' 2>/dev/null; }
-bool_word() { [[ "$1" == 1 ]] && echo true || echo false; }
+# В Hyprland 0.56 у булевых опций в JSON поле .bool, а не .int — со старым
+# парсером снимок не снимался вовсе и возвращались догадки.
+opt_bool() { hyprctl -j getoption "$1" 2>/dev/null | jq -r '.bool' 2>/dev/null; }
 
 snapshot_hypr() {
   command -v jq >/dev/null 2>&1 || return 0
   local a b t
-  a="$(opt_int animations:enabled)"
-  b="$(opt_int decoration:blur:enabled)"
-  t="$(opt_int general:allow_tearing)"
-  [[ -n "$a" && -n "$b" && -n "$t" ]] || return 0
+  a="$(opt_bool animations:enabled)"
+  b="$(opt_bool decoration:blur:enabled)"
+  t="$(opt_bool general:allow_tearing)"
+  [[ "$a" == true || "$a" == false ]] || return 0
+  [[ "$b" == true || "$b" == false ]] || return 0
+  [[ "$t" == true || "$t" == false ]] || return 0
   printf 'animations=%s\nblur=%s\ntearing=%s\n' "$a" "$b" "$t" >"$PREV_STATE"
 }
 
@@ -38,12 +41,12 @@ restore_hypr() {
   a="$(sed -n 's/^animations=//p' "$PREV_STATE" 2>/dev/null | head -1)"
   b="$(sed -n 's/^blur=//p' "$PREV_STATE" 2>/dev/null | head -1)"
   t="$(sed -n 's/^tearing=//p' "$PREV_STATE" 2>/dev/null | head -1)"
-  [[ "$a" == 0 || "$a" == 1 ]] || a=1
-  [[ "$b" == 0 || "$b" == 1 ]] || b=1
-  [[ "$t" == 0 || "$t" == 1 ]] || t=0
-  hyprctl eval "hl.config({animations = {enabled = $(bool_word "$a")}})" >/dev/null 2>&1
-  hyprctl eval "hl.config({decoration = {blur = {enabled = $(bool_word "$b")}}})" >/dev/null 2>&1
-  hyprctl eval "hl.config({general = {allow_tearing = $(bool_word "$t")}})" >/dev/null 2>&1
+  [[ "$a" == true || "$a" == false ]] || a=true
+  [[ "$b" == true || "$b" == false ]] || b=true
+  [[ "$t" == true || "$t" == false ]] || t=false
+  hyprctl eval "hl.config({animations = {enabled = $a}})" >/dev/null 2>&1
+  hyprctl eval "hl.config({decoration = {blur = {enabled = $b}}})" >/dev/null 2>&1
+  hyprctl eval "hl.config({general = {allow_tearing = $t}})" >/dev/null 2>&1
 }
 
 # ── выгрузка фоновых сервисов по списку ────────────────────────
@@ -132,6 +135,11 @@ gm_on() {
 }
 
 gm_off() {
+  # если Game Mode не включали — ничего не трогаем. hyprctl reload зовёт
+  # gm_off «на всякий случай», и без этого guard'а сбрасывались DND/профиль.
+  if [[ "$(cat "$STATE" 2>/dev/null || echo 0)" != 1 && ! -f "$PREV_STATE" ]]; then
+    return 0
+  fi
   restore_hypr
   rm -f "$PREV_STATE"
   makoctl mode -r do-not-disturb >/dev/null 2>&1
