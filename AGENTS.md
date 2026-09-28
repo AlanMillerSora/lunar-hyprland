@@ -220,6 +220,14 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
   Резервный UKI без заставки — лучший откат.
 - SDDM-greeter на Qt5: QtQuick 2.0 + SddmComponents 2.0; `Rectangle.radius` не скругляет содержимое →
   круглый аватар через `ShaderEffect` (премноженная альфа). Дата — вручную по-русски.
+- **Hyprland Lua — точные имена API.** События в `hl.on(...)` точечные: `config.reloaded`,
+  `hyprland.start`, `workspace.created`, `window.open_early` и т.п. — **НЕ** слитные
+  (`hl.on("configreloaded", …)` валит весь конфиг: «unknown event»). Полный список валидных
+  имён печатается в тексте этой ошибки; `strings /usr/bin/Hyprland` даёт и слитную строку —
+  ей верить нельзя. После правки `hyprland.lua` — `hyprctl reload` и `hyprctl configerrors`
+  (пусто!), причём ошибку в имени события `configerrors` показывает не всегда — смотри и
+  вывод самого `hyprctl reload`. Общее правило: имена хостовых API (Lua/QML/Quickshell)
+  не угадывать по бинарю, а сверять по докам/стабам и живым вызовом.
 
 **Quickshell / QML**
 
