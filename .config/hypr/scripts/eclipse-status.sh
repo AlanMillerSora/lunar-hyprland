@@ -28,9 +28,11 @@ fi
 # Берём клавиатуру с флагом main, иначе первую. Разбор через jq.
 kb="EN"; kbdev=""
 if command -v jq >/dev/null 2>&1; then
-  read -r kb kbdev < <(hyprctl devices -j 2>/dev/null | jq -r '
+  # разделитель \x1f — не встречается в имени устройства, поэтому
+  # «мышь Logitech USB Receiver» не режется по пробелам
+  IFS=$'\x1f' read -r kb kbdev < <(hyprctl devices -j 2>/dev/null | jq -r '
     ([.keyboards[] | select(.main)] + [.keyboards[0]])[0]
-    | "\(.active_keymap[:2] | ascii_upcase) \(.name)"' 2>/dev/null)
+    | "\(.active_keymap[:2] | ascii_upcase)\u001f\(.name)"' 2>/dev/null)
 fi
 
 # ── уведомления ──
@@ -42,32 +44,40 @@ notif="$(makoctl list -j 2>/dev/null | jq 'length' 2>/dev/null)"
 notif="${notif:-0}"
 
 # ── GPU (один замер; сглаживание — в панели) ──
+# gpu_busy_percent есть не у всех драйверов (только amdgpu) — проверяем файл
 gpu=""
 gput=""
 if command -v nvidia-smi >/dev/null 2>&1; then
   read -r gpu gput < <(nvidia-smi --query-gpu=utilization.gpu,temperature.gpu \
     --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ' ' | tr ',' ' ')
 else
-  gpu="$(cat /sys/class/drm/card*/device/gpu_busy_percent 2>/dev/null | head -1)"
+  for f in /sys/class/drm/card*/device/gpu_busy_percent; do
+    if [ -r "$f" ]; then gpu="$(<"$f")"; break; fi
+  done
   for h in /sys/class/hwmon/hwmon*; do
-    if [ "$(cat "$h/name" 2>/dev/null)" = "amdgpu" ]; then
-      t="$(cat "$h/temp1_input" 2>/dev/null)"
-      [ -n "$t" ] && gput=$((t / 1000))
+    if [ -r "$h/name" ] && [ "$(<"$h/name")" = "amdgpu" ] && [ -r "$h/temp1_input" ]; then
+      gput=$(( $(<"$h/temp1_input") / 1000 ))
+      break
     fi
   done
 fi
 
 # ── Game Mode / профиль питания / запись ──
-gm="$(cat "$HOME/.cache/lunar/gamemode" 2>/dev/null || echo 0)"
+GM_FILE="$HOME/.cache/lunar/gamemode"
+gm="0"
+[ -r "$GM_FILE" ] && gm="$(<"$GM_FILE")"
 pp="$(powerprofilesctl get 2>/dev/null || echo "")"
 rec=0
-rp="$(cat "${XDG_RUNTIME_DIR:-/tmp}/lunar-record.pid" 2>/dev/null || true)"
-if [ -n "$rp" ] && [ "$(cat "/proc/$rp/comm" 2>/dev/null)" = "wf-recorder" ]; then
+PIDFILE="${XDG_RUNTIME_DIR:-/tmp}/lunar-record.pid"
+rp=""
+[ -r "$PIDFILE" ] && rp="$(<"$PIDFILE")"
+if [ -n "$rp" ] && [[ "$rp" =~ ^[0-9]+$ ]] \
+   && [ -r "/proc/$rp/comm" ] && [ "$(<"/proc/$rp/comm")" = "wf-recorder" ]; then
   rec=1
 else
   # своего pid нет — считаем записью только wf-recorder, пишущий в наш каталог
   for p in $(pgrep -x wf-recorder); do
-    if tr '\0' ' ' <"/proc/$p/cmdline" 2>/dev/null | grep -qF -- "$HOME/Videos/lunar-"; then
+    if grep -aqF -- "$HOME/Videos/lunar-" "/proc/$p/cmdline" 2>/dev/null; then
       rec=1; break
     fi
   done

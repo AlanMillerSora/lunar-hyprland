@@ -17,8 +17,15 @@ set -uo pipefail
 ZDIR=/opt/zapret
 UNIT=zapret.service
 
-# без пароля (sudoers-правило от install.sh --zapret), иначе — pkexec
-priv() { sudo -n "$@" 2>/dev/null || pkexec "$@" ; }
+# без пароля (sudoers-правило от install.sh --zapret); если правило не
+# установлено — внятно сообщаем, а не уходим в невидимый polkit-диалог pkexec
+priv() {
+  if sudo -n "$@" 2>/dev/null; then
+    return 0
+  fi
+  echo "zapret: нет прав без пароля (нужно правило sudoers — install.sh --zapret)" >&2
+  return 1
+}
 
 is_active()  { systemctl is-active  --quiet "$UNIT" 2>/dev/null; }
 is_enabled() { systemctl is-enabled --quiet "$UNIT" 2>/dev/null; }

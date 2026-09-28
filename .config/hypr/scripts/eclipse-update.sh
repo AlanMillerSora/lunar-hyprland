@@ -88,6 +88,9 @@ clean_orphans() {
   fi
   say "пакеты-сироты (${#orphans[@]}):"
   printf '   %s\n' "${orphans[@]}"
+  # сперва показываем, что утянет каскадом, и только потом удаляем
+  say "каскад удаления (pacman -Rs --print):"
+  pacman -Rs --print "${orphans[@]}" 2>&1 | sed 's/^/   /' || true
   local ans=""
   read -r -p "Удалить сироты? [y/N] " ans </dev/tty || ans=""
   if [[ ! "${ans:-}" =~ ^[Yy]$ ]]; then
@@ -177,13 +180,13 @@ newest_age_days() {
 import sys, datetime
 s = sys.stdin.read().strip()
 if not s:
-    print(999); sys.exit()
+    print(-1); sys.exit()
 try:
     d = datetime.date.fromisoformat(s)
     print((datetime.date.today() - d).days)
 except Exception:
-    print(999)
-'
+    print(-1)
+' || true
 }
 
 # ── показать новости (переведённые) ────────────────────────────
@@ -205,7 +208,8 @@ show_news() {
 # ── проверка непрочитанных новостей через informant ─────────────
 informant_pending() {
   command -v informant >/dev/null 2>&1 || { echo 0; return; }
-  informant check >/dev/null 2>&1
+  # state informant читается только от root — иначе check врёт нулём
+  sudo informant check >/dev/null 2>&1
   echo $?   # >0 — есть непрочитанные
 }
 
@@ -213,8 +217,11 @@ informant_pending() {
 syu_available() {
   if command -v checkupdates >/dev/null 2>&1; then
     checkupdates 2>/dev/null | wc -l
-  else
+  elif pacman -Qu >/dev/null 2>&1; then
     pacman -Qu 2>/dev/null | wc -l
+  else
+    # нет checkupdates и pacman не опросился — не врём нулём
+    echo "?"
   fi
 }
 
@@ -234,11 +241,21 @@ fi
 AGE="$(newest_age_days)"
 
 if [[ "$MODE" == "check" ]]; then
-  say "самая свежая новость Arch: ${AGE} дн. назад (буфер: ${BUFFER_DAYS} дн.)"
-  [[ "$AGE" -lt "$BUFFER_DAYS" ]] && echo "→ рано обновляться (буфер)"
+  if [[ "$AGE" -eq -1 ]]; then
+    say "новости Arch не получены (RSS недоступен)"
+  else
+    say "самая свежая новость Arch: ${AGE} дн. назад (буфер: ${BUFFER_DAYS} дн.)"
+    [[ "$AGE" -lt "$BUFFER_DAYS" ]] && echo "→ рано обновляться (буфер)"
+  fi
   N="$(syu_available)"; echo "→ пакетов к обновлению: ${N:-?}"
   echo "→ непрочитанных новостей: $(informant_pending)"
   exit 0
+fi
+
+# новости не распарсились — не обновляемся вслепую (даже с --now)
+if [[ "$AGE" -eq -1 ]]; then
+  say "новости Arch не получены (RSS не распарсился) — обновление отменено"
+  exit 3
 fi
 
 # буфер
@@ -252,11 +269,11 @@ fi
 # новости: если informant есть — показываем и отмечаем прочитанными
 if [[ "$(informant_pending)" -gt 0 ]]; then
   say "Есть непрочитанные новости Arch — читаем (с переводом):"
-  informant list --unread 2>/dev/null | head -10
+  informant list --unread 2>/dev/null | head -10 || true
   echo
   show_news 3
   if command -v informant >/dev/null 2>&1; then
-    informant read --all >/dev/null 2>&1 || true
+    sudo informant read --all >/dev/null 2>&1 || true
     say "новости отмечены прочитанными"
   fi
 fi

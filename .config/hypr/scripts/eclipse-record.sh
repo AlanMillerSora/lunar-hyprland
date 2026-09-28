@@ -19,11 +19,17 @@
 # ════════════════════════════════════════════════════════════════
 set -uo pipefail
 
-DIR="$HOME/Videos"
-mkdir -p "$DIR"
-PIDFILE="${XDG_RUNTIME_DIR:-/tmp}/lunar-record.pid"
-CODECFILE="${XDG_RUNTIME_DIR:-/tmp}/lunar-record.codec"
-LOCKFILE="${XDG_RUNTIME_DIR:-/tmp}/lunar-record.lock"
+DIR="$HOME/Videos"   # mkdir — только когда реально пишем (start)
+# приватный рантайм-каталог; общий /tmp для pid/лока не используем
+RUNTIME="${XDG_RUNTIME_DIR:-}"
+if [ -z "$RUNTIME" ]; then
+  RUNTIME="$(mktemp -d "${TMPDIR:-/tmp}/lunar-record.XXXXXX")" || {
+    echo "не удалось создать приватный каталог для записи" >&2; exit 1; }
+  chmod 700 "$RUNTIME"
+fi
+PIDFILE="$RUNTIME/lunar-record.pid"
+CODECFILE="$RUNTIME/lunar-record.codec"
+LOCKFILE="$RUNTIME/lunar-record.lock"
 CONF="$HOME/.config/lunar/record.json"
 
 # pid именно нашей записи: сначала PIDFILE, иначе — по каталогу вывода
@@ -31,7 +37,8 @@ CONF="$HOME/.config/lunar/record.json"
 rec_pid() {
   local p
   p="$(cat "$PIDFILE" 2>/dev/null || true)"
-  if [ -n "$p" ] && [ "$(cat "/proc/$p/comm" 2>/dev/null || true)" = "wf-recorder" ]; then
+  if [ -n "$p" ] && [ "$(cat "/proc/$p/comm" 2>/dev/null || true)" = "wf-recorder" ] \
+     && tr '\0' ' ' <"/proc/$p/cmdline" 2>/dev/null | grep -qF -- "$DIR/lunar-"; then
     echo "$p"; return 0
   fi
   for p in $(pgrep -x wf-recorder); do
@@ -49,7 +56,7 @@ run_locked() {
   exec 9>"$LOCKFILE"
   if ! flock -n 9 2>/dev/null; then
     echo "занято: другая операция с записью выполняется"
-    return 0
+    return 1
   fi
   "$@"
 }
@@ -66,6 +73,10 @@ load_conf() {
   v="$(jq -r '.qp // 24' "$CONF" 2>/dev/null)";        [ -n "$v" ] && [ "$v" != null ] && rec_qp="$v"
   v="$(jq -r '.bitrate // 12' "$CONF" 2>/dev/null)";   [ -n "$v" ] && [ "$v" != null ] && rec_bitrate="$v"
   v="$(jq -r '.fps // "auto"' "$CONF" 2>/dev/null)";   [ -n "$v" ] && [ "$v" != null ] && rec_fps="$v"
+  # мусор из record.json не тащим в argv: чинится дефолтом
+  [[ "$rec_qp" =~ ^[0-9]+$ ]] && [ "$rec_qp" -le 51 ] || rec_qp=24
+  [[ "$rec_bitrate" =~ ^[1-9][0-9]*$ ]] || rec_bitrate=12
+  [[ "$rec_fps" == auto || "$rec_fps" =~ ^[1-9][0-9]*$ ]] || rec_fps=auto
 }
 
 # ближайший render-узел (на ПК с NVIDIA — обычно renderD128)
@@ -122,28 +133,27 @@ vaapi_label() {
 start() {
   if running; then echo "уже пишу"; return 0; fi
   load_conf
-  local dev params label
+  mkdir -p "$DIR"
+  local dev params=() label out
   dev="$(render_node)" || dev=""
-  local out="$DIR/lunar-$(date +%Y%m%d-%H%M%S).mp4"
+  out="$DIR/lunar-$(date +%Y%m%d-%H%M%S).mp4"
 
   if [ -n "$dev" ] && vaapi_works "$dev"; then
-    params="$(vaapi_params "$dev")"
+    read -r -a params <<<"$(vaapi_params "$dev")"
     label="$(vaapi_label)"
   else
-    params="$(soft_params)"
+    read -r -a params <<<"$(soft_params)"
     label="софт (libx264)"
   fi
 
   # 9>&- — не наследовать лок записью, иначе stop не сможет его взять
-  # shellcheck disable=SC2086
-  setsid wf-recorder -f "$out" $params >/dev/null 2>&1 </dev/null 9>&- &
+  setsid wf-recorder -f "$out" "${params[@]}" >/dev/null 2>&1 </dev/null 9>&- &
   sleep 0.6
   if [ -z "$(rec_pid 2>/dev/null || true)" ]; then
     # кодек не завёлся — падаем на софт
     label="софт (libx264)"
-    params="$(soft_params)"
-    # shellcheck disable=SC2086
-    setsid wf-recorder -f "$out" $params >/dev/null 2>&1 </dev/null 9>&- &
+    read -r -a params <<<"$(soft_params)"
+    setsid wf-recorder -f "$out" "${params[@]}" >/dev/null 2>&1 </dev/null 9>&- &
     sleep 0.6
   fi
 
@@ -189,18 +199,18 @@ toggle() { if running; then stop; else start; fi; }
 
 probe() {
   load_conf
-  local dev params label
+  local dev params=() label
   dev="$(render_node)" || dev=""
   if [ -n "$dev" ] && vaapi_works "$dev"; then
-    params="$(vaapi_params "$dev")"
+    read -r -a params <<<"$(vaapi_params "$dev")"
     label="$(vaapi_label)"
   else
-    params="$(soft_params)"
+    read -r -a params <<<"$(soft_params)"
     label="софт (libx264)"
   fi
   echo "кодек: $label"
   echo "настройки: QP $rec_qp · ${rec_bitrate} Мбит/с · герцовка $rec_fps"
-  echo "параметры: $params"
+  echo "параметры: ${params[*]}"
 }
 
 case "${1:-toggle}" in

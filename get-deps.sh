@@ -35,9 +35,17 @@ fi
 # поставится. Раскомментируем идемпотентно.
 if ! pacman-conf --repo-list 2>/dev/null | grep -qx multilib; then
   say "multilib: включаю репозиторий (для steam)"
+  # бэкап перед правкой: sed может не совпасть с форматом файла — откатимся
+  sudo cp /etc/pacman.conf "/etc/pacman.conf.bak.$(date +%Y%m%d-%H%M%S)"
   sudo sed -i '/^#\[multilib\]/,/^#Include = \/etc\/pacman.d\/mirrorlist/ s/^#//' /etc/pacman.conf
-  sudo pacman -Sy --noconfirm >/dev/null 2>&1 || true
-  ok "multilib включён"
+  # проверяем, что правка реально сработала — иначе steam не поставится
+  if pacman-conf --repo-list 2>/dev/null | grep -qx multilib; then
+    # -Syu, а не -Sy: -Sy без -u — partial upgrade, ломает систему
+    sudo pacman -Syu --noconfirm >/dev/null 2>&1 || true
+    ok "multilib включён"
+  else
+    warn "multilib не включился — правь /etc/pacman.conf вручную (бэкап рядом: /etc/pacman.conf.bak.*)"
+  fi
 else
   say "multilib уже включён"
 fi

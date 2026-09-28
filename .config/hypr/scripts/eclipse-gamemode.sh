@@ -4,7 +4,7 @@
 #
 #  Вкл:  без анимаций и blur, DND, пауза hypridle (не лочится),
 #        профиль performance, разрешён tearing (меньше задержка).
-#  Выкл: всё возвращается.
+#  Выкл: всё возвращается к значениям, что были до включения.
 #
 #  Запуск:  eclipse-gamemode.sh on|off|toggle
 # ════════════════════════════════════════════════════════════════
@@ -13,18 +13,51 @@ set -uo pipefail
 STATE="$HOME/.cache/lunar/gamemode"
 PAUSE_CONF="$HOME/.config/lunar/gamemode-pause.conf"
 PAUSED_STATE="$HOME/.cache/lunar/gamemode-paused"
+PREV_STATE="$HOME/.cache/lunar/gamemode-prev"
 mkdir -p "$(dirname "$STATE")"
 
 say() { printf '\033[97m==>\033[0m %s\n' "$*"; }
+
+# ── снимок/восстановление булевых опций Hyprland ───────────────
+# gm_off должен вернуть то, что реально было (а не угаданный дефолт).
+opt_int()   { hyprctl -j getoption "$1" 2>/dev/null | jq -r '.int // empty' 2>/dev/null; }
+bool_word() { [[ "$1" == 1 ]] && echo true || echo false; }
+
+snapshot_hypr() {
+  command -v jq >/dev/null 2>&1 || return 0
+  local a b t
+  a="$(opt_int animations:enabled)"
+  b="$(opt_int decoration:blur:enabled)"
+  t="$(opt_int general:allow_tearing)"
+  [[ -n "$a" && -n "$b" && -n "$t" ]] || return 0
+  printf 'animations=%s\nblur=%s\ntearing=%s\n' "$a" "$b" "$t" >"$PREV_STATE"
+}
+
+restore_hypr() {
+  local a b t
+  a="$(sed -n 's/^animations=//p' "$PREV_STATE" 2>/dev/null | head -1)"
+  b="$(sed -n 's/^blur=//p' "$PREV_STATE" 2>/dev/null | head -1)"
+  t="$(sed -n 's/^tearing=//p' "$PREV_STATE" 2>/dev/null | head -1)"
+  [[ "$a" == 0 || "$a" == 1 ]] || a=1
+  [[ "$b" == 0 || "$b" == 1 ]] || b=1
+  [[ "$t" == 0 || "$t" == 1 ]] || t=0
+  hyprctl eval "hl.config({animations = {enabled = $(bool_word "$a")}})" >/dev/null 2>&1
+  hyprctl eval "hl.config({decoration = {blur = {enabled = $(bool_word "$b")}}})" >/dev/null 2>&1
+  hyprctl eval "hl.config({general = {allow_tearing = $(bool_word "$t")}})" >/dev/null 2>&1
+}
 
 # ── выгрузка фоновых сервисов по списку ────────────────────────
 # Формат строки: [user:|system:]unit.service (по умолчанию user).
 # Останавливаем только активные и запоминаем, какие именно, — чтобы
 # при выключении поднять обратно ровно их (а не всё подряд).
+# PAUSED_STATE не обнуляем: новые записи мержим со старыми (sort -u),
+# иначе повторный gm_on «забудет» уже приостановленные сервисы.
 svc_pause() {
   [[ -f "$PAUSE_CONF" ]] || return 0
-  : >"$PAUSED_STATE"
-  local raw unit scope
+  local tmp out raw unit scope
+  tmp="$(mktemp "${PAUSED_STATE}.XXXXXX")" || return 0
+  out="$(mktemp "${PAUSED_STATE}.XXXXXX")" || { rm -f "$tmp"; return 0; }
+  [[ -s "$PAUSED_STATE" ]] && cat "$PAUSED_STATE" >"$tmp"
   while IFS= read -r raw || [[ -n "$raw" ]]; do
     raw="${raw%%#*}"
     read -r unit _ <<<"$raw"
@@ -37,17 +70,25 @@ svc_pause() {
     if [[ "$scope" == user ]]; then
       systemctl --user is-active --quiet "$unit" \
         && systemctl --user stop "$unit" 2>/dev/null \
-        && echo "$unit" >>"$PAUSED_STATE"
+        && echo "$unit" >>"$tmp"
     else
       if systemctl is-active --quiet "$unit"; then
         if sudo -n systemctl stop "$unit" 2>/dev/null; then
-          echo "system:$unit" >>"$PAUSED_STATE"
+          echo "system:$unit" >>"$tmp"
         else
           say "Game Mode: нет прав на $unit (sudo -n) — пропускаю"
         fi
       fi
     fi
   done <"$PAUSE_CONF"
+  # склейка: старые + новые без дублей, затем атомарно на место
+  if [[ -s "$tmp" ]]; then
+    sort -u "$tmp" >"$out" && mv "$out" "$PAUSED_STATE"
+  else
+    : >"$PAUSED_STATE"
+    rm -f "$out"
+  fi
+  rm -f "$tmp"
   if [[ -s "$PAUSED_STATE" ]]; then
     say "Game Mode: приостановлены сервисы ($(tr '\n' ' ' <"$PAUSED_STATE"))"
   fi
@@ -72,6 +113,10 @@ svc_restore() {
 }
 
 gm_on() {
+  [[ "$(cat "$STATE" 2>/dev/null || echo 0)" == 1 ]] && return 0
+  # если что-то упадёт до конца — не оставляем hypridle в SIGSTOP
+  trap '[[ "$(cat "$STATE" 2>/dev/null || echo 0)" == 1 ]] || pkill -CONT -x hypridle 2>/dev/null' EXIT
+  snapshot_hypr
   hyprctl eval 'hl.config({animations = {enabled = false}})' >/dev/null 2>&1
   hyprctl eval 'hl.config({decoration = {blur = {enabled = false}}})' >/dev/null 2>&1
   hyprctl eval 'hl.config({general = {allow_tearing = true}})' >/dev/null 2>&1
@@ -80,15 +125,15 @@ gm_on() {
   powerprofilesctl set performance >/dev/null 2>&1
   svc_pause
   echo 1 >"$STATE"
+  trap - EXIT
   say "Game Mode включён: анимации/blur выкл · DND · performance · tearing"
   notify-send -a "Game Mode" "Игровой режим включён" \
     "анимации/blur выкл · DND · performance · hypridle на паузе" 2>/dev/null
 }
 
 gm_off() {
-  hyprctl eval 'hl.config({animations = {enabled = true}})' >/dev/null 2>&1
-  hyprctl eval 'hl.config({decoration = {blur = {enabled = true}}})' >/dev/null 2>&1
-  hyprctl eval 'hl.config({general = {allow_tearing = false}})' >/dev/null 2>&1
+  restore_hypr
+  rm -f "$PREV_STATE"
   makoctl mode -r do-not-disturb >/dev/null 2>&1
   pkill -CONT -x hypridle 2>/dev/null
   powerprofilesctl set balanced >/dev/null 2>&1

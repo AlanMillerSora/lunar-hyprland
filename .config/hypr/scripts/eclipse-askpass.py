@@ -130,7 +130,7 @@ def main() -> int:
     Gtk.main()
     if win.answer is None:
         return 1
-    sys.stdout.write(win.answer)
+    print(win.answer)
     return 0
 
 

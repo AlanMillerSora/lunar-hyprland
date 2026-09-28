@@ -17,6 +17,7 @@
 # ════════════════════════════════════════════════════════════════
 import argparse
 import datetime
+import fcntl
 import json
 import os
 import shutil
@@ -38,7 +39,17 @@ def load():
     try:
         with open(STORE, "r", encoding="utf-8") as f:
             d = json.load(f)
+    except FileNotFoundError:
+        d = {}
     except Exception:
+        # битый JSON — не превращаем его в пустую базу и не теряем данные:
+        # откладываем файл рядом (.corrupt-<ts>), чтобы можно было починить руками
+        try:
+            if os.path.getsize(STORE) > 0:
+                ts = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+                os.replace(STORE, f"{STORE}.corrupt-{ts}")
+        except OSError:
+            pass
         d = {}
     if not isinstance(d, dict):
         d = {}
@@ -47,6 +58,14 @@ def load():
     st.setdefault("sound", False)
     st.setdefault("remind", DEFAULT_REMIND)
     return d
+
+
+def lock_store():
+    """Эксклюзивная блокировка на время read-modify-write."""
+    os.makedirs(BASE, exist_ok=True)
+    f = open(os.path.join(BASE, ".calendar.lock"), "w", encoding="utf-8")
+    fcntl.flock(f, fcntl.LOCK_EX)
+    return f
 
 
 def save(d):
@@ -159,9 +178,21 @@ def main():
     ps.add_argument("--remind", type=int, default=None)
 
     a = p.parse_args()
-    d = load()
-    {"list": cmd_list, "add": cmd_add, "del": cmd_del,
-     "settings": cmd_settings, "reminders": cmd_reminders}[a.cmd](d, a)
+    cmds = {"list": cmd_list, "add": cmd_add, "del": cmd_del,
+            "settings": cmd_settings, "reminders": cmd_reminders}
+    if a.cmd == "list":
+        # только чтение: save не вызывается, блокировка не нужна
+        cmds[a.cmd](load(), a)
+        return
+    # read-modify-write (add/del/settings/reminders) — под файловой блокировкой,
+    # чтобы параллельные вызовы из сайдбара не теряли события друг друга
+    lock = lock_store()
+    try:
+        d = load()
+        cmds[a.cmd](d, a)
+    finally:
+        fcntl.flock(lock, fcntl.LOCK_UN)
+        lock.close()
 
 
 if __name__ == "__main__":

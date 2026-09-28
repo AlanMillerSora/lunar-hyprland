@@ -29,13 +29,22 @@ installer_version() {
   vencordinstaller -version 2>/dev/null | head -1 | sed 's/^Vencord Installer Cli //'
 }
 
+# аккуратно закрываем Discord: SIGTERM, ждём до 5 с, kill -9 только при force=yes
+# (при unpatch force=no — не убиваем принудительно, чтобы не рвать SQLite)
 close_discord() {
+  local force="${1:-yes}" i
+  pgrep -x Discord >/dev/null 2>&1 || return 0
   echo "== закрываю Discord =="
   pkill -x Discord 2>/dev/null
-  sleep 2
-  if pgrep -x Discord >/dev/null; then
-    kill -9 $(pgrep -x Discord) 2>/dev/null
+  for i in $(seq 1 50); do
+    pgrep -x Discord >/dev/null 2>&1 || return 0
+    sleep 0.1
+  done
+  if [ "$force" = yes ]; then
+    pkill -9 -x Discord 2>/dev/null
     sleep 1
+  else
+    echo "Discord не завершился сам — не убиваю принудительно" >&2
   fi
 }
 
@@ -74,7 +83,7 @@ case "${1:-status}" in
 
   unpatch)
     command -v vencordinstaller >/dev/null 2>&1 || { echo "нет vencordinstaller"; exit 1; }
-    close_discord
+    close_discord no
     echo "== удаляю Vencord =="
     vencordinstaller -uninstall -location "$DISCORD_DIR" < /dev/null
     ;;
