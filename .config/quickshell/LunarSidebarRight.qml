@@ -19,6 +19,7 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
 
     WlrLayershell.layer: WlrLayer.Top
+    WlrLayershell.namespace: "lunar-sidebar-right"
     WlrLayershell.keyboardFocus: root.collapsed ? WlrKeyboardFocus.None : WlrKeyboardFocus.OnDemand
 
     property bool collapsed: true

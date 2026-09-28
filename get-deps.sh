@@ -147,6 +147,9 @@ sudo pacman -S --needed --noconfirm \
 # AUR) на чистой системе просто пропустятся. base-devel — в списке выше.
 if ! command -v yay >/dev/null 2>&1 && ! command -v paru >/dev/null 2>&1; then
   say "AUR: ставлю yay (помощник для AUR)"
+  if [ "$(id -u)" -eq 0 ]; then
+    warn "запущено от root — makepkg от root не работает; поставь yay вручную (makepkg -si)"
+  else
   _tmp="$(mktemp -d)"
   if git clone --depth=1 https://aur.archlinux.org/yay-bin.git "$_tmp/yay-bin" >/dev/null 2>&1 \
      && (cd "$_tmp/yay-bin" && makepkg -si --noconfirm); then
@@ -155,6 +158,7 @@ if ! command -v yay >/dev/null 2>&1 && ! command -v paru >/dev/null 2>&1; then
     warn "yay не установился — AUR-пакеты пропущены (вручную: makepkg -si)"
   fi
   rm -rf "$_tmp"
+  fi
 else
   say "AUR-помощник уже есть: $(command -v yay >/dev/null 2>&1 && echo yay || echo paru)"
 fi

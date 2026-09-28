@@ -235,7 +235,9 @@ hl.window_rule({ match = { class = "eclipse-cheatsheet" }, float = true, center 
 hl.window_rule({ match = { class = "eclipse-askpass" },    float = true, center = true, rounding = 16, border_size = 0 })
 
 -- Quickshell: единая оболочка Lunar Eclipse (панель, лаунчер, sidebar, настройки, OSD)
-hl.layer_rule({ match = { namespace = "quickshell" }, blur = true, ignore_alpha = 0.25 })
+hl.layer_rule({ match = { namespace = "lunar-panel" },         blur = true, ignore_alpha = 0.25 })
+hl.layer_rule({ match = { namespace = "lunar-sidebar" },       blur = true, ignore_alpha = 0.25 })
+hl.layer_rule({ match = { namespace = "lunar-sidebar-right" }, blur = true, ignore_alpha = 0.25 })
 
 
 -- ─────────── Автораскладка: приложение → свой стол ───────────

@@ -14,6 +14,7 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
 
     WlrLayershell.layer: WlrLayer.Top
+    WlrLayershell.namespace: "lunar-sidebar"
     // клавиатуру берём только когда панель выдвинута (нужна для заметок)
     WlrLayershell.keyboardFocus: root.collapsed ? WlrKeyboardFocus.None : WlrKeyboardFocus.OnDemand
 

@@ -143,7 +143,7 @@ Item {
                     anchors.verticalCenter:
                         parent.verticalCenter
 
-                    x: fill.width - width / 2
+                    x: Math.max(0, Math.min(fill.width - width, fill.width - width / 2))
 
                     color: Theme.text
 
@@ -174,6 +174,7 @@ Item {
                 cursorShape: Qt.PointingHandCursor
 
                 function setFromX(px) {
+                    if (track.width <= 0) return
                     // mouse.x считается от dragArea, а он шире дорожки на 6px
                     // с каждой стороны — переводим точку в координаты track,
                     // иначе ползунок смещён и ручка не доходит до краёв

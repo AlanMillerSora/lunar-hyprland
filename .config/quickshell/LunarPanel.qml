@@ -23,6 +23,7 @@ PanelWindow {
     color: "transparent"
 
     WlrLayershell.layer: WlrLayer.Top
+    WlrLayershell.namespace: "lunar-panel"
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
     WlrLayershell.exclusiveZone: implicitHeight
     WlrLayershell.anchors.top: true
@@ -59,9 +60,10 @@ PanelWindow {
     Process {
         id: luaCheck
         running: true
+        // без jq — он не входит в базовую группу Arch (M30)
         command: ["bash", "-c",
-            "hyprctl -j status 2>/dev/null | jq -r '.configProvider // empty'"]
-        stdout: StdioCollector { onStreamFinished: root.luaMode = (text.trim() === "lua") }
+            "hyprctl -j status 2>/dev/null | grep -o '\"configProvider\"[^,}]*'"]
+        stdout: StdioCollector { onStreamFinished: root.luaMode = (text.indexOf("lua") >= 0) }
     }
 
     function focusWs(id) {
