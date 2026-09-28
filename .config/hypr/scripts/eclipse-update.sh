@@ -210,8 +210,10 @@ informant_pending() {
   command -v informant >/dev/null 2>&1 || { echo 0; return; }
   # state informant читается только от root. В GUI нет tty, а NOPASSWD для
   # informant нет — sudo -n тогда падает; это НЕ «есть новости», иначе панель врёт.
+  # LC_ALL=C — иначе локализованное сообщение sudo не совпадёт с *password*
+  # и падение sudo примем за непрочитанные новости.
   local err rc
-  err="$(sudo -n informant check 2>&1 >/dev/null)"; rc=$?
+  err="$(LC_ALL=C sudo -n informant check 2>&1 >/dev/null)"; rc=$?
   if [ "$rc" -ne 0 ] && { [[ "$err" == *password* ]] || [[ "$err" == *terminal* ]]; }; then
     echo 0; return
   fi
