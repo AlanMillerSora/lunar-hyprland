@@ -22,20 +22,29 @@ PanelWindow {
     // заметки: true, если пользователь уже правил текст до/во время загрузки файла —
     // тогда загрузка не должна затирать его правку (TOCTOU при старте)
     property bool notesDirty: false
+    // L24: панель, открытая по IPC, не должна сама спрятаться через 600 мс
+    property bool pinned: false
 
     function openPanel() { collapsed = false }
     function closePanel() { collapsed = true }
     function toggle() { collapsed = !collapsed }
 
     onCollapsedChanged: {
-        if (!collapsed && !stripHover.hovered && !contentHover.hovered) hideTimer.restart()
+        if (!collapsed) {
+            sysStats.running = true
+            sysStatsTimer.restart()
+            if (!pinned && !stripHover.hovered && !contentHover.hovered) hideTimer.restart()
+        }
     }
 
     IpcHandler {
         target: "sidebar"
-        function toggle(): void { root.toggle() }
-        function open(): void { root.openPanel() }
-        function close(): void { root.closePanel() }
+        function toggle(): void {
+            if (root.collapsed) { root.pinned = true; root.openPanel() }
+            else { root.pinned = false; root.closePanel() }
+        }
+        function open(): void { root.pinned = true; root.openPanel() }
+        function close(): void { root.pinned = false; root.closePanel() }
         function tab(idx: int): void { root.tabIndex = Math.max(0, Math.min(1, idx)) }
     }
 
@@ -237,51 +246,43 @@ PanelWindow {
                             }
                         }
 
-                        // история чата
-                        Flickable {
-                            id: chatFlick
+                        // история чата (ListView + reuseItems: длинный стрим
+                        // не пересоздаёт все делегаты на каждый чанк)
+                        ListView {
+                            id: chatList
                             Layout.fillWidth: true
                             Layout.fillHeight: true
                             clip: true
-                            contentWidth: width
-                            contentHeight: chatCol.implicitHeight
+                            spacing: 8
+                            model: chat.messages
+                            reuseItems: true
+                            cacheBuffer: 400
                             boundsBehavior: Flickable.StopAtBounds
+                            onCountChanged: positionViewAtEnd()
 
-                            onContentHeightChanged: contentY = Math.max(0, contentHeight - height)
+                            delegate: Rectangle {
+                                required property var modelData
+                                width: chatList.width
+                                height: msgText.implicitHeight + 16
+                                radius: Theme.radius
+                                color: modelData.role === "user"
+                                    ? Theme.active
+                                    : Theme.fill
+                                border.width: 1
+                                border.color: Theme.border
 
-                            Column {
-                                id: chatCol
-                                width: chatFlick.width
-                                spacing: 8
-
-                                Repeater {
-                                    model: chat.messages
-
-                                    delegate: Rectangle {
-                                        required property var modelData
-                                        width: chatCol.width
-                                        height: msgText.implicitHeight + 16
-                                        radius: Theme.radius
-                                        color: modelData.role === "user"
-                                            ? Theme.active
-                                            : Theme.fill
-                                        border.width: 1
-                                        border.color: Theme.border
-
-                                        Text {
-                                            id: msgText
-                                            anchors.left: parent.left
-                                            anchors.right: parent.right
-                                            anchors.top: parent.top
-                                            anchors.margins: 8
-                                            text: modelData.text
-                                            color: modelData.role === "user" ? Theme.text : Theme.textDim
-                                            font.family: Theme.fontFamily
-                                            font.pixelSize: Theme.fontSize(12)
-                                            wrapMode: Text.Wrap
-                                            textFormat: Text.PlainText
-                                        }
-                                    }
+                                Text {
+                                    id: msgText
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.top: parent.top
+                                    anchors.margins: 8
+                                    text: modelData.text
+                                    color: modelData.role === "user" ? Theme.text : Theme.textDim
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.fontSize(12)
+                                    wrapMode: Text.Wrap
+                                    textFormat: Text.PlainText
                                 }
                             }
                         }
@@ -459,7 +460,8 @@ PanelWindow {
                                 wrapMode: TextArea.WordWrap
                                 clip: true
                                 selectByMouse: true
-                                focus: root.tabIndex === 1 && !root.collapsed
+                                // L23: фокус не захватываем открытием по наведению —
+                                // только явным кликом (activeFocusOnPress по умолчанию)
                                 background: Rectangle { color: "transparent" }
                                 onTextChanged: {
                                     root.notesDirty = true
@@ -500,7 +502,7 @@ PanelWindow {
         id: hideTimer
         interval: 600
         onTriggered: {
-            if (!stripHover.hovered && !contentHover.hovered) root.closePanel()
+            if (!root.pinned && !stripHover.hovered && !contentHover.hovered) root.closePanel()
         }
     }
 
@@ -522,6 +524,8 @@ PanelWindow {
         property bool busy: false
         property string status: "готов"
         property string sessionId: ""
+        // C4/H10: сообщение, ждущее завершения текущего запуска — не теряем
+        property string queued: ""
 
         // Витрина чата ограничена: и по числу сообщений, и по суммарной
         // длине — длинный стрим не растит память бесконечно. Контекст
@@ -554,12 +558,20 @@ PanelWindow {
             busy = true
             status = "opencode работает…"
             if (chatInput) chatInput.text = ""
+            dispatch(text)
+        }
 
-            var args = "opencode run --format json "
-            if (sessionId !== "") args += "--session " + sessionId + " "
-            chatProc.command = ["bash", "-c",
-                args + "-- " + JSON.stringify(text).replace(/^"|"$/g, "'\\''")]
+        // H10: без shell — argv-массив, поэтому кавычки/апострофы в тексте
+        // не ломают команду. C4: если процесс занят — ставим в очередь.
+        function dispatch(text) {
+            if (text === "") return
+            if (chatProc.running) { queued = text; return }
+            var args = ["opencode", "run", "--format", "json"]
+            if (sessionId !== "") { args.push("--session", sessionId) }
+            args.push("--", text)
+            chatProc.command = args
             chatProc.running = true
+            chatWatchdog.restart()
         }
 
         function appendAssistant(chunk) {
@@ -570,13 +582,18 @@ PanelWindow {
         }
 
         function newSession() {
+            // H9: гасим текущий запуск, иначе он снова запишет ID удалённой сессии
+            chatProc.running = false
+            chatWatchdog.stop()
+            queued = ""
+            busy = false
+            status = "новая сессия"
             if (sessionId !== "") {
                 sessionsProc.command = ["opencode", "session", "delete", sessionId]
                 sessionsProc.running = true
             }
             sessionId = ""
             messages = []
-            status = "новая сессия"
         }
 
         function openTui() {
@@ -586,19 +603,43 @@ PanelWindow {
         }
 
         function stop() {
+            // running=false теперь завершает сам opencode (без bash-обёртки)
             chatProc.running = false
+            chatWatchdog.stop()
+            queued = ""
             busy = false
             status = "остановлено"
         }
     }
 
+    Timer {
+        id: chatWatchdog
+        interval: 600000        // 10 мин: дольше агент уже не отвечает — не висим вечно
+        repeat: false
+        onTriggered: chat.stop()
+    }
+
     Process {
         id: chatProc
         running: false
-        onExited: {
+        onExited: (exitCode) => {
+            chatWatchdog.stop()
             chat.busy = false
-            chat.status = "готов"
+            if (exitCode === 0) {
+                chat.status = "готов"
+            } else {
+                var e = (chatErr.text || "").trim()
+                chat.status = e !== "" ? e.split("\n").pop() : ("ошибка " + exitCode)
+            }
+            if (chat.queued !== "") {
+                var p = chat.queued
+                chat.queued = ""
+                chat.busy = true
+                chat.status = "opencode работает…"
+                chat.dispatch(p)
+            }
         }
+        stderr: StdioCollector { id: chatErr }
         stdout: SplitParser {
             onRead: function(line) {
                 if (!line) return
@@ -632,14 +673,19 @@ PanelWindow {
 
     Process {
         id: sysStats
-        command: ["python3", "-c", "import psutil; print(f'CPU {int(psutil.cpu_percent())}%  RAM {int(psutil.virtual_memory().percent)}%')"]
-        running: true
-        stdout: StdioCollector { onStreamFinished: sysStats.text = text.trim() }
+        // interval>0 обязателен: в новом процессе cpu_percent() иначе всегда 0
+        command: ["python3", "-c", "import psutil; print(f'CPU {int(psutil.cpu_percent(interval=0.3))}%  RAM {int(psutil.virtual_memory().percent)}%')"]
+        running: false
+        stdout: StdioCollector {
+            onStreamFinished: if (text.trim() !== "") sysStats.text = text.trim()
+        }
+        stderr: StdioCollector {}
         property string text: "CPU --%  RAM --%"
     }
     Timer {
+        id: sysStatsTimer
         interval: 3000
-        running: true
+        running: !root.collapsed
         repeat: true
         onTriggered: sysStats.running = true
     }
