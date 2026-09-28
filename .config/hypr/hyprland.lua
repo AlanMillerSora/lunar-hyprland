@@ -241,9 +241,6 @@ hl.window_rule({ match = { class = "eclipse-askpass" },    float = true, center 
 hl.layer_rule({ match = { namespace = "quickshell" }, blur = true, ignore_alpha = 0.25 })
 
 
--- Запрет blur окон под полноэкранной игрой/видео
-hl.window_rule({ match = { fullscreen = true }, no_blur = true })
-
 -- ─────────── Автораскладка: приложение → свой стол ───────────
 -- Раскладка по задачам:
 --   1 — игры              2 — браузер (Firefox)   3 — Discord
@@ -371,7 +368,7 @@ hl.on("hyprland.start", function()
   hl.exec_cmd("~/.config/hypr/scripts/eclipse-transparency.sh")
   -- курсор Bibata (тема применяется на лету)
   hl.exec_cmd("hyprctl setcursor Bibata-Modern-Ice 24")
-  -- btop на 8-м столе (фаза затмения), без перехвата фокуса
+  -- btop на 9-м столе (фаза затмения), без перехвата фокуса
   hl.exec_cmd("[workspace 9 silent] kitty --class lunar-btop --title btop -e btop")
 end)
 
