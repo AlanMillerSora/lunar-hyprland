@@ -616,7 +616,7 @@ fi
 # ── sudo: белый список агента (OpenCode) + root-хелперы ────────
 step "sudo: белый список агента → /etc/sudoers.d/lunar-agent"
 if [ -d "$REPO/systemd" ]; then
-  for h in lunar-avatar-sync.sh lunar-journal-read.sh; do
+  for h in lunar-avatar-sync.sh lunar-journal-read.sh lunar-journal-vacuum.sh; do
     [ -f "$REPO/systemd/$h" ] || continue
     sudo install -d -m 0755 -o root -g root /usr/local/lib/lunar 2>/dev/null \
       && sudo install -m 0755 -o root -g root \

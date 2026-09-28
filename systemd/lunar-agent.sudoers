@@ -75,6 +75,8 @@ Cmnd_Alias LUNAR_PKG = \
 
 # root-хелперы риса (root:root, пользователь их не редактирует)
 Cmnd_Alias LUNAR_HELP = \
-  /usr/local/lib/lunar/avatar-sync.sh
+  /usr/local/lib/lunar/avatar-sync.sh, \
+  /usr/local/lib/lunar/journal-vacuum.sh, \
+  /usr/local/lib/lunar/journal-vacuum.sh *
 
 sora ALL=(root) NOPASSWD: LUNAR_READ, LUNAR_SVC, LUNAR_PKG, LUNAR_HELP

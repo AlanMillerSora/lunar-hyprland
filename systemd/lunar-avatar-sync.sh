@@ -25,13 +25,17 @@ real="$(readlink -f -- "$src" 2>/dev/null || true)"
 [[ -n "$real" && "$real" == "$home/.config/avatars/"* && -f "$real" ]] \
   || { echo "источник вне каталога аватаров: $src" >&2; exit 1; }
 [[ -d "$(dirname "$SDDM_AV")" ]] || { echo "нет темы SDDM: $(dirname "$SDDM_AV")" >&2; exit 1; }
+uid="$(id -u "$user")"
 
-python3 - "$real" "$SDDM_AV" <<'PY'
+python3 - "$real" "$SDDM_AV" "$uid" <<'PY'
 import os, stat, sys
-src, dst = sys.argv[1], sys.argv[2]
+src, dst, uid = sys.argv[1], sys.argv[2], int(sys.argv[3])
 fd = os.open(src, os.O_RDONLY | os.O_NOFOLLOW)
-if not stat.S_ISREG(os.fstat(fd).st_mode):
+st = os.fstat(fd)
+if not stat.S_ISREG(st.st_mode):
     sys.exit("источник — не регулярный файл")
+if st.st_uid != uid:
+    sys.exit("источник не принадлежит пользователю")
 with os.fdopen(fd, "rb") as fsrc, open(dst, "wb") as fdst:
     while True:
         chunk = fsrc.read(65536)

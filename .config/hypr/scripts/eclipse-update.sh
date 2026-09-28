@@ -69,7 +69,7 @@ clean_cache_journal() {
 
   local jbefore jafter
   jbefore="$(journalctl --disk-usage 2>/dev/null | grep -o '[0-9.]*[MG]' | head -1)"
-  sudo journalctl --vacuum-size=200M >/dev/null 2>&1 || true
+  sudo -n /usr/local/lib/lunar/journal-vacuum.sh --size=200M >/dev/null 2>&1 || true
   jafter="$(journalctl --disk-usage 2>/dev/null | grep -o '[0-9.]*[MG]' | head -1)"
   say "журнал systemd (--vacuum-size=200M): ${jbefore:-?} → ${jafter:-?}"
 }
