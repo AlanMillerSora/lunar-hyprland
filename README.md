@@ -68,6 +68,14 @@
 
 </div>
 
+<h3 align="center">Живые / лёгкий режим — Hub → Wallpapers</h3>
+
+<div align="center">
+
+<img src="assets/screens/hub-wallpapers.png" width="70%" alt="Hub — Wallpapers"/>
+
+</div>
+
 <details>
 <summary>Превью сцены без Hyprland</summary>
 
@@ -178,6 +186,9 @@ sudo ./install.sh --disable-sddm  # вернуть штатную тему
 
 Оригинальный [zapret](https://github.com/bol-van/zapret) в `/opt/zapret` (+ `zapret.service`), чтобы открывались **Discord** и **YouTube**. Управление — **Hub → Network → Zapret** или:
 
+<br>
+<img src="assets/screens/hub-network.png" width="72%" alt="Hub — Network: Zapret и Vencord"/>
+
 </div>
 
 ```bash
@@ -263,6 +274,9 @@ lib32-nvidia-utils
 
 Агент [OpenCode](https://opencode.ai) в левом сайдбаре, вывод стримится в UI. «＋» — новая сессия, «▣» — обычный OpenCode в терминале. Агент умеет `sudo` только по белому списку (`/etc/sudoers.d/lunar-agent`), остальное от root — после подтверждения в чате.
 
+<br>
+<img src="assets/screens/sidebar-left.png" width="62%" alt="Чат OpenCode в левом сайдбаре"/>
+
 </div>
 
 ---
@@ -272,6 +286,9 @@ lib32-nvidia-utils
 <div align="center">
 
 Локальный, без сети: клик по дню в правом сайдбаре → список событий и форма (название, время, за сколько минут напомнить). Точки на днях показывают, где есть события; напоминание приходит уведомлением mako, звук — опцией. События хранятся в `~/.local/share/lunar/calendar.json`, логика — `hypr/scripts/eclipse-calendar.py`. Синхронизация CalDAV (Google/Nextcloud) — следующим этапом.
+
+<br>
+<img src="assets/screens/sidebar-calendar.png" width="55%" alt="Календарь в правом сайдбаре"/>
 
 </div>
 
@@ -284,6 +301,9 @@ lib32-nvidia-utils
 **Hub → Update** — состояние (буфер, число пакетов), кнопки **ОБНОВИТЬ** / **ОБНОВИТЬ СРАЗУ** / **ОТКАТ** / **ПРОВЕРИТЬ** / **ПОЧИСТИТЬ**, новости Arch с переводом на русский.
 
 `eclipse-update.sh` — буфер 1–2 дня, `informant`, бэкап, `pacman -Syu` (+AUR), затем гигиена: `paccache -rk2` и журнал ≤200 МБ; кнопка **ПОЧИСТИТЬ** чистит кэш и журнал, показывает пакеты-сироты с подтверждением. `fwupd` проверяет прошивки (тоже с подтверждением). `eclipse-backup.sh` — ротация 5 бэкапов. **timeshift** — снимки перед обновлением; откат — кнопкой «Откат».
+
+<br>
+<img src="assets/screens/hub-update.png" width="72%" alt="Hub — Update"/>
 
 </div>
 
@@ -301,21 +321,20 @@ lib32-nvidia-utils
 
 <div align="center">
 
-| Launch | System | Interface |
-|:---:|:---:|:---:|
-| ![Launch](assets/screens/hub-launch.png) | ![System](assets/screens/hub-system.png) | ![Interface](assets/screens/hub-interface.png) |
-| Update | Network | Wallpapers |
-| ![Update](assets/screens/hub-update.png) | ![Network](assets/screens/hub-network.png) | ![Wallpapers](assets/screens/hub-wallpapers.png) |
+| Launch | System |
+|:---:|:---:|
+| ![Launch](assets/screens/hub-launch.png) | ![System](assets/screens/hub-system.png) |
 
 </div>
 
-<h3 align="center">Панели</h3>
+<h3 align="center">Правый сайдбар</h3>
 
 <div align="center">
 
-| Чат (OpenCode) | Панель справа | Календарь |
-|:---:|:---:|:---:|
-| ![Сайдбар слева](assets/screens/sidebar-left.png) | ![Сайдбар справа](assets/screens/sidebar-right.png) | ![Календарь](assets/screens/sidebar-calendar.png) |
+Уведомления (mako), «сейчас играет» (MPRIS), календарь и запись экрана — `SUPER + SHIFT + N`.
+
+<br>
+<img src="assets/screens/sidebar-right.png" width="52%" alt="Правый сайдбар"/>
 
 </div>
 
@@ -405,6 +424,9 @@ lib32-nvidia-utils
 <div align="center">
 
 **Hub → Interface**: прозрачность, размытие, размер шрифта, производительность **NORMAL / OPTIMIZE**, курсор Bibata-Modern-Ice. Размытие и профиль сохраняются и переживают `hyprctl reload`.
+
+<br>
+<img src="assets/screens/hub-interface.png" width="72%" alt="Hub — Interface"/>
 
 Палитра: `#050505` · `#ffffff` · `#888888` · акценты белые · опасность `#ff003c`.
 
