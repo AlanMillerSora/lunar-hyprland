@@ -11,10 +11,6 @@ import QtQuick.Layouts
 Item {
     id: page
 
-    // контейнер (Hub) может закрыться по этому сигналу — без хрупкой
-    // ссылки root.closePanel() через цепочку контекстов Loader (M77)
-    signal closeRequested()
-
     ColumnLayout {
         anchors.fill: parent
         spacing: 14
@@ -141,10 +137,9 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        gameModel.launch(modelData)
-                        page.closeRequested()
-                    }
+                    // M77: Hub закрывается сам по AppModel.launched (см. LunarHub),
+                    // отдельный сигнал страницы больше не нужен
+                    onClicked: gameModel.launch(modelData)
                 }
             }
 

@@ -420,7 +420,7 @@ Item {
                                     Text {
                                         id: tooltipText
                                         anchors.centerIn: parent
-                                        text: "Unpair"
+                                        text: "Разорвать связь"
                                         color: Theme.text
                                         font.family: Theme.fontFamily
                                         font.pixelSize: 10

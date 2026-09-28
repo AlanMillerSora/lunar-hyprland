@@ -120,6 +120,31 @@ Item {
                 color: Theme.border
             }
 
+            // M73: ошибка чтения lunar-ui.json (битый JSON / нет доступа) —
+            // настройки молча уходят в дефолты, поэтому сообщаем явно
+            Rectangle {
+                visible: Theme.uiError !== ""
+                width: parent.width
+                height: errText.implicitHeight + 24
+                radius: Theme.radius
+                color: Theme.alpha(Theme.danger, 0.08)
+                border.width: 1
+                border.color: Theme.danger
+
+                Text {
+                    id: errText
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.margins: 12
+                    text: "\uf071  настройки интерфейса не прочитаны: " + Theme.uiError
+                    color: Theme.danger
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 11
+                    wrapMode: Text.WordWrap
+                }
+            }
+
             // Производительность: NORMAL (полный блюр, обои 60 fps)
             //                  / OPTIMIZE (легче, обои ~25 fps)
             Column {
