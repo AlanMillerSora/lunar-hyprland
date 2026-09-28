@@ -4,9 +4,11 @@ After=network.target
 
 [Service]
 Type=simple
-# отдаём только ~/.config/lunar, только на localhost — расширению Firefox
-# нельзя открывать file://, поэтому новая вкладка берёт страницу отсюда
-ExecStart=/usr/bin/python3 -m http.server 8787 --bind 127.0.0.1 --directory %h/.config/lunar
+# отдаём только ~/.config/lunar/home — там один firefox-home.html;
+# остальное из ~/.config/lunar (record.json, gamemode-pause.conf, lunar.bash)
+# наружу не выставляем. Только localhost — расширению Firefox нельзя file://,
+# поэтому новая вкладка берёт страницу отсюда
+ExecStart=/usr/bin/python3 -m http.server 8787 --bind 127.0.0.1 --directory %h/.config/lunar/home
 Restart=on-failure
 RestartSec=2
 

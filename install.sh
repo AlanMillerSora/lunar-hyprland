@@ -510,7 +510,7 @@ if [ -d "$REPO/.config/firefox/chrome" ]; then
       say "тема → $P"
       mkdir -p "$P/chrome"
       cp "$REPO"/.config/firefox/chrome/*.css "$P/chrome/" 2>/dev/null || true
-      sed "s|__LUNAR_HOME__|file://$HOME/.config/lunar/firefox-home.html|g" \
+      sed "s|__LUNAR_HOME__|file://$HOME/.config/lunar/home/firefox-home.html|g" \
         "$REPO/.config/firefox/user.js" > "$P/user.js"
 
       # New Tab Override: новая вкладка = наша страница (URL задаётся
@@ -526,7 +526,7 @@ if [ -d "$REPO/.config/firefox/chrome" ]; then
     # настройка расширения: новая вкладка = наша страница.
     # Формат native-manifest: {name, type:"storage", data:{…}};
     # путь для пользователя — ~/.mozilla/managed-storage/<id>.json
-    if [ -f "$HOME/.config/lunar/firefox-home.html" ]; then
+    if [ -f "$HOME/.config/lunar/home/firefox-home.html" ]; then
       mkdir -p "$HOME/.mozilla/managed-storage"
       cat > "$HOME/.mozilla/managed-storage/newtaboverride@agenedia.com.json" <<JSON
 {

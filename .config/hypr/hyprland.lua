@@ -4,7 +4,7 @@
 --  ВАЖНО: начиная с Hyprland 0.55 конфиг грузится ТОЛЬКО из
 --  ~/.config/hypr/hyprland.lua. hyprland.conf игнорируется.
 --
---  Палитра — из превью D:\test\hyperland-preview (style.css):
+--  Палитра — из style.css макета-превью:
 --    фон        #000000        текст      #e6e6e6
 --    поверхность rgba(10,10,10,.72)        тусклый  #6f6f6f
 --    рамка      rgba(255,255,255,.10)      свет     rgba(255,255,255,.35)
@@ -31,8 +31,11 @@ hl.env("HYPRCURSOR_SIZE", "24")
 hl.env("XCURSOR_THEME", "Bibata-Modern-Ice")
 hl.env("HYPRCURSOR_THEME", "Bibata-Modern-Ice")
 
--- Браузер по умолчанию — Firefox (для xdg-open, CLI-утилит и ссылок)
-hl.env("BROWSER", "firefox")
+-- Браузер по умолчанию — Firefox (для xdg-open, CLI-утилит и ссылок).
+-- Не перекрываем BROWSER, если он уже задан в окружении сессии.
+if not os.getenv("BROWSER") then
+  hl.env("BROWSER", "firefox")
+end
 
 -- ─────────────────────── NVIDIA: окружение ──────────────────────
 -- Ставим переменные ТОЛЬКО если NVIDIA реально есть в системе —
@@ -41,38 +44,31 @@ hl.env("BROWSER", "firefox")
 -- В Arch 615 модули ядра NVIDIA открытые (nvidia-open-dkms), user-space
 -- проприетарный — для Hyprland это штатный вариант.
 
--- производители всех GPU в системе
-local function gpu_vendors()
-  local out = {}
-  local p = io.popen("ls -d /sys/class/drm/card*/device/vendor 2>/dev/null")
-  if not p then return out end
-  for path in p:lines() do
-    local f = io.open(path, "r")
-    if f then
-      local v = (f:read("*a") or ""):gsub("%s+", "")
-      f:close()
-      if v ~= "" then out[#out + 1] = v end
-    end
-  end
-  p:close()
-  return out
-end
-
--- производители GPU, к которым подключён хотя бы один монитор
-local function display_vendors()
-  local out = {}
+-- Производители GPU: все и те, к которым подключён хотя бы один монитор.
+-- Оба списка — ОДНИМ io.popen (на загрузке раньше было два вызова);
+-- секции разделены строкой "--".
+local function gpu_info()
+  local all, connected = {}, {}
   local p = io.popen(
+    "for v in /sys/class/drm/card*/device/vendor; do " ..
+    "[ -r \"$v\" ] || continue; cat \"$v\" 2>/dev/null; done | sort -u; " ..
+    "echo '--'; " ..
     "for s in /sys/class/drm/card*-*/status; do " ..
     "[ \"$(cat \"$s\" 2>/dev/null)\" = connected ] || continue; " ..
     "c=\"${s#/sys/class/drm/}\"; c=\"${c%%-*}\"; " ..
     "cat \"/sys/class/drm/$c/device/vendor\" 2>/dev/null; done | sort -u")
-  if not p then return out end
+  if not p then return all, connected end
+  local section = all
   for line in p:lines() do
     local v = line:gsub("%s+", "")
-    if v ~= "" then out[#out + 1] = v end
+    if v == "--" then
+      section = connected
+    elseif v ~= "" then
+      section[#section + 1] = v
+    end
   end
   p:close()
-  return out
+  return all, connected
 end
 
 local function has_vendor(list, id)
@@ -82,13 +78,14 @@ local function has_vendor(list, id)
   return false
 end
 
-if has_vendor(gpu_vendors(), "0x10de") then
+local vendors, display_devs = gpu_info()
+if has_vendor(vendors, "0x10de") then
   -- NVIDIA есть: аппаратное декодирование видео (официальный VA-API)
   hl.env("LIBVA_DRIVER_NAME", "nvidia")
 
   -- Если монитор подключён к NVIDIA — она и рисует рабочий стол.
   -- (на гибридных ноутах с выводом через iGPU эти строки не ставятся)
-  if has_vendor(display_vendors(), "0x10de") then
+  if has_vendor(display_devs, "0x10de") then
     hl.env("__GLX_VENDOR_LIBRARY_NAME", "nvidia")  -- XWayland: GLX через NVIDIA
     hl.env("GBM_BACKEND", "nvidia-drm")            -- GBM через nvidia-drm
     hl.env("NVD_BACKEND", "direct")                -- прямой scanout/текстуры
@@ -335,7 +332,8 @@ hl.bind(M .. " + S", dsp.workspace.toggle_special("scratchpad"))
 hl.bind(M .. " + SHIFT + S", dsp.window.move({ workspace = "special:scratchpad" }))
 
 -- скриншоты / перезагрузка / меню питания
-hl.bind("PRINT",           dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))   -- область в буфер
+-- отмена slurp (Esc) даёт пустой вывод — тогда ничего не снимаем
+hl.bind("PRINT",           dsp.exec_cmd("sh -c 'g=$(slurp) || exit 0; [ -n \"$g\" ] || exit 0; grim -g \"$g\" - | wl-copy'"))
 hl.bind(M .. " + PRINT",   dsp.exec_cmd("grim - | wl-copy"))                    -- весь экран в буфер
 hl.bind(M .. " + SHIFT + PRINT", dsp.exec_cmd("sh -c 'mkdir -p $HOME/Pictures/Screenshots && grim $HOME/Pictures/Screenshots/lunar-$(date +%Y%m%d-%H%M%S).png'"))  -- весь экран в файл
 hl.bind(M .. " + R",       dsp.exec_cmd("hyprctl reload"))
@@ -361,15 +359,25 @@ hl.on("hyprland.start", function()
   hl.exec_cmd("sh -c 'systemctl --user import-environment DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE HYPRLAND_INSTANCE_SIGNATURE; systemctl --user reset-failed lunar-quickshell.service 2>/dev/null; systemctl --user --no-block restart lunar-quickshell.service'")
   hl.exec_cmd("mako")
   hl.exec_cmd("hypridle")
-  -- история буфера обмена (клипборд Quickshell, SUPER+V)
-  hl.exec_cmd("wl-paste --type text  --watch cliphist store")
-  hl.exec_cmd("wl-paste --type image --watch cliphist store")
+  -- история буфера обмена (клипборд Quickshell, SUPER+V).
+  -- sh -c '… || true': падение wl-paste не оставляет автозапуск «тихо мёртвым»
+  hl.exec_cmd("sh -c 'wl-paste --type text  --watch cliphist store || true'")
+  hl.exec_cmd("sh -c 'wl-paste --type image --watch cliphist store || true'")
   hl.exec_cmd("/usr/lib/polkit-kde-authentication-agent-1")
   hl.exec_cmd("~/.config/hypr/scripts/eclipse-transparency.sh")
   -- курсор Bibata (тема применяется на лету)
   hl.exec_cmd("hyprctl setcursor Bibata-Modern-Ice 24")
-  -- btop на 9-м столе (фаза затмения), без перехвата фокуса
-  hl.exec_cmd("[workspace 9 silent] kitty --class lunar-btop --title btop -e btop")
+  -- btop на 9-м столе (фаза затмения), без перехвата фокуса.
+  -- Идемпотентно: если btop уже запущен — второй раз не поднимаем.
+  local btop = io.popen("pgrep -x btop 2>/dev/null")
+  local btop_running = false
+  if btop then
+    btop_running = (btop:read("*a") or "") ~= ""
+    btop:close()
+  end
+  if not btop_running then
+    hl.exec_cmd("[workspace 9 silent] kitty --class lunar-btop --title btop -e btop")
+  end
 end)
 
 -- Проверка:  hyprctl configerrors

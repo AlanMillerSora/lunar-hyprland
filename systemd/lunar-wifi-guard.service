@@ -5,7 +5,10 @@ After=network-online.target
 [Service]
 Type=simple
 ExecStart=/usr/bin/python3 %h/.config/hypr/scripts/eclipse-wifi-guard.py
-Environment=LUNAR_WIFI_PROFILE=Xiaomi-45
+# Профиль Wi-Fi — из пользовательского файла: SSID не хардкодим в публичном репо.
+# Формат файла: LUNAR_WIFI_PROFILE=<имя профиля NetworkManager>
+# Файла нет — скрипт сам возьмёт первый сохранённый профиль.
+EnvironmentFile=-%h/.config/lunar/wifi-profile
 Restart=always
 RestartSec=5
 
