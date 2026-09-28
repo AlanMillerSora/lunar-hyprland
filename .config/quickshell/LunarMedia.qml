@@ -48,10 +48,30 @@ PanelWindow {
     readonly property string title: player && player.trackTitle ? player.trackTitle : "ничего не играет"
     readonly property string artist: player && player.trackArtist ? player.trackArtist : ""
     readonly property string art: player && player.trackArtUrl ? player.trackArtUrl : ""
-    readonly property real pos: player && player.position ? player.position : 0
     readonly property real len: player && player.length ? player.length : 0
+    // позицию MPRIS обновляет редко — тикаем локально, а на изменение
+    // позиции плеера синхронизируемся, чтобы прогресс не «прыгал»
+    property real shownPos: 0
+    readonly property real pos: shownPos
     readonly property real progress: len > 0 ? Math.min(1, pos / len) : 0
     readonly property bool seekable: player !== null && player.canSeek === true && len > 0
+
+    function syncPos() {
+        root.shownPos = (root.player && root.player.position) ? root.player.position : 0
+    }
+    onPlayerChanged: { syncPos(); if (posTimer) posTimer.restart() }
+    Component.onCompleted: syncPos()
+    Timer {
+        id: posTimer
+        interval: 250
+        running: root.playing && root.seekable
+        repeat: true
+        onTriggered: root.shownPos = Math.min(root.len, root.shownPos + 0.25)
+    }
+    Connections {
+        target: root.player
+        function onPositionChanged() { root.syncPos() }
+    }
 
     function fmt(s) {
         if (!s || s < 0 || !isFinite(s))
@@ -83,6 +103,8 @@ PanelWindow {
         border.color: Theme.accent
         border.width: 1
 
+        // невидимый попап не рендерим вовсе — MultiEffect/обложка не грузят GPU
+        visible: root.showing
         opacity: root.showing ? 1 : 0
         scale: root.showing ? 1 : 0.96
         Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
@@ -154,7 +176,8 @@ PanelWindow {
                     MultiEffect {
                         anchors.fill: parent
                         source: coverImg
-                        visible: root.art.length > 0
+                        // битая обложка → эффект не рендерим, покажем заглушку
+                        visible: root.art.length > 0 && coverImg.status !== Image.Error
                         saturation: -1.0
                         brightness: 0.04
                         colorization: 0.28
@@ -163,7 +186,7 @@ PanelWindow {
 
                     Rectangle {
                         anchors.fill: parent
-                        visible: root.art.length === 0
+                        visible: root.art.length === 0 || coverImg.status === Image.Error
                         color: Theme.bgCard
                         border.color: Theme.border
                         border.width: 1
@@ -297,13 +320,19 @@ PanelWindow {
                     enabled: root.seekable
                     cursorShape: root.seekable ? Qt.PointingHandCursor : Qt.ArrowCursor
                     function setFromX(px) {
-                        seek.dragFrac = Math.max(0, Math.min(1, px / seekBg.width))
+                        // mouse.x считается от seekArea (поля −8) — переводим
+                        // точку в координаты дорожки seekBg
+                        var p = seekArea.mapToItem(seekBg, px, 0).x
+                        seek.dragFrac = Math.max(0, Math.min(1, p / seekBg.width))
                     }
                     onPressed: (mouse) => setFromX(mouse.x)
                     onPositionChanged: (mouse) => { if (pressed) setFromX(mouse.x) }
                     onReleased: {
-                        if (root.seekable && root.player && root.len > 0)
-                            root.player.position = Math.max(0, Math.min(1, seek.dragFrac)) * root.len
+                        if (root.seekable && root.player && root.len > 0) {
+                            var target = Math.max(0, Math.min(1, seek.dragFrac)) * root.len
+                            root.player.position = target
+                            root.shownPos = target
+                        }
                     }
                 }
             }

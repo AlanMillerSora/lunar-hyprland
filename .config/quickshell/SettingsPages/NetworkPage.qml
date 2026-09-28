@@ -7,6 +7,8 @@ Item {
     property bool wifiEnabled: true
     property var networks: []
     property string pendingSsid: ""
+    property string connectMsg: ""
+    property bool scanning: false
     property int contentMargin: 0
     property int contentRightMargin: 48
     property int contentTopMargin: 0
@@ -66,7 +68,12 @@ Item {
         stdout: StdioCollector {
             onStreamFinished: {
                 pRadioGet.running = true
-                page.wifiEnabled ? pList.running = true : page.networks = []
+                if (page.wifiEnabled) {
+                    pList.running = true
+                } else {
+                    page.networks = []
+                    page.scanning = false
+                }
             }
         }
     }
@@ -108,32 +115,57 @@ Item {
                     out.push({ssid: fields[1], signal: signal, secured: fields[3] !== "" && fields[3] !== "--", connected: fields[0] === "*"})
                 }
                 page.networks = out
+                page.scanning = false
             }
         }
-        stderr: StdioCollector {}
+        stderr: StdioCollector { onStreamFinished: page.scanning = false }
+        onStarted: page.scanning = true
     }
 
     Process {
         id: pConnect
+        stdinEnabled: true
+        // H23: пароль уходит в stdin уже запущенному nmcli (не в argv)
+        property string pendingPassword: ""
+        onStarted: if (pendingPassword !== "") { write(pendingPassword); pendingPassword = "" }
         function refresh() {
             page.pendingSsid = ""
             pList.running = true
         }
-        stdout: StdioCollector { onStreamFinished: pConnect.refresh() }
-        stderr: StdioCollector { onStreamFinished: pConnect.refresh() }
+        stdout: StdioCollector { id: connectOut }
+        stderr: StdioCollector { id: connectErr }
+        // M40: сообщаем об ошибке подключения
+        onExited: (exitCode) => {
+            if (exitCode !== 0) {
+                var raw = ((connectErr.text || "") + "\n" + (connectOut.text || "")).split("\n")
+                var msg = []
+                for (var i = 0; i < raw.length; i++)
+                    if (raw[i].trim() !== "") msg.push(raw[i].trim())
+                page.connectMsg = msg.length ? msg[msg.length - 1]
+                    : "не удалось подключиться (код " + exitCode + ")"
+            } else {
+                page.connectMsg = ""
+            }
+            pConnect.refresh()
+        }
     }
 
     function connectOpen(ssid) {
+        page.connectMsg = ""
         pConnect.command = ["nmcli", "device", "wifi", "connect", ssid]
         pConnect.running = true
     }
 
     function connectSecured(ssid, password) {
-        pConnect.command = ["nmcli", "device", "wifi", "connect", ssid, "password", password]
+        page.connectMsg = ""
+        // H23: пароль не попадает в argv — отдаём его nmcli через stdin (--ask)
+        pConnect.command = ["nmcli", "--ask", "device", "wifi", "connect", ssid]
         pConnect.running = true
+        pConnect.pendingPassword = password + "\n"
     }
 
     function disconnect(ssid) {
+        page.connectMsg = ""
         pConnect.command = ["nmcli", "connection", "down", "id", ssid]
         pConnect.running = true
     }
@@ -146,6 +178,8 @@ Item {
     }
 
     function rescan() {
+        page.connectMsg = ""
+        page.scanning = true
         pRescan.command = ["bash", "-c", "nmcli device wifi rescan 2>/dev/null; sleep 1"]
         pRescan.running = true
     }
@@ -513,11 +547,23 @@ Item {
                     Text {
                         visible: page.wifiEnabled && !page.networks.length
                         width: parent.width
-                        text: "Scanning Wi-Fi networks"
+                        // M75: отличаем «идёт скан» от «сетей нет»
+                        text: page.scanning ? "Сканирую сети…" : "Сети не найдены"
                         color: Theme.textDim
                         font.family: Theme.fontFamily
                         font.pixelSize: 12
                         horizontalAlignment: Text.AlignHCenter
+                    }
+
+                    // M40: обратная связь об ошибке подключения
+                    Text {
+                        visible: page.connectMsg !== ""
+                        width: parent.width
+                        text: page.connectMsg
+                        color: Theme.danger
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 10
+                        wrapMode: Text.Wrap
                     }
 
                     Repeater {

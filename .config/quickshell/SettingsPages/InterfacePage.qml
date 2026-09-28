@@ -29,10 +29,36 @@ Item {
         }
     }
 
+    // M47: uiState может загрузиться позже blurGet — тогда ползунок блюра
+    // показывал бы значение из Hyprland, а не сохранённое. Подхватываем Theme.
+    Connections {
+        target: Theme
+        function onBlurSizeChanged() {
+            if (Theme.blurSize >= 0) {
+                page.blurValue = Math.max(0, Math.min(1, Theme.blurSize / 12))
+                page.blurReady = true
+            }
+        }
+    }
+
     Timer {
         id: blurDebounce
         interval: 120
         onTriggered: page.applyBlur()
+    }
+
+    // M45: прозрачность/шрифт раньше писали lunar-ui.json на каждый кадр
+    // перетаскивания — теперь только после паузы (как у блюра).
+    Timer {
+        id: opacityDebounce
+        interval: 150
+        onTriggered: Theme.interfaceOpacity = opacitySlider.dragValue
+    }
+
+    Timer {
+        id: fontDebounce
+        interval: 150
+        onTriggered: Theme.fontScale = 0.75 + fontSlider.dragValue * 0.5
     }
 
     function applyBlur() {
@@ -57,15 +83,16 @@ Item {
         WheelHandler {
             onWheel: function(event) {
                 var delta = event.angleDelta.y
-                if (delta !== 0) {
-                    scrollArea.contentY = Math.max(
-                        0,
-                        Math.min(
-                            scrollArea.contentHeight - scrollArea.height,
-                            scrollArea.contentY - delta
-                        )
+                // L33: горизонтальные/пустые события не съедаем
+                if (delta === 0)
+                    return
+                scrollArea.contentY = Math.max(
+                    0,
+                    Math.min(
+                        scrollArea.contentHeight - scrollArea.height,
+                        scrollArea.contentY - delta
                     )
-                }
+                )
                 event.accepted = true
             }
         }
@@ -216,9 +243,11 @@ Item {
                 }
 
                 CustomSlider {
+                    id: opacitySlider
                     width: parent.width
                     value: Theme.interfaceOpacity
-                    onValueChanged: Theme.interfaceOpacity = value
+                    // M45/L35: только от пользователя, запись — после паузы
+                    onMoved: opacityDebounce.restart()
                 }
             }
 
@@ -307,9 +336,11 @@ Item {
                 }
 
                 CustomSlider {
+                    id: fontSlider
                     width: parent.width
                     value: (Theme.fontScale - 0.75) / 0.5
-                    onValueChanged: Theme.fontScale = 0.75 + value * 0.5
+                    // M45/L35: только от пользователя, запись — после паузы
+                    onMoved: fontDebounce.restart()
                 }
             }
 
@@ -412,8 +443,9 @@ Item {
     component CustomSlider: Rectangle {
         id: slider
         property real value: 0.5
-        property real minValue: 0
-        property real maxValue: 1
+        // значение во время перетаскивания: не трогаем value, иначе рвём
+        // привязку вызывающей стороны (L35)
+        property real dragValue: 0
         // только от пользователя (программная установка value сюда не шлёт)
         signal moved(real v)
         // «заполнение» при появлении: старт с нуля → плавно к value
@@ -426,6 +458,9 @@ Item {
             interval: 60
             onTriggered: { slider.shown = slider.value; slider.primed = true }
         }
+        // пока тянем — значение под курсором, иначе — текущее value
+        readonly property real displayValue:
+            sliderDrag.pressed ? slider.dragValue : slider.shown
         height: 24
         radius: 12
         color: Theme.trackBg
@@ -437,7 +472,8 @@ Item {
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             anchors.margins: 2
-            width: 2 + (parent.width - 20) * slider.shown
+            width: 2 + (parent.width - 20)
+                * Math.max(0, Math.min(1, slider.displayValue))
             radius: 10
             color: Theme.accent
             // плавное заполнение, как у полос в «Памяти»
@@ -451,17 +487,24 @@ Item {
             id: sliderDrag
             cursorShape: Qt.PointingHandCursor
             anchors.fill: parent
+            // M46: иначе Flickable перехватывает перетаскивание
+            preventStealing: true
+            function setFromX(px) {
+                var v = Math.max(0, Math.min(1, px / slider.width))
+                slider.dragValue = v
+                slider.moved(v)
+            }
             onPositionChanged: function(mouse) {
-                if (pressed) {
-                    var v = Math.max(0, Math.min(1, mouse.x / width))
-                    slider.value = v
-                    slider.moved(v)
-                }
+                if (pressed)
+                    setFromX(mouse.x)
             }
             onPressed: function(mouse) {
-                var v = Math.max(0, Math.min(1, mouse.x / width))
-                slider.value = v
-                slider.moved(v)
+                setFromX(mouse.x)
+            }
+            onReleased: {
+                // фиксируем последнее значение, чтобы заполнение не мигало
+                // до срабатывания debounce
+                slider.shown = slider.dragValue
             }
         }
     }

@@ -120,11 +120,12 @@ PanelWindow {
             "[ \"$n\" = k10temp ] && cat \"$h/temp1_input\"; done"]
         stdout: StdioCollector { onStreamFinished: root.applySys(text) }
     }
+    // каждый замер — это bash + ~5 процессов, поэтому не чаще раза в 2 с
     Timer {
-        interval: 1000
+        interval: 2000
         running: true
         repeat: true
-        onTriggered: sysProc.running = true
+        onTriggered: if (!sysProc.running) sysProc.running = true
     }
 
     // ─────────────── clock ───────────────
@@ -239,11 +240,12 @@ PanelWindow {
 
     // ─────────────── power ───────────────
     // Кнопки питания на панели нет — меню открывается по SUPER + ESC.
-    Process { id: powerProc; running: false }
 
     Process { id: pavuProc; running: false }
     function openMixer() {
-        pavuProc.command = ["bash", "-c", "setsid pavucontrol >/dev/null 2>&1 &"]
+        // pavucontrol может отсутствовать — проверяем перед запуском
+        pavuProc.command = ["bash", "-c",
+            "command -v pavucontrol >/dev/null 2>&1 && setsid pavucontrol >/dev/null 2>&1 &"]
         pavuProc.running = true
     }
 
@@ -257,6 +259,34 @@ PanelWindow {
     // ─────────── системный трей ───────────
     // сколько значков показываем в панели, остальные — в списке (Theme.trayVisible)
     readonly property int trayMax: Theme.trayVisible
+    // общее число значков: по нему видно, прятать ли «+N» в списке
+    readonly property int trayCount: SystemTray.items.values.length
+
+    // Кэш видимых значков: SystemTray.items.values отдаёт новый массив на любое
+    // изменение, и Repeater пересоздавал бы делегаты даже без смены состава.
+    property var trayItems: []
+    function sameTray(a, b) {
+        if (a.length !== b.length)
+            return false
+        for (var i = 0; i < a.length; i++)
+            if (a[i] !== b[i])
+                return false
+        return true
+    }
+    function refreshTray() {
+        var v = SystemTray.items.values.slice(0, root.trayMax)
+        if (!sameTray(v, root.trayItems))
+            root.trayItems = v
+    }
+    Connections {
+        target: SystemTray.items
+        function onValuesChanged() { root.refreshTray() }
+    }
+    Connections {
+        target: Theme
+        function onTrayVisibleChanged() { root.refreshTray() }
+    }
+    Component.onCompleted: root.refreshTray()
 
     Process { id: trayPanelProc; running: false }
     function openTrayPanel() {
@@ -441,7 +471,14 @@ PanelWindow {
         return (bps / 1048576).toFixed(1) + "М"
     }
 
-    Process { id: statusProcAction; running: false }
+    // По отдельному Process на каждое действие: общий процесс затирал команду,
+    // если новое действие приходило, пока выполнялось предыдущее.
+    Process { id: hubOpenProc; running: false }
+    Process { id: layoutProc; running: false }
+    Process { id: dndProc; running: false }
+    Process { id: gameProc; running: false }
+    Process { id: powerProc; running: false }
+    Process { id: recordProc; running: false }
     Process {
         id: mediaPanelProc
         running: false
@@ -449,40 +486,41 @@ PanelWindow {
     }
 
     function openNetwork() {
-        statusProcAction.command = ["bash", "-c",
+        hubOpenProc.command = ["bash", "-c",
             "qs ipc call hub open; sleep 0.15; qs ipc call hub nav 4"]
-        statusProcAction.running = true
+        hubOpenProc.running = true
     }
 
     function switchLayout() {
         if (kbDevice.length === 0)
             return
-        statusProcAction.command = ["bash", "-c",
-            "hyprctl switchxkblayout '" + kbDevice + "' next"]
-        statusProcAction.running = true
+        // без bash: имя устройства отдельным argv — одинарные кавычки в имени
+        // клавиатуры ломали команду
+        layoutProc.command = ["hyprctl", "switchxkblayout", root.kbDevice, "next"]
+        layoutProc.running = true
     }
 
     function toggleDnd() {
-        statusProcAction.command = ["bash", "-c", "makoctl mode -t do-not-disturb"]
-        statusProcAction.running = true
+        dndProc.command = ["bash", "-c", "makoctl mode -t do-not-disturb"]
+        dndProc.running = true
     }
 
     function toggleGameMode() {
-        statusProcAction.command = ["bash", "-c",
+        gameProc.command = ["bash", "-c",
             "~/.config/hypr/scripts/eclipse-gamemode.sh toggle"]
-        statusProcAction.running = true
+        gameProc.running = true
     }
 
     function cyclePower() {
-        statusProcAction.command = ["bash", "-c",
+        powerProc.command = ["bash", "-c",
             "p=$(powerprofilesctl get); case \"$p\" in performance) n=balanced;; power-saver) n=performance;; *) n=power-saver;; esac; powerprofilesctl set \"$n\""]
-        statusProcAction.running = true
+        powerProc.running = true
     }
 
     function toggleRecording() {
-        statusProcAction.command = ["bash", "-c",
+        recordProc.command = ["bash", "-c",
             "~/.config/hypr/scripts/eclipse-record.sh toggle"]
-        statusProcAction.running = true
+        recordProc.running = true
     }
 
     // ───────────────────────────── layout ─────────────────────────────
@@ -1067,7 +1105,7 @@ PanelWindow {
                 implicitWidth: root.trayMax * 20 + Math.max(0, root.trayMax - 1) * 9
                 implicitHeight: 26
 
-                HoverBg { visible: SystemTray.items.values.length > 0 }
+                HoverBg { visible: root.trayCount > 0 }
 
                 Row {
                     id: trayRow
@@ -1077,7 +1115,7 @@ PanelWindow {
                     spacing: 9
 
                     Repeater {
-                        model: SystemTray.items.values.slice(0, root.trayMax)
+                        model: root.trayItems
 
                         delegate: Item {
                             required property var modelData
@@ -1128,7 +1166,7 @@ PanelWindow {
 
                     // сколько значков не влезло — открыть список
                     Rectangle {
-                        visible: SystemTray.items.values.length > root.trayMax
+                        visible: root.trayCount > root.trayMax
                         width: moreText.implicitWidth + 12
                         height: 22
                         radius: Theme.radius
@@ -1140,7 +1178,7 @@ PanelWindow {
                         Text {
                             id: moreText
                             anchors.centerIn: parent
-                            text: "+" + (SystemTray.items.values.length - root.trayMax)
+                            text: "+" + (root.trayCount - root.trayMax)
                             color: moreMouse.containsMouse ? Theme.accent : Theme.textDim
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.fontSize(10)
@@ -1316,7 +1354,9 @@ PanelWindow {
                     height: 26
                     verticalAlignment: Text.AlignVCenter
                     opacity: root.colonOn ? 1.0 : 0.15
-                    Behavior on opacity { NumberAnimation { duration: 480; easing.type: Easing.InOutSine } }
+                    // длительность заметно меньше периода (500 мс), иначе
+                    // анимация не успевает затихнуть и двоеточие «плывёт»
+                    Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.InOutSine } }
                 }
                 Text {
                     id: clockMin
@@ -1362,7 +1402,10 @@ PanelWindow {
         width: Math.max(0, clockBox.x - 18 - x)
         readonly property bool active: root.mediaActive
         readonly property real vizW: width / 3
-        readonly property real titleW: Math.max(0, width - vizW - 12)
+        // на узком экране столбикам не хватает места — прячем их целиком,
+        // иначе они вылезают за свою треть и лезут на название трека
+        readonly property bool showViz: vizW >= root.barCount + (root.barCount - 1) * 2
+        readonly property real titleW: Math.max(0, width - (showViz ? vizW + 12 : 0))
         readonly property real mqCharW: fm12.advanceWidth("0") > 0 ? fm12.advanceWidth("0") : 8
         readonly property int mqChars:
             Math.max(4, Math.floor((titleW - 18 - 8) / mqCharW))
@@ -1389,6 +1432,7 @@ PanelWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 height: 26
                 spacing: 2
+                visible: mediaBox.showViz
 
                 Repeater {
                     model: root.barCount
@@ -1430,11 +1474,14 @@ PanelWindow {
                 }
 
                 Text {
+                    // при скрытых столбиках название занимает всю ширину
                     width: Math.max(0, mediaBox.titleW - noteIcon.width - 8)
                     height: 26
                     verticalAlignment: Text.AlignVCenter
                     clip: true
-                    text: root.marqueeText(mediaBox.mqChars)
+                    text: mediaBox.showViz
+                        ? root.marqueeText(mediaBox.mqChars)
+                        : root.marqueeText(Math.max(4, Math.floor((width - 8) / mediaBox.mqCharW)))
                     color: Theme.text
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(12)

@@ -17,7 +17,17 @@ Item {
 
     // живое превью обоев: показываем фазу активного стола (или выбранную)
     readonly property var ws: Hyprland.activeWorkspace || Hyprland.focusedWorkspace
-    readonly property int activePhase: (ws && ws.id > 0) ? Math.max(1, Math.min(9, ws.id)) : 5
+    // L40: фаза — строго номер стола 1..9. Специальные/внемерные столы
+    // не мапим молча: берём focusedWorkspace, иначе фазу 5 (затмение).
+    readonly property int activePhase: {
+        var id = ws ? ws.id : 0
+        if (id >= 1 && id <= 9)
+            return id
+        var f = Hyprland.focusedWorkspace
+        if (f && f.id >= 1 && f.id <= 9)
+            return f.id
+        return 5
+    }
     property int previewPhase: -1
     readonly property int shownPhase: previewPhase > 0 ? previewPhase : activePhase
 
@@ -33,10 +43,12 @@ Item {
         WheelHandler {
             onWheel: function(event) {
                 var delta = event.angleDelta.y
-                if (delta !== 0)
-                    scrollArea.contentY = Math.max(0, Math.min(
-                        scrollArea.contentHeight - scrollArea.height,
-                        scrollArea.contentY - delta))
+                // L33: пустые/горизонтальные события не съедаем
+                if (delta === 0)
+                    return
+                scrollArea.contentY = Math.max(0, Math.min(
+                    scrollArea.contentHeight - scrollArea.height,
+                    scrollArea.contentY - delta))
                 event.accepted = true
             }
         }

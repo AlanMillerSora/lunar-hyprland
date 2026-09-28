@@ -174,12 +174,16 @@ Item {
                 cursorShape: Qt.PointingHandCursor
 
                 function setFromX(px) {
+                    // mouse.x считается от dragArea, а он шире дорожки на 6px
+                    // с каждой стороны — переводим точку в координаты track,
+                    // иначе ползунок смещён и ручка не доходит до краёв
+                    var p = dragArea.mapToItem(track, px, 0).x
                     var v =
                         Math.max(
                             0,
                             Math.min(
                                 1,
-                                px / track.width
+                                p / track.width
                             )
                         )
 

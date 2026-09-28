@@ -30,6 +30,7 @@ PanelWindow {
     property var items: []          // все записи: [{ id, preview }]
     property string query: ""
     property int selectedIndex: 0
+    property string toolError: ""   // cliphist/wl-copy недоступны или команда упала
 
     readonly property var filtered: {
         var q = root.query.toLowerCase()
@@ -45,8 +46,10 @@ PanelWindow {
 
     function openPanel() {
         root.selectedIndex = 0
+        root.toolError = ""
         searchInput.text = ""
         root.query = ""
+        list.positionViewAtBeginning()   // прокрутка не «залипает» с прошлого раза (L47)
         root.refresh()
         root.showing = true
         searchInput.forceActiveFocus()
@@ -80,17 +83,29 @@ PanelWindow {
     }
 
     function copyEntry(id) {
-        copyProc.command = ["bash", "-c", "cliphist decode " + id + " | wl-copy"]
+        // id из cliphist — только цифры; проверяем и заодно не даём
+        // подставить что-то в shell (L45/C5-стиль)
+        if (!/^\d+$/.test("" + id))
+            return
+        root.toolError = ""
+        copyProc.command = ["bash", "-c",
+            "command -v cliphist >/dev/null 2>&1 || exit 127; "
+            + "command -v wl-copy >/dev/null 2>&1 || exit 128; "
+            + "cliphist decode " + id + " | wl-copy"]
+        copyProc.running = false
         copyProc.running = true
-        root.closePanel()
     }
 
     function removeSelected() {
         var l = root.filtered
         if (root.selectedIndex < 0 || root.selectedIndex >= l.length)
             return
-        var id = l[root.selectedIndex].id
+        var id = "" + l[root.selectedIndex].id
+        if (!/^\d+$/.test(id))
+            return
+        root.toolError = ""
         delProc.command = ["bash", "-c", "cliphist list | grep -P '^" + id + "\\t' | cliphist delete"]
+        delProc.running = false
         delProc.running = true
     }
 
@@ -310,13 +325,25 @@ PanelWindow {
                 Text {
                     anchors.centerIn: parent
                     visible: root.filtered.length === 0
-                    text: root.items.length === 0
-                        ? "буфер обмена пуст"
-                        : "ничего не найдено"
-                    color: Theme.textFaint
+                    text: root.toolError !== ""
+                        ? root.toolError
+                        : (root.items.length === 0
+                            ? "буфер обмена пуст"
+                            : "ничего не найдено")
+                    color: root.toolError !== "" ? Theme.danger : Theme.textFaint
                     font.family: Theme.fontFamily
                     font.pixelSize: 11
                 }
+            }
+
+            Text {
+                Layout.fillWidth: true
+                visible: root.toolError !== "" && root.items.length > 0
+                text: root.toolError
+                color: Theme.danger
+                font.family: Theme.fontFamily
+                font.pixelSize: 10
+                wrapMode: Text.WordWrap
             }
 
             Rectangle {
@@ -339,35 +366,76 @@ PanelWindow {
     Process {
         id: listProc
         running: false
-        command: ["bash", "-c", "cliphist list 2>/dev/null | head -200"]
+        // без head -200: список не обрезается, счётчик «N / M» честный (M61).
+        // Проверяем наличие cliphist и читаем stderr (M62).
+        command: ["bash", "-c",
+            "command -v cliphist >/dev/null 2>&1 || { echo cliphist-not-installed >&2; exit 127; }; "
+            + "cliphist list"]
         stdout: StdioCollector {
+            id: listOut
             onStreamFinished: {
-                var lines = text.split("\n")
+                var lines = ("" + listOut.text).split("\n")
                 var out = []
                 for (var i = 0; i < lines.length; i++) {
                     var line = lines[i]
-                    if (!line.length)
+                    if (line === "")
                         continue
                     var tab = line.indexOf("\t")
-                    if (tab < 0)
-                        continue
-                    var id = line.substring(0, tab).trim()
-                    var preview = line.substring(tab + 1)
-                    if (!preview.length)
-                        preview = "(пусто)"
-                    out.push({ id: id, preview: preview })
+                    var id = tab > 0 ? line.substring(0, tab) : ""
+                    if (tab > 0 && /^\d+$/.test(id)) {
+                        var preview = line.substring(tab + 1)
+                        out.push({ id: id, preview: preview.length ? preview : "(пусто)" })
+                    } else if (out.length > 0) {
+                        // продолжение многострочного превью (L46)
+                        out[out.length - 1].preview += "\n" + line
+                    }
                 }
                 root.items = out
                 if (root.selectedIndex >= out.length)
                     root.selectedIndex = 0
+                list.positionViewAtBeginning()   // новый список — с начала (L47)
+                if (out.length > 0)
+                    root.toolError = ""
+            }
+        }
+        stderr: StdioCollector { id: listErr }
+        onExited: (code) => {
+            if (code === 127) {
+                root.toolError = "cliphist не установлен"
+            } else if (code !== 0) {
+                root.toolError = (listErr.text || "").trim()
+                    || ("cliphist недоступен (код " + code + ")")
             }
         }
     }
 
-    Process { id: copyProc; running: false }
+    Process {
+        id: copyProc
+        running: false
+        stderr: StdioCollector { id: copyErr }
+        onExited: (code) => {
+            if (code === 0) {
+                root.closePanel()
+            } else if (code === 127) {
+                root.toolError = "cliphist не установлен"
+            } else if (code === 128) {
+                root.toolError = "wl-copy не установлен"
+            } else {
+                root.toolError = (copyErr.text || "").trim()
+                    || ("не удалось скопировать (код " + code + ")")
+            }
+        }
+    }
+
     Process {
         id: delProc
         running: false
-        onExited: root.refresh()
+        stderr: StdioCollector { id: delErr }
+        onExited: (code) => {
+            if (code !== 0)
+                root.toolError = (delErr.text || "").trim()
+                    || ("не удалось удалить запись (код " + code + ")")
+            root.refresh()
+        }
     }
 }

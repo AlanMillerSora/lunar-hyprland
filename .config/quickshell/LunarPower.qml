@@ -23,6 +23,15 @@ PanelWindow {
     }
 
     property bool showing: false
+    // подтверждение необратимых действий (M69)
+    property int pendingIndex: -1
+    property string status: ""
+
+    Timer {
+        id: pendingReset
+        interval: 4000
+        onTriggered: { root.pendingIndex = -1; root.status = "" }
+    }
 
     function openPanel() { showing = true }
     function closePanel() { showing = false }
@@ -36,19 +45,65 @@ PanelWindow {
     }
 
     readonly property var actions: [
-        { icon: "󰛇", label: "Спящий режим", key: "1", cmd: "systemctl suspend" },
-        { icon: "󰤄",  label: "Гибернация",   key: "2", cmd: "systemctl hibernate" },
-        { icon: "󰿅",  label: "Выйти",        key: "3", cmd: "hyprctl dispatch 'hl.dsp.exit()'" },
-        { icon: "󰓮",  label: "Перезагрузить", key: "4", cmd: "systemctl reboot" },
-        { icon: "󰐥",   label: "Выключить",    key: "5", cmd: "systemctl poweroff" }
+        { icon: "󰛇", label: "Спящий режим", key: "1", cmd: "systemctl suspend", confirm: false },
+        { icon: "󰤄",  label: "Гибернация",   key: "2", cmd: "systemctl hibernate", confirm: true },
+        { icon: "󰿅",  label: "Выйти",        key: "3", cmd: "hyprctl dispatch 'hl.dsp.exit()'", confirm: true },
+        { icon: "󰓮",  label: "Перезагрузить", key: "4", cmd: "systemctl reboot", confirm: true },
+        { icon: "󰐥",   label: "Выключить",    key: "5", cmd: "systemctl poweroff", confirm: true }
     ]
 
-    Process { id: runProc; running: false }
+    // гибернация недоступна без swap — прячем пункт (M69)
+    property bool canHibernate: true
+
+    Process {
+        id: hibernateCheck
+        running: true
+        command: ["loginctl", "can-hibernate"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var t = ("" + text).trim().toLowerCase()
+                if (t === "no")
+                    root.canHibernate = false
+            }
+        }
+    }
+
+    Process {
+        id: runProc
+        running: false
+        stderr: StdioCollector { id: runErr }
+        // обратная связь: не глотаем ошибку (M69)
+        onExited: (code) => {
+            if (code !== 0) {
+                root.status = (runErr.text || "").trim()
+                    || ("команда не выполнилась (код " + code + ")")
+                root.openPanel()
+            }
+        }
+    }
 
     function run(cmd) {
+        root.status = ""
         runProc.command = ["bash", "-c", cmd]
         runProc.running = true
         closePanel()
+    }
+
+    // запуск действия по индексу; для необратимых — второе подтверждение
+    function runAt(i) {
+        var a = root.actions[i]
+        if (!a)
+            return
+        if (a.key === "2" && !root.canHibernate)
+            return
+        if (a.confirm && root.pendingIndex !== i) {
+            root.pendingIndex = i
+            root.status = "«" + a.label + "» — нажмите ещё раз для подтверждения"
+            pendingReset.restart()
+            return
+        }
+        root.pendingIndex = -1
+        root.run(a.cmd)
     }
 
     // ── затемнение + закрытие ──
@@ -61,9 +116,14 @@ PanelWindow {
 
         Keys.onEscapePressed: root.closePanel()
         Keys.onPressed: function (event) {
+            // цифры работают только «чистыми»: Ctrl/Alt/Shift+1 — не команды (M70).
+            // NumPad (KeypadModifier) не блокируем.
+            if (event.modifiers & (Qt.ControlModifier | Qt.AltModifier
+                                   | Qt.MetaModifier | Qt.ShiftModifier))
+                return
             var i = event.key - Qt.Key_1
             if (i >= 0 && i < root.actions.length) {
-                root.run(root.actions[i].cmd)
+                root.runAt(i)
                 event.accepted = true
             }
         }
@@ -136,18 +196,31 @@ PanelWindow {
                 color: Theme.border
             }
 
+            Text {
+                Layout.fillWidth: true
+                visible: root.status !== ""
+                text: root.status
+                color: Theme.danger
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize(10)
+                wrapMode: Text.WordWrap
+            }
+
             Repeater {
                 model: root.actions
 
                 delegate: Rectangle {
                     required property var modelData
+                    required property int index
 
+                    visible: !(modelData.key === "2" && !root.canHibernate)
                     Layout.fillWidth: true
                     height: 48
                     radius: Theme.radius
-                    color: rowMouse.containsMouse ? Theme.hoverStrong : "transparent"
-                    border.width: rowMouse.containsMouse ? 1 : 0
-                    border.color: Theme.borderAccent
+                    color: (rowMouse.containsMouse || root.pendingIndex === index)
+                        ? Theme.hoverStrong : "transparent"
+                    border.width: (rowMouse.containsMouse || root.pendingIndex === index) ? 1 : 0
+                    border.color: root.pendingIndex === index ? Theme.danger : Theme.borderAccent
 
                     RowLayout {
                         anchors.fill: parent
@@ -173,7 +246,7 @@ PanelWindow {
 
                         Text {
                             text: modelData.key
-                            color: Theme.textFaint
+                            color: root.pendingIndex === index ? Theme.danger : Theme.textFaint
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.fontSize(11)
                         }
@@ -184,7 +257,7 @@ PanelWindow {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: root.run(modelData.cmd)
+                        onClicked: root.runAt(index)
                     }
                 }
             }

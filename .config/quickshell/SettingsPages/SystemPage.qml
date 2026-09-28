@@ -15,6 +15,7 @@ Item {
     property string ramSpeed: "Loading..."
     property int updateCount: -1
     property string updateList: ""
+    property string updateError: ""
 
     property real cpuUsage: 0
     property real gpuUsage: 0
@@ -161,27 +162,6 @@ Item {
         page.currentTime = Qt.formatTime(new Date(), "HH:mm:ss")
     }
 
-    component HardwareLabel: Text {
-        property string value: ""
-
-        text: value
-        color: Theme.accent
-        font.family: page.mono
-        font.pixelSize: page.hardwareLabelSize
-        font.letterSpacing: 2
-    }
-
-    component HardwareValue: Text {
-        property string value: ""
-
-        text: value
-        color: Theme.text
-        font.family: Theme.fontFamily
-        font.pixelSize: page.hardwareTextSize
-        elide: Text.ElideRight
-        width: parent.width
-    }
-
     // кнопка раздела «Обновления»
     component ActionButton: Rectangle {
         property string label: ""
@@ -217,30 +197,39 @@ Item {
     }
 
     // проверка обновлений (checkupdates из pacman-contrib, иначе pacman -Qu)
+    // M39: пустой вывод ≠ «система актуальна» — различаем «не проверено» и ошибку проверки
     Process {
         id: pUpdates
         running: false
 
         command: ["bash", "-c",
-            "if command -v checkupdates >/dev/null 2>&1; then checkupdates 2>/dev/null; " +
-            "else pacman -Qu 2>/dev/null; fi"]
+            "if command -v checkupdates >/dev/null 2>&1; then " +
+            "out=$(checkupdates 2>/dev/null); rc=$?; " +
+            "if [ $rc -ne 0 ] && [ $rc -ne 2 ]; then exit 9; fi; " +
+            "printf '%s' \"$out\"; " +
+            "else " +
+            "out=$(pacman -Qu 2>/dev/null); rc=$?; " +
+            "if [ $rc -ne 0 ] && [ $rc -ne 1 ]; then exit 9; fi; " +
+            "printf '%s' \"$out\"; " +
+            "fi"]
 
-        stdout: StdioCollector {
-            onStreamFinished: {
-                var t = text.trim()
-                var lines = t === "" ? [] : t.split("\n")
-                page.updateCount = lines.length
-                page.updateList = lines.slice(0, 12).join("\n")
+        stdout: StdioCollector { id: updOut }
+
+        onExited: (exitCode) => {
+            // команда нормализует код: 0 — проверка удалась (пусто = обновлений нет);
+            // 9 — ошибка (нет сети, занята БД pacman и т.п.)
+            if (exitCode !== 0) {
+                page.updateError = "не удалось проверить (код " + exitCode + ")"
+                page.updateCount = -1
+                page.updateList = ""
+                return
             }
+            page.updateError = ""
+            var t = (updOut.text || "").trim()
+            var lines = t === "" ? [] : t.split("\n")
+            page.updateCount = lines.length
+            page.updateList = lines.slice(0, 12).join("\n")
         }
-    }
-
-    // обновление системы в терминале (интерактивный sudo)
-    Process {
-        id: updateProc
-        running: false
-        command: ["kitty", "--hold", "-e", "sudo", "pacman", "-Syu"]
-        onExited: pUpdates.running = true
     }
 
     Process {
@@ -420,7 +409,7 @@ Item {
                     if (line.indexOf("Configured Memory Speed:") === 0) {
                         var parts = line.split(/\s+/)
 
-                        if (parts.length >= 4 &&
+                        if (parts.length >= 5 &&
                             /^[0-9]+$/.test(parts[3])) {
                             speed = parts[3] + " " + parts[4]
                             break
@@ -509,15 +498,17 @@ Item {
             onWheel: function(event) {
                 var delta = event.angleDelta.y
 
-                if (delta !== 0) {
-                    scrollArea.contentY = Math.max(
-                        0,
-                        Math.min(
-                            scrollArea.contentHeight - scrollArea.height,
-                            scrollArea.contentY - delta
-                        )
+                // L33: не перехватываем горизонтальную прокрутку
+                if (delta === 0)
+                    return
+
+                scrollArea.contentY = Math.max(
+                    0,
+                    Math.min(
+                        scrollArea.contentHeight - scrollArea.height,
+                        scrollArea.contentY - delta
                     )
-                }
+                )
 
                 event.accepted = true
             }
@@ -986,11 +977,13 @@ Item {
                     }
 
                     Text {
-                        text: page.updateCount < 0
-                            ? "не проверялось"
-                            : (page.updateCount === 0
-                                ? "система актуальна"
-                                : page.updateCount + " пакетов")
+                        text: page.updateError !== ""
+                            ? page.updateError
+                            : (page.updateCount < 0
+                                ? "не проверялось"
+                                : (page.updateCount === 0
+                                    ? "система актуальна"
+                                    : page.updateCount + " пакетов"))
                         color: Theme.text
                         font.family: page.mono
                         font.pixelSize: 11

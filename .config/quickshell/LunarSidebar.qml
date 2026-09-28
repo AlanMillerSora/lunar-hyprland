@@ -19,6 +19,9 @@ PanelWindow {
 
     property bool collapsed: true
     property int tabIndex: 0
+    // заметки: true, если пользователь уже правил текст до/во время загрузки файла —
+    // тогда загрузка не должна затирать его правку (TOCTOU при старте)
+    property bool notesDirty: false
 
     function openPanel() { collapsed = false }
     function closePanel() { collapsed = true }
@@ -435,7 +438,7 @@ PanelWindow {
                                     anchors.fill: parent
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
-                                    onClicked: notesSaveTimer.triggered()
+                                    onClicked: notesFile.setText(notesArea.text)
                                 }
                             }
                         }
@@ -458,7 +461,10 @@ PanelWindow {
                                 selectByMouse: true
                                 focus: root.tabIndex === 1 && !root.collapsed
                                 background: Rectangle { color: "transparent" }
-                                onTextChanged: notesSaveTimer.restart()
+                                onTextChanged: {
+                                    root.notesDirty = true
+                                    notesSaveTimer.restart()
+                                }
                             }
 
                             Text {
@@ -501,10 +507,7 @@ PanelWindow {
     Timer {
         id: notesSaveTimer
         interval: 800
-        onTriggered: {
-            notesSaveProc.command = ["bash", "-c", "cat > ~/.cache/lunar_notes.txt <<'EOF'\n" + notesArea.text.replace(/\\/g, "\\\\").replace(/'/g, "'\\''") + "\nEOF"]
-            notesSaveProc.running = true
-        }
+        onTriggered: notesFile.setText(notesArea.text)
     }
 
     Process { id: termProc; running: false }
@@ -610,7 +613,22 @@ PanelWindow {
     }
 
     Process { id: sessionsProc; running: false }
-    Process { id: notesSaveProc; running: false }
+
+    // заметки: пишем файлом напрямую (без bash/heredoc) и атомарно
+    FileView {
+        id: notesFile
+        path: Quickshell.env("HOME") + "/.cache/lunar_notes.txt"
+        blockLoading: true
+        atomicWrites: true
+        // файла может ещё не быть — это не ошибка
+        __printErrors: false
+        onLoaded: {
+            if (root.notesDirty) return
+            notesArea.text = text()
+            root.notesDirty = false
+            notesSaveTimer.stop()
+        }
+    }
 
     Process {
         id: sysStats
@@ -626,14 +644,5 @@ PanelWindow {
         onTriggered: sysStats.running = true
     }
 
-    Component.onCompleted: {
-        notesLoadProc.command = ["bash", "-c", "cat ~/.cache/lunar_notes.txt 2>/dev/null || true"]
-        notesLoadProc.running = true
-    }
-
-    Process {
-        id: notesLoadProc
-        running: false
-        stdout: StdioCollector { onStreamFinished: notesArea.text = text }
-    }
+    Component.onCompleted: notesFile.reload()
 }

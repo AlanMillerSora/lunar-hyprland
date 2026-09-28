@@ -30,6 +30,9 @@ PanelWindow {
     function openPanel() { showing = true; Theme.volumePopupOpen = true }
     function closePanel() { showing = false; Theme.volumePopupOpen = false }
     function toggle() { showing ? closePanel() : openPanel() }
+    // окно может быть пересоздано (reload) — снимаем флаг, иначе OSD навсегда
+    // перестанет показываться
+    Component.onDestruction: Theme.volumePopupOpen = false
 
     IpcHandler {
         target: "volume"
@@ -43,6 +46,7 @@ PanelWindow {
     readonly property var sink: Pipewire.defaultAudioSink
     readonly property real vol: (sink && sink.audio) ? sink.audio.volume : 0
     readonly property bool muted: (sink && sink.audio) ? sink.audio.muted : false
+    readonly property bool hasSink: !!(sink && sink.audio)
 
     function setVol(v) {
         if (sink && sink.audio) {
@@ -57,11 +61,44 @@ PanelWindow {
     }
 
     // ── устройства вывода / входа (без потоков и мониторов) ──
-    readonly property var sinks:
-        Pipewire.nodes.values.filter(n => n.isSink && !n.isStream && n.audio)
-    readonly property var sources:
-        Pipewire.nodes.values.filter(n => !n.isSink && !n.isStream && n.audio
-            && ("" + n.name).indexOf(".monitor") < 0)
+    // Кэшируем отфильтрованные списки: граф меняется часто, а новый массив
+    // в Repeater пересоздаёт все строки — обновляем только при смене состава.
+    property var sinks: []
+    property var sources: []
+
+    function sameDevices(a, b) {
+        if (a.length !== b.length)
+            return false
+        for (var i = 0; i < a.length; i++)
+            if (a[i] !== b[i])
+                return false
+        return true
+    }
+
+    function refreshDevices() {
+        var ns = Pipewire.nodes.values
+        var out = [], inp = []
+        for (var i = 0; i < ns.length; i++) {
+            var n = ns[i]
+            if (!n.audio)
+                continue
+            if (n.isSink && !n.isStream)
+                out.push(n)
+            else if (!n.isSink && !n.isStream
+                    && ("" + n.name).indexOf(".monitor") < 0)
+                inp.push(n)
+        }
+        if (!sameDevices(out, root.sinks))
+            root.sinks = out
+        if (!sameDevices(inp, root.sources))
+            root.sources = inp
+    }
+
+    Connections {
+        target: Pipewire.nodes
+        function onValuesChanged() { root.refreshDevices() }
+    }
+    Component.onCompleted: root.refreshDevices()
 
     function devName(n) {
         return (n && (n.description || n.nickname || n.name)) || ""
@@ -83,7 +120,9 @@ PanelWindow {
 
     Process { id: mixerProc; running: false }
     function openMixer() {
-        mixerProc.command = ["bash", "-c", "setsid pavucontrol >/dev/null 2>&1 &"]
+        // pavucontrol может отсутствовать — проверяем перед запуском
+        mixerProc.command = ["bash", "-c",
+            "command -v pavucontrol >/dev/null 2>&1 && setsid pavucontrol >/dev/null 2>&1 &"]
         mixerProc.running = true
         closePanel()
     }
@@ -251,11 +290,25 @@ PanelWindow {
             Slider {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 66
+                visible: root.hasSink
                 trackHeight: 12
                 handleSize: 24
                 value: root.muted ? 0 : root.vol
                 onMoved: (v) => root.setVol(v)
                 onCommitted: (v) => root.setVol(v)
+            }
+
+            // ── нет аудиоустройств ──
+            Text {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 66
+                visible: !root.hasSink
+                text: "нет аудиоустройств"
+                color: Theme.textFaint
+                font.family: Theme.fontFamily
+                font.pixelSize: 11
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
             }
 
             // ── вывод звука (список, если есть из чего выбирать) ──

@@ -7,8 +7,9 @@ QtObject {
     id: theme
 
     property color bg: Qt.rgba(0, 0, 0, 0.85 * interfaceOpacity)
-    property color bgPanel: "#050505"
-    property color bgCard: "#0d0d0d"
+    // панель и карточки тоже реагируют на ползунок прозрачности (L43)
+    property color bgPanel: Qt.rgba(5 / 255, 5 / 255, 5 / 255, interfaceOpacity)
+    property color bgCard: Qt.rgba(13 / 255, 13 / 255, 13 / 255, interfaceOpacity)
     property color border: "#1e1e1e"
     property color borderAccent: "#2a2a2a"
 
@@ -73,20 +74,78 @@ QtObject {
     // ─────────── персистентность UI-настроек ───────────
     // Прозрачность интерфейса, масштаб шрифта и число значков трея
     // сохраняются между перезапусками Quickshell.
-    property bool uiReady: false
+    property bool uiReady: false        // первичная загрузка файла завершена
+    property bool uiLoading: false      // идёт загрузка/перезагрузка (защита от эха, L42)
+    property bool uiInternal: false     // изменение пришло из файла, а не от пользователя
+    property bool uiWriteBlocked: false // файл битый — не затираем его дефолтами (M73)
+    property bool uiPersistPending: false // UI-правка ждёт окончания загрузки
+    property string uiError: ""         // диагностика чтения настроек
+
+    // пометить изменение как пользовательское и запланировать запись
+    function markUI() {
+        uiWriteBlocked = false
+        uiPersistPending = true
+    }
 
     property FileView uiState: FileView {
         id: uiFile
         path: Quickshell.statePath("lunar-ui.json")
         watchChanges: true
         atomicWrites: true
-        onFileChanged: reload()
-        onAdapterUpdated: { if (theme.uiReady) writeAdapter() }
-        onLoaded: { theme.uiReady = true }
-        onLoadFailed: (error) => {
-            if (error === FileViewError.FileNotFound)
+
+        onFileChanged: { theme.uiLoading = true; reload() }
+        onAdapterUpdated: {
+            if (theme.uiReady && !theme.uiLoading && !theme.uiWriteBlocked) {
+                theme.uiPersistPending = false
                 writeAdapter()
+            }
+        }
+        onLoaded: {
+            theme.uiLoading = false
+            // адаптер о битом JSON молчит и оставляет дефолты, поэтому
+            // проверяем содержимое сами и не затираем файл (M73)
+            var raw = uiFile.text()
+            var healthy = true
+            if (raw && raw.trim() !== "") {
+                try {
+                    JSON.parse(raw)
+                } catch (e) {
+                    healthy = false
+                }
+            }
+            if (!healthy) {
+                theme.uiError = "настройки не прочитаны: повреждён JSON"
+                console.warn("[Theme] " + theme.uiError + " — файл сохранён в .bak, дефолты не записываются")
+                theme.uiWriteBlocked = true
+                theme.uiReady = true
+                Quickshell.execDetached(["cp", "-f", theme.uiState.path,
+                                         theme.uiState.path + ".bak"])
+                return
+            }
             theme.uiReady = true
+            theme.uiError = ""
+            // правка, пришедшая во время загрузки, станет финальным значением
+            if (theme.uiPersistPending) {
+                theme.uiPersistPending = false
+                writeAdapter()
+            }
+        }
+        onLoadFailed: (error) => {
+            theme.uiLoading = false
+            if (error === FileViewError.FileNotFound) {
+                // файла ещё нет — создаём с текущими значениями
+                theme.uiReady = true
+                writeAdapter()
+            } else {
+                // битый/нечитаемый файл: сохраняем копию и не затираем
+                // его дефолтами молча — ошибка видна в Theme.uiError (M73)
+                theme.uiError = "настройки не прочитаны: " + FileViewError.toString(error)
+                console.warn("[Theme] " + theme.uiError + " — файл сохранён в .bak, дефолты не записываются")
+                theme.uiWriteBlocked = true
+                theme.uiReady = true
+                Quickshell.execDetached(["cp", "-f", theme.uiState.path,
+                                         theme.uiState.path + ".bak"])
+            }
         }
 
         JsonAdapter {
@@ -99,25 +158,32 @@ QtObject {
             property int blurSize: -1
             property int blurPasses: 3
 
-            // файл → UI
-            onInterfaceOpacityChanged: theme.interfaceOpacity = interfaceOpacity
-            onFontScaleChanged: theme.fontScale = fontScale
-            onTrayVisibleChanged: theme.trayVisible = trayVisible
-            onWallpaperLiveChanged: theme.wallpaperLive = wallpaperLive
-            onOptimizeModeChanged: theme.optimizeMode = optimizeMode
-            onBlurSizeChanged: theme.blurSize = blurSize
-            onBlurPassesChanged: theme.blurPasses = blurPasses
+            // файл → UI (в uiInternal, чтобы не писать назад прочитанное)
+            onInterfaceOpacityChanged: { theme.uiInternal = true; theme.interfaceOpacity = interfaceOpacity; theme.uiInternal = false }
+            onFontScaleChanged: { theme.uiInternal = true; theme.fontScale = fontScale; theme.uiInternal = false }
+            onTrayVisibleChanged: { theme.uiInternal = true; theme.trayVisible = trayVisible; theme.uiInternal = false }
+            onWallpaperLiveChanged: { theme.uiInternal = true; theme.wallpaperLive = wallpaperLive; theme.uiInternal = false }
+            onOptimizeModeChanged: { theme.uiInternal = true; theme.optimizeMode = optimizeMode; theme.uiInternal = false }
+            onBlurSizeChanged: { theme.uiInternal = true; theme.blurSize = blurSize; theme.uiInternal = false }
+            onBlurPassesChanged: { theme.uiInternal = true; theme.blurPasses = blurPasses; theme.uiInternal = false }
         }
     }
 
-    // UI → файл
-    onInterfaceOpacityChanged: uiAdapter.interfaceOpacity = interfaceOpacity
-    onFontScaleChanged: uiAdapter.fontScale = fontScale
-    onTrayVisibleChanged: uiAdapter.trayVisible = trayVisible
-    onWallpaperLiveChanged: uiAdapter.wallpaperLive = wallpaperLive
-    onOptimizeModeChanged: uiAdapter.optimizeMode = optimizeMode
-    onBlurSizeChanged: { uiAdapter.blurSize = blurSize; blurApply.restart() }
-    onBlurPassesChanged: { uiAdapter.blurPasses = blurPasses; blurApply.restart() }
+    // UI → файл. Пишем только настоящие действия пользователя: загрузка
+    // из файла идёт через uiInternal и сюда не попадает (H27, L42).
+    onInterfaceOpacityChanged: if (!uiInternal) { markUI(); uiAdapter.interfaceOpacity = interfaceOpacity }
+    onFontScaleChanged: if (!uiInternal) { markUI(); uiAdapter.fontScale = fontScale }
+    onTrayVisibleChanged: if (!uiInternal) { markUI(); uiAdapter.trayVisible = trayVisible }
+    onWallpaperLiveChanged: if (!uiInternal) { markUI(); uiAdapter.wallpaperLive = wallpaperLive }
+    onOptimizeModeChanged: if (!uiInternal) { markUI(); uiAdapter.optimizeMode = optimizeMode }
+    onBlurSizeChanged: {
+        if (!uiInternal) { markUI(); uiAdapter.blurSize = blurSize }
+        blurApply.restart()
+    }
+    onBlurPassesChanged: {
+        if (!uiInternal) { markUI(); uiAdapter.blurPasses = blurPasses }
+        blurApply.restart()
+    }
 
     // Ползунок блюра: применяем с задержкой — size и passes могут прийти
     // по очереди (загрузка сохранённого состояния, перетаскивание).
@@ -139,7 +205,8 @@ QtObject {
             + ", size = " + size + ", passes = " + Math.max(1, blurPasses) + "}}})"])
     }
 
-    // Выставить и запомнить блюр: из ползунка и из пресетов NORMAL/OPTIMIZE.
+    // Выставить и запомнить блюр (ползунок Hub → Interface). Пресет
+    // NORMAL/OPTIMIZE сюда не пишет — иначе он затирал бы выбор пользователя.
     // Сам вызов hyprctl делает blurApply (см. выше).
     function setBlur(size, passes) {
         blurSize = size

@@ -10,12 +10,23 @@ import QtQuick
 PanelWindow {
     id: root
 
-    anchors { top: true; left: true; right: true; bottom: true }
+    // поверхность — только верхняя полоса, а не весь экран: меньше рисуется
+    // (и меньше блита) при каждом показе подсказки
+    anchors { top: true; left: true; right: true }
+    implicitHeight: 72
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore
 
     // рисуем только когда нужно — иначе окно не маппится
     visible: Theme.tooltipShown
+
+    // сторож: если панель не прислала скрытие (мышь ушла нештатно), прячем сами
+    Timer {
+        id: watchdog
+        interval: 8000
+        onTriggered: Theme.tooltipShown = false
+    }
+    onVisibleChanged: if (visible && watchdog) watchdog.restart()
 
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None

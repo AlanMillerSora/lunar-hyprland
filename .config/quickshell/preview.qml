@@ -7,8 +7,11 @@ import QtQuick
 //      qml6 preview.qml          # в части сборок раннер называется просто qml
 //  или из репо:  qml6 .config/quickshell/preview.qml
 //
-//  Клавиши 1..9 — фазы, L — «лёгкий режим». Та же сцена, что и в
-//  обоях (LunarWallpaperScene.qml), только без слоя и обёртки.
+//  Клавиши 1..9 — фазы, L — «лёгкий режим», O — OPTIMIZE.
+//  Хоткеи читаются по символу клавиши, поэтому работают и на русской
+//  раскладке (там L даёт «д», O — «щ»); те же переключатели есть мышью.
+//  Та же сцена, что и в обоях (LunarWallpaperScene.qml), только без
+//  слоя и обёртки.
 // ════════════════════════════════════════════════════════════════
 Window {
     id: win
@@ -16,15 +19,56 @@ Window {
     height: 720
     visible: true
     color: "#000000"
-    title: "Lunar Eclipse — preview (1..9 — фазы, L — лёгкий режим)"
+    title: "Lunar Eclipse — preview (1..9 — фазы, L — лёгкий, O — OPTIMIZE)"
 
     property int phase: 5
     property bool live: true
+    property bool optimize: false
 
     LunarWallpaperScene {
         anchors.fill: parent
         phase: win.phase
         live: win.live
+        // OPTIMIZE-путь стенда: те же 40 мс и «без пыли/метеоров» (L55)
+        optimize: win.optimize
+        tickMs: win.optimize ? 40 : 16
+    }
+
+    // ── клавиши: по символу, а не по физической клавише (ru-раскладка) ──
+    Item {
+        anchors.fill: parent
+        focus: true
+        Component.onCompleted: forceActiveFocus()
+
+        Keys.onPressed: (event) => {
+            var t = (event.text || "").toLowerCase()
+            if (t >= "1" && t <= "9") {
+                win.phase = parseInt(t, 10)
+                event.accepted = true
+                return
+            }
+            if (t === "l" || t === "д") {
+                win.live = !win.live
+                event.accepted = true
+                return
+            }
+            if (t === "o" || t === "щ") {
+                win.optimize = !win.optimize
+                event.accepted = true
+                return
+            }
+            // запасной путь по коду клавиши (если text пуст, напр. NumPad)
+            if (event.key >= Qt.Key_1 && event.key <= Qt.Key_9) {
+                win.phase = event.key - Qt.Key_1 + 1
+                event.accepted = true
+            } else if (event.key === Qt.Key_L) {
+                win.live = !win.live
+                event.accepted = true
+            } else if (event.key === Qt.Key_O) {
+                win.optimize = !win.optimize
+                event.accepted = true
+            }
+        }
     }
 
     // ── мини-контролы (без QtQuick.Controls) ───────────────────
@@ -77,16 +121,25 @@ Window {
                 onClicked: win.live = !win.live
             }
         }
-    }
 
-    Shortcut { sequence: "1"; onActivated: win.phase = 1 }
-    Shortcut { sequence: "2"; onActivated: win.phase = 2 }
-    Shortcut { sequence: "3"; onActivated: win.phase = 3 }
-    Shortcut { sequence: "4"; onActivated: win.phase = 4 }
-    Shortcut { sequence: "5"; onActivated: win.phase = 5 }
-    Shortcut { sequence: "6"; onActivated: win.phase = 6 }
-    Shortcut { sequence: "7"; onActivated: win.phase = 7 }
-    Shortcut { sequence: "8"; onActivated: win.phase = 8 }
-    Shortcut { sequence: "9"; onActivated: win.phase = 9 }
-    Shortcut { sequence: "L"; onActivated: win.live = !win.live }
+        Rectangle {
+            width: 110
+            height: 30
+            radius: 4
+            color: win.optimize ? "#ffffff" : Qt.rgba(1, 1, 1, 0.08)
+            border.width: 1
+            border.color: win.optimize ? "#ffffff" : Qt.rgba(1, 1, 1, 0.18)
+            Text {
+                anchors.centerIn: parent
+                text: win.optimize ? "OPTIMIZE" : "полный"
+                color: win.optimize ? "#000000" : "#888888"
+                font.pixelSize: 11
+            }
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: win.optimize = !win.optimize
+            }
+        }
+    }
 }

@@ -36,11 +36,11 @@ PanelWindow {
     // блюр/тени Hyprland (eclipse-perf.sh) и темп анимации обоев (40/16 мс).
     readonly property bool optimize: Theme.optimizeMode
     onOptimizeChanged: {
+        // Пресет сам выставляет блюр (eclipse-perf.sh). Ползунок Theme
+        // здесь НЕ трогаем: иначе он затирал бы пользовательское значение
+        // и писал его в файл при каждом старте/переключении (H27).
+        // Если ползунок выставлен, его вернёт perfProc.onExited ниже.
         applyPerf()
-        // пресет сбрасывает ползунок блюра к своему значению
-        // (NORMAL 6/3, OPTIMIZE 5/2) — как в eclipse-perf.sh
-        Theme.blurSize = root.optimize ? 5 : 6
-        Theme.blurPasses = root.optimize ? 2 : 3
     }
     Component.onCompleted: applyPerf()
 

@@ -15,7 +15,9 @@ QtObject {
     property var allApps: []
     property var apps: []
     property string filter: ""
-    property string lastRaw: ""      // сырой JSON прошлого скана — чтобы не пересобирать зря
+    property string lastRaw: ""      // сырой JSON прошлого УСПЕШНОГО скана
+    property string scanError: ""    // диагностика сканера (пусто = всё хорошо)
+    property bool scanPending: false // обновление запрошено, пока шёл скан
 
     // приложение запущено — Hub может закрыться
     signal launched()
@@ -30,8 +32,12 @@ QtObject {
     }
 
     function load() {
-        if (!proc.running)
-            proc.running = true
+        // не теряем запрос: если скан уже идёт — повторим сразу после него (M55)
+        if (proc.running) {
+            scanPending = true
+            return
+        }
+        proc.running = true
     }
 
     // нечёткий поиск: буквы запроса по порядку + бонус за начало строки
@@ -71,7 +77,8 @@ QtObject {
         if (idx > 0) return name[idx - 1] === " " ? 1 : 1.5
         if ((app.generic || "").toLowerCase().indexOf(q) >= 0) return 3
         if ((app.keywords || "").toLowerCase().indexOf(q) >= 0) return 4
-        if (app.id.indexOf(q) >= 0) return 5
+        // flatpak-id может содержать заглавные: приводим, как в score() (L44)
+        if (app.id.toLowerCase().indexOf(q) >= 0) return 5
         return -1
     }
 
@@ -114,9 +121,15 @@ QtObject {
 
     function launch(app) {
         if (!app) return
-        var cmd = app.terminal ? ("kitty -e " + app.exec) : app.exec
-        launchProc.command = ["bash", "-c", "exec " + cmd]
-        launchProc.running = true
+        var argv = app.execArgs
+        if (!argv || argv.length === 0)
+            return
+        // argv уже разобран по спецификации desktop-entry (см. python-скан) —
+        // никакого `bash -c` и field-codes: shell-инъекция невозможна (C5).
+        // execDetached не следит за процессом, поэтому быстрый второй запуск
+        // ничего не «проглатывает» (H28).
+        var cmd = app.terminal ? ["kitty", "-e"].concat(argv) : argv
+        Quickshell.execDetached(cmd)
         launched()
     }
 
@@ -125,18 +138,51 @@ QtObject {
     property Process proc: Process {
         running: false
         stdout: StdioCollector {
+            id: scanOut
             onStreamFinished: {
+                var text = scanOut.text
+                if (!text || text.trim() === "")
+                    return
                 if (text === appModel.lastRaw)
                     return
-                appModel.lastRaw = text
+                var parsed
                 try {
-                    appModel.allApps = JSON.parse(text)
-                    appModel.update()
-                } catch (e) {}
+                    parsed = JSON.parse(text)
+                } catch (e) {
+                    // lastRaw НЕ трогаем: иначе следующий такой же вывод
+                    // считался бы «уже разобранным» (H29)
+                    appModel.scanError = "не удалось разобрать список приложений"
+                    console.warn("[AppModel] " + appModel.scanError)
+                    return
+                }
+                if (!Array.isArray(parsed)) {
+                    appModel.scanError = "сканер вернул не список"
+                    return
+                }
+                appModel.allApps = parsed
+                appModel.lastRaw = text
+                appModel.scanError = ""
+                appModel.update()
+            }
+        }
+        stderr: StdioCollector { id: scanErr }
+        onExited: (code) => {
+            if (code !== 0 && appModel.scanError === "") {
+                appModel.scanError = (scanErr.text || "").trim()
+                    || ("индексатор приложений вышел с кодом " + code)
+                console.warn("[AppModel] " + appModel.scanError)
+            } else if (code === 0 && appModel.scanError === ""
+                       && (scanOut.text || "").trim() === "") {
+                appModel.scanError = "не удалось проиндексировать приложения"
+                console.warn("[AppModel] " + appModel.scanError)
+            }
+            if (appModel.scanPending) {
+                appModel.scanPending = false
+                Qt.callLater(function() { appModel.load() })
             }
         }
         command: ["python3", "-c", `
-import json, os, glob
+import json, os, glob, re, shlex, shutil
 
 bases = [
     os.path.expanduser("~/.local/share/applications"),
@@ -144,7 +190,53 @@ bases = [
     os.path.expanduser("~/.local/share/flatpak/exports/share/applications"),
     "/var/lib/flatpak/exports/share/applications",
 ]
-DROPS = ["%f", "%F", "%u", "%U", "%i", "%c", "%k", "%d", "%D", "%n", "%N", "%v", "%m"]
+
+# field-codes desktop-entry (%% — литерал процента, снимаем отдельно)
+FIELDS = re.compile(r"%[fFuUdDnNickvm]")
+
+
+def locale_suffixes():
+    loc = os.environ.get("LC_ALL") or os.environ.get("LC_MESSAGES") or os.environ.get("LANG") or ""
+    loc = loc.split(".")[0].split("@")[0]
+    if not loc or loc in ("C", "POSIX"):
+        return []
+    out = ["[" + loc + "]"]
+    if "_" in loc:
+        out.append("[" + loc.split("_")[0] + "]")
+    return out
+
+
+LANG_SUFFIXES = locale_suffixes()
+CURRENT_DESKTOP = set((os.environ.get("XDG_CURRENT_DESKTOP") or "").split(":"))
+
+
+def localized(entry, key):
+    for sfx in LANG_SUFFIXES:
+        v = entry.get(key + sfx)
+        if v:
+            return v
+    return entry.get(key, "")
+
+
+def shown_in(val):
+    for d in (val or "").split(";"):
+        if d and d in CURRENT_DESKTOP:
+            return True
+    return False
+
+
+def parse_exec(ex):
+    ex = ex.replace("%%", "lunar_pct_marker")
+    try:
+        argv = shlex.split(ex, posix=True)
+    except ValueError:
+        argv = ex.split()
+    out = []
+    for a in argv:
+        a = FIELDS.sub("", a).replace("lunar_pct_marker", "%")
+        if a:
+            out.append(a)
+    return out
 
 
 def parse(path):
@@ -175,22 +267,32 @@ for base in bases:
             continue
         if e.get("NoDisplay") == "true" or e.get("Hidden") == "true":
             continue
-        name = e.get("Name[ru]") or e.get("Name")
+        name = localized(e, "Name")
         if not name or "avahi" in name.lower():
+            continue
+        # TryExec: если бинарника нет — запись заведомо нерабочая (M54)
+        te = e.get("TryExec")
+        if te and not (shutil.which(te) or (os.path.isabs(te) and os.access(te, os.X_OK))):
+            continue
+        only = e.get("OnlyShowIn")
+        if CURRENT_DESKTOP and only and not shown_in(only):
+            continue
+        notin = e.get("NotShowIn")
+        if CURRENT_DESKTOP and notin and shown_in(notin):
             continue
         aid = os.path.splitext(os.path.basename(f))[0]
         if aid in seen:
             continue
         seen.add(aid)
-        ex = e.get("Exec", "")
-        for token in DROPS:
-            ex = ex.replace(token, "")
+        argv = parse_exec(e.get("Exec", ""))
+        if not argv:
+            continue
         apps.append({
-            "id": aid,
+            "id": aid.lower(),
             "name": name,
-            "generic": e.get("GenericName[ru]") or e.get("GenericName", ""),
-            "keywords": (e.get("Keywords[ru]") or e.get("Keywords", "")).replace(";", " "),
-            "exec": ex.strip(),
+            "generic": localized(e, "GenericName"),
+            "keywords": localized(e, "Keywords").replace(";", " "),
+            "execArgs": argv,
             "icon": e.get("Icon", ""),
             "terminal": e.get("Terminal") == "true",
         })
@@ -199,11 +301,11 @@ print(json.dumps(apps))
 `]
     }
 
-    property Process launchProc: Process { running: false }
-
-    // список приложений обновляем сами (поставил/удалил — увидел)
+    // список приложений обновляем сами (поставил/удалил — увидел).
+    // Раньше — раз в минуту (постоянный CPU и пробуждение из idle, M55);
+    // теперь редко, а кнопка «ОБНОВИТЬ» на странице Launch делает это вручную.
     property Timer refreshTimer: Timer {
-        interval: 60000
+        interval: 600000
         running: true
         repeat: true
         onTriggered: appModel.load()

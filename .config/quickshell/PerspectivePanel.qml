@@ -36,6 +36,9 @@ Item {
             angle: root.open ? root.parallaxX : 20
 
             Behavior on angle {
+                // во время наведения угол должен идти за мышью без анимации,
+                // иначе Behavior перезапускается на каждое движение (M72)
+                enabled: !hover.hovered
                 NumberAnimation { duration: Theme.animSlow; easing.type: Easing.OutCubic }
             }
         },
@@ -46,6 +49,9 @@ Item {
             angle: root.open ? root.parallaxY : -16
 
             Behavior on angle {
+                // во время наведения угол должен идти за мышью без анимации,
+                // иначе Behavior перезапускается на каждое движение (M72)
+                enabled: !hover.hovered
                 NumberAnimation { duration: Theme.animSlow; easing.type: Easing.OutCubic }
             }
         },
@@ -62,13 +68,37 @@ Item {
 
     HoverHandler {
         id: hover
+        property real fx: 0.5
+        property real fy: 0.5
         onPointChanged: {
-            var nx = (point.position.x / root.width) - 0.5
-            var ny = (point.position.y / root.height) - 0.5
-            root.parallaxX = -ny * root.tiltStrength
-            root.parallaxY = nx * root.tiltStrength
+            hover.fx = point.position.x / root.width
+            hover.fy = point.position.y / root.height
+            if (!tiltTick.running)
+                tiltTick.start()
         }
-        onHoveredChanged: if (!hovered) { root.parallaxX = 0; root.parallaxY = 0 }
+        onHoveredChanged: {
+            if (hovered) {
+                if (!tiltTick.running)
+                    tiltTick.start()
+            } else {
+                root.parallaxX = 0
+                root.parallaxY = 0
+            }
+        }
+    }
+
+    // параллакс обновляем не чаще ~30 Гц: Behavior на angle не должен
+    // перезапускаться на каждое событие движения мыши (M72)
+    Timer {
+        id: tiltTick
+        interval: 33
+        repeat: false
+        onTriggered: {
+            if (!hover.hovered)
+                return
+            root.parallaxX = -(hover.fy - 0.5) * root.tiltStrength
+            root.parallaxY = (hover.fx - 0.5) * root.tiltStrength
+        }
     }
 
     Item {

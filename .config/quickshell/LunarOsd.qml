@@ -1,13 +1,13 @@
 import Quickshell
-import Quickshell.Io
 import Quickshell.Wayland
+import Quickshell.Services.Pipewire
 import QtQuick
 import QtQuick.Layouts
 
 // ════════════════════════════════════════════════════════════════
 //  LunarOsd — индикатор громкости: иконка + число + деления
 //  (сегментная шкала). Показывается сам при изменении звука
-//  (опрос wpctl). Пока открыт попап громкости — OSD прячем, без дубля.
+//  (напрямую из PipeWire). Пока открыт попап громкости — OSD прячем, без дубля.
 // ════════════════════════════════════════════════════════════════
 PanelWindow {
     id: root
@@ -23,12 +23,27 @@ PanelWindow {
         item: root.showing ? flyout : null
     }
 
-    property int volume: -1
-    property bool muted: false
+    // громкость берём прямо из PipeWire — без опроса wpctl через bash
+    PwObjectTracker { objects: [Pipewire.defaultAudioSink] }
+    readonly property var sink: Pipewire.defaultAudioSink
+    readonly property int volume: (sink && sink.audio) ? Math.round(sink.audio.volume * 100) : -1
+    readonly property bool muted: (sink && sink.audio) ? sink.audio.muted : false
+
     property bool showing: false
-    // первый успешный замер — только запоминаем значение, OSD не показываем
-    // (иначе при запуске/перезапуске шелла всплывает ползунок под часами)
+    // первый замер после старта не показываем (иначе OSD всплывал бы при
+    // запуске шелла). Праймим по времени, а не по первому значению, чтобы
+    // не проглотить первое реальное изменение громкости.
     property bool primed: false
+    Component.onCompleted: primeTimer.restart()
+    Timer {
+        id: primeTimer
+        interval: 250
+        onTriggered: root.primed = true
+    }
+
+    // изменение звука → показать OSD (после прайма и при наличии устройства)
+    onVolumeChanged: if (root.primed && root.volume >= 0) root.showOsd()
+    onMutedChanged: if (root.primed && root.volume >= 0) root.showOsd()
 
     readonly property int segments: 20
     readonly property real frac: (muted || volume <= 0) ? 0 : Math.min(volume / 100, 1)
@@ -38,7 +53,7 @@ PanelWindow {
     Behavior on shownFrac { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
     onShowingChanged: shownFrac = showing ? frac : 0
     onFracChanged: if (showing) shownFrac = frac
-    readonly property string label: muted ? "mute" : volume + "%"
+    readonly property string label: muted ? "mute" : (volume < 0 ? "--" : volume + "%")
     // FontAwesome: mute / volume-low / volume-high
     readonly property string icon: muted ? "\uf026" : (volume < 50 ? "\uf027" : "\uf028")
 
@@ -64,37 +79,6 @@ PanelWindow {
         id: hideTimer
         interval: 1200
         onTriggered: root.showing = false
-    }
-
-    Process {
-        id: volProc
-        command: ["bash", "-c", "wpctl get-volume @DEFAULT_AUDIO_SINK@"]
-        running: true
-        stdout: StdioCollector {
-            onStreamFinished: {
-                var t = text.trim()
-                var m = t.match(/Volume:\s*([0-9.]+)/)
-                if (!m)
-                    return
-                var newVol = Math.round(parseFloat(m[1]) * 100)
-                var newMuted = t.includes("[MUTED]")
-                var changed = newVol !== root.volume || newMuted !== root.muted
-                root.volume = newVol
-                root.muted = newMuted
-                if (!root.primed) {
-                    root.primed = true
-                    return
-                }
-                if (changed)
-                    root.showOsd()
-            }
-        }
-    }
-    Timer {
-        interval: 300
-        running: true
-        repeat: true
-        onTriggered: volProc.running = true
     }
 
     Rectangle {

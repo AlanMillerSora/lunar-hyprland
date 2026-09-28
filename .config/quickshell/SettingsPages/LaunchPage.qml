@@ -93,6 +93,9 @@ Item {
             clip: true
             model: AppModel.apps
             currentIndex: 0
+            // M80: без фокуса Keys.* не срабатывают — стрелки/Enter мертвы
+            focus: true
+            activeFocusOnTab: true
 
             delegate: Rectangle {
                 required property var modelData

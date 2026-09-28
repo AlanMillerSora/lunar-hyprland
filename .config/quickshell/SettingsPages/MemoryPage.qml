@@ -12,7 +12,8 @@ import QtQuick.Layouts
 Item {
     id: page
 
-    readonly property string scriptPath: (Quickshell.env("HOME") || "/home/sora")
+    // L31: без хардкода домашней папки — берём HOME из окружения
+    readonly property string scriptPath: (Quickshell.env("HOME") || "")
         + "/.config/hypr/scripts/eclipse-cleanup.sh"
 
     // ── память (в килобайтах) ──
@@ -50,9 +51,12 @@ Item {
 
     // ── очистка ──
     property bool running: false
+    // M42: не даём запускать очистку в терминале пачкой
+    property bool terminalBusy: false
     property string status: ""
     property string logText: ""
-    property var enabled: ({})
+    // M44: переименовано из `enabled` — не затеняет Item.enabled
+    property var opts: ({})
 
     readonly property var options: [
         { key: "orphans",  flag: "--orphans",  label: "Пакеты-сироты", on: true },
@@ -69,24 +73,24 @@ Item {
         var e = {}
         for (var i = 0; i < options.length; i++)
             e[options[i].key] = options[i].on
-        enabled = e
+        opts = e
         memProc.running = true
     }
 
-    function isOn(key) { return enabled[key] === true }
+    function isOn(key) { return opts[key] === true }
 
     function toggleOption(key) {
-        var e = Object.assign({}, enabled)
+        var e = Object.assign({}, opts)
         e[key] = !e[key]
-        enabled = e
+        opts = e
     }
 
     function buildFlags() {
         var f = []
         for (var i = 0; i < options.length; i++)
-            if (enabled[options[i].key])
+            if (opts[options[i].key])
                 f.push(options[i].flag)
-        return f.join(" ")
+        return f
     }
 
     function start(dry) {
@@ -98,24 +102,29 @@ Item {
             return
         }
         if (dry)
-            flags += " --dry-run"
+            flags.push("--dry-run")
         logText = ""
         status = dry ? "Сухой прогон (без удаления)…" : "Очистка… введи пароль в окне polkit"
         running = true
-        cleanProc.command = ["bash", "-c",
-            "pkexec '" + scriptPath + "' " + flags + " 2>&1"]
+        // L31: путь и флаги — аргументами, без shell
+        cleanProc.command = ["pkexec", scriptPath].concat(flags)
         cleanProc.running = true
     }
 
     function startTerminal() {
+        // M42: защита от повторных запусков
+        if (terminalBusy)
+            return
         var flags = buildFlags()
         if (flags.length === 0) {
             status = "Ничего не выбрано"
             return
         }
-        terminalProc.command = ["bash", "-c",
-            "setsid kitty --hold -e sudo '" + scriptPath + "' " + flags + " >/dev/null 2>&1 &"]
+        // L31: argv без shell
+        terminalProc.command = ["setsid", "kitty", "--hold", "-e", "sudo", scriptPath].concat(flags)
         terminalProc.running = true
+        terminalBusy = true
+        terminalCooldown.restart()
         status = "Открыл терминал — пароль вводится там"
     }
 
@@ -425,6 +434,7 @@ Item {
                     id: termMouse
                     anchors.fill: parent
                     hoverEnabled: true
+                    enabled: !page.terminalBusy
                     cursorShape: Qt.PointingHandCursor
                     onClicked: page.startTerminal()
                 }
@@ -490,15 +500,32 @@ Item {
         onTriggered: memProc.running = true
     }
 
+    // M42: остывание кнопки «В ТЕРМИНАЛЕ» (процесс отцеплен, running не помогает)
+    Timer {
+        id: terminalCooldown
+        interval: 3000
+        repeat: false
+        onTriggered: page.terminalBusy = false
+    }
+
     Process {
         id: cleanProc
         running: false
         stdout: StdioCollector {
             onStreamFinished: page.logText = text
         }
-        onExited: {
+        stderr: StdioCollector {
+            onStreamFinished: page.logText = (page.logText + "\n" + text).trim()
+        }
+        // M43: отмена/ошибка polkit — не «Готово»
+        onExited: (exitCode) => {
             page.running = false
-            page.status = "Готово"
+            if (exitCode === 0)
+                page.status = "Готово"
+            else if (exitCode === 126 || exitCode === 127)
+                page.status = "Отменено: аутентификация не пройдена"
+            else
+                page.status = "Завершено с кодом " + exitCode
         }
     }
 

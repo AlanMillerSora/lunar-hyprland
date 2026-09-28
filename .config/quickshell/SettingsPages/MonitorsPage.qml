@@ -12,6 +12,10 @@ Item {
     property bool nightlightEnabled: false
     property string monitorSequence: ""
     property int monitorStep: 0
+    // L37: кэш частот по монитору (name+разрешение) — не гоняем sort на каждый биндинг
+    property var ratesCache: ({})
+    // M48: последняя ошибка hyprctl (stderr/код возврата)
+    property string lastError: ""
 
     // ── запись экрана (качество/битрейт/герцовка) ──
     // Значения хранятся в ~/.config/lunar/record.json и читаются
@@ -20,6 +24,7 @@ Item {
     property int recQp: 24
     property int recBitrate: 12
     property string recFps: "auto"
+    property string recError: ""
 
     property FileView recFile: FileView {
         path: Quickshell.env("HOME") + "/.config/lunar/record.json"
@@ -34,9 +39,17 @@ Item {
             page.recReady = true
         }
         onLoadFailed: (error) => {
-            if (error === FileViewError.FileNotFound)
+            if (error === FileViewError.FileNotFound) {
                 writeAdapter()
-            page.recReady = true
+                page.recReady = true
+            } else {
+                // M49: при прочих ошибках не гоним повторные неудачные записи
+                page.recError = "record.json не читается"
+            }
+        }
+        onSaved: page.recError = ""
+        onSaveFailed: (error) => {
+            page.recError = "record.json не сохранить"
         }
 
         JsonAdapter {
@@ -83,12 +96,23 @@ Item {
         return Math.round(2500 + value * 4000)
     }
 
-    function startNightlight(value, delay) {
+    // H18: применяем ночную подсветку не на каждый кадр перетаскивания,
+    // а с паузой, и каждый раз перезапускаем gammastep с новым значением.
+    Timer {
+        id: nightlightDebounce
+        interval: 160
+        onTriggered: {
+            if (page.nightlightEnabled)
+                page.startNightlight(page.nightlightValue)
+        }
+    }
+
+    function startNightlight(value) {
         nightlightProcess.command = [
             "sh",
             "-c",
             "pkill -x gammastep 2>/dev/null; " +
-            "sleep " + delay + "; " +
+            "sleep 0.05; " +
             "nohup gammastep -O " +
             nightlightTemperature(value) +
             " >/dev/null 2>&1 &"
@@ -98,19 +122,22 @@ Item {
 
     function nightlightOn() {
         nightlightEnabled = true
-        startNightlight(nightlightValue, "0.05")
+        nightlightDebounce.stop()
+        startNightlight(nightlightValue)
     }
 
     function nightlightOff() {
         nightlightEnabled = false
-        nightlightProcess.command = ["pkill", "-x", "gammastep"]
-        nightlightProcess.running = true
+        nightlightDebounce.stop()
+        // снимаем немедленно, не через Process (иначе установка command на
+        // уже запущенном процессе игнорируется)
+        Quickshell.execDetached(["pkill", "-x", "gammastep"])
     }
 
     function commitNightlight(value) {
         nightlightValue = value
         if (nightlightEnabled)
-            startNightlight(value, "0.03")
+            nightlightDebounce.restart()
     }
 
     function isInternalMonitor(mon) {
@@ -196,14 +223,26 @@ Item {
 
     Process {
         id: pApply
-        onExited: {
+        // M48: раньше считалось, что hyprctl всегда успешен — проверяем
+        // код возврата, а stderr используем как текст ошибки
+        stderr: StdioCollector { id: pApplyErr }
+        onExited: (exitCode) => {
+            if (exitCode !== 0) {
+                var e = pApplyErr.text.trim()
+                page.lastError = e !== "" ? e : ("hyprctl: код " + exitCode)
+                return
+            }
+            page.lastError = ""
             refreshTimer.restart()
             tearingProc.running = true
         }
     }
 
-    // доступные частоты для текущего разрешения монитора
+    // доступные частоты для текущего разрешения монитора (с кэшем)
     function ratesFor(mon) {
+        var key = mon.name + " " + mon.width + "x" + mon.height
+        if (ratesCache[key] !== undefined)
+            return ratesCache[key]
         var out = []
         var res = mon.width + "x" + mon.height
         var modes = mon.availableModes || []
@@ -216,6 +255,11 @@ Item {
             }
         }
         out.sort(function (a, b) { return parseFloat(a) - parseFloat(b) })
+        var c = {}
+        for (var k in ratesCache)
+            c[k] = ratesCache[k]
+        c[key] = out
+        ratesCache = c
         return out
     }
 
@@ -270,8 +314,14 @@ Item {
 
     Process {
         id: pMode
-
-        onExited: {
+        stderr: StdioCollector { id: pModeErr }
+        onExited: (exitCode) => {
+            if (exitCode !== 0) {
+                var e = pModeErr.text.trim()
+                page.lastError = e !== "" ? e : ("hyprctl: код " + exitCode)
+                return
+            }
+            page.lastError = ""
             refreshTimer.restart()
         }
     }
@@ -489,6 +539,17 @@ Item {
                 width: parent.width
                 height: 1
                 color: Theme.border
+            }
+
+            // M48: видимая ошибка применения настроек монитора
+            Text {
+                visible: page.lastError !== ""
+                width: parent.width
+                text: "hyprctl: " + page.lastError
+                color: Theme.danger
+                font.family: Theme.fontFamily
+                font.pixelSize: 10
+                wrapMode: Text.Wrap
             }
 
             // ── превью раскладки мониторов (пропорционально) ──
@@ -1100,11 +1161,28 @@ Item {
                     font.family: Theme.fontFamily
                     font.pixelSize: 10
                 }
+
+                // M49: видимая ошибка чтения/записи record.json
+                Text {
+                    visible: page.recError !== ""
+                    text: page.recError
+                    color: Theme.danger
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 10
+                }
             }
         }
     }
 
     Component.onCompleted: {
         tearingProc.running = true
+    }
+
+    // M50: gammastep запускается через nohup и переживал страницу — при
+    // уничтожении страницы гасим его, иначе тумблер не вернуть.
+    Component.onDestruction: {
+        nightlightDebounce.stop()
+        if (page.nightlightEnabled)
+            Quickshell.execDetached(["pkill", "-x", "gammastep"])
     }
 }

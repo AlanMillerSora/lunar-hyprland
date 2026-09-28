@@ -26,7 +26,8 @@ PanelWindow {
 
     function openPanel() { collapsed = false; notif.load(); recModel.load(); recStatusProc.running = true; cal.reload() }
     function closePanel() { collapsed = true }
-    function toggle() { collapsed = !collapsed }
+    // M35: открытие по IPC тоже подтягивает данные — toggle не должен просто переключать флаг
+    function toggle() { if (collapsed) openPanel(); else closePanel() }
 
     // ── крупный спектр cava во вкладке «музыка» ──
     readonly property bool mediaPlaying: player !== null && player !== undefined && player.isPlaying
@@ -107,7 +108,8 @@ PanelWindow {
         HoverHandler {
             id: stripHover
             onHoveredChanged: {
-                if (hovered) root.openPanel()
+                // M36: не дёргаем openPanel повторно, если панель уже открыта
+                if (hovered && root.collapsed) root.openPanel()
                 else if (!contentHover.hovered) hideTimer.restart()
             }
         }
@@ -140,7 +142,8 @@ PanelWindow {
         HoverHandler {
             id: contentHover
             onHoveredChanged: {
-                if (hovered) root.openPanel()
+                // M36: панель уже открыта, лишняя перезагрузка данных не нужна
+                if (hovered && root.collapsed) root.openPanel()
                 else if (!stripHover.hovered) hideTimer.restart()
             }
         }
@@ -262,7 +265,11 @@ PanelWindow {
 
                 // плавный индикатор активной вкладки
                 Rectangle {
-                    readonly property var active: rightTabRep.count > 0 ? rightTabRep.itemAt(root.tabIndex) : null
+                    // M28: держим зависимость от count и ширины строки — иначе itemAt
+                    // в биндинге не пересчитается при ресайзе и x/width «залипнут»
+                    readonly property int tabCount: rightTabRep.count
+                    readonly property real rowW: rightTabRow.width
+                    readonly property var active: (tabCount > 0 && rowW > 0) ? rightTabRep.itemAt(root.tabIndex) : null
                     visible: active !== null
                     x: active ? active.x : 0
                     y: rightTabRow.height - 2
@@ -660,20 +667,21 @@ PanelWindow {
 
                                         // тонкая черта под месяцем — HUD-разделитель
                                         Rectangle {
-                                            anchors.horizontalCenter: parent.horizontalCenter
+                                            x: (parent.width - width) / 2
                                             width: 34
                                             height: 1
                                             color: Theme.alpha(Theme.accent, 0.35)
                                         }
 
                                         Row {
-                                            anchors.horizontalCenter: parent.horizontalCenter
+                                            x: (parent.width - implicitWidth) / 2
                                             spacing: 0
                                             Repeater {
                                                 model: ["пн", "вт", "ср", "чт", "пт", "сб", "вс"]
                                                 Text {
                                                     required property string modelData
-                                                    width: 68
+                                                    // H12: ширина дня считается от ширины контейнера, а не жёсткие 68px
+                                                    width: Math.floor(monthsColumn.width / 7)
                                                     text: modelData
                                                     color: Theme.textFaint
                                                     font.family: Theme.fontFamily
@@ -684,18 +692,22 @@ PanelWindow {
                                         }
 
                                         Grid {
-                                            anchors.horizontalCenter: parent.horizontalCenter
+                                            x: (parent.width - implicitWidth) / 2
                                             columns: 7
                                             spacing: 0
                                             Repeater {
                                                 model: modelData.cells
                                                 Rectangle {
                                                     required property var modelData
-                                                    width: 68
+                                                    // H12: ширина дня считается от ширины контейнера
+                                                    width: Math.floor(monthsColumn.width / 7)
                                                     height: 42
                                                     radius: Theme.radius
                                                     readonly property bool isSel: modelData.day > 0 && cal.selected === modelData.date
-                                                    readonly property bool isToday: modelData.day > 0 && modelData.today === true
+                                                    // M34: «сегодня» считаем от текущей даты, а не из зафиксированного при старте значения
+                                                    readonly property bool isToday: modelData.day > 0 && modelData.date === root.todayStr
+                                                    // M34: точки событий читаются из cal.events, модель месяцев не пересобирается
+                                                    readonly property bool hasEvent: modelData.day > 0 && cal.eventsFor(modelData.date).length > 0
                                                     readonly property bool isHover: cellMouse.containsMouse && modelData.day > 0
 
                                                     // сегодня — кольцо, выбранный — заливка
@@ -719,7 +731,7 @@ PanelWindow {
                                                     }
                                                     // точка: на этот день есть события
                                                     Rectangle {
-                                                        visible: modelData.has === true
+                                                        visible: hasEvent
                                                         width: 5
                                                         height: 5
                                                         radius: 3
@@ -1152,16 +1164,31 @@ PanelWindow {
         "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"
     ]
 
+    // M34: «сегодня» храним строкой и обновляем по таймеру, а не фиксируем при старте
+    property string todayStr: root.localDateStr(new Date())
+
+    function localDateStr(d) {
+        return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2)
+            + "-" + ("0" + d.getDate()).slice(-2)
+    }
+
+    function parseDay(s) {
+        var p = ("" + s).split("-")
+        return new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]))
+    }
+
     readonly property string todayText: {
+        var cur = root.todayStr // зависимость: пересчитывается при смене суток
         var d = new Date()
         return d.getDate() + "." + ("0" + (d.getMonth() + 1)).slice(-2) + "." + d.getFullYear()
     }
 
-    // 18 месяцев вперёд — список прокручивается; cal.events даёт точки событий
+    // 18 месяцев вперёд — список прокручивается.
+    // M34: зависим только от даты (todayStr), а точки событий считаются в делегате
+    // от cal.events — добавление события больше не пересобирает весь календарь.
     readonly property var months: {
-        var evs = cal.events
         var out = []
-        var now = new Date()
+        var now = root.parseDay(root.todayStr)
         for (var i = 0; i < 18; i++) {
             var first = new Date(now.getFullYear(), now.getMonth() + i, 1)
             var y = first.getFullYear(), m = first.getMonth()
@@ -1169,13 +1196,10 @@ PanelWindow {
             var days = new Date(y, m + 1, 0).getDate()
             var cells = []
             for (var k = 0; k < startDow; k++)
-                cells.push({ day: 0, today: false, date: "", has: false })
+                cells.push({ day: 0, date: "" })
             for (var dd = 1; dd <= days; dd++) {
                 var ds = y + "-" + ("0" + (m + 1)).slice(-2) + "-" + ("0" + dd).slice(-2)
-                var has = false
-                for (var q = 0; q < evs.length; q++)
-                    if (evs[q].date === ds) { has = true; break }
-                cells.push({ day: dd, today: (i === 0 && dd === now.getDate()), date: ds, has: has })
+                cells.push({ day: dd, date: ds })
             }
             out.push({ title: monthNames[m] + " " + y, cells: cells })
         }
@@ -1191,9 +1215,23 @@ PanelWindow {
         }
     }
 
-    // обновление списка уведомлений, пока панель открыта
+    // M34: раз в минуту сверяем текущие сутки — «сегодня» не залипает на дате старта
     Timer {
-        interval: 2500
+        id: todayTimer
+        interval: 60000
+        repeat: true
+        running: true
+        onTriggered: {
+            var s = root.localDateStr(new Date())
+            if (s !== root.todayStr)
+                root.todayStr = s
+        }
+    }
+
+    // обновление списка уведомлений, пока панель открыта
+    // M36: раз в 5 с вместо 2.5 с — вдвое меньше запусков listProc/modeProc
+    Timer {
+        interval: 5000
         repeat: true
         running: !root.collapsed
         onTriggered: notif.load()
@@ -1237,13 +1275,13 @@ PanelWindow {
             var r = (remind || "").trim()
             if (r !== "" && !isNaN(parseInt(r)))
                 cmd = cmd.concat(["--remind", "" + Math.max(0, parseInt(r))])
-            calMutate.command = cmd
-            calMutate.running = true
+            calAddProc.command = cmd
+            calAddProc.running = true
         }
 
         function del(id) {
-            calMutate.command = ["python3", py(), "del", "--id", id]
-            calMutate.running = true
+            calDelProc.command = ["python3", py(), "del", "--id", id]
+            calDelProc.running = true
         }
     }
 
@@ -1257,13 +1295,32 @@ PanelWindow {
                     cal.events = d.events || []
                     cal.settings = d.settings || {}
                 } catch (e) {
-                    cal.events = []
+                    // L25: не обнуляем события молча — оставляем прошлый список
+                    console.warn("календарь: не удалось разобрать список событий: " + e)
                 }
             }
         }
     }
 
-    Process { id: calMutate; onExited: cal.reload() }
+    // H11: отдельный Process на каждую мутацию — быстрый add+del больше не теряет второй клик.
+    // Код выхода проверяем, чтобы не показывать успех при ошибке.
+    Process {
+        id: calAddProc
+        onExited: (exitCode) => {
+            if (exitCode !== 0)
+                console.warn("календарь: добавление события завершилось с кодом " + exitCode)
+            cal.reload()
+        }
+    }
+
+    Process {
+        id: calDelProc
+        onExited: (exitCode) => {
+            if (exitCode !== 0)
+                console.warn("календарь: удаление события завершилось с кодом " + exitCode)
+            cal.reload()
+        }
+    }
 
     Process {
         id: calReminder
@@ -1325,7 +1382,8 @@ PanelWindow {
                     }
                     notif.items = out
                 } catch (e) {
-                    notif.items = []
+                    // L25: не затираем список уведомлений при сбое разбора
+                    console.warn("уведомления: не удалось разобрать вывод makoctl: " + e)
                 }
             }
         }
@@ -1391,23 +1449,25 @@ PanelWindow {
         function load() { recListProc.running = true }
 
         function toggle() {
-            recActionProc.command = ["bash", "-c",
-                "~/.config/hypr/scripts/eclipse-record.sh toggle"]
+            // M26: argv без bash — путь не проходит через шелл
+            recActionProc.command = [Quickshell.env("HOME") + "/.config/hypr/scripts/eclipse-record.sh", "toggle"]
             recActionProc.running = true
         }
 
         function open(p) {
-            recActionProc.command = ["bash", "-c", "setsid mpv '" + p + "' >/dev/null 2>&1 &"]
+            // M26: argv без bash, --fork отцепляет mpv и не держит Process открытым
+            recActionProc.command = ["setsid", "--fork", "mpv", p]
             recActionProc.running = true
         }
 
         function remove(p) {
-            recActionProc.command = ["bash", "-c", "rm -f '" + p + "'"]
+            // M26: argv без bash — имя файла не может стать частью команды
+            recActionProc.command = ["rm", "-f", "--", p]
             recActionProc.running = true
         }
 
         function openFolder() {
-            recActionProc.command = ["bash", "-c", "setsid xdg-open ~/Videos >/dev/null 2>&1 &"]
+            recActionProc.command = ["setsid", "--fork", "xdg-open", Quickshell.env("HOME") + "/Videos"]
             recActionProc.running = true
         }
     }
@@ -1430,7 +1490,8 @@ print(json.dumps(out[:200]))
                 try {
                     recModel.items = JSON.parse(text)
                 } catch (e) {
-                    recModel.items = []
+                    // L25: не очищаем список записей при сбое разбора
+                    console.warn("запись: не удалось разобрать список файлов: " + e)
                 }
             }
         }

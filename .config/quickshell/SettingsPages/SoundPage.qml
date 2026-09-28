@@ -26,15 +26,41 @@ Item {
         ? sink.audio.muted
         : false
 
-    property var outputSinks: Pipewire.nodes.values.filter(
-        n => n.isSink &&
-             !n.isStream &&
-             n.audio
-    )
+    // L38: держим JS-списки стабильными — пересобираем делегатов только
+    // когда реально меняется набор id, а не на любое изменение nodes
+    property var outputSinks: []
+    property var appStreams: []
 
-    property var appStreams: Pipewire.nodes.values.filter(
-        n => n.isStream && n.isSink
-    )
+    function nodeIdList(list) {
+        var s = ""
+        for (var i = 0; i < list.length; i++)
+            s += list[i].id + ","
+        return s
+    }
+
+    function recomputeAudioLists() {
+        var sinks = []
+        var streams = []
+        var all = Pipewire.nodes.values
+        for (var i = 0; i < all.length; i++) {
+            var n = all[i]
+            if (n.isSink && !n.isStream && n.audio)
+                sinks.push(n)
+            if (n.isStream && n.isSink)
+                streams.push(n)
+        }
+        if (nodeIdList(page.outputSinks) !== nodeIdList(sinks))
+            page.outputSinks = sinks
+        if (nodeIdList(page.appStreams) !== nodeIdList(streams))
+            page.appStreams = streams
+    }
+
+    Connections {
+        target: Pipewire.nodes
+        function onValuesChanged() { page.recomputeAudioLists() }
+    }
+
+    Component.onCompleted: recomputeAudioLists()
 
     Column {
         anchors {

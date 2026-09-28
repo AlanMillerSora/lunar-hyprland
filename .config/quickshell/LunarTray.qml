@@ -26,6 +26,8 @@ PanelWindow {
     }
 
     property bool showing: false
+    // потолок высоты списка (и карточки) — длинный трей прокручивается
+    readonly property real listMax: 380
     readonly property var items: SystemTray.items.values
     // в списке — только свёрнутые (те, что не влезли в панель)
     readonly property var collapsed: SystemTray.items.values.slice(Theme.trayVisible)
@@ -90,7 +92,7 @@ PanelWindow {
     Rectangle {
         id: card
         width: 300
-        height: Math.min(440, 44 + col.height)
+        height: Math.min(44 + root.listMax, 44 + col.height)
         anchors.top: parent.top
         anchors.topMargin: 52
         anchors.right: parent.right
@@ -99,6 +101,7 @@ PanelWindow {
         color: Theme.bgPanel
         border.color: Theme.accent
         border.width: 1
+        clip: true
 
         opacity: root.showing ? 1 : 0
         scale: root.showing ? 1 : 0.96
@@ -160,12 +163,21 @@ PanelWindow {
                 horizontalAlignment: Text.AlignHCenter
             }
 
-            Repeater {
+            // список в ListView: длинный трей прокручивается, а не вылезает
+            // за карточку (clip + ограниченная высота)
+            ListView {
+                id: list
+                width: col.width
+                height: Math.min(contentHeight, root.listMax)
                 model: root.collapsed
+                spacing: 2
+                clip: true
+                boundsBehavior: Flickable.StopAtBounds
+                interactive: contentHeight > height
 
                 delegate: Rectangle {
                     required property var modelData
-                    width: col.width
+                    width: list.width
                     height: 34
                     radius: Theme.radius
                     color: rowMouse.containsMouse ? Theme.hoverStrong : "transparent"

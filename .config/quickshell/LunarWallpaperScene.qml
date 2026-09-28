@@ -33,12 +33,24 @@ Item {
     // вместо 60 — на слабом iGPU это главное облегчение без потери жизни.
     // темп анимации: 16 мс (≈60 fps, NORMAL) или 40 мс (≈25 fps, OPTIMIZE)
     property int tickMs: 16
+    // t ограничен сутками, чтобы аргумент sin не рос бесконечно (L52)
     property real t: 0
+    // Мерцанию звёзд и дрейфу пыли не нужна частота кадров: считаем их
+    // каждый 3-й тик (M66) — на полном `t` живут только метеоры.
+    property real slowT: 0
+    property int slowStep: 0
     Timer {
         interval: scene.tickMs
         running: scene.live
         repeat: true
-        onTriggered: scene.t += interval / 1000
+        onTriggered: {
+            scene.t = (scene.t + interval / 1000) % 3600
+            scene.slowStep += 1
+            if (scene.slowStep >= 3) {
+                scene.slowStep = 0
+                scene.slowT = scene.t
+            }
+        }
     }
 
     // ── текущая фаза (1..9) и масштаб сцены ────────────────────
@@ -208,7 +220,14 @@ Item {
         property var stops: []
         property real gcx: width / 2
         property real gcy: height / 2
-        property real gr: Math.max(width, height) / 2
+        // радиус градиента. По умолчанию — до дальней стороны (max/2):
+        // декоративные градиенты солнца/луны настроены под него.
+        // farthestCorner=true (полноэкранный фон) — до дальнего угла, как
+        // farthest-corner в CSS, чтобы стопы доходили до углов (L51).
+        property bool farthestCorner: false
+        property real gr: farthestCorner
+            ? Math.sqrt(width * width + height * height) / 2
+            : Math.max(width, height) / 2
         onStopsChanged: requestPaint()
         onGcxChanged: requestPaint()
         onGcyChanged: requestPaint()
@@ -280,6 +299,7 @@ Item {
     RadialCanvas {
         anchors.fill: parent
         stops: scene.bgStops(scene.p)
+        farthestCorner: true
     }
 
     // ── звёзды ─────────────────────────────────────────────────
@@ -293,11 +313,12 @@ Item {
             height: modelData.size
             radius: width / 2
             color: "#ffffff"
-            // мерцание считается от общего времени сцены (без анимации на кадр)
+            // мерцание считается от общего времени сцены (без анимации на кадр).
+            // slowT — чтобы не пересчитывать 170 звёзд каждый тик (M66)
             opacity: {
                 var hi = scene.fullEclipse ? Math.min(1, modelData.max * 1.5) : modelData.max
                 var w = Math.PI / (modelData.dur / 1000)
-                var k = 0.5 + 0.5 * Math.sin(scene.t * w + modelData.ph)
+                var k = 0.5 + 0.5 * Math.sin(scene.slowT * w + modelData.ph)
                 return 0.1 + (hi - 0.1) * k
             }
         }
@@ -350,10 +371,10 @@ Item {
             radius: width / 2
             color: "#ffffff"
             opacity: scene.live
-                ? scene.dustOps[scene.p] * (0.12 + 0.12 * (0.5 + 0.5 * Math.sin(scene.t * 0.5 + modelData.ph)))
+                ? scene.dustOps[scene.p] * (0.12 + 0.12 * (0.5 + 0.5 * Math.sin(scene.slowT * 0.5 + modelData.ph)))
                 : 0
-            x: modelData.x * scene.width + modelData.drift * scene.unit * Math.sin(scene.t * 0.15 + modelData.ph)
-            y: modelData.y * scene.height - 40 * scene.unit * (0.5 + 0.5 * Math.sin(scene.t * 0.12 + modelData.ph * 1.3))
+            x: modelData.x * scene.width + modelData.drift * scene.unit * Math.sin(scene.slowT * 0.15 + modelData.ph)
+            y: modelData.y * scene.height - 40 * scene.unit * (0.5 + 0.5 * Math.sin(scene.slowT * 0.12 + modelData.ph * 1.3))
         }
     }
 

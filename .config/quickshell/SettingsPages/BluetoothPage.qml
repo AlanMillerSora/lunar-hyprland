@@ -15,10 +15,14 @@ Item {
     property int contentTopMargin: 0
     property int contentBottomMargin: 0
     property var removingDevices: ({})
+    // M82: устройство, ожидающее подтверждения «разорвать связь»
+    property var forgetPending: null
+    // H19: blockLoading без вызова load() означал, что файл не читался
+    // вообще — убираем его, FileView грузится сам, onLoaded срабатывает
     FileView {
         id: removedDevicesFile
         path: Quickshell.dataDir + "/removed-bluetooth-devices.json"
-        blockLoading: true
+        atomicWrites: true
         onLoaded: page.loadRemovingDevices()
     }
     function loadRemovingDevices() {
@@ -96,6 +100,26 @@ Item {
         }
         dev.forget()
     }
+    // M82: forget() необратим — сначала подтверждение
+    function requestForget(dev) {
+        if (!dev)
+            return
+        page.forgetPending = dev
+    }
+    function confirmForget() {
+        var dev = page.forgetPending
+        page.forgetPending = null
+        if (dev)
+            page.removeDevice(dev)
+    }
+    function cancelForget() {
+        page.forgetPending = null
+    }
+    // L41: показать скрытые обратно (список «удалённых» только рос)
+    function resetRemoved() {
+        page.removingDevices = ({})
+        saveRemovingDevices()
+    }
     function actionLabel(dev) {
         if (!dev)
             return ""
@@ -118,7 +142,12 @@ Item {
         if (page.visible && page.powered)
             setDiscovering(true)
     }
-    Component.onDestruction: setDiscovering(false)
+    Component.onDestruction: {
+        // M81: гасим скан напрямую, не полагаясь на page.visible —
+        // при закрытии Hub он не меняется
+        if (page.adapter)
+            page.adapter.discovering = false
+    }
     Column {
         anchors.fill: parent
         anchors.leftMargin: page.contentMargin
@@ -177,6 +206,23 @@ Item {
             font.family: Theme.fontFamily
             font.pixelSize: 10
             horizontalAlignment: Text.AlignHCenter
+        }
+        // L41: скрытые устройства можно вернуть — список только рос
+        Text {
+            width: parent.width
+            visible: Object.keys(page.removingDevices).length > 0
+            text: "скрыто устройств: "
+                + Object.keys(page.removingDevices).length
+                + " — сбросить"
+            color: Theme.textFaint
+            font.family: Theme.fontFamily
+            font.pixelSize: 9
+            horizontalAlignment: Text.AlignHCenter
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: page.resetRemoved()
+            }
         }
         Flickable {
             id: flick
@@ -355,27 +401,126 @@ Item {
                                     anchors.fill: parent
                                     cursorShape: Qt.PointingHandCursor
                                     hoverEnabled: true
-                                    onClicked: page.removeDevice(card.modelData)
+                                    // M82: сначала подтверждение, forget() необратим
+                                    onClicked: page.requestForget(card.modelData)
                                 }
-                                Rectangle { 
-                                    visible: unpairMouseArea.containsMouse 
-                                    z: 100 
-                                    x: -8 
-                                    y: height + 6 
-                                    width: tooltipText.width + 16 
-                                    height: 24 
-                                    radius: 4 
-                                    color: "transparent" 
-                                    Text { 
-                                        id: tooltipText 
-                                        anchors.centerIn: parent 
-                                        text: "Unpair" 
-                                        color: "white" 
-                                        font.family: Theme.fontFamily 
-                                        font.pixelSize: 10 
-                                    } 
+                                Rectangle {
+                                    // M83: с фоном и слева от иконки, а не поверх
+                                    // следующей строки списка
+                                    visible: unpairMouseArea.containsMouse
+                                    z: 100
+                                    x: -width - 6
+                                    y: (parent.height - height) / 2
+                                    width: tooltipText.width + 16
+                                    height: 24
+                                    radius: 4
+                                    color: Theme.bgPanel
+                                    border.width: 1
+                                    border.color: Theme.border
+                                    Text {
+                                        id: tooltipText
+                                        anchors.centerIn: parent
+                                        text: "Unpair"
+                                        color: Theme.text
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: 10
+                                    }
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // M82: подтверждение необратимого «разорвать связь»
+    Rectangle {
+        id: forgetOverlay
+        anchors.fill: parent
+        visible: page.forgetPending !== null
+        z: 50
+        color: Qt.rgba(0, 0, 0, 0.55)
+
+        MouseArea { anchors.fill: parent }
+
+        Rectangle {
+            anchors.centerIn: parent
+            width: Math.min(380, parent.width - 40)
+            height: 132
+            radius: Theme.radius
+            color: Theme.bgPanel
+            border.width: 1
+            border.color: Theme.danger
+
+            Column {
+                anchors.centerIn: parent
+                spacing: 16
+
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: Math.min(340, forgetOverlay.width - 80)
+                    text: "Разорвать связь с "
+                        + (page.forgetPending
+                            ? (page.forgetPending.name || page.forgetPending.address)
+                            : "")
+                        + "?"
+                    color: Theme.text
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 12
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.Wrap
+                }
+
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 10
+
+                    Rectangle {
+                        width: 110
+                        height: 32
+                        radius: Theme.radius
+                        color: cancelMouse.containsMouse ? Theme.active : "transparent"
+                        border.width: 1
+                        border.color: cancelMouse.containsMouse ? Theme.borderAccent : Theme.border
+                        Text {
+                            anchors.centerIn: parent
+                            text: "ОТМЕНА"
+                            color: cancelMouse.containsMouse ? Theme.accent : Theme.textDim
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 10
+                        }
+                        MouseArea {
+                            id: cancelMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: page.cancelForget()
+                        }
+                    }
+
+                    Rectangle {
+                        width: 130
+                        height: 32
+                        radius: Theme.radius
+                        color: confirmMouse.containsMouse
+                            ? Theme.alpha(Theme.danger, 0.18)
+                            : "transparent"
+                        border.width: 1
+                        border.color: Theme.danger
+                        Text {
+                            anchors.centerIn: parent
+                            text: "РАЗОРВАТЬ"
+                            color: Theme.danger
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 10
+                        }
+                        MouseArea {
+                            id: confirmMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: page.confirmForget()
                         }
                     }
                 }

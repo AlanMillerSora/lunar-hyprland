@@ -62,6 +62,10 @@ Item {
     property var gitBranches: []
     property string gitOut: ""
     property string commitMsg: ""
+    // H21: очередь git-действий — один Process не должен терять команды
+    property var gitQueue: []
+    // L37-подобно: повторный refresh, если он пришёл во время работы
+    property bool gitRefreshAgain: false
 
     function shq(s) {
         return "'" + String(s).replace(/'/g, "'\\''") + "'"
@@ -79,7 +83,12 @@ Item {
     function refreshGit() {
         if (!gitProject)
             return
-        gitProc.action = "refresh"
+        // H21: у refresh — отдельный Process, он не мешает действиям
+        if (gitProc.running) {
+            gitRefreshAgain = true
+            return
+        }
+        gitRefreshAgain = false
         gitProc.command = ["bash", "-c",
             "cd " + shq(gitProject.path) + " && " +
             "echo '###BRANCHES###' && git for-each-ref --format='%(refname:short)|%(HEAD)' refs/heads && " +
@@ -91,9 +100,31 @@ Item {
     function gitRun(action, cmd) {
         if (!gitProject)
             return
-        gitProc.action = action
-        gitProc.command = ["bash", "-c", "cd " + shq(gitProject.path) + " && " + cmd + " 2>&1"]
-        gitProc.running = true
+        var job = { action: action, cmd: cmd, path: gitProject.path }
+        // H21: действие уже идёт — ставим в очередь, а не переписываем команду
+        if (gitActionProc.running) {
+            var q = gitQueue.slice()
+            q.push(job)
+            gitQueue = q
+            return
+        }
+        startGitJob(job)
+    }
+
+    function startGitJob(job) {
+        gitActionProc.action = job.action
+        gitActionProc.command = ["bash", "-c",
+            "cd " + shq(job.path) + " && " + job.cmd + " 2>&1"]
+        gitActionProc.running = true
+    }
+
+    function runNextGitJob() {
+        if (gitQueue.length === 0)
+            return
+        var q = gitQueue.slice()
+        var job = q.shift()
+        gitQueue = q
+        startGitJob(job)
     }
 
     function switchBranch(branch) {
@@ -115,7 +146,9 @@ Item {
     }
 
     function gitDiff() {
-        gitRun("diff", "git --no-pager diff")
+        // H22: полный diff может быть в мегабайты — обрезаем, чтобы не
+        // вешать отрисовку одним гигантским Text
+        gitRun("diff", "git --no-pager diff | head -c 200000")
     }
 
     ColumnLayout {
@@ -501,6 +534,20 @@ Item {
                     border.width: 1
                     border.color: msgInput.activeFocus ? Theme.borderAccent : Theme.border
 
+                    // L34: плейсхолдер — сосед TextInput (объявлен раньше,
+                    // значит ниже по z и не перехватывает клики/фокус)
+                    Text {
+                        anchors.fill: parent
+                        anchors.leftMargin: 10
+                        anchors.rightMargin: 10
+                        verticalAlignment: Text.AlignVCenter
+                        text: "сообщение коммита…"
+                        color: Theme.textFaint
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 11
+                        visible: msgInput.text === ""
+                    }
+
                     TextInput {
                         id: msgInput
                         anchors.fill: parent
@@ -515,16 +562,6 @@ Item {
                         onTextChanged: page.commitMsg = text
                         Keys.onEscapePressed: page.gitOpen = false
                         Keys.onReturnPressed: page.commitChanges()
-
-                        Text {
-                            anchors.fill: parent
-                            verticalAlignment: Text.AlignVCenter
-                            text: "сообщение коммита…"
-                            color: Theme.textFaint
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 11
-                            visible: msgInput.text === ""
-                        }
                     }
                 }
 
@@ -664,44 +701,67 @@ Item {
 
     Process { id: actionProc; running: false }
 
+    // H21: refresh — свой Process (разбор веток/статуса), действия — отдельный
     Process {
         id: gitProc
         running: false
-        property string action: ""
 
         stdout: StdioCollector {
             onStreamFinished: {
                 var t = text
+                var parts = t.split(/###BRANCHES###\n|###STATUS###\n|###DIFF###\n/)
+                var branches = []
+                ;(parts[1] || "").trim().split("\n").forEach(function(l) {
+                    l = l.trim()
+                    if (l === "") return
+                    var i = l.indexOf("|")
+                    var name = i >= 0 ? l.slice(0, i) : l
+                    var cur = i >= 0 ? l.slice(i + 1).trim() === "*" : false
+                    branches.push({ name: name, current: cur })
+                })
+                page.gitBranches = branches
 
-                if (gitProc.action === "refresh") {
-                    var parts = t.split(/###BRANCHES###\n|###STATUS###\n|###DIFF###\n/)
-                    var branches = []
-                    ;(parts[1] || "").trim().split("\n").forEach(function(l) {
-                        l = l.trim()
-                        if (l === "") return
-                        var i = l.indexOf("|")
-                        var name = i >= 0 ? l.slice(0, i) : l
-                        var cur = i >= 0 ? l.slice(i + 1).trim() === "*" : false
-                        branches.push({ name: name, current: cur })
-                    })
-                    page.gitBranches = branches
-
-                    var status = (parts[2] || "").trim()
-                    var diff = (parts[3] || "").trim()
-                    page.gitOut = status === "" && diff === ""
-                        ? "рабочее дерево чистое"
-                        : (status + (diff ? "\n\n" + diff : ""))
-                } else {
-                    page.gitOut = t.trim() === "" ? "готово" : t.trim()
-                }
+                var status = (parts[2] || "").trim()
+                var diff = (parts[3] || "").trim()
+                page.gitOut = status === "" && diff === ""
+                    ? "рабочее дерево чистое"
+                    : (status + (diff ? "\n\n" + diff : ""))
             }
         }
 
         onExited: {
-            if (["commit", "switch", "pull", "push"].indexOf(gitProc.action) >= 0) {
+            if (page.gitRefreshAgain)
                 page.refreshGit()
-                projectModel.load()
+        }
+    }
+
+    // действия: commit/switch/pull/push/diff
+    Process {
+        id: gitActionProc
+        running: false
+        property string action: ""
+
+        stdout: StdioCollector { id: gitActOut }
+        stderr: StdioCollector { id: gitActErr }
+
+        onExited: (exitCode) => {
+            var t = gitActOut.text.trim()
+            var e = gitActErr.text.trim()
+            if (t === "" && e !== "")
+                t = e
+            // M52: при неудаче не пересканируем все проекты — показываем ошибку
+            if (exitCode !== 0) {
+                page.gitOut = t === ""
+                    ? "ошибка git (код " + exitCode + ")"
+                    : "ошибка git (код " + exitCode + "):\n" + t
+            } else {
+                page.gitOut = t === "" ? "готово" : t
+                if (["commit", "switch", "pull", "push"].indexOf(gitActionProc.action) >= 0) {
+                    page.refreshGit()
+                    projectModel.load()
+                }
             }
+            page.runNextGitJob()
         }
     }
 
@@ -709,6 +769,8 @@ Item {
         id: projectModel
         property var projects: []
         property bool loaded: false
+        // M51: скан уже идёт, а попросили ещё — повторим после него
+        property bool scanAgain: false
 
         Component.onCompleted: load()
 
@@ -720,6 +782,12 @@ Item {
         }
 
         function load() {
+            // M51: во время скана кнопка «ОБНОВИТЬ» не должна молча теряться
+            if (scanProc.running) {
+                scanAgain = true
+                return
+            }
+            scanAgain = false
             scanProc.command = ["python3", "-c", `
 import json, os, glob, subprocess
 
@@ -727,6 +795,7 @@ roots = [
     "~/Projects", "~/projects", "~/dev", "~/code",
     "~/src", "~/work", "~/rice", "~/git",
 ]
+MAX = 60
 seen = set()
 projects = []
 
@@ -741,30 +810,44 @@ def git(path, *args):
 
 
 def add(path):
+    if len(projects) >= MAX:
+        return
     path = os.path.realpath(path)
     if path in seen or not os.path.isdir(os.path.join(path, ".git")):
         return
     seen.add(path)
-    st = git(path, "status", "--porcelain")
-    dirty = len([l for l in st.splitlines() if l.strip()])
+    # одна команда git даёт и ветку, и число изменений
+    st = git(path, "status", "--porcelain", "--branch")
+    lines = st.splitlines()
+    branch = ""
+    if lines and lines[0].startswith("## "):
+        branch = lines[0][3:].split("...")[0].strip()
+        lines = lines[1:]
+    dirty = len([l for l in lines if l.strip()])
     projects.append({
         "name": os.path.basename(path),
         "path": path,
-        "branch": git(path, "rev-parse", "--abbrev-ref", "HEAD"),
+        "branch": branch,
         "dirty": dirty,
         "last": git(path, "log", "-1", "--pretty=%s"),
     })
 
 
 for r in roots:
+    if len(projects) >= MAX:
+        break
     r = os.path.expanduser(r)
     if os.path.isdir(r):
         add(r)  # сам корень может быть репозиторием
         for sub in sorted(glob.glob(os.path.join(r, "*"))):
+            if len(projects) >= MAX:
+                break
             add(sub)
 
 # заодно репозитории первого уровня прямо в домашнем каталоге
 for g in sorted(glob.glob(os.path.expanduser("~/*/.git"))):
+    if len(projects) >= MAX:
+        break
     add(os.path.dirname(g))
 
 projects.sort(key=lambda p: p["name"].lower())
@@ -798,5 +881,15 @@ print(json.dumps(projects))
                 projectModel.loaded = true
             }
         }
+
+        onExited: {
+            if (projectModel.scanAgain) {
+                projectModel.scanAgain = false
+                projectModel.load()
+            }
+        }
     }
+
+    // M51: не оставляем висящий скан git при уходе со страницы
+    Component.onDestruction: scanProc.running = false
 }

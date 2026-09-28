@@ -23,6 +23,7 @@ Item {
     // ── кроп ──
     readonly property real viewSize: 260
     property bool cropping: false
+    property string cropError: ""
     property int srcTick: 0
     property real srcW: 1
     property real srcH: 1
@@ -72,8 +73,9 @@ Item {
         var cy = Math.round(-ty / dispScale)
         cx = Math.max(0, Math.min(Math.round(srcW) - cs, cx))
         cy = Math.max(0, Math.min(Math.round(srcH) - cs, cy))
-        pApply.command = ["bash", "-c",
-            "\"" + page.script + "\" apply " + cs + " " + cx + " " + cy]
+        // M41: путь скрипта — аргументом, без shell и склейки строк
+        pApply.command = ["bash", page.script, "apply",
+            String(cs), String(cx), String(cy)]
         pApply.running = true
     }
 
@@ -90,10 +92,11 @@ Item {
     Process {
         id: pPick
         running: false
+        // M78: trap EXIT гарантирует возврат Hub даже при сбое/прерывании
         command: ["bash", "-c",
+            "trap 'qs ipc call hub open' EXIT; " +
             "qs ipc call hub close; sleep 0.25; " +
-            "\"$HOME/.config/hypr/scripts/eclipse-avatar.sh\" pick; rc=$?; " +
-            "qs ipc call hub open; exit $rc"]
+            "\"$HOME/.config/hypr/scripts/eclipse-avatar.sh\" pick"]
         onExited: (exitCode) => {
             if (exitCode === 0) {
                 page.cropping = true
@@ -179,6 +182,16 @@ Item {
                         onClicked: pPick.running = true
                     }
                 }
+
+                Text {
+                    visible: page.cropError !== ""
+                    width: parent.width
+                    text: page.cropError
+                    color: Theme.danger
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 11
+                    wrapMode: Text.WordWrap
+                }
             }
 
             // ── вид обрезки ──
@@ -212,9 +225,14 @@ Item {
                         asynchronous: true
                         onStatusChanged: {
                             if (status === Image.Ready) {
+                                page.cropError = ""
                                 page.srcW = sourceSize.width
                                 page.srcH = sourceSize.height
                                 page.resetView()
+                            } else if (status === Image.Error) {
+                                // M79: битый файл — не оставляем пустой экран обрезки
+                                page.cropError = "Не удалось открыть изображение — попробуй другой файл"
+                                page.cropping = false
                             }
                         }
                     }

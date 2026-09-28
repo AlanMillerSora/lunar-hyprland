@@ -28,7 +28,17 @@ PanelWindow {
     property bool showing: false
 
     function openPanel() { showing = true }
-    function closePanel() { showing = false }
+    function closePanel() {
+        showing = false
+        // L29: сбрасываем поиск, чтобы при следующем открытии поле было пустым
+        if (query !== "") {
+            query = ""
+            results = []
+            resultIndex = 0
+        }
+        if (hubSearch)
+            hubSearch.text = ""
+    }
     function toggle() { showing = !showing }
 
     // Bind a Hyprland key to this, e.g. in hyprland.conf:
@@ -89,12 +99,21 @@ PanelWindow {
 
     property int selectedIndex: 0
 
+    // L30: безопасное имя текущей страницы (на случай выхода selectedIndex за границы)
+    readonly property string currentPageFile: {
+        var i = Math.max(0, Math.min(root.navItems.length - 1, root.selectedIndex))
+        return root.navItems[i] ? root.navItems[i].page : ""
+    }
+
     // -------------------------
     // Глобальный поиск (поле внизу сайдбара)
     // -------------------------
     property string query: ""
     property var results: []
     property int resultIndex: 0
+    // H38: предрассчитанные поисковые строки приложений
+    // (не склеиваем name/generic/keywords/id на каждый введённый символ)
+    property var appHay: []
 
     property var searchActions: [
         { name: "Game Mode — вкл/выкл", icon: "\uf11b",
@@ -122,8 +141,9 @@ PanelWindow {
         function onLaunched() { root.closePanel() }
         // список приложений подгрузился/обновился — досчитываем выдачу
         function onAllAppsChanged() {
+            root.rebuildAppHay()
             if (root.query.trim() !== "")
-                root.results = root.search(root.query)
+                root.applyQuery(root.query)
         }
     }
 
@@ -158,13 +178,14 @@ PanelWindow {
                 out.push({ kind: "action", rank: ra - 1, label: searchActions[a].name,
                            icon: searchActions[a].icon, act: a })
         }
+        var apps = AppModel.allApps
+        if (root.appHay.length !== apps.length)
+            root.rebuildAppHay()
         var hits = []
-        for (var j = 0; j < AppModel.allApps.length; j++) {
-            var ap = AppModel.allApps[j]
-            var hay = (ap.name + " " + (ap.generic || "") + " " + (ap.keywords || "")
-                + " " + ap.id).toLowerCase()
+        for (var j = 0; j < apps.length; j++) {
+            var ap = apps[j]
             var r2 = root.matchRank(q, ap.name)
-            if (r2 < 0) r2 = root.matchRank(q, hay)
+            if (r2 < 0) r2 = root.matchRank(q, root.appHay[j])
             if (r2 >= 0) hits.push({ kind: "app", rank: r2, label: ap.name, app: ap })
         }
         hits.sort(function(x, y) { return x.rank - y.rank })
@@ -173,10 +194,33 @@ PanelWindow {
         return out.slice(0, 12)
     }
 
-    function setQuery(q) {
-        root.query = q
+    function rebuildAppHay() {
+        var apps = AppModel.allApps
+        var h = []
+        for (var i = 0; i < apps.length; i++) {
+            var ap = apps[i]
+            h.push(((ap.name || "") + " " + (ap.generic || "") + " " + (ap.keywords || "")
+                + " " + (ap.id || "")).toLowerCase())
+        }
+        root.appHay = h
+    }
+
+    function applyQuery(q) {
         root.results = root.search(q)
         root.resultIndex = 0
+    }
+
+    // H38: debounce — не гоняем поиск по всем приложениям на каждый символ
+    Timer {
+        id: searchDebounce
+        interval: 120
+        repeat: false
+        onTriggered: root.applyQuery(root.query)
+    }
+
+    function setQuery(q) {
+        root.query = q
+        searchDebounce.restart()
     }
 
     function moveResult(d) {
@@ -278,8 +322,31 @@ PanelWindow {
                         }
 
                         // ---------------- Nav buttons ----------------
-                        Column {
+                        // H15: на низких экранах (800p) список не влезает — прокручиваем
+                        Flickable {
+                            id: navFlick
                             width: parent.width
+                            height: Math.max(0, sidebar.height - y - hubSearchBox.height - 12)
+                            contentWidth: width
+                            contentHeight: navColumn.implicitHeight
+                            clip: true
+                            boundsBehavior: Flickable.StopAtBounds
+
+                            // H15: прокрутка колесом (только вертикаль)
+                            WheelHandler {
+                                onWheel: function(event) {
+                                    if (event.angleDelta.y === 0)
+                                        return
+                                    navFlick.contentY = Math.max(0,
+                                        Math.min(navFlick.contentHeight - navFlick.height,
+                                            navFlick.contentY - event.angleDelta.y))
+                                    event.accepted = true
+                                }
+                            }
+
+                            Column {
+                            id: navColumn
+                            width: navFlick.width
                             spacing: 4
 
                             Repeater {
@@ -343,6 +410,7 @@ PanelWindow {
                                     }
                                 }
                             }
+                            }
                         }
                     }
                     // поиск (глобальный) — внизу сайдбара
@@ -387,9 +455,18 @@ PanelWindow {
                             }
                             Keys.onUpPressed: root.moveResult(-1)
                             Keys.onDownPressed: root.moveResult(1)
-                            Keys.onReturnPressed: root.activateResult()
+                            Keys.onReturnPressed: {
+                                // H38: если debounce ещё не сработал — досчитываем сразу
+                                if (searchDebounce.running) {
+                                    searchDebounce.stop()
+                                    root.applyQuery(root.query)
+                                }
+                                root.activateResult()
+                            }
                             Keys.onPressed: (e) => {
-                                if (e.key >= Qt.Key_1 && e.key <= Qt.Key_9) {
+                                // H14: цифры остаются обычным вводом; быстрый выбор — по Ctrl+1…9
+                                if (e.key >= Qt.Key_1 && e.key <= Qt.Key_9
+                                    && (e.modifiers & Qt.ControlModifier)) {
                                     root.activateIndex(e.key - Qt.Key_1)
                                     e.accepted = true
                                 }
@@ -413,11 +490,15 @@ PanelWindow {
                     Loader {
                         id: pageLoader
                         anchors.fill: parent
-                        source: "SettingsPages/" + root.navItems[root.selectedIndex].page + ".qml"
+                        // X1: страница живёт только пока Hub открыт — её таймеры не крутятся впустую
+                        active: root.showing && root.currentPageFile !== ""
+                        source: root.currentPageFile !== ""
+                            ? "SettingsPages/" + root.currentPageFile + ".qml" : ""
 
                         opacity: 0
                         Component.onCompleted: opacity = 1
                         onSourceChanged: fadeIn.restart()
+                        onActiveChanged: if (active) fadeIn.restart()
 
                         Behavior on opacity {
                             NumberAnimation {

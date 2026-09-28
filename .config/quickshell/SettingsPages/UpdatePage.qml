@@ -108,34 +108,52 @@ Item {
         onExited: { page.busy = false; pCheck.running = true }
     }
 
+    // L39: раньше был kitty --hold → busy висел, пока пользователь сам не
+    // закроет окно, хотя команда давно завершилась. Держим окно только при
+    // ошибке (чтобы прочитать вывод), при успехе kitty закрывается сам.
+    function termCommand(script) {
+        return ["kitty", "-e", "bash", "-c",
+            script + "; rc=$?; if [ $rc -ne 0 ]; then " +
+            "echo; echo \"код возврата: $rc\"; " +
+            "read -r -p 'Enter — закрыть…' _ </dev/tty; fi"]
+    }
+
     function runUpdate() {
-        pAction.command = ["kitty", "--hold", "-e", "bash", "-c",
-            "$HOME/.config/hypr/scripts/eclipse-update.sh --now"]
+        // L39: не подменяем команду у работающего процесса
+        if (pAction.running)
+            return
+        pAction.command = termCommand(
+            "$HOME/.config/hypr/scripts/eclipse-update.sh --now")
         pAction.running = true
     }
 
     function runUpdateBuffered() {
-        pAction.command = ["kitty", "--hold", "-e", "bash", "-c",
-            "$HOME/.config/hypr/scripts/eclipse-update.sh"]
+        if (pAction.running)
+            return
+        pAction.command = termCommand(
+            "$HOME/.config/hypr/scripts/eclipse-update.sh")
         pAction.running = true
     }
 
     // кэш pacman (2 версии), журнал (≤200 МБ), сироты под подтверждение
     function runClean() {
-        pAction.command = ["kitty", "--hold", "-e", "bash", "-c",
-            "$HOME/.config/hypr/scripts/eclipse-update.sh --clean"]
+        if (pAction.running)
+            return
+        pAction.command = termCommand(
+            "$HOME/.config/hypr/scripts/eclipse-update.sh --clean")
         pAction.running = true
     }
 
-    Process { id: pRollback }
-
     function showRollback() {
         // предпросмотр снимков timeshift (без реального отката)
-        pAction.command = ["kitty", "--hold", "-e", "bash", "-c",
+        if (pAction.running)
+            return
+        pAction.command = termCommand(
             "if command -v timeshift >/dev/null 2>&1; then " +
             "echo 'Снимки timeshift:'; sudo timeshift --list; " +
             "echo; echo 'Откат: sudo timeshift --restore --snapshot <имя>'; " +
-            "else echo 'timeshift не установлен (см. get-deps.sh)'; fi"]
+            "else echo 'timeshift не установлен (см. get-deps.sh)'; fi; " +
+            "read -r -p 'Enter — закрыть…' _ </dev/tty")
         pAction.running = true
     }
 
