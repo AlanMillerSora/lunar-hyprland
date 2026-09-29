@@ -24,14 +24,14 @@ Item {
 
     property int phase: 5
     property bool live: true
-    // OPTIMIZE: небо реже, без пыли/метеоров/«дыхания» (см. LunarWallpaper).
+    // облегчённый режим: небо реже, без пыли/метеоров/«дыхания» (см. LunarWallpaper).
     property bool optimize: false
 
     // ── общее время сцены, обновляется ~25 раз/с ───────────────
     // Все анимации (звёзды, пыль, метеоры, дыхание, серп) считаются от `t`,
     // а не тикают на каждом кадре. Композитор перерисовывает фон 25 раз/с
     // вместо 60 — на слабом iGPU это главное облегчение без потери жизни.
-    // темп анимации: 16 мс (≈60 fps, NORMAL) или 40 мс (≈25 fps, OPTIMIZE)
+    // темп анимации: 16 мс (≈60 fps) или 40 мс (≈25 fps, лёгкий режим)
     property int tickMs: 16
     // t ограничен сутками, чтобы аргумент sin не рос бесконечно (L52)
     property real t: 0
@@ -204,7 +204,7 @@ Item {
     readonly property var meteorData: makeMeteors()
     readonly property var dustData: makeDust()
 
-    // OPTIMIZE: та же карта неба, но каждая третья звезда — небо реже.
+    // лёгкий режим: та же карта неба, но каждая третья звезда — небо реже.
     readonly property var starDataOpt: {
         var a = []
         for (var i = 0; i < starData.length; i += 3)

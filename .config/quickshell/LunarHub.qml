@@ -123,9 +123,7 @@ PanelWindow {
         { name: "Микшер (pavucontrol)", icon: "\uf028",
           run: function() { root.runShell("setsid pavucontrol >/dev/null 2>&1 &") } },
         { name: "Живые обои — вкл/выкл", icon: "\uf03e",
-          run: function() { Theme.wallpaperLive = !Theme.wallpaperLive } },
-        { name: "Оптимизация (OPTIMIZE) — вкл/выкл", icon: "\uf0e7",
-          run: function() { Theme.optimizeMode = !Theme.optimizeMode } }
+          run: function() { Theme.wallpaperLive = !Theme.wallpaperLive } }
     ]
 
     Process { id: actionProc; running: false }

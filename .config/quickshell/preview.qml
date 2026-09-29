@@ -7,7 +7,7 @@ import QtQuick
 //      qml6 preview.qml          # в части сборок раннер называется просто qml
 //  или из репо:  qml6 .config/quickshell/preview.qml
 //
-//  Клавиши 1..9 — фазы, L — «лёгкий режим», O — OPTIMIZE.
+//  Клавиши 1..9 — фазы, L — «лёгкий режим».
 //  Хоткеи читаются по символу клавиши, поэтому работают и на русской
 //  раскладке (там L даёт «д», O — «щ»); те же переключатели есть мышью.
 //  Та же сцена, что и в обоях (LunarWallpaperScene.qml), только без
@@ -19,19 +19,18 @@ Window {
     height: 720
     visible: true
     color: "#000000"
-    title: "Lunar Eclipse — preview (1..9 — фазы, L — лёгкий, O — OPTIMIZE)"
+    title: "Lunar Eclipse — preview (1..9 — фазы, L — лёгкий)"
 
     property int phase: 5
     property bool live: true
-    property bool optimize: false
 
     LunarWallpaperScene {
         anchors.fill: parent
         phase: win.phase
         live: win.live
-        // OPTIMIZE-путь стенда: те же 40 мс и «без пыли/метеоров» (L55)
-        optimize: win.optimize
-        tickMs: win.optimize ? 40 : 16
+        // как в жизни: единственный облегчённый режим (40 мс, без пыли/метеоров)
+        optimize: true
+        tickMs: 40
     }
 
     // ── клавиши: по символу, а не по физической клавише (ru-раскладка) ──
@@ -52,20 +51,12 @@ Window {
                 event.accepted = true
                 return
             }
-            if (t === "o" || t === "щ") {
-                win.optimize = !win.optimize
-                event.accepted = true
-                return
-            }
             // запасной путь по коду клавиши (если text пуст, напр. NumPad)
             if (event.key >= Qt.Key_1 && event.key <= Qt.Key_9) {
                 win.phase = event.key - Qt.Key_1 + 1
                 event.accepted = true
             } else if (event.key === Qt.Key_L) {
                 win.live = !win.live
-                event.accepted = true
-            } else if (event.key === Qt.Key_O) {
-                win.optimize = !win.optimize
                 event.accepted = true
             }
         }
@@ -119,26 +110,6 @@ Window {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: win.live = !win.live
-            }
-        }
-
-        Rectangle {
-            width: 110
-            height: 30
-            radius: 4
-            color: win.optimize ? "#ffffff" : Qt.rgba(1, 1, 1, 0.08)
-            border.width: 1
-            border.color: win.optimize ? "#ffffff" : Qt.rgba(1, 1, 1, 0.18)
-            Text {
-                anchors.centerIn: parent
-                text: win.optimize ? "OPTIMIZE" : "полный"
-                color: win.optimize ? "#000000" : "#888888"
-                font.pixelSize: 11
-            }
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: win.optimize = !win.optimize
             }
         }
     }

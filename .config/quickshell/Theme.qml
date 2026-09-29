@@ -39,13 +39,11 @@ QtObject {
     // живые обои (QML-сцена): false — «лёгкий режим» без звёзд/метеоров/пыли
     property bool wallpaperLive: true
 
-    // Производительность (Hub → Interface):
-    //   true  = OPTIMIZE — облегчённый блюр/тени, обои ~25 fps
-    //   false = NORMAL   — полный блюр/тени, обои ~60 fps
-    property bool optimizeMode: true
+    // Производительность: единственный облегчённый режим (см. eclipse-perf.sh
+    // и LunarWallpaper). Пресеты NORMAL/OPTIMIZE убраны.
 
     // Блюр (Hub → Interface): size 0..12 и число проходов.
-    //   -1 = пользователь ещё не трогал — рулит пресет NORMAL/OPTIMIZE
+    //   -1 = пользователь ещё не трогал — рулит облегчённый пресет
     // (eclipse-perf.sh). Как только выставлено — значение переживает
     // hyprctl reload и перезапуск шелла: ползунок главнее пресета.
     property int blurSize: -1
@@ -154,7 +152,6 @@ QtObject {
             property real fontScale: 1.0
             property int trayVisible: 3
             property bool wallpaperLive: true
-            property bool optimizeMode: true
             property int blurSize: -1
             property int blurPasses: 3
 
@@ -163,7 +160,6 @@ QtObject {
             onFontScaleChanged: { theme.uiInternal = true; theme.fontScale = fontScale; theme.uiInternal = false }
             onTrayVisibleChanged: { theme.uiInternal = true; theme.trayVisible = trayVisible; theme.uiInternal = false }
             onWallpaperLiveChanged: { theme.uiInternal = true; theme.wallpaperLive = wallpaperLive; theme.uiInternal = false }
-            onOptimizeModeChanged: { theme.uiInternal = true; theme.optimizeMode = optimizeMode; theme.uiInternal = false }
             onBlurSizeChanged: { theme.uiInternal = true; theme.blurSize = blurSize; theme.uiInternal = false }
             onBlurPassesChanged: { theme.uiInternal = true; theme.blurPasses = blurPasses; theme.uiInternal = false }
         }
@@ -175,7 +171,6 @@ QtObject {
     onFontScaleChanged: if (!uiInternal) { markUI(); uiAdapter.fontScale = fontScale }
     onTrayVisibleChanged: if (!uiInternal) { markUI(); uiAdapter.trayVisible = trayVisible }
     onWallpaperLiveChanged: if (!uiInternal) { markUI(); uiAdapter.wallpaperLive = wallpaperLive }
-    onOptimizeModeChanged: if (!uiInternal) { markUI(); uiAdapter.optimizeMode = optimizeMode }
     onBlurSizeChanged: {
         if (!uiInternal) { markUI(); uiAdapter.blurSize = blurSize }
         blurApply.restart()
@@ -206,7 +201,8 @@ QtObject {
     }
 
     // Выставить и запомнить блюр (ползунок Hub → Interface). Пресет
-    // NORMAL/OPTIMIZE сюда не пишет — иначе он затирал бы выбор пользователя.
+    // Пресеты NORMAL/OPTIMIZE убраны: пресет сюда не пишет — иначе он
+    // затирал бы выбор пользователя.
     // Сам вызов hyprctl делает blurApply (см. выше).
     function setBlur(size, passes) {
         blurSize = size

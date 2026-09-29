@@ -32,16 +32,8 @@ PanelWindow {
     readonly property var ws: Hyprland.activeWorkspace || Hyprland.focusedWorkspace
     readonly property int wsId: (ws && ws.id > 0) ? ws.id : 5
 
-    // Профиль производительности (Theme.optimizeMode): на лету переключает
-    // блюр/тени Hyprland (eclipse-perf.sh) и темп анимации обоев (40/16 мс).
-    readonly property bool optimize: Theme.optimizeMode
-    onOptimizeChanged: {
-        // Пресет сам выставляет блюр (eclipse-perf.sh). Ползунок Theme
-        // здесь НЕ трогаем: иначе он затирал бы пользовательское значение
-        // и писал его в файл при каждом старте/переключении (H27).
-        // Если ползунок выставлен, его вернёт perfProc.onExited ниже.
-        applyPerf()
-    }
+    // Единственный облегчённый режим: на лету задаёт блюр/тени Hyprland
+    // (eclipse-perf.sh) и темп анимации обоев (~25 fps, без пыли/метеоров).
     Component.onCompleted: applyPerf()
 
     // hyprctl reload возвращает decoration из hyprland.lua: заново применяем
@@ -55,11 +47,9 @@ PanelWindow {
         }
     }
 
-    // команду задаём явно перед запуском (binding не успевал обновиться
-    // к моменту running=true, и режимы переключались наоборот)
     function applyPerf() {
         perfProc.command = ["bash", "-c",
-            "$HOME/.config/hypr/scripts/eclipse-perf.sh " + (root.optimize ? "optimize" : "normal")]
+            "$HOME/.config/hypr/scripts/eclipse-perf.sh"]
         perfProc.running = true
     }
 
@@ -74,7 +64,7 @@ PanelWindow {
         anchors.fill: parent
         phase: Math.max(1, Math.min(9, root.wsId))
         live: Theme.wallpaperLive
-        optimize: root.optimize
-        tickMs: root.optimize ? 40 : 16
+        optimize: true
+        tickMs: 40
     }
 }
