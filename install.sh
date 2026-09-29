@@ -505,8 +505,15 @@ ok "kdeglobals + схема"
 # ── Firefox: тема, стили и префы ───────────────────────────────
 step "Firefox: тема, префы, новая вкладка"
 if [ -d "$REPO/.config/firefox/chrome" ]; then
-  FF_ROOT="$HOME/.mozilla/firefox"
-  FF_PROFS="$(find "$FF_ROOT" -maxdepth 2 -name prefs.js -printf '%h\n' 2>/dev/null || true)"
+  # Firefox держит профиль либо в ~/.mozilla/firefox (классика), либо в
+  # XDG-каталоге (~/.config/mozilla/firefox) — проверяем оба.
+  FF_PROFS=""
+  for r in "$HOME/.mozilla/firefox" "${XDG_CONFIG_HOME:-$HOME/.config}/mozilla/firefox"; do
+    [ -d "$r" ] || continue
+    found="$(find "$r" -maxdepth 2 -name prefs.js -printf '%h\n' 2>/dev/null || true)"
+    if [ -n "$found" ]; then FF_PROFS="$FF_PROFS$found"$'\n'; fi
+  done
+  FF_PROFS="$(printf '%s' "$FF_PROFS" | sed '/^$/d' | sort -u)"
 
   if [ -z "$FF_PROFS" ]; then
     warn "профиль ещё не создан — запусти Firefox и повтори ./install.sh"
