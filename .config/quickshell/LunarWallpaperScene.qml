@@ -433,8 +433,10 @@ Item {
     }
 
     // ── метеоры (только полное затмение, фаза 5) ───────────────
+    // В лёгком режиме тоже видны: 7 штук, хвост-градиент — самая
+    // дорогая часть, но на ПК это незаметно (см. замер в HANDOFF).
     Repeater {
-        model: (scene.live && !scene.optimize && scene.fullEclipse) ? scene.meteorData : []
+        model: (scene.live && scene.fullEclipse) ? scene.meteorData : []
         delegate: Item {
             required property var modelData
             readonly property real pr: (scene.live && scene.fullEclipse) ? scene.meteorPhase(modelData) : -1
