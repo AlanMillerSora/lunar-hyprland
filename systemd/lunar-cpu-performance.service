@@ -1,7 +1,6 @@
 [Unit]
 Description=Lunar Eclipse — CPU governor performance (без powersave)
 ConditionPathExists=/usr/local/lib/lunar/cpu-performance.sh
-After=multi-user.target
 
 [Service]
 Type=oneshot

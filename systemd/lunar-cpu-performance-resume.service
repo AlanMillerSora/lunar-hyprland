@@ -1,7 +1,8 @@
 [Unit]
 Description=Lunar Eclipse — CPU performance после сна
 ConditionPathExists=/usr/local/lib/lunar/cpu-performance.sh
-After=suspend.target hibernate.target hybrid-sleep.target
+After=hibernate.target hybrid-sleep.target
+Before=suspend.target
 
 [Service]
 Type=oneshot
