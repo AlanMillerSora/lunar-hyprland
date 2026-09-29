@@ -14,21 +14,21 @@ import QtQuick
 //  Фаза 1..9 (по активному столу), все зеркально симметричны (1↔9,
 //  2↔8, 3↔7, 4↔6):
 //    · луна едет слева направо;
-//    · 5 — ПОЛНОЕ затмение: тонкая корона, свечение горизонта, пыль, метеоры;
+//    · 5 — ПОЛНОЕ затмение: тонкая корона, пыль;
 //    · чем дальше от 5, тем бледнее гало и полутень.
-//  live=false — «лёгкий режим»: без звёзд/метеоров/пыли.
-//  optimize=true — реже звёзды, без пыли/метеоров и «дыхания» (см. LunarWallpaper).
+//  live=false — «лёгкий режим»: без звёзд/пыли.
+//  optimize=true — реже звёзды, без пыли и «дыхания» (см. LunarWallpaper).
 // ════════════════════════════════════════════════════════════════
 Item {
     id: scene
 
     property int phase: 5
     property bool live: true
-    // облегчённый режим: небо реже, без пыли/метеоров/«дыхания» (см. LunarWallpaper).
+    // облегчённый режим: небо реже, без пыли/«дыхания» (см. LunarWallpaper).
     property bool optimize: false
 
     // ── общее время сцены, обновляется ~25 раз/с ───────────────
-    // Все анимации (звёзды, пыль, метеоры, дыхание, серп) считаются от `t`,
+    // Все анимации (звёзды, пыль, дыхание, серп) считаются от `t`,
     // а не тикают на каждом кадре. Композитор перерисовывает фон 25 раз/с
     // вместо 60 — на слабом iGPU это главное облегчение без потери жизни.
     // темп анимации: 16 мс (≈60 fps) или 40 мс (≈25 fps, лёгкий режим)
@@ -36,7 +36,7 @@ Item {
     // t ограничен сутками, чтобы аргумент sin не рос бесконечно (L52)
     property real t: 0
     // Мерцанию звёзд и дрейфу пыли не нужна частота кадров: считаем их
-    // каждый 3-й тик (M66) — на полном `t` живут только метеоры.
+    // каждый 3-й тик (M66) — на полном `t` живут только медленные анимации.
     property real slowT: 0
     property int slowStep: 0
     Timer {
@@ -62,13 +62,12 @@ Item {
     // ── таблицы фаз (индекс = фаза; 0 не используется) ─────────
     // Все фазы симметричны относительно центра (5): 1↔9, 2↔8, 3↔7, 4↔6.
     // Эталон зеркальных пар — правая сторона (6..9). Полное затмение
-    // (кольцо, метеоры, пыль, свечение горизонта) — фаза 5.
+    // (кольцо, пыль) — фаза 5.
     readonly property var moonOffsets: [0, -339, -288, -230, -107, 0, 107, 230, 288, 339]
     readonly property var sunOps:      [0, 1, 1, 0.95, 0.88, 0.95, 0.88, 0.95, 1, 1]
     readonly property var moonGlowOps: [0, 0.2, 0, 0.2, 0.35, 0.22, 0.35, 0.2, 0, 0.2]
     readonly property var penumbraOps: [0, 0.5, 0, 0.5, 0.9, 1, 0.9, 0.5, 0, 0.5]
     readonly property var dustOps:     [0, 0, 0, 0, 0, 0.9, 0, 0, 0, 0]
-    readonly property var horizonOps:  [0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
 
     readonly property bool fullEclipse: p === 5
 
@@ -141,12 +140,9 @@ Item {
 
 
     // ── горизонт ───────────────────────────────────────────────
-    readonly property var horizonStops: [
-        { p: 0, c: "rgba(255,255,255,0.26)" }, { p: 0.35, c: "rgba(255,255,255,0.09)" },
-        { p: 0.70, c: "rgba(255,255,255,0)" }, { p: 1, c: "rgba(255,255,255,0)" }
-    ]
+    // Нижнее свечение убрано: у полного затмения низ экрана чистый.
 
-    // ═══════════════ звёзды / метеоры / пыль ═══════════════
+    // ═══════════════ звёзды / пыль ═══════════════
     // Детерминированный ГПСЧ — поле звёзд одинаково при каждом старте.
     function makeStars() {
         var a = [], s = 20240924
@@ -159,19 +155,6 @@ Item {
                 max: 0.25 + rnd() * 0.75,
                 delay: rnd() * 4000,
                 ph: rnd() * 6.28318
-            })
-        }
-        return a
-    }
-    function makeMeteors() {
-        var a = [], s = 777
-        function rnd() { s = (s * 1103515245 + 12345) % 2147483648; return s / 2147483648 }
-        for (var i = 0; i < 7; i++) {
-            a.push({
-                x: 0.45 + rnd() * 0.55,
-                y: -0.02 + rnd() * 0.25,
-                dur: 1100 + rnd() * 1600,
-                delay: 3000 + rnd() * 9000
             })
         }
         return a
@@ -191,17 +174,9 @@ Item {
         }
         return a
     }
-    // прогресс падения метеора (0..1) или -1, если он сейчас «спит».
-    // Считается от общего времени сцены, а не анимацией на кадр.
-    function meteorPhase(m) {
-        var fall = Math.max(0.6, m.dur / 1000)
-        var P = fall + 6.0 + (m.delay % 6000) / 1000
-        var local = (scene.t + (m.delay % 9000) / 1000) % P
-        return local < fall ? local / fall : -1
-    }
+    // прогресс дрейфа пылинки считается от общего времени сцены (см. ниже)
 
     readonly property var starData: makeStars()
-    readonly property var meteorData: makeMeteors()
     readonly property var dustData: makeDust()
 
     // лёгкий режим: та же карта неба, но реже — ровно 100 звёзд из 170
@@ -383,99 +358,7 @@ Item {
         }
     }
 
-    // ── горизонт (низ экрана) ──────────────────────────────────
-    // Эллиптический радиальный градиент (как CSS ellipse at 50% 100%).
-    Canvas {
-        id: horizon
-        x: 0
-        y: 0
-        width: scene.width
-        height: scene.height
-        opacity: scene.horizonOps[scene.p]
-        visible: opacity > 0.001
-        property int repaintKey: scene.p
-        onRepaintKeyChanged: requestPaint()
-        onWidthChanged: requestPaint()
-        onHeightChanged: requestPaint()
-        Behavior on opacity { NumberAnimation { duration: 900 } }
-        onPaint: {
-            var ctx = getContext("2d")
-            ctx.clearRect(0, 0, width, height)
-            var stops = scene.horizonStops
-            var R = width * 0.62
-            var squash = (height * 0.55) / R
-            ctx.save()
-            ctx.translate(width / 2, height)
-            ctx.scale(1, squash)
-            var g = ctx.createRadialGradient(0, 0, 0, 0, 0, R)
-            for (var i = 0; i < stops.length; i++)
-                g.addColorStop(stops[i].p, stops[i].c)
-            ctx.fillStyle = g
-            ctx.fillRect(-width, -height * 6, width * 2, height * 7)
-            ctx.restore()
-        }
-    }
-    // светлая линия у горизонта
-    Rectangle {
-        x: 0
-        y: scene.height - 2
-        width: scene.width
-        height: 2
-        gradient: Gradient {
-            orientation: Gradient.Horizontal
-            GradientStop { position: 0; color: "transparent" }
-            GradientStop { position: 0.5; color: "#E6FFFFFF" }
-            GradientStop { position: 1; color: "transparent" }
-        }
-        opacity: scene.horizonOps[scene.p] * 0.9
-        visible: opacity > 0.001
-        Behavior on opacity { NumberAnimation { duration: 900 } }
-    }
-
-    // ── метеоры (только полное затмение, фаза 5) ───────────────
-    // В лёгком режиме тоже видны: 7 штук, хвост-градиент — самая
-    // дорогая часть, но на ПК это незаметно (см. замер в HANDOFF).
-    Repeater {
-        model: (scene.live && scene.fullEclipse) ? scene.meteorData : []
-        delegate: Item {
-            required property var modelData
-            readonly property real pr: (scene.live && scene.fullEclipse) ? scene.meteorPhase(modelData) : -1
-            width: 2
-            height: 2
-            opacity: pr < 0 ? 0 : (pr < 0.1 ? pr / 0.1 : (pr > 0.6 ? (1 - pr) / 0.4 : 1))
-            x: modelData.x * scene.width - 0.45 * scene.width * Math.max(0, pr)
-            y: modelData.y * scene.height + 0.34 * scene.height * Math.max(0, pr)
-
-            // хвост (монохром)
-            Rectangle {
-                x: 1; y: -1
-                width: 150 * scene.unit
-                height: 2
-                radius: 1
-                rotation: -24
-                transformOrigin: Item.Left
-                gradient: Gradient {
-                    orientation: Gradient.Horizontal
-                    GradientStop { position: 0; color: "#FFFFFFFF" }
-                    GradientStop { position: 0.45; color: "#99FFFFFF" }
-                    GradientStop { position: 1; color: "#00FFFFFF" }
-                }
-            }
-            // головка с ореолом
-            Rectangle {
-                width: 3; height: 3; radius: 1.5; color: "#ffffff"
-                x: -1; y: -1
-            }
-            Rectangle {
-                width: 9; height: 9; radius: 4.5
-                x: -4; y: -4
-                color: "transparent"
-                border.width: 2
-                border.color: "#66FFFFFF"
-            }
-
-        }
-    }
+    // ── горизонт (нижнее свечение) убран ───────────────────────
 
     // ═══════════════ затмение (центр сцены) ═══════════════
     Item {
