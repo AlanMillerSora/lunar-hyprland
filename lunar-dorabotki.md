@@ -135,7 +135,7 @@ GitHub берёт коммиты между тегами.)
 **Как проверить:**
 - [x] `hyprctl configerrors` — чисто; все новые бинды применяются (`hyprctl binds`).
 - [x] `SUPER+SHIFT+R` начинает/останавливает запись (файл появляется в `~/Videos/lunar-*.mp4`).
-- [x] `SUPER+SHIFT+G` — Game Mode toggle (`powerprofilesctl get` → performance/balanced).
+- [x] `SUPER+SHIFT+G` — Game Mode toggle (анимации/blur, DND, tearing).
 - [x] `SUPER+SHIFT+N` открывает панель справа.
 - [x] `SUPER+SHIFT+P` закрепляет плавающее окно поверх.
 - [x] `SUPER+TAB` / `SUPER+SHIFT+TAB` листают окна по кругу в обе стороны.

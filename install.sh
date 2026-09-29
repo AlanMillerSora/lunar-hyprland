@@ -407,7 +407,7 @@ case "$ACTION" in
 esac
 
 # количество шагов для счётчика [n/total]
-LUNAR_TOTAL=12
+LUNAR_TOTAL=13
 [ "$WITH_DEPS" = 1 ] && LUNAR_TOTAL=$((LUNAR_TOTAL + 1))
 [ "$DO_SDDM" = 1 ] && LUNAR_TOTAL=$((LUNAR_TOTAL + 1))
 [ "$DO_PLYMOUTH" = 1 ] && LUNAR_TOTAL=$((LUNAR_TOTAL + 1))
@@ -656,13 +656,16 @@ sudo systemctl daemon-reload 2>/dev/null || true
 sudo systemctl enable --now lunar-cpu-performance.service 2>/dev/null \
   && ok "CPU: governor performance (юнит включён)" \
   || warn "lunar-cpu-performance.service не включился (нужен sudo)"
-sudo systemctl enable --now lunar-cpu-performance-resume.service 2>/dev/null || true
-if systemctl list-unit-files power-profiles-daemon.service >/dev/null 2>&1; then
-  sudo systemctl disable --now power-profiles-daemon.service 2>/dev/null || true
-  sudo systemctl mask power-profiles-daemon.service 2>/dev/null \
-    && ok "power-profiles-daemon замаскирован (powersave не вернётся)" \
-    || warn "power-profiles-daemon не замаскирован (нужен sudo)"
-fi
+sudo systemctl enable lunar-cpu-performance-resume.service 2>/dev/null \
+  && ok "CPU: performance после сна (resume-юнит)" \
+  || warn "lunar-cpu-performance-resume.service не включился (нужен sudo)"
+# power-profiles-daemon умеет только balanced/powersave (а на Ryzen
+# balanced = powersave): глушим и маскируем безусловно. mask работает
+# и для отсутствующего юнита — заглушка не даст демону подняться позже.
+sudo systemctl disable --now power-profiles-daemon.service 2>/dev/null || true
+sudo systemctl mask power-profiles-daemon.service 2>/dev/null \
+  && ok "power-profiles-daemon замаскирован (powersave не вернётся)" \
+  || warn "power-profiles-daemon не замаскирован (нужен sudo)"
 
 # ── Wi-Fi: powersave off + ASPM ────────────────────────────────
 step "Wi-Fi: powersave off + mt7921e ASPM"

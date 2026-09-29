@@ -91,6 +91,10 @@ if has_vendor(vendors, "0x10de") then
     hl.env("__GLX_VENDOR_LIBRARY_NAME", "nvidia")  -- XWayland: GLX через NVIDIA
     hl.env("GBM_BACKEND", "nvidia-drm")            -- GBM через nvidia-drm
     hl.env("NVD_BACKEND", "direct")                -- прямой scanout/текстуры
+    -- Vulkan/DXVK — только NVIDIA-ICD. На гибриде (AMD iGPU + NVIDIA) выбор
+    -- устройства иначе неявный (по порядку ICD), а игры из Hub и вовсе
+    -- теряют env. Оставляем один ICD — Proton/DXVK точно возьмут дискретку.
+    hl.env("VK_ICD_FILENAMES", "/usr/share/vulkan/icd.d/nvidia_icd.json")
   end
 end
 
@@ -258,7 +262,6 @@ local app_ws = {
   -- 1 — игры (Steam/Proton, Heroic, Lutris, эмуляторы)
   ["1"] = { "steam_app_.*", "gamescope", "wine.*", "proton.*",
             "heroic", "com.heroicgameslauncher.hgl", "lutris",
-            "moe.launcher.an-anime-game-launcher",
             "prismlauncher", "Minecraft.*", "retroarch", "dolphin-emu",
             "ryujinx", "citra.*", "ppsspp.*", "osu!.*" },
   -- 2 — браузер
@@ -367,7 +370,7 @@ hl.on("hyprland.start", function()
   -- restart, а не start: чтобы пережившая сессию копия шелла перечитала env.
   -- reset-failed перед restart: после серии падений юнит ловит start-limit-hit,
   -- и без сброса restart из hyprland.start блокируется — стол остаётся без панели.
-  hl.exec_cmd("sh -c 'systemctl --user import-environment DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE HYPRLAND_INSTANCE_SIGNATURE; systemctl --user reset-failed lunar-quickshell.service 2>/dev/null; systemctl --user --no-block restart lunar-quickshell.service'")
+  hl.exec_cmd("sh -c 'systemctl --user import-environment DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE HYPRLAND_INSTANCE_SIGNATURE __GLX_VENDOR_LIBRARY_NAME GBM_BACKEND NVD_BACKEND LIBVA_DRIVER_NAME VK_ICD_FILENAMES 2>/dev/null; systemctl --user reset-failed lunar-quickshell.service 2>/dev/null; systemctl --user --no-block restart lunar-quickshell.service'")
   hl.exec_cmd("mako")
   hl.exec_cmd("hypridle")
   -- история буфера обмена (клипборд Quickshell, SUPER+V).
@@ -388,17 +391,6 @@ hl.on("hyprland.start", function()
   end
   if not btop_running then
     hl.exec_cmd("[workspace 9 silent] kitty --class lunar-btop --title btop -e btop")
-  end
-  -- AAGL (An Anime Game Launcher) на столе 01, без перехвата фокуса.
-  -- pgrep -f с [a] — шаблон не матчит сам себя; -x не годится (имя >15 символов).
-  local aagl = io.popen("pgrep -f '[a]n-anime-game-launcher' 2>/dev/null")
-  local aagl_running = false
-  if aagl then
-    aagl_running = (aagl:read("*a") or "") ~= ""
-    aagl:close()
-  end
-  if not aagl_running then
-    hl.exec_cmd("[workspace 1 silent] an-anime-game-launcher")
   end
 end)
 

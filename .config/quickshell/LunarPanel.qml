@@ -352,6 +352,7 @@ PanelWindow {
     property real gpuEma: -1          // сглаживание gpu_busy_percent (APU дёргается 0/100)
     property string gpuTemp: ""
     property bool gameMode: false
+    property string cpuGovernor: ""
     property bool recording: false
     readonly property int focusedPhase:
         (root.focusedWs && root.focusedWs.id > 0) ? root.focusedWs.id : 0
@@ -394,6 +395,8 @@ PanelWindow {
                         root.gpuTemp = v
                     } else if (k === "gm") {
                         root.gameMode = (v === "1")
+                    } else if (k === "pp") {
+                        root.cpuGovernor = v
                     } else if (k === "rec") {
                         root.recording = (v === "1")
                     }
@@ -845,12 +848,13 @@ PanelWindow {
                         }
                     }
 
-                    // питание: CPU всегда performance, powersave убран
+                    // питание: CPU всегда performance, powersave убран.
+                    // Красный — сигнал, что юнит не сработал и governor не performance.
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         width: fm13.advanceWidth("PERF")
                         text: "PERF"
-                        color: Theme.accent
+                        color: root.cpuGovernor === "performance" ? Theme.accent : Theme.danger
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSize(13)
                         font.bold: true

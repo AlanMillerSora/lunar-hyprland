@@ -250,7 +250,7 @@ sudo ./install.sh --disable-sddm  # вернуть штатную тему
 
 <div align="center">
 
-`SUPER + SHIFT + G` — анимации/blur выкл, DND, профиль performance, пауза hypridle, tearing. Откладываются обновление/бэкап/zapret-пересборка; сервисы из `gamemode-pause.conf` выгружаются и возвращаются при выходе.
+`SUPER + SHIFT + G` — анимации/blur выкл, DND, пауза hypridle, tearing. Откладываются обновление/бэкап/zapret-пересборка; сервисы из `gamemode-pause.conf` выгружаются и возвращаются при выходе.
 
 </div>
 
@@ -376,12 +376,12 @@ lib32-nvidia-utils
 | Компонент | Файл | Что делает |
 |---|---|---|
 | **Обои** | `quickshell/LunarWallpaper.qml`, `LunarWallpaperScene.qml` | Живая сцена затмения на QtQuick (фоновый слой): фаза по столу 1–9, звёзды/метеоры/пыль. Превью — `preview.qml` |
-| **Панель** | `quickshell/LunarPanel.qml` | 42px сверху. Лого+фаза, столы `01–09`; справа — пилюля **скорости сети** (Б/К/М), сеть/раскладка/уведомления, Game Mode, питание, CPU/RAM/°C/GPU, mpris, трей, громкость |
+| **Панель** | `quickshell/LunarPanel.qml` | 42px сверху. Лого+фаза, столы `01–09`; справа — пилюля **скорости сети** (Б/К/М), сеть/раскладка/уведомления, Game Mode, PERF, CPU/RAM/°C/GPU, mpris, трей, громкость |
 | **Hub** | `quickshell/LunarHub.qml` | Лаунчер + настройки (980×640): Launch, System, Sound, Monitors, Network, Bluetooth, Interface, Memory, Games, Dev, Wallpapers, User, Update |
 | **Sidebar** | `quickshell/LunarSidebar.qml` | Слева (560px): чат OpenCode, буфер cliphist (ПКМ — удалить), заметки |
 | **Sidebar R** | `quickshell/LunarSidebarRight.qml` | Справа: уведомления (mako), «сейчас играет» (mpris), календарь (локальные события и напоминания), запись экрана |
 | **Очистка/Система** | `SettingsPages/MemoryPage.qml`, `hypr/scripts/eclipse-cleanup.sh` | RAM/SWAP и кнопка «ОЧИСТИТЬ»: сироты, кэш, журнал, tmpfiles |
-| **Game Mode** | `hypr/scripts/eclipse-gamemode.sh` | Анимации/blur выкл, DND, performance, пауза hypridle, tearing + пауза фоновых задач |
+| **Game Mode** | `hypr/scripts/eclipse-gamemode.sh` | Анимации/blur выкл, DND, пауза hypridle, tearing + пауза фоновых задач |
 | **Запись** | `hypr/scripts/eclipse-record.sh` | wf-recorder → `~/Videos/lunar-*.mp4`; аппаратный кодек (VAAPI/NVENC) с откатом на софт. Качество (QP), битрейт и герцовку задают переключатели в **Hub → Monitors** (`~/.config/lunar/record.json`) |
 | **Меню питания** | `quickshell/LunarPower.qml` | Спящий/гибернация/выход/перезагрузка/выключение — `SUPER + ESC` |
 | **Dev** | `SettingsPages/DevPage.qml` | Находит git-проекты, показывает ветку/изменения/коммит; кнопки VS Code, терминал, GIT-панель |

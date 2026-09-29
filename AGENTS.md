@@ -278,6 +278,9 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
   (аргументы валидируются внутри), без масок по пользовательским скриптам.
   Журнал читать через `sudo -n /usr/local/lib/lunar/journal-read.sh …` — у raw
   `journalctl` отозваны мутирующие режимы (`--vacuum`/`--rotate`).
+- CPU всегда `performance`: системный юнит `lunar-cpu-performance` зовёт
+  `/usr/local/lib/lunar/cpu-performance.sh` (root, вне sudoers); он же гасит
+  `power-profiles-daemon` (balanced/powersave).
 - `eclipse-askpass.py` — интерактивный GTK-диалог пароля (не автоподстановка).
 - Скрины для README: `grim -o DP-3` (3440×1440) → `magick … -resize 1600x900 -strip`.
 - `/tmp/shots` может исчезнуть между вызовами — `mkdir -p`.
