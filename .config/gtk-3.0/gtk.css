@@ -1,0 +1,158 @@
+/* ════════════════════════════════════════════════════════════════
+ *  Lunar Eclipse — монохромный GTK-3 стиль (HUD)
+ *  Палитра: фон #050505 · текст #fff · dim #888 · faint #4a4a4a
+ *  Рамка 1px · радиус 6 · JetBrains Mono
+ * ════════════════════════════════════════════════════════════════ */
+
+@define-color theme_bg_color #050505;
+@define-color theme_base_color #050505;
+@define-color theme_fg_color #ffffff;
+@define-color theme_text_color #ffffff;
+@define-color theme_selected_bg_color rgba(255, 255, 255, 0.12);
+@define-color theme_selected_fg_color #ffffff;
+@define-color theme_unfocused_bg_color #050505;
+@define-color theme_unfocused_base_color #050505;
+@define-color theme_unfocused_fg_color #888888;
+@define-color theme_unfocused_text_color #888888;
+@define-color insensitive_fg_color #4a4a4a;
+@define-color borders #4a4a4a;
+@define-color unfocused_borders #2a2a2a;
+@define-color warning_color #ff003c;
+@define-color error_color #ff003c;
+@define-color success_color #00ff9c;
+
+@define-color lunar_dim #888888;
+@define-color lunar_faint #4a4a4a;
+@define-color lunar_hover rgba(255, 255, 255, 0.06);
+@define-color lunar_active rgba(255, 255, 255, 0.12);
+@define-color lunar_raised #0a0a0a;
+
+* { outline-color: #ffffff; outline-style: none; }
+
+window, .background, dialog {
+  background-color: @theme_bg_color;
+  color: @theme_fg_color;
+  font-family: "JetBrains Mono", monospace;
+}
+
+/* ── заголовок окна / тулбар ─────────────────────────────────── */
+headerbar, .titlebar, toolbar, .toolbar, .toolbar-container {
+  background-color: @theme_bg_color;
+  background-image: none;
+  color: @theme_fg_color;
+  border-bottom: 1px solid @borders;
+  box-shadow: none;
+}
+headerbar button, .titlebar button, toolbar button, .toolbar button {
+  border-color: transparent;
+}
+headerbar button:hover, toolbar button:hover, .toolbar button:hover {
+  background-color: @lunar_hover;
+}
+
+/* ── кнопки ──────────────────────────────────────────────────── */
+button, .button {
+  background-color: transparent;
+  background-image: none;
+  border: 1px solid @borders;
+  border-radius: 6px;
+  color: @theme_fg_color;
+  box-shadow: none;
+  text-shadow: none;
+  min-height: 22px;
+  padding: 3px 10px;
+}
+button:hover, .button:hover {
+  background-color: @lunar_hover;
+  border-color: @lunar_dim;
+}
+button:active, button:checked, button:checked:hover {
+  background-color: @lunar_active;
+  border-color: #ffffff;
+}
+button:disabled, .button:disabled {
+  color: @insensitive_fg_color;
+  border-color: @unfocused_borders;
+}
+button.flat, .button.flat { border-color: transparent; }
+
+/* ── поля ввода ──────────────────────────────────────────────── */
+entry, .entry, spinbutton, searchentry {
+  background-color: rgba(255, 255, 255, 0.03);
+  background-image: none;
+  border: 1px solid @borders;
+  border-radius: 6px;
+  color: @theme_fg_color;
+  box-shadow: none;
+}
+entry:focus, entry:focus-within, .entry:focus { border-color: #ffffff; }
+
+/* ── списки / иконки файлов ──────────────────────────────────── */
+.view, treeview.view, iconview, .thunar {
+  background-color: @theme_base_color;
+  color: @theme_text_color;
+}
+.view:selected, treeview.view:selected, iconview:selected,
+.view:selected:focus, treeview.view:selected:focus, iconview:selected:focus {
+  background-color: @lunar_active;
+  color: #ffffff;
+}
+.view:hover, treeview.view:hover, iconview:hover { background-color: @lunar_hover; }
+.rubberband { background-color: rgba(255, 255, 255, 0.08); border: 1px solid @lunar_dim; }
+
+/* ── сайдбар (Places) ────────────────────────────────────────── */
+.sidebar, placessidebar, stacksidebar, .sidebar-pane {
+  background-color: @theme_bg_color;
+  color: @lunar_dim;
+  border-right: 1px solid @borders;
+}
+.sidebar row, placessidebar row, stacksidebar row {
+  border-radius: 6px;
+  padding: 4px 6px;
+  min-height: 24px;
+}
+.sidebar row:hover, placessidebar row:hover, stacksidebar row:hover { background-color: @lunar_hover; }
+.sidebar row:selected, placessidebar row:selected, stacksidebar row:selected {
+  background-color: @lunar_active;
+  color: #ffffff;
+}
+
+/* ── статусбар ───────────────────────────────────────────────── */
+statusbar, .statusbar { background-color: @theme_bg_color; color: @lunar_dim; }
+
+/* ── скроллбар ───────────────────────────────────────────────── */
+scrollbar { background-color: transparent; }
+scrollbar slider {
+  background-color: @lunar_faint;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: 6px;
+  min-width: 6px;
+  min-height: 6px;
+}
+scrollbar slider:hover { background-color: @lunar_dim; }
+
+/* ── меню / поповеры ─────────────────────────────────────────── */
+menu, .menu, .context-menu, popover, popover.background {
+  background-color: @lunar_raised;
+  border: 1px solid @borders;
+  border-radius: 6px;
+  color: @theme_fg_color;
+}
+menuitem:hover, menuitem:selected, .menu menuitem:hover { background-color: @lunar_active; color: #ffffff; }
+separator, .separator { background-color: @borders; min-width: 1px; min-height: 1px; }
+
+/* ── прочее ──────────────────────────────────────────────────── */
+frame, .frame { border: 1px solid @borders; border-radius: 6px; }
+progressbar trough { background-color: rgba(255, 255, 255, 0.06); border-radius: 6px; }
+progressbar progress { background-color: #ffffff; border-radius: 6px; }
+check, radio { background-color: transparent; border: 1px solid @borders; }
+check:checked, radio:checked { background-color: #ffffff; color: #050505; }
+notebook > header { background-color: @theme_bg_color; }
+notebook > header tab:checked { border-bottom: 1px solid #ffffff; }
+tooltip, tooltip.background {
+  background-color: @lunar_raised;
+  color: @theme_fg_color;
+  border: 1px solid @borders;
+  border-radius: 6px;
+}
