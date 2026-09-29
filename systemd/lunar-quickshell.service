@@ -21,6 +21,9 @@ ExecStart=/usr/bin/quickshell
 Restart=on-failure
 RestartSec=2
 Nice=-5
+# при рестарте завершать только сам quickshell, а приложения из Hub
+# (Discord, Telegram, Firefox) не трогать
+KillMode=process
 
 [Install]
 WantedBy=graphical-session.target
