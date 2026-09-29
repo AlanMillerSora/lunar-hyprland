@@ -180,7 +180,7 @@ else
   warn "yay/paru не найден — VS Code пропущен (yay -S visual-studio-code-bin)"
 fi
 
-say "обои: живые — QML-сцена в Quickshell (LunarWallpaper.qml); статику генерит eclipse-walls-gen.sh"
+say "обои: живые — QML-сцена в Quickshell (LunarWallpaper.qml)"
 
 # ── Vencord (AUR) ──────────────────────────────────────────────
 # Мод Discord: патчит app.asar; после обновления Discord патч накатывается заново.
