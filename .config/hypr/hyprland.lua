@@ -170,9 +170,14 @@ hl.config({
 
 -- ──────────────────────────────────── Мониторы ─────────────────────
 -- Авто: всё, что подключено, с нативной частотой.
--- Нужен свой?  hl.monitor({ output = "HDMI-A-1", mode = "2560x1440@144",
---                            position = "0x0", scale = 1 })
+-- Основной монитор — явные 165 Гц. EDID-preferred у него 60 Гц, поэтому с
+-- "preferred" частота слетала на 60 после reload/перезагрузки (Hub меняет
+-- режим только в рантайме). Правило по описанию переживает переименование порта.
 hl.monitor({ output = "", mode = "preferred", position = "auto", scale = 1 })
+hl.monitor({ output = "desc:Xiaomi Corporation Mi monitor 5323110105491",
+             mode = "3440x1440@165", position = "auto", scale = 1 })
+-- Нужен свой под конкретный порт?  hl.monitor({ output = "HDMI-A-1", mode = "2560x1440@144",
+--                                            position = "0x0", scale = 1 })
 -- Привязка рабочего стола к монитору (если их несколько):
 -- hl.workspace_rule({ workspace = "1", monitor = "DP-1" })
 
