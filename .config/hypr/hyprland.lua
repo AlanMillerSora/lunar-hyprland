@@ -148,6 +148,7 @@ hl.config({
 
     follow_mouse    = 1,
     accel_profile   = "flat",
+    force_no_accel  = true,   -- сырой ввод: системное ускорение мыши выключено
     sensitivity     = -0.15,
 
     touchpad = {
