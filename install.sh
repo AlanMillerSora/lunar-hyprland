@@ -407,7 +407,7 @@ case "$ACTION" in
 esac
 
 # количество шагов для счётчика [n/total]
-LUNAR_TOTAL=11
+LUNAR_TOTAL=12
 [ "$WITH_DEPS" = 1 ] && LUNAR_TOTAL=$((LUNAR_TOTAL + 1))
 [ "$DO_SDDM" = 1 ] && LUNAR_TOTAL=$((LUNAR_TOTAL + 1))
 [ "$DO_PLYMOUTH" = 1 ] && LUNAR_TOTAL=$((LUNAR_TOTAL + 1))
@@ -749,6 +749,27 @@ elif [ ! -t 0 ]; then
   warn "нет tty — shell не меняю; вручную: sudo chsh -s $ZSH_BIN $SHELL_TARGET"
 else
   chsh -s "$ZSH_BIN" "$SHELL_TARGET" && ok "zsh у $SHELL_TARGET" || warn "не удалось сменить shell"
+fi
+
+# ── GTK: тема, иконки, шрифт через gsettings ───────────────────
+# GTK3 под Wayland берёт настройки из gsettings, а не из
+# ~/.config/gtk-3.0/settings.ini — поэтому дублируем важное здесь.
+step "GTK: тёмная тема, иконки, шрифт"
+if command -v gsettings >/dev/null 2>&1; then
+  gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null || true
+  gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita-dark' 2>/dev/null || true
+  gsettings set org.gnome.desktop.interface font-name 'JetBrains Mono 11' 2>/dev/null || true
+  gsettings set org.gnome.desktop.interface monospace-font-name 'JetBrains Mono 11' 2>/dev/null || true
+  gsettings set org.gnome.desktop.interface cursor-theme 'Bibata-Modern-Ice' 2>/dev/null || true
+  gsettings set org.gnome.desktop.interface cursor-size 24 2>/dev/null || true
+  ok "gsettings: prefer-dark, шрифт, курсор"
+else
+  warn "gsettings не найден — GTK-настройки пропущены"
+fi
+if [ -x "$HOME/.config/hypr/scripts/eclipse-mono-icons.sh" ]; then
+  "$HOME/.config/hypr/scripts/eclipse-mono-icons.sh" >/dev/null 2>&1 \
+    && ok "иконки: монохром Tela-lunar" \
+    || warn "иконки: нужен пакет tela-icon-theme (yay -S tela-icon-theme)"
 fi
 
 # ── опционально: SDDM ──────────────────────────────────────────

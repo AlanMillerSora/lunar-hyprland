@@ -386,7 +386,7 @@ lib32-nvidia-utils
 | **Меню питания** | `quickshell/LunarPower.qml` | Спящий/гибернация/выход/перезагрузка/выключение — `SUPER + ESC` |
 | **Dev** | `SettingsPages/DevPage.qml` | Находит git-проекты, показывает ветку/изменения/коммит; кнопки VS Code, терминал, GIT-панель |
 | **Firefox** | `firefox/chrome/userChrome.css`, `firefox/user.js` | Тёмный монохром, вертикальные вкладки, без рекламы и телеметрии; своя страница новой вкладки |
-| **Файлы** | `yazi/theme.toml`, `yazi/yazi.toml` | yazi в монохроме (`SUPER + E`); превью картинок, PDF, шрифтов, видео |
+| **Файлы** | `gtk-3.0/gtk.css`, `gtk-4.0/gtk.css` | Thunar в монохроме риса (`SUPER + E`, drag&drop); yazi — в терминале (`y`) |
 | **Тема** | `quickshell/Theme.qml` | Палитра, радиусы, шрифты; прозрачность, размер шрифта, число значков трея, **размытие** и профиль **NORMAL/OPTIMIZE** сохраняются |
 
 </details>
@@ -402,7 +402,7 @@ lib32-nvidia-utils
 |---|---|
 | `SUPER + RETURN` | Терминал (kitty) |
 | `SUPER + G` | Hub: лаунчер + настройки |
-| `SUPER + E` | Файлы (yazi) |
+| `SUPER + E` | Файлы (Thunar) |
 | `SUPER + V` | Буфер обмена (cliphist) |
 | `SUPER + SHIFT + E` | Боковая панель (слева) |
 | `SUPER + SHIFT + N` | Панель справа (уведомления/музыка/календарь) |

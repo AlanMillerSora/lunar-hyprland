@@ -30,6 +30,8 @@ hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_SIZE", "24")
 hl.env("XCURSOR_THEME", "Bibata-Modern-Ice")
 hl.env("HYPRCURSOR_THEME", "Bibata-Modern-Ice")
+-- Qt: тему/цвета берём из портала (gsettings color-scheme = prefer-dark)
+hl.env("QT_QPA_PLATFORMTHEME", "xdgdesktopportal")
 
 -- Браузер по умолчанию — Firefox (для xdg-open, CLI-утилит и ссылок).
 -- Не перекрываем BROWSER, если он уже задан в окружении сессии.
@@ -283,7 +285,7 @@ local M = "SUPER"
 
 hl.bind(M .. " + RETURN",  dsp.exec_cmd("kitty"))
 hl.bind(M .. " + G",       dsp.exec_cmd("qs ipc call hub toggle"))      -- Lunar Hub: launch + settings (Quickshell)
-hl.bind(M .. " + E",       dsp.exec_cmd("kitty --class lunar-yazi -e yazi"))
+hl.bind(M .. " + E",       dsp.exec_cmd("thunar"))
 hl.bind(M .. " + V",       dsp.exec_cmd("qs ipc call clipboard toggle"))   -- буфер обмена (cliphist, Quickshell)
 hl.bind(M .. " + SHIFT + E", dsp.exec_cmd("qs ipc call sidebar toggle"))   -- боковая панель слева (Quickshell)
 hl.bind(M .. " + SHIFT + N", dsp.exec_cmd("qs ipc call rsidebar toggle"))  -- панель справа: уведомления/музыка/календарь

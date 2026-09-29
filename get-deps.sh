@@ -196,6 +196,19 @@ else
   warn "yay/paru не найден — Vencord пропущен (yay -S vencord-installer-bin)"
 fi
 
+# ── Tela: база для монохромных иконок (AUR) ────────────────────
+# Из неё install.sh собирает монохромную Tela-lunar (eclipse-mono-icons.sh).
+say "AUR: tela-icon-theme"
+if command -v yay >/dev/null 2>&1; then
+  yay -S --needed --noconfirm tela-icon-theme \
+    && ok "Tela" || warn "Tela не установилась — вручную: yay -S tela-icon-theme"
+elif command -v paru >/dev/null 2>&1; then
+  paru -S --needed --noconfirm tela-icon-theme \
+    && ok "Tela" || warn "Tela не установилась — вручную: paru -S tela-icon-theme"
+else
+  warn "yay/paru не найден — Tela пропущена (yay -S tela-icon-theme)"
+fi
+
 if [ "${LUNAR_EMBEDDED:-0}" != 1 ]; then
   say "дальше: ./install.sh (конфиги) или ./install.sh --deps-only"
   lunar_done
