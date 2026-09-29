@@ -1339,8 +1339,27 @@ PanelWindow {
 
     QtObject {
         id: notif
-        property var items: []
+        property var raw: []          // сырой список от mako (история + активные)
+        property var items: []        // показываемый список (без скрытых)
         property bool dnd: false
+        property int hideBefore: -1   // «очистить»: прячем всё с id <= этого
+        property var hiddenIds: ({})  // точечно скрытые (dismiss)
+
+        function rebuild() {
+            var out = []
+            for (var i = 0; i < raw.length; i++) {
+                var n = raw[i]
+                if (n.id <= hideBefore) continue
+                if (hiddenIds[n.id] === true) continue
+                out.push({
+                    id: n.id,
+                    app: n.app_name || "",
+                    summary: n.summary || "",
+                    body: (n.body || "").replace(/\n/g, " ")
+                })
+            }
+            items = out
+        }
 
         function load() {
             listProc.running = true
@@ -1348,11 +1367,18 @@ PanelWindow {
         }
 
         function dismiss(id) {
+            hiddenIds[id] = true
+            rebuild()
             actionProc.command = ["bash", "-c", "makoctl dismiss -n " + id]
             actionProc.running = true
         }
 
         function clear() {
+            var m = -1
+            for (var i = 0; i < raw.length; i++) if (raw[i].id > m) m = raw[i].id
+            hideBefore = m
+            hiddenIds = ({})
+            rebuild()
             actionProc.command = ["bash", "-c", "makoctl dismiss --all"]
             actionProc.running = true
         }
@@ -1366,22 +1392,13 @@ PanelWindow {
     Process {
         id: listProc
         running: false
-        command: ["bash", "-c", "makoctl list -j 2>/dev/null || echo '[]'"]
+        // история mako (ограничена max-history=20) + активные, свежие сверху
+        command: ["bash", "-c", "jq -s 'add | unique_by(.id) | sort_by(.id) | reverse | .[0:20]' <(makoctl history -j 2>/dev/null || echo '[]') <(makoctl list -j 2>/dev/null || echo '[]')"]
         stdout: StdioCollector {
             onStreamFinished: {
                 try {
-                    var arr = JSON.parse(text)
-                    var out = []
-                    for (var i = 0; i < arr.length; i++) {
-                        var n = arr[i]
-                        out.push({
-                            id: n.id,
-                            app: n.app_name || "",
-                            summary: n.summary || "",
-                            body: (n.body || "").replace(/\n/g, " ")
-                        })
-                    }
-                    notif.items = out
+                    notif.raw = JSON.parse(text)
+                    notif.rebuild()
                 } catch (e) {
                     // L25: не затираем список уведомлений при сбое разбора
                     console.warn("уведомления: не удалось разобрать вывод makoctl: " + e)
