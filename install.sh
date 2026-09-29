@@ -117,6 +117,59 @@ ply_hooks_del() {
   say "HOOKS: убран plymouth"
 }
 
+# Plymouth рисуется только через KMS. Если монитор на NVIDIA, в initramfs
+# нужны её модули, иначе заставка уйдёт в текст/чёрный экран (simpledrm не тянет).
+ply_nvidia_kms() {
+  # NVIDIA есть только если её видит ядро (по PCI-вендору 0x10de)
+  grep -q '^0x10de' /sys/bus/pci/devices/*/vendor 2>/dev/null || return 0
+  local mods="nvidia nvidia_modeset nvidia_uvm nvidia_drm"
+  if ! grep -qE '^MODULES=\(.*\bnvidia_drm\b' /etc/mkinitcpio.conf; then
+    ply_backup /etc/mkinitcpio.conf
+    if grep -qE '^MODULES=\(\)' /etc/mkinitcpio.conf; then
+      sudo sed -i -E "s/^MODULES=\(\)/MODULES=($mods)/" /etc/mkinitcpio.conf
+    else
+      sudo sed -i -E "s/^MODULES=\(([^)]*)\)/MODULES=($mods \1)/" /etc/mkinitcpio.conf
+    fi
+    say "MODULES: + $mods (KMS NVIDIA для Plymouth)"
+    ply_state_add nvidia-kms
+  fi
+  local f; f="$(ply_cmdline_file)"
+  if ! grep -qw 'nvidia_drm.modeset=1' "$f" 2>/dev/null; then
+    ply_param_raw 'nvidia_drm.modeset=1'
+  fi
+}
+
+ply_nvidia_kms_del() {
+  ply_state_has nvidia-kms || return 0
+  sudo sed -i -E 's/\bnvidia //; s/ nvidia\b//; s/\bnvidia_modeset //; s/ nvidia_modeset\b//; s/\bnvidia_uvm //; s/ nvidia_uvm\b//; s/\bnvidia_drm //; s/ nvidia_drm\b//' /etc/mkinitcpio.conf
+  sudo sed -i -E 's/^MODULES=\(\)$/MODULES=()/' /etc/mkinitcpio.conf
+  say "MODULES: убраны nvidia-модули"
+  ply_param_raw_del 'nvidia_drm.modeset=1'
+}
+
+# произвольный параметр cmdline (не splash/quiet)
+ply_param_raw() {
+  local p="$1" f; f="$(ply_cmdline_file)"
+  grep -qw -- "$p" "$f" 2>/dev/null && return 0
+  ply_backup "$f"
+  if ply_is_uki; then
+    sudo sed -i "s/\$/ $p/" "$f"
+  else
+    sudo sed -i -E "s/^(GRUB_CMDLINE_LINUX_DEFAULT=\"[^\"]*)\"/\1 $p\"/" "$f"
+  fi
+  say "cmdline: + $p"
+  ply_state_add "$p"
+}
+
+ply_param_raw_del() {
+  local p="$1" f; f="$(ply_cmdline_file)"
+  ply_state_has "$p" || return 0
+  ply_backup "$f"
+  sudo sed -i -E "s/ *\b$p\b//g" "$f"
+  ply_state_del "$p"
+  say "cmdline: - $p"
+}
+
 ply_param_add() {  # splash|quiet — добавляю и запоминаю ТОЛЬКО фактически добавленное
   local p="$1" f; f="$(ply_cmdline_file)"
   ply_backup "$f"
@@ -160,7 +213,12 @@ ply_grub_guard() {
 }
 
 ply_rebuild() {
-  command -v mkinitcpio >/dev/null && { say "пересборка initramfs/UKI"; sudo mkinitcpio -P; }
+  if command -v mkinitcpio >/dev/null; then
+    say "пересборка initramfs/UKI"
+    if ! sudo mkinitcpio -P; then
+      warn "mkinitcpio -P завершился с ошибкой — образ мог не собраться"
+    fi
+  fi
   ply_grub_guard
   if command -v grub-mkconfig >/dev/null && [ -d /boot/grub ]; then
     say "пересборка grub.cfg"; sudo grub-mkconfig -o /boot/grub/grub.cfg
@@ -186,6 +244,7 @@ ply_enable() {
   ply_hooks_add
   ply_param_add quiet
   ply_param_add splash
+  ply_nvidia_kms
   ply_rebuild
 }
 
@@ -193,6 +252,7 @@ ply_disable() {
   ply_hooks_del
   ply_param_del splash
   ply_param_del quiet
+  ply_nvidia_kms_del
   ply_rebuild
 }
 
