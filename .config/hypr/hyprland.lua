@@ -170,9 +170,9 @@ hl.config({
     disable_splash_rendering = true,
     animate_manual_resizes = true,
     animate_mouse_windowdragging = true,
-    vrr = 1,                    -- FreeSync/GSync только для полноэкранных игр.
-                                -- vrr=2 (всегда) давал мерцание экрана в играх
-                                -- на NVIDIA + FreeSync-совместимом мониторе.
+    vrr = 0,                    -- FreeSync/GSync выключен совсем.
+                                -- vrr=2 и vrr=1 (полный экран) давали мерцание
+                                -- по всей системе на NVIDIA + FreeSync-мониторе.
     focus_on_activate = true,
   },
 })
