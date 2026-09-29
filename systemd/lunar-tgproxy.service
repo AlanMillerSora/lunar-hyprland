@@ -1,11 +1,14 @@
 [Unit]
 Description=Lunar Eclipse — MTProto WS-прокси для Telegram (tg-ws-proxy)
-After=network-online.target
-Wants=network-online.target
+# в user-менеджере нет network-online.target — порядок по сети не задаём,
+# прокси сам переподключается (Restart=on-failure)
 
 [Service]
 Type=simple
-# порт и секрет — в env-файле вне git (секрет не должен попадать в репо)
+# секрет — в env-файле вне git; umask 0077, чтобы лог не был world-readable
+UMask=0077
+NoNewPrivileges=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
 EnvironmentFile=%h/.config/lunar/tgproxy.env
 ExecStartPre=/usr/bin/mkdir -p %h/.cache/lunar
 ExecStart=/usr/bin/tg-ws-proxy --host 127.0.0.1 --port ${TGWSP_PORT} --secret ${TGWSP_SECRET} \

@@ -76,3 +76,9 @@ user_pref("browser.translations.automaticallyPopup", false);
 // managed-storage (см. install.sh) — здесь только разрешаем
 // «загруженное сбоку» расширение, чтобы оно включилось.
 user_pref("extensions.autoDisableScopes", 0);
+
+// ── поиск по умолчанию — Google (а не региональный DuckDuckGo/Яндекс) ──
+user_pref("browser.search.defaultenginename", "Google");
+user_pref("browser.search.defaultenginename.US", "Google");
+user_pref("browser.search.defaultenginename.RU", "Google");
+user_pref("browser.search.selectedEngine", "Google");

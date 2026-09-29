@@ -180,7 +180,7 @@ ply_enable() {
   if ! command -v plymouthd >/dev/null; then
     say "Plymouth: пакета нет — ставлю plymouth"
     sudo pacman -S --needed --noconfirm plymouth \
-      || { warn "пакет plymouth не поставился (вручную: sudo pacman -S plymouth)"; return 1; }
+      || { warn "пакет plymouth не поставился (вручную: sudo pacman -S plymouth; если блокирует хук informant — sudo informant read --all)"; return 1; }
   fi
   ply_install
   ply_hooks_add
@@ -412,6 +412,7 @@ LUNAR_TOTAL=11
 [ "$DO_SDDM" = 1 ] && LUNAR_TOTAL=$((LUNAR_TOTAL + 1))
 [ "$DO_PLYMOUTH" = 1 ] && LUNAR_TOTAL=$((LUNAR_TOTAL + 1))
 [ "$DO_ZAPRET" = 1 ] && LUNAR_TOTAL=$((LUNAR_TOTAL + 1))
+[ "$DEPS_ONLY" = 1 ] && LUNAR_TOTAL=1   # deps-only выполняет только один шаг
 
 lunar_banner
 
@@ -726,6 +727,13 @@ step "shell по умолчанию"
 # zsh читает конфиг из ~/.zshrc (ZDOTDIR не задаём), а в репо он лежит
 # в .config/.zshrc — кладём копию в домашний каталог, иначе шелл стартует голым
 if [ -f "$REPO/.config/.zshrc" ]; then
+  # ~/.zshrc вне ~/.config, общий бэкап его не видит — сохраняем сами
+  if [ -f "$HOME/.zshrc" ] && ! cmp -s "$HOME/.zshrc" "$REPO/.config/.zshrc"; then
+    BACKUP="${BACKUP:-$HOME/.config-backup-$(date +%Y%m%d-%H%M%S)}"
+    mkdir -p "$BACKUP/home"
+    cp -a "$HOME/.zshrc" "$BACKUP/home/.zshrc" 2>/dev/null || true
+    say "бэкап ~/.zshrc → $BACKUP/home/.zshrc"
+  fi
   cp "$REPO/.config/.zshrc" "$HOME/.zshrc"
   ok "~/.zshrc обновлён"
 fi
