@@ -34,9 +34,12 @@ PanelWindow {
         if (!collapsed) {
             sysStats.running = true
             sysStatsTimer.restart()
+            if (tabIndex === 0) api.refresh()
             if (!pinned && !stripHover.hovered && !contentHover.hovered) hideTimer.restart()
         }
     }
+
+    onTabIndexChanged: if (tabIndex === 0) api.refresh()
 
     IpcHandler {
         target: "sidebar"
@@ -162,7 +165,7 @@ PanelWindow {
                     spacing: 4
                     Repeater {
                         id: leftTabRep
-                        model: ["чат", "заметки"]
+                        model: ["api-limit", "заметки"]
                         delegate: Rectangle {
                             required property int index
                             required property string modelData
@@ -217,7 +220,10 @@ PanelWindow {
                 Layout.fillHeight: true
                 currentIndex: tabIndex
 
+                // ═══ api-limit: расход лимитов OpenCode Go ═══
                 Rectangle {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
                     color: Theme.bgCard
                     radius: Theme.radius
                     border.color: Theme.border
@@ -225,13 +231,13 @@ PanelWindow {
                     ColumnLayout {
                         anchors.fill: parent
                         anchors.margins: 14
-                        spacing: 8
+                        spacing: 10
 
                         RowLayout {
                             Layout.fillWidth: true
                             spacing: 6
                             Text {
-                                text: "OPENCODE"
+                                text: "API-LIMIT"
                                 color: Theme.text
                                 font.family: Theme.fontFamily
                                 font.pixelSize: Theme.fontSize(14)
@@ -240,178 +246,177 @@ PanelWindow {
                             }
                             Item { Layout.fillWidth: true }
                             Text {
-                                text: chat.busy ? "думает…" : "агент"
-                                color: chat.busy ? Theme.accent : Theme.textFaint
+                                text: api.ok ? (api.lead !== "" ? api.lead : "нет данных") : api.status
+                                color: Theme.textFaint
                                 font.family: Theme.fontFamily
                                 font.pixelSize: Theme.fontSize(11)
+                                elide: Text.ElideRight
+                                Layout.maximumWidth: 320
                             }
                         }
 
-                        // история чата (ListView + reuseItems: длинный стрим
-                        // не пересоздаёт все делегаты на каждый чанк)
-                        ListView {
-                            id: chatList
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            clip: true
-                            spacing: 8
-                            model: chat.messages
-                            reuseItems: true
-                            cacheBuffer: 400
-                            boundsBehavior: Flickable.StopAtBounds
-                            onCountChanged: positionViewAtEnd()
-
-                            delegate: Rectangle {
+                        // три HUD-полосы: 5 часов / неделя / месяц
+                        Repeater {
+                            model: [
+                                { label: "5 ЧАСОВ", value: api.h5, limit: api.h5lim },
+                                { label: "НЕДЕЛЯ", value: api.wk, limit: api.wklim },
+                                { label: "МЕСЯЦ", value: api.mo, limit: api.molim }
+                            ]
+                            delegate: ColumnLayout {
                                 required property var modelData
-                                width: chatList.width
-                                height: msgText.implicitHeight + 16
-                                radius: Theme.radius
-                                color: modelData.role === "user"
-                                    ? Theme.active
-                                    : Theme.fill
-                                border.width: 1
-                                border.color: Theme.border
+                                Layout.fillWidth: true
+                                spacing: 5
 
-                                Text {
-                                    id: msgText
-                                    anchors.left: parent.left
-                                    anchors.right: parent.right
-                                    anchors.top: parent.top
-                                    anchors.margins: 8
-                                    text: modelData.text
-                                    color: modelData.role === "user" ? Theme.text : Theme.textDim
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSize(12)
-                                    wrapMode: Text.Wrap
-                                    textFormat: Text.PlainText
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 6
+                                    Text {
+                                        text: modelData.label
+                                        color: Theme.textDim
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: Theme.fontSize(12)
+                                        font.letterSpacing: 1
+                                    }
+                                    Item { Layout.fillWidth: true }
+                                    Text {
+                                        text: api.money(modelData.value) + " / "
+                                            + (modelData.limit > 0 ? api.money(modelData.limit) : "∞")
+                                        color: Theme.text
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: Theme.fontSize(12)
+                                    }
+                                    Text {
+                                        text: modelData.limit > 0
+                                            ? api.pctLabel(modelData.value, modelData.limit)
+                                            : "∞"
+                                        color: api.pct(modelData.value, modelData.limit) > 80
+                                            ? Theme.danger
+                                            : Theme.textDim
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: Theme.fontSize(12)
+                                    }
+                                }
+
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    height: 8
+                                    radius: 3
+                                    color: "#1a1a1a"
+                                    border.color: Theme.border
+                                    border.width: 1
+                                    Rectangle {
+                                        readonly property real ratio: modelData.limit > 0
+                                            ? Math.max(0, Math.min(1, modelData.value / modelData.limit))
+                                            : 0
+                                        anchors.left: parent.left
+                                        anchors.top: parent.top
+                                        anchors.bottom: parent.bottom
+                                        anchors.margins: 1
+                                        width: (parent.width - 2) * ratio
+                                        radius: 2
+                                        color: (ratio * 100) > 80 ? Theme.danger : Theme.accent
+                                        Behavior on width {
+                                            NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+                                        }
+                                    }
                                 }
                             }
                         }
 
-                        // строка ввода
                         Rectangle {
                             Layout.fillWidth: true
-                            height: 40
-                            radius: Theme.radius
-                            color: Theme.bg
-                            border.width: 1
-                            border.color: chatInput.activeFocus ? Theme.borderAccent : Theme.border
-
-                            TextInput {
-                                id: chatInput
-                                anchors.fill: parent
-                                anchors.leftMargin: 10
-                                anchors.rightMargin: 10
-                                verticalAlignment: TextInput.AlignVCenter
-                                color: Theme.text
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSize(12)
-                                clip: true
-                                selectByMouse: true
-                                onAccepted: chat.send(text)
-
-                                Text {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: "спроси что-нибудь…"
-                                    color: Theme.textFaint
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSize(12)
-                                    visible: chatInput.text === "" && !chatInput.activeFocus
-                                }
-                            }
+                            height: 1
+                            color: Theme.border
                         }
 
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 6
+                        Text {
+                            text: "МОДЕЛИ"
+                            color: Theme.text
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize(12)
+                            font.bold: true
+                            font.letterSpacing: 2
+                        }
 
-                            Rectangle {
+                        // разбивка по моделям за месяц
+                        Repeater {
+                            model: api.models
+                            delegate: ColumnLayout {
+                                required property var modelData
                                 Layout.fillWidth: true
-                                height: 36
-                                radius: Theme.radius
-                                color: sendMouse.containsMouse
-                                    ? Theme.active
-                                    : Theme.hoverStrong
-                                border.color: Theme.borderAccent
-                                border.width: 1
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: chat.busy ? "СТОП" : "ОТПРАВИТЬ"
-                                    color: Theme.text
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSize(12)
-                                    font.letterSpacing: 1
-                                }
-                                MouseArea {
-                                    id: sendMouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: chat.busy ? chat.stop() : chat.send(chatInput.text)
-                                }
-                            }
+                                spacing: 4
 
-                            // новая сессия (сбросить контекст)
-                            Rectangle {
-                                Layout.preferredWidth: 40
-                                height: 36
-                                radius: Theme.radius
-                                color: newMouse.containsMouse ? Theme.alpha(Theme.danger, 0.12) : "transparent"
-                                border.width: 1
-                                border.color: newMouse.containsMouse ? Theme.danger : Theme.border
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "＋"
-                                    color: newMouse.containsMouse ? Theme.danger : Theme.textDim
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSize(14)
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 6
+                                    Text {
+                                        text: modelData.id
+                                        color: Theme.textDim
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: Theme.fontSize(11)
+                                        elide: Text.ElideRight
+                                        Layout.fillWidth: true
+                                    }
+                                    Text {
+                                        text: api.money(modelData.usd) + " / "
+                                            + (modelData.lim > 0 ? api.money(modelData.lim) : "∞")
+                                        color: Theme.text
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: Theme.fontSize(11)
+                                    }
                                 }
-                                MouseArea {
-                                    id: newMouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: chat.newSession()
-                                }
-                            }
-
-                            // открыть полноценный opencode в терминале
-                            Rectangle {
-                                Layout.preferredWidth: 40
-                                height: 36
-                                radius: Theme.radius
-                                color: tuiMouse.containsMouse ? Theme.active : "transparent"
-                                border.width: 1
-                                border.color: tuiMouse.containsMouse ? Theme.accent : Theme.border
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "▣"
-                                    color: tuiMouse.containsMouse ? Theme.accent : Theme.textDim
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSize(14)
-                                }
-                                MouseArea {
-                                    id: tuiMouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: chat.openTui()
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 6
+                                    Rectangle {
+                                        Layout.fillWidth: true
+                                        height: 4
+                                        radius: 2
+                                        color: "#1a1a1a"
+                                        Rectangle {
+                                            readonly property real ratio: modelData.lim > 0
+                                                ? Math.max(0, Math.min(1, modelData.usd / modelData.lim))
+                                                : 0
+                                            anchors.left: parent.left
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            height: parent.height
+                                            width: parent.width * ratio
+                                            radius: 2
+                                            color: (ratio * 100) > 80 ? Theme.danger : Theme.accent
+                                            Behavior on width {
+                                                NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+                                            }
+                                        }
+                                    }
+                                    Text {
+                                        text: "in " + api.fmtTokens(modelData.tin)
+                                            + "  out " + api.fmtTokens(modelData.tout)
+                                            + "  cache " + api.fmtTokens(modelData.cache)
+                                        color: Theme.textFaint
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: Theme.fontSize(10)
+                                    }
                                 }
                             }
                         }
 
                         Text {
                             Layout.fillWidth: true
-                            text: chat.status
+                            text: api.status
                             color: Theme.textFaint
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.fontSize(10)
                             elide: Text.ElideRight
                         }
+
+                        Item { Layout.fillHeight: true }
                     }
                 }
 
+                // ═══ заметки ═══
                 Rectangle {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
                     color: Theme.bgCard
                     radius: Theme.radius
                     border.color: Theme.border
@@ -513,148 +518,108 @@ PanelWindow {
         onTriggered: notesFile.setText(notesArea.text)
     }
 
-    Process { id: termProc; running: false }
-
-    // ═══════════════ OpenCode-чат (агент в сайдбаре) ═══════════════
-    // Вызов: opencode run --format json "<сообщение>" — стримит JSON-события,
-    // из них берём текстовые части ответа. Контекст держим в сессии
-    // (--continue), пока пользователь не сбросит (＋).
+    // ═══════════════ api-limit: расход лимитов OpenCode Go ═══════════════
+    // Данные собирает eclipse-api-limit.sh из локальной БД OpenCode
+    // (readonly). Лимиты долларовые и на модель: 5ч = 20% месячного,
+    // неделя = 50%, месяц = 100%. Секретов скрипт не читает.
     QtObject {
-        id: chat
-        property var messages: []
-        property bool busy: false
-        property string status: "готов"
-        property string sessionId: ""
-        // C4/H10: сообщение, ждущее завершения текущего запуска — не теряем
-        property string queued: ""
+        id: api
+        property bool ok: false
+        property string lead: ""
+        property real h5: 0
+        property real wk: 0
+        property real mo: 0
+        property real molim: 60
+        property var models: []
+        property string status: "загрузка…"
 
-        // Витрина чата ограничена: и по числу сообщений, и по суммарной
-        // длине — длинный стрим не растит память бесконечно. Контекст
-        // агента живёт в сессии OpenCode (--session), а не здесь.
-        readonly property int maxMessages: 200
-        readonly property int maxChars: 180000
+        // лимиты окон выводятся из месячного лимита ведущей модели
+        readonly property real h5lim: molim * 0.2
+        readonly property real wklim: molim * 0.5
 
-        function capHistory(m) {
-            if (m.length > maxMessages)
-                m = m.slice(m.length - maxMessages)
-            var n = 0, i
-            for (i = 0; i < m.length; i++)
-                n += m[i].text.length
-            var start = 0
-            while (n > maxChars && (m.length - start) > 1) {
-                n -= m[start].text.length
-                start++
+        function money(v) {
+            return "$" + Number(v || 0).toFixed(2)
+        }
+
+        function pct(v, lim) {
+            if (!(lim > 0)) return 0
+            return Math.round((v / lim) * 100)
+        }
+
+        function pctLabel(v, lim) {
+            return Math.min(999, pct(v, lim)) + "%"
+        }
+
+        function fmtTokens(n) {
+            n = Number(n || 0)
+            if (n >= 1e9) return (n / 1e9).toFixed(1) + "B"
+            if (n >= 1e6) return (n / 1e6).toFixed(1) + "M"
+            if (n >= 1e3) return Math.round(n / 1e3) + "K"
+            return "" + Math.round(n)
+        }
+
+        function refresh() {
+            if (apiProc.running) return
+            models = []
+            ok = false
+            status = "загрузка…"
+            apiProc.running = true
+        }
+
+        // строки сборщика: key=value и "M id usd lim tin tout cache"
+        function parseLine(line) {
+            if (!line) return
+            if (line.charAt(0) === "M") {
+                var p = line.split(" ")
+                if (p.length >= 7) {
+                    var arr = models.slice()
+                    arr.push({
+                        id: p[1],
+                        usd: Number(p[2]),
+                        lim: Number(p[3]),
+                        tin: Number(p[4]),
+                        tout: Number(p[5]),
+                        cache: Number(p[6])
+                    })
+                    models = arr
+                }
+                return
             }
-            if (start > 0)
-                m = m.slice(start)
-            return m
+            var i = line.indexOf("=")
+            if (i < 0) return
+            var k = line.slice(0, i)
+            var v = line.slice(i + 1)
+            if (k === "lead") lead = v
+            else if (k === "h5") h5 = Number(v)
+            else if (k === "wk") wk = Number(v)
+            else if (k === "mo") mo = Number(v)
+            else if (k === "molim") molim = Number(v)
+            else if (k === "ok") ok = (v === "1")
         }
+    }
 
-        function send(text) {
-            if (text.trim() === "" || busy) return
-            messages = capHistory(messages.concat([
-                { role: "user", text: text },
-                { role: "assistant", text: "" }
-            ]))
-            busy = true
-            status = "opencode работает…"
-            if (chatInput) chatInput.text = ""
-            dispatch(text)
+    Process {
+        id: apiProc
+        running: false
+        command: ["bash", Quickshell.env("HOME") + "/.config/hypr/scripts/eclipse-api-limit.sh"]
+        onExited: (exitCode) => {
+            api.status = exitCode === 0
+                ? (api.lead !== "" ? "обновлено" : "нет данных")
+                : ("ошибка " + exitCode)
         }
-
-        // H10: без shell — argv-массив, поэтому кавычки/апострофы в тексте
-        // не ломают команду. C4: если процесс занят — ставим в очередь.
-        function dispatch(text) {
-            if (text === "") return
-            if (chatProc.running) { queued = text; return }
-            var args = ["opencode", "run", "--format", "json"]
-            if (sessionId !== "") { args.push("--session", sessionId) }
-            args.push("--", text)
-            chatProc.command = args
-            chatProc.running = true
-            chatWatchdog.restart()
-        }
-
-        function appendAssistant(chunk) {
-            if (messages.length === 0) return
-            var m = messages.slice()
-            m[m.length - 1] = { role: "assistant", text: m[m.length - 1].text + chunk }
-            messages = capHistory(m)
-        }
-
-        function newSession() {
-            // H9: гасим текущий запуск, иначе он снова запишет ID удалённой сессии
-            chatProc.running = false
-            chatWatchdog.stop()
-            queued = ""
-            busy = false
-            status = "новая сессия"
-            if (sessionId !== "") {
-                sessionsProc.command = ["opencode", "session", "delete", sessionId]
-                sessionsProc.running = true
-            }
-            sessionId = ""
-            messages = []
-        }
-
-        function openTui() {
-            termProc.command = ["bash", "-c",
-                "hyprctl dispatch 'hl.dsp.exec_cmd(\"kitty -e opencode\")'"]
-            termProc.running = true
-        }
-
-        function stop() {
-            // running=false теперь завершает сам opencode (без bash-обёртки)
-            chatProc.running = false
-            chatWatchdog.stop()
-            queued = ""
-            busy = false
-            status = "остановлено"
+        stderr: StdioCollector {}
+        stdout: SplitParser {
+            onRead: function(line) { api.parseLine(line) }
         }
     }
 
     Timer {
-        id: chatWatchdog
-        interval: 600000        // 10 мин: дольше агент уже не отвечает — не висим вечно
-        repeat: false
-        onTriggered: chat.stop()
+        id: apiTimer
+        interval: 60000
+        repeat: true
+        running: !root.collapsed && root.tabIndex === 0
+        onTriggered: api.refresh()
     }
-
-    Process {
-        id: chatProc
-        running: false
-        onExited: (exitCode) => {
-            chatWatchdog.stop()
-            chat.busy = false
-            if (exitCode === 0) {
-                chat.status = "готов"
-            } else {
-                var e = (chatErr.text || "").trim()
-                chat.status = e !== "" ? e.split("\n").pop() : ("ошибка " + exitCode)
-            }
-            if (chat.queued !== "") {
-                var p = chat.queued
-                chat.queued = ""
-                chat.busy = true
-                chat.status = "opencode работает…"
-                chat.dispatch(p)
-            }
-        }
-        stderr: StdioCollector { id: chatErr }
-        stdout: SplitParser {
-            onRead: function(line) {
-                if (!line) return
-                try {
-                    var ev = JSON.parse(line)
-                    if (ev.type === "text" && ev.part && ev.part.text !== undefined)
-                        chat.appendAssistant(ev.part.text)
-                    if (ev.sessionID) chat.sessionId = ev.sessionID
-                } catch (e) { /* не-JSON строки игнорируем */ }
-            }
-        }
-    }
-
-    Process { id: sessionsProc; running: false }
 
     // заметки: пишем файлом напрямую (без bash/heredoc) и атомарно
     FileView {
@@ -691,5 +656,8 @@ PanelWindow {
         onTriggered: sysStats.running = true
     }
 
-    Component.onCompleted: notesFile.reload()
+    Component.onCompleted: {
+        notesFile.reload()
+        api.refresh()
+    }
 }
