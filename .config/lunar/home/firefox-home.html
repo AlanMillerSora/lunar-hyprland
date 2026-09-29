@@ -135,9 +135,11 @@
     const v = input.value.trim();
     if (!v) return;
     const looksUrl = /^[\w.-]+\.[a-z]{2,}(\/|$)/i.test(v) || v.startsWith("http");
+    // поисковик — Google (как и Default в политике Firefox;
+    // раньше здесь был DuckDuckGo, из-за него новая вкладка искала не там)
     location.href = looksUrl
       ? (v.startsWith("http") ? v : "https://" + v)
-      : "https://duckduckgo.com/?q=" + encodeURIComponent(v);
+      : "https://www.google.com/search?q=" + encodeURIComponent(v);
   });
 </script>
 </body>
