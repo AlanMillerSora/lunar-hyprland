@@ -723,6 +723,12 @@ fi
 
 # ── shell по умолчанию ─────────────────────────────────────────
 step "shell по умолчанию"
+# zsh читает конфиг из ~/.zshrc (ZDOTDIR не задаём), а в репо он лежит
+# в .config/.zshrc — кладём копию в домашний каталог, иначе шелл стартует голым
+if [ -f "$REPO/.config/.zshrc" ]; then
+  cp "$REPO/.config/.zshrc" "$HOME/.zshrc"
+  ok "~/.zshrc обновлён"
+fi
 ZSH_BIN="$(command -v zsh 2>/dev/null || true)"
 SHELL_TARGET="${SUDO_USER:-$USER}"
 if [ -z "$ZSH_BIN" ]; then
