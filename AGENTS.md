@@ -183,6 +183,8 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 
 - Батарея и всё ноутбучное — не нужно.
 - Яркость (`XF86MonBrightness`, `brightnessctl`, `ddcutil`, `i2c-dev`) — удалена.
+- Профили питания (`power-profiles-daemon`, balanced/powersave) — убраны: CPU всегда
+  `performance` (юнит `lunar-cpu-performance`), powersave не возвращать.
 - Статические PNG-обои и их генератор — удалены; обои только QML-сцена (`LunarWallpaper.qml`).
 - Видео-обои (mpvpaper/awww, webm/zoompan, headless-Chromium) — убраны.
 - `svappy`/редактор скриншотов (PRINT = область в буфер).

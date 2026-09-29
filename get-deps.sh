@@ -78,7 +78,7 @@ if sudo pacman -S --needed --noconfirm \
   playerctl iw jq cliphist wl-clipboard \
   grim slurp wf-recorder \
   pipewire pipewire-pulse wireplumber pavucontrol cava \
-  power-profiles-daemon polkit polkit-kde-agent \
+  polkit polkit-kde-agent \
   networkmanager iwd bluez bluez-utils nm-connection-editor blueman \
   gammastep \
   python python-psutil python-gobject \

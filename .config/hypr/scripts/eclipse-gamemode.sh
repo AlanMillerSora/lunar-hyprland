@@ -3,7 +3,7 @@
 #  eclipse-gamemode.sh — игровой режим одним действием.
 #
 #  Вкл:  без анимаций и blur, DND, пауза hypridle (не лочится),
-#        профиль performance, разрешён tearing (меньше задержка).
+#        разрешён tearing (меньше задержка).
 #  Выкл: всё возвращается к значениям, что были до включения.
 #
 #  Запуск:  eclipse-gamemode.sh on|off|toggle
@@ -125,13 +125,12 @@ gm_on() {
   hyprctl eval 'hl.config({general = {allow_tearing = true}})' >/dev/null 2>&1
   makoctl mode -a do-not-disturb >/dev/null 2>&1
   pkill -STOP -x hypridle 2>/dev/null
-  powerprofilesctl set performance >/dev/null 2>&1
   svc_pause
   echo 1 >"$STATE"
   trap - EXIT
-  say "Game Mode включён: анимации/blur выкл · DND · performance · tearing"
+  say "Game Mode включён: анимации/blur выкл · DND · tearing"
   notify-send -a "Game Mode" "Игровой режим включён" \
-    "анимации/blur выкл · DND · performance · hypridle на паузе" 2>/dev/null
+    "анимации/blur выкл · DND · hypridle на паузе" 2>/dev/null
 }
 
 gm_off() {
@@ -144,7 +143,6 @@ gm_off() {
   rm -f "$PREV_STATE"
   makoctl mode -r do-not-disturb >/dev/null 2>&1
   pkill -CONT -x hypridle 2>/dev/null
-  powerprofilesctl set balanced >/dev/null 2>&1
   svc_restore
   echo 0 >"$STATE"
   say "Game Mode выключен: всё вернулось"

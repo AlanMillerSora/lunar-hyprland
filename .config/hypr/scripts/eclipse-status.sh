@@ -8,7 +8,7 @@
 #  notif — сколько уведомлений
 #  gpu/gput — загрузка и температура GPU (AMD sysfs или NVIDIA)
 #  gm   — 1 если включён Game Mode
-#  pp   — профиль питания (performance/balanced/power-saver)
+#  pp   — CPU governor (всегда performance; powersave убран)
 #  Без python3: JSON разбирает jq (в зависимостях), уведомления — makoctl -j.
 #  GPU отдаём одним «сырым» замером, а сглаживание дёрганого gpu_busy_percent
 #  на APU делает панель (EMA) — без sleep-цикла в горячем пути.
@@ -66,7 +66,7 @@ fi
 GM_FILE="$HOME/.cache/lunar/gamemode"
 gm="0"
 [ -r "$GM_FILE" ] && gm="$(<"$GM_FILE")"
-pp="$(powerprofilesctl get 2>/dev/null || echo "")"
+pp="$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || echo performance)"
 rec=0
 PIDFILE="${XDG_RUNTIME_DIR:-/tmp}/lunar-record.pid"
 rp=""

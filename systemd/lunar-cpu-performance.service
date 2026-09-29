@@ -1,0 +1,11 @@
+[Unit]
+Description=Lunar Eclipse — CPU governor performance (без powersave)
+After=multi-user.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/lib/lunar/cpu-performance.sh
+
+[Install]
+WantedBy=multi-user.target

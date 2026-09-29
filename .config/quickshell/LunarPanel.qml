@@ -352,7 +352,6 @@ PanelWindow {
     property real gpuEma: -1          // сглаживание gpu_busy_percent (APU дёргается 0/100)
     property string gpuTemp: ""
     property bool gameMode: false
-    property string powerProfile: ""
     property bool recording: false
     readonly property int focusedPhase:
         (root.focusedWs && root.focusedWs.id > 0) ? root.focusedWs.id : 0
@@ -395,8 +394,6 @@ PanelWindow {
                         root.gpuTemp = v
                     } else if (k === "gm") {
                         root.gameMode = (v === "1")
-                    } else if (k === "pp") {
-                        root.powerProfile = v
                     } else if (k === "rec") {
                         root.recording = (v === "1")
                     }
@@ -479,7 +476,6 @@ PanelWindow {
     Process { id: layoutProc; running: false }
     Process { id: dndProc; running: false }
     Process { id: gameProc; running: false }
-    Process { id: powerProc; running: false }
     Process { id: recordProc; running: false }
     Process {
         id: mediaPanelProc
@@ -511,12 +507,6 @@ PanelWindow {
         gameProc.command = ["bash", "-c",
             "~/.config/hypr/scripts/eclipse-gamemode.sh toggle"]
         gameProc.running = true
-    }
-
-    function cyclePower() {
-        powerProc.command = ["bash", "-c",
-            "p=$(powerprofilesctl get); case \"$p\" in performance) n=balanced;; power-saver) n=performance;; *) n=power-saver;; esac; powerprofilesctl set \"$n\""]
-        powerProc.running = true
     }
 
     function toggleRecording() {
@@ -855,22 +845,15 @@ PanelWindow {
                         }
                     }
 
-                    // профиль питания (клик — переключить performance/balanced/save)
+                    // питание: CPU всегда performance, powersave убран
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         width: fm13.advanceWidth("PERF")
-                        text: root.powerProfile === "performance"
-                            ? "PERF"
-                            : (root.powerProfile === "power-saver" ? "SAVE" : "BAL")
-                        color: root.powerProfile === "performance" ? Theme.accent : Theme.textDim
+                        text: "PERF"
+                        color: Theme.accent
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSize(13)
                         font.bold: true
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.cyclePower()
-                        }
                     }
 
                     Rectangle {

@@ -608,7 +608,12 @@ fi
 step "systemd --user: wifi-guard, homepage"
 if [ -d "$REPO/systemd" ]; then
   mkdir -p "$HOME/.config/systemd/user"
-  cp "$REPO"/systemd/*.service "$HOME/.config/systemd/user/"
+  # lunar-cpu-performance*.service — системные (пишут в sysfs), в user-юниты
+  # их класть нельзя, поэтому пропускаем при копировании.
+  for u in "$REPO"/systemd/*.service; do
+    case "$(basename "$u")" in lunar-cpu-performance*) continue;; esac
+    cp "$u" "$HOME/.config/systemd/user/"
+  done
   systemctl --user daemon-reload 2>/dev/null || true
   systemctl --user enable --now lunar-wifi-guard.service 2>/dev/null || true
   systemctl --user enable --now lunar-homepage.service 2>/dev/null || true
@@ -628,6 +633,35 @@ if systemctl list-unit-files cronie.service >/dev/null 2>&1; then
     || warn "cronie не включился (нужен sudo)"
 else
   say "cronie не установлен — пропускаю"
+fi
+
+# ── CPU: всегда performance, без power-profiles-daemon ─────────
+# power-profiles-daemon запускается по D-Bus и умеет только balanced/
+# power-saver, а на Ryzen «balanced» = governor powersave (просадки).
+# Поэтому глушим его навсегда, а CPU держим на performance своим юнитом.
+step "CPU: performance вместо power-profiles-daemon"
+if [ -f "$REPO/systemd/lunar-cpu-performance.sh" ]; then
+  sudo install -d -m 0755 -o root -g root /usr/local/lib/lunar 2>/dev/null \
+    && sudo install -m 0755 -o root -g root \
+         "$REPO/systemd/lunar-cpu-performance.sh" \
+         /usr/local/lib/lunar/cpu-performance.sh 2>/dev/null \
+    && ok "хелпер: /usr/local/lib/lunar/cpu-performance.sh" \
+    || warn "хелпер cpu-performance не установлен (нужен sudo)"
+fi
+for u in lunar-cpu-performance.service lunar-cpu-performance-resume.service; do
+  [ -f "$REPO/systemd/$u" ] && sudo install -m 0644 -o root -g root \
+    "$REPO/systemd/$u" "/etc/systemd/system/$u" 2>/dev/null || true
+done
+sudo systemctl daemon-reload 2>/dev/null || true
+sudo systemctl enable --now lunar-cpu-performance.service 2>/dev/null \
+  && ok "CPU: governor performance (юнит включён)" \
+  || warn "lunar-cpu-performance.service не включился (нужен sudo)"
+sudo systemctl enable --now lunar-cpu-performance-resume.service 2>/dev/null || true
+if systemctl list-unit-files power-profiles-daemon.service >/dev/null 2>&1; then
+  sudo systemctl disable --now power-profiles-daemon.service 2>/dev/null || true
+  sudo systemctl mask power-profiles-daemon.service 2>/dev/null \
+    && ok "power-profiles-daemon замаскирован (powersave не вернётся)" \
+    || warn "power-profiles-daemon не замаскирован (нужен sudo)"
 fi
 
 # ── Wi-Fi: powersave off + ASPM ────────────────────────────────
