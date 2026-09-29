@@ -151,6 +151,15 @@ gm_off() {
   notify-send -a "Game Mode" "Игровой режим выключен" "анимации/blur/DND вернулись" 2>/dev/null
 }
 
+# сериализуем on/off/toggle: параллельный запуск (хоткей + reload-хук)
+# портил снимок PREV_STATE и возвращал «догадки» вместо реальных значений
+LOCK="$HOME/.cache/lunar/gamemode.lock"
+exec 9>"$LOCK"
+if ! flock -w 15 9; then
+  say "Game Mode: другая операция ещё идёт — пропускаю"
+  exit 0
+fi
+
 case "${1:-toggle}" in
   on)  gm_on ;;
   off) gm_off ;;

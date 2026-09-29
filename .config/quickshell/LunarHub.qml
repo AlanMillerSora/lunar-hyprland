@@ -505,8 +505,10 @@ PanelWindow {
                         // иначе SIGKILL посреди долгих операций), но видимость
                         // страницы = открыт ли Hub. По ней страницы гасят свои
                         // таймеры-поллинг (Network/Bluetooth/Memory/System).
+                        // видимость держим и на время затухания карточки
+                        // (opacity ~220 мс), иначе контент гаснет рывком
                         onItemChanged: if (item)
-                            item.visible = Qt.binding(function() { return root.showing })
+                            item.visible = Qt.binding(function() { return root.showing || card.opacity > 0.01 })
 
                         Behavior on opacity {
                             NumberAnimation {

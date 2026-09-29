@@ -137,9 +137,9 @@ Item {
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.margins: 12
-                    text: "\uf071  настройки интерфейса не прочитаны: " + Theme.uiError
+                    text: "\uf071  " + Theme.uiError
                     color: Theme.danger
-                    font.family: Theme.fontFamily
+                    font.family: Theme.iconFont
                     font.pixelSize: 11
                     wrapMode: Text.WordWrap
                 }

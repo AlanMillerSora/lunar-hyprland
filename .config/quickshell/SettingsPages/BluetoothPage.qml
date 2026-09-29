@@ -143,8 +143,8 @@ Item {
             setDiscovering(true)
     }
     Component.onDestruction: {
-        // M81: гасим скан напрямую, не полагаясь на page.visible —
-        // при закрытии Hub он не меняется
+        // M81/X1: page.visible теперь гаснет при закрытии Hub, но на выгрузке
+        // страницы гасим скан ещё и напрямую — на всякий случай
         if (page.adapter)
             page.adapter.discovering = false
     }

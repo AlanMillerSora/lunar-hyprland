@@ -20,9 +20,12 @@ set -uo pipefail
 PERF_STATE="$HOME/.cache/lunar/perf-prev"
 mkdir -p "$(dirname "$PERF_STATE")"
 
-# сырое значение булевой/целой опции Hyprland (через jq)
+# сырое значение опции Hyprland (через jq). У булевых опций в JSON поле
+# .bool, а не .int — иначе снимок popups выходил пустым (та же ловушка,
+# что была в Game Mode).
 get_int()   { hyprctl -j getoption "$1" 2>/dev/null | jq -r '.int // empty' 2>/dev/null; }
 get_float() { hyprctl -j getoption "$1" 2>/dev/null | jq -r '.float // empty' 2>/dev/null; }
+get_bool()  { hyprctl -j getoption "$1" 2>/dev/null | jq -r '.bool' 2>/dev/null; }
 read_state() { sed -n "s/^$1=//p" "$PERF_STATE" 2>/dev/null | head -1; }
 
 # снимаем пользовательский блюр ДО того, как его перезапишет пресет
@@ -33,9 +36,9 @@ snapshot() {
   size="$(get_int decoration:blur:size)"
   passes="$(get_int decoration:blur:passes)"
   vib="$(get_float decoration:blur:vibrancy)"
-  pop="$(get_int decoration:blur:popups)"
+  pop="$(get_bool decoration:blur:popups)"
   [[ "$size" =~ ^[0-9]+$ && "$passes" =~ ^[0-9]+$ && -n "$vib" ]] || return 0
-  [[ "$pop" == 1 ]] && pop=true || pop=false
+  [[ "$pop" == true || "$pop" == false ]] || pop=true
   printf 'size=%s\npasses=%s\nvibrancy=%s\npopups=%s\n' \
     "$size" "$passes" "$vib" "$pop" >"$PERF_STATE"
 }

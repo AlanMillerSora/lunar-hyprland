@@ -160,10 +160,11 @@ Item {
     function connectSecured(ssid, password) {
         if (pConnect.running) { page.connectMsg = "подождите — идёт другая операция"; return }
         page.connectMsg = ""
-        // H23: пароль не попадает в argv — отдаём его nmcli через stdin (--ask)
+        // H23: пароль не попадает в argv — отдаём его nmcli через stdin (--ask).
+        // Кладём пароль ДО старта, чтобы onStarted гарантированно его увидел.
+        pConnect.pendingPassword = password + "\n"
         pConnect.command = ["nmcli", "--ask", "device", "wifi", "connect", ssid]
         pConnect.running = true
-        pConnect.pendingPassword = password + "\n"
     }
 
     function disconnect(ssid) {

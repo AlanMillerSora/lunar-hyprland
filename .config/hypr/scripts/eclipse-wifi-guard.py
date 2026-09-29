@@ -126,7 +126,7 @@ def wifi_device_present():
 
 
 def visible_ssids():
-    """SSID, видимые в текущем скане (чтобы выбрать профиль по дальности)."""
+    """SSID, видимые в текущем скане (для выбора доступного профиля)."""
     r = sh("nmcli", "-t", "-f", "SSID", "device", "wifi", "list")
     if not r:
         return set()
@@ -139,14 +139,19 @@ def visible_ssids():
 
 
 def pick_profile(conns):
-    """Профиль для восстановления: явный → видимый в скане → первый."""
+    """Профиль для восстановления: видимый в скане → явный → первый.
+
+    Явный PROFILE не должен побеждать всегда: после переезда на другой
+    роутер его сеть может быть не видна, и сторож иначе долбит мёртвый
+    профиль вместо реально доступного.
+    """
     names = [n for n, _ in conns]
-    if PROFILE and PROFILE in names:
-        return PROFILE
     vis = visible_ssids()
     for n in names:
         if n in vis:
             return n
+    if PROFILE and PROFILE in names:
+        return PROFILE
     return names[0] if names else ""
 
 
@@ -179,7 +184,7 @@ def main():
                 if active:
                     fails = 0
                 elif not wifi_device_present():
-                    # Wi-Fi-карты нет вовсе (проводной ПК) — не дёргаем nmcli
+                    # Wi-Fi-карты нет вовсе (проводной ПК) — профиль не поднимаем
                     fails = 0
                 else:
                     # радио включено, но связи нет — чиним профилем,

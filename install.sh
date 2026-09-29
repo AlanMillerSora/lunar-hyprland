@@ -616,7 +616,9 @@ if [ -f "$REPO/systemd/10-lunar-wifi-powersave-off.sh" ]; then
 fi
 if [ -f "$REPO/systemd/mt7921e-no-aspm.conf" ]; then
   # только для адаптеров MediaTek mt7921e: на другом чипе файл — мёртвый груз
-  if modinfo mt7921e >/dev/null 2>&1; then
+  # не modinfo: модуль mt7921e in-tree и есть на любом ядре Arch, поэтому
+  # проверяем само железо — PCI-вендор MediaTek (0x14c3)
+  if grep -qi '^0x14c3' /sys/bus/pci/devices/*/vendor 2>/dev/null; then
     sudo install -m 0644 -o root -g root \
       "$REPO/systemd/mt7921e-no-aspm.conf" \
       /etc/modprobe.d/mt7921e-no-aspm.conf 2>/dev/null \
