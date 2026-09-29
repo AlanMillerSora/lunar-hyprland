@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 # ════════════════════════════════════════════════════════════════
 #  eclipse-api-limit.sh — расход лимитов OpenCode Go для панели api-limit.
-#    Читает локальную БД OpenCode (readonly), считает доллары за
-#    5 часов / неделю / 30 дней по провайдеру opencode-go и отдаёт
-#    строки key=value + по строке на модель.
-#    Лимиты — долларовые, на модель (источник: opencode.ai/docs/go):
-#      5ч = 20% месячного, неделя = 50%, месяц = 100%.
-#    Секретов не содержит: только локальная БД и публичная таблица лимитов.
+#    Источник истины — официальный эндпоинт OpenCode Go:
+#       GET https://opencode.ai/zen/go/v1/usage   (Authorization: Bearer)
+#    Отдаёт проценты по окнам rolling(5ч)/weekly/monthly и время сброса.
+#    Ключ берём из локальной БД OpenCode (credential, integration_id
+#    opencode-go) — в репозиторий и логи он не попадает.
+#    Доллары оцениваем как percent/100 × лимит окна (месяц = лимит
+#    ведущей модели; 5ч = 20%, неделя = 50%). Если API недоступен —
+#    считаем сами по session_message (per-message cost + время).
+#    Разбивка по моделям — из session_message (API её не отдаёт).
+#    Секретов в файле нет: только локальная БД и публичный эндпоинт.
 # ════════════════════════════════════════════════════════════════
 set -u
 
@@ -38,26 +42,51 @@ model_limit() {
     esac
 }
 
-read -r h5 wk mo <<EOF
-$(sql "SELECT
-  round(coalesce(sum(CASE WHEN time_updated >= $h5_from THEN cost END),0),4) || ' ' ||
-  round(coalesce(sum(CASE WHEN time_updated >= $wk_from THEN cost END),0),4) || ' ' ||
-  round(coalesce(sum(CASE WHEN time_updated >= $mo_from THEN cost END),0),4)
-FROM session_v2
-WHERE cost > 0 AND json_extract(model,'\$.providerID') = 'opencode-go';")
-EOF
-
-# ведущая модель месяца — по ней считаем лимиты (5ч/неделя/месяц)
-lead=$(sql "SELECT json_extract(model,'\$.id')
-FROM session_v2
-WHERE cost > 0 AND json_extract(model,'\$.providerID') = 'opencode-go'
-  AND time_updated >= $mo_from
-GROUP BY json_extract(model,'\$.id')
-ORDER BY sum(cost) DESC LIMIT 1;")
-
+# ведущая модель (по сумме cost) — по ней берём месячный лимит
+lead=$(sql "SELECT json_extract(data,'\$.model.id')
+FROM session_message
+WHERE json_extract(data,'\$.cost') > 0
+  AND json_extract(data,'\$.model.providerID') = 'opencode-go'
+GROUP BY json_extract(data,'\$.model.id')
+ORDER BY sum(json_extract(data,'\$.cost')) DESC LIMIT 1;")
 molim=$(model_limit "${lead:-}")
 
+# ── официальный источник: проценты окон ──
+source="local"
+h5pct="" ; wkpct="" ; mopct=""
+key=$(sql "SELECT json_extract(value,'\$.key') FROM credential
+           WHERE integration_id='opencode-go' LIMIT 1;")
+if [ -n "${key:-}" ]; then
+    usage=$(curl -s --max-time 8 -H "Authorization: Bearer $key" \
+        https://opencode.ai/zen/go/v1/usage 2>/dev/null)
+    hp=$(printf '%s' "$usage" | jq -r '.usage.rolling.percent // empty' 2>/dev/null)
+    wp=$(printf '%s' "$usage" | jq -r '.usage.weekly.percent // empty' 2>/dev/null)
+    mp=$(printf '%s' "$usage" | jq -r '.usage.monthly.percent // empty' 2>/dev/null)
+    if [ -n "$hp" ] && [ -n "$wp" ] && [ -n "$mp" ]; then
+        source="api" ; h5pct=$hp ; wkpct=$wp ; mopct=$mp
+    fi
+fi
+
+if [ "$source" = "api" ]; then
+    # проценты официальные; доллары — оценка от лимита окна
+    h5=$(awk -v p="$h5pct" -v l="$molim" 'BEGIN{printf "%.4f", p/100*l*0.2}')
+    wk=$(awk -v p="$wkpct" -v l="$molim" 'BEGIN{printf "%.4f", p/100*l*0.5}')
+    mo=$(awk -v p="$mopct" -v l="$molim" 'BEGIN{printf "%.4f", p/100*l}')
+else
+    # фолбэк: считаем по session_message (точное время каждого ответа)
+    read -r h5 wk mo <<EOF
+$(sql "SELECT
+  round(coalesce(sum(CASE WHEN time_created >= $h5_from THEN json_extract(data,'\$.cost') END),0),4) || ' ' ||
+  round(coalesce(sum(CASE WHEN time_created >= $wk_from THEN json_extract(data,'\$.cost') END),0),4) || ' ' ||
+  round(coalesce(sum(CASE WHEN time_created >= $mo_from THEN json_extract(data,'\$.cost') END),0),4)
+FROM session_message
+WHERE json_extract(data,'\$.cost') > 0
+  AND json_extract(data,'\$.model.providerID') = 'opencode-go';")
+EOF
+fi
+
 printf 'ok=1\n'
+printf 'source=%s\n' "$source"
 printf 'lead=%s\n' "${lead:-}"
 printf 'h5=%s\n' "${h5:-0}"
 printf 'wk=%s\n' "${wk:-0}"
@@ -65,16 +94,17 @@ printf 'mo=%s\n' "${mo:-0}"
 printf 'molim=%s\n' "$molim"
 
 # разбивка по моделям за месяц: M id usd lim tin tout cache
-sql "SELECT json_extract(model,'\$.id') || '|' ||
-       round(sum(cost),4) || '|' ||
-       coalesce(sum(tokens_input),0) || '|' ||
-       coalesce(sum(tokens_output),0) || '|' ||
-       coalesce(sum(tokens_cache_read),0)
-FROM session_v2
-WHERE cost > 0 AND json_extract(model,'\$.providerID') = 'opencode-go'
-  AND time_updated >= $mo_from
-GROUP BY json_extract(model,'\$.id')
-ORDER BY sum(cost) DESC
+sql "SELECT json_extract(data,'\$.model.id') || '|' ||
+       round(sum(json_extract(data,'\$.cost')),4) || '|' ||
+       coalesce(sum(json_extract(data,'\$.tokens.input')),0) || '|' ||
+       coalesce(sum(json_extract(data,'\$.tokens.output')),0) || '|' ||
+       coalesce(sum(json_extract(data,'\$.tokens.cache.read')),0)
+FROM session_message
+WHERE json_extract(data,'\$.cost') > 0
+  AND json_extract(data,'\$.model.providerID') = 'opencode-go'
+  AND time_created >= $mo_from
+GROUP BY json_extract(data,'\$.model.id')
+ORDER BY sum(json_extract(data,'\$.cost')) DESC
 LIMIT 6;" | while IFS='|' read -r id usd tin tout cache; do
     [ -n "$id" ] || continue
     printf 'M %s %s %s %s %s %s\n' "$id" "$usd" "$(model_limit "$id")" "$tin" "$tout" "$cache"

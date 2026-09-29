@@ -330,7 +330,7 @@ PanelWindow {
                         }
 
                         Text {
-                            text: "МОДЕЛИ"
+                            text: "МОДЕЛИ · локально"
                             color: Theme.text
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.fontSize(12)
@@ -338,7 +338,7 @@ PanelWindow {
                             font.letterSpacing: 2
                         }
 
-                        // разбивка по моделям за месяц
+                        // разбивка по моделям (локальная история): доля в расходе
                         Repeater {
                             model: api.models
                             delegate: ColumnLayout {
@@ -358,8 +358,7 @@ PanelWindow {
                                         Layout.fillWidth: true
                                     }
                                     Text {
-                                        text: api.money(modelData.usd) + " / "
-                                            + (modelData.lim > 0 ? api.money(modelData.lim) : "∞")
+                                        text: api.money(modelData.usd)
                                         color: Theme.text
                                         font.family: Theme.fontFamily
                                         font.pixelSize: Theme.fontSize(11)
@@ -374,15 +373,15 @@ PanelWindow {
                                         radius: 2
                                         color: "#1a1a1a"
                                         Rectangle {
-                                            readonly property real ratio: modelData.lim > 0
-                                                ? Math.max(0, Math.min(1, modelData.usd / modelData.lim))
+                                            readonly property real ratio: api.modelsTotal > 0
+                                                ? Math.max(0, Math.min(1, modelData.usd / api.modelsTotal))
                                                 : 0
                                             anchors.left: parent.left
                                             anchors.verticalCenter: parent.verticalCenter
                                             height: parent.height
                                             width: parent.width * ratio
                                             radius: 2
-                                            color: (ratio * 100) > 80 ? Theme.danger : Theme.accent
+                                            color: Theme.accent
                                             Behavior on width {
                                                 NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
                                             }
@@ -519,12 +518,13 @@ PanelWindow {
     }
 
     // ═══════════════ api-limit: расход лимитов OpenCode Go ═══════════════
-    // Данные собирает eclipse-api-limit.sh из локальной БД OpenCode
-    // (readonly). Лимиты долларовые и на модель: 5ч = 20% месячного,
-    // неделя = 50%, месяц = 100%. Секретов скрипт не читает.
+    // Проценты окон (5ч/неделя/месяц) берём из официального usage-API Go,
+    // доллары оцениваем от лимита ведущей модели; разбивка по моделям —
+    // из локальной БД. Собирает eclipse-api-limit.sh, ключ не хранит.
     QtObject {
         id: api
         property bool ok: false
+        property string source: "local"
         property string lead: ""
         property real h5: 0
         property real wk: 0
@@ -536,6 +536,14 @@ PanelWindow {
         // лимиты окон выводятся из месячного лимита ведущей модели
         readonly property real h5lim: molim * 0.2
         readonly property real wklim: molim * 0.5
+
+        // сумма локального расхода — для долей в разбивке по моделям
+        readonly property real modelsTotal: {
+            var t = 0
+            for (var i = 0; i < models.length; i++)
+                t += models[i].usd
+            return t
+        }
 
         function money(v) {
             return "$" + Number(v || 0).toFixed(2)
@@ -590,6 +598,7 @@ PanelWindow {
             var k = line.slice(0, i)
             var v = line.slice(i + 1)
             if (k === "lead") lead = v
+            else if (k === "source") source = v
             else if (k === "h5") h5 = Number(v)
             else if (k === "wk") wk = Number(v)
             else if (k === "mo") mo = Number(v)
@@ -603,9 +612,9 @@ PanelWindow {
         running: false
         command: ["bash", Quickshell.env("HOME") + "/.config/hypr/scripts/eclipse-api-limit.sh"]
         onExited: (exitCode) => {
-            api.status = exitCode === 0
-                ? (api.lead !== "" ? "обновлено" : "нет данных")
-                : ("ошибка " + exitCode)
+            if (exitCode !== 0) { api.status = "ошибка " + exitCode; return }
+            if (api.lead === "") { api.status = "нет данных"; return }
+            api.status = (api.source === "api" ? "официальные" : "локальные") + " · обновлено"
         }
         stderr: StdioCollector {}
         stdout: SplitParser {
