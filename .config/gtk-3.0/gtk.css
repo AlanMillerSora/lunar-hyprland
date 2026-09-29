@@ -100,22 +100,49 @@ entry:focus, entry:focus-within, .entry:focus { border-color: #ffffff; }
 .view:hover, treeview.view:hover, iconview:hover { background-color: @lunar_hover; }
 .rubberband { background-color: rgba(255, 255, 255, 0.08); border: 1px solid @lunar_dim; }
 
-/* ── сайдбар (Places) ────────────────────────────────────────── */
-.sidebar, placessidebar, stacksidebar, .sidebar-pane {
+/* ── сайдбар (Places / Lutris, libadwaita-стиль) ─────────────── */
+.sidebar, placessidebar, stacksidebar, .sidebar-pane,
+.navigation-sidebar, list.navigation-sidebar {
   background-color: @theme_bg_color;
-  color: @lunar_dim;
+  color: @theme_fg_color;
   border-right: 1px solid @borders;
 }
-.sidebar row, placessidebar row, stacksidebar row {
+.sidebar row, placessidebar row, stacksidebar row,
+.navigation-sidebar row, list.navigation-sidebar row {
   border-radius: 6px;
   padding: 4px 6px;
   min-height: 24px;
+  color: @theme_fg_color;
 }
-.sidebar row:hover, placessidebar row:hover, stacksidebar row:hover { background-color: @lunar_hover; }
-.sidebar row:selected, placessidebar row:selected, stacksidebar row:selected {
+/* текст строк: и сам row, и вложенный label — иначе в Lutris
+   подписи («Recent», «Steam»…) сливались с фоном */
+.sidebar row label, placessidebar row label, stacksidebar row label,
+.navigation-sidebar row label, list.navigation-sidebar row label {
+  color: @theme_fg_color;
+}
+.sidebar row:hover, placessidebar row:hover, stacksidebar row:hover,
+.navigation-sidebar row:hover { background-color: @lunar_hover; }
+.sidebar row:selected, placessidebar row:selected, stacksidebar row:selected,
+.navigation-sidebar row:selected {
   background-color: @lunar_active;
   color: #ffffff;
 }
+.sidebar row:selected label, .navigation-sidebar row:selected label { color: #ffffff; }
+
+/* список/дерево в общем виде (Lutris: библиотека, настройки).
+   Раньше покрывались только .view/treeview — из-за этого Lutris
+   показывал чёрный текст на чёрном фоне. */
+list, listbox, listview, columnview, row {
+  background-color: transparent;
+  color: @theme_fg_color;
+}
+list row label, listbox row label, row label, columnview label { color: @theme_fg_color; }
+list row:hover, listbox row:hover, columnview row:hover { background-color: @lunar_hover; }
+list row:selected, listbox row:selected, columnview row:selected {
+  background-color: @lunar_active;
+  color: #ffffff;
+}
+list row:selected label, listbox row:selected label, columnview row:selected label { color: #ffffff; }
 
 /* ── статусбар ───────────────────────────────────────────────── */
 statusbar, .statusbar { background-color: @theme_bg_color; color: @lunar_dim; }
