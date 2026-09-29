@@ -12,8 +12,6 @@ Item {
     property bool nightlightEnabled: false
     property string monitorSequence: ""
     property int monitorStep: 0
-    // L37: кэш частот по монитору (name+разрешение) — не гоняем sort на каждый биндинг
-    property var ratesCache: ({})
     // M48: последняя ошибка hyprctl (stderr/код возврата)
     property string lastError: ""
 
@@ -238,11 +236,10 @@ Item {
         }
     }
 
-    // доступные частоты для текущего разрешения монитора (с кэшем)
+    // доступные частоты для текущего разрешения монитора.
+    // Без кэша в свойстве: функция вызывается из биндинга model:, а запись
+    // в свойство, которое она же читает, Qt считает binding loop.
     function ratesFor(mon) {
-        var key = mon.name + " " + mon.width + "x" + mon.height
-        if (ratesCache[key] !== undefined)
-            return ratesCache[key]
         var out = []
         var res = mon.width + "x" + mon.height
         var modes = mon.availableModes || []
@@ -255,11 +252,6 @@ Item {
             }
         }
         out.sort(function (a, b) { return parseFloat(a) - parseFloat(b) })
-        var c = {}
-        for (var k in ratesCache)
-            c[k] = ratesCache[k]
-        c[key] = out
-        ratesCache = c
         return out
     }
 
