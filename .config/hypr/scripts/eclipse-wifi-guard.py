@@ -20,6 +20,7 @@ import subprocess
 import time
 
 INTERVAL = 15
+MAX_BACKOFF = 300   # потолок паузы при неудачных попытках восстановления
 NOTIFY = ["notify-send", "-a", "Wi-Fi"]
 
 STATE_DIR = os.path.join(
@@ -112,6 +113,43 @@ def wifi_connections():
     return out
 
 
+def wifi_device_present():
+    """Есть ли в системе Wi-Fi-устройство (на проводном ПК — нет)."""
+    r = sh("nmcli", "-t", "-f", "DEVICE,TYPE", "device", "status")
+    if not r:
+        return False
+    for line in r.stdout.splitlines():
+        parts = terse_split(line)
+        if len(parts) >= 2 and parts[1] == "wifi":
+            return True
+    return False
+
+
+def visible_ssids():
+    """SSID, видимые в текущем скане (чтобы выбрать профиль по дальности)."""
+    r = sh("nmcli", "-t", "-f", "SSID", "device", "wifi", "list")
+    if not r:
+        return set()
+    out = set()
+    for line in r.stdout.splitlines():
+        s = terse_split(line)[0].strip()
+        if s:
+            out.add(s)
+    return out
+
+
+def pick_profile(conns):
+    """Профиль для восстановления: явный → видимый в скане → первый."""
+    names = [n for n, _ in conns]
+    if PROFILE and PROFILE in names:
+        return PROFILE
+    vis = visible_ssids()
+    for n in names:
+        if n in vis:
+            return n
+    return names[0] if names else ""
+
+
 def try_connect(profile):
     r = sh("nmcli", "connection", "up", profile)
     if r and r.returncode == 0:
@@ -122,7 +160,9 @@ def try_connect(profile):
 
 
 def main():
+    fails = 0
     while True:
+        wait = INTERVAL
         try:
             prev = read_state()
             if not radio_on():
@@ -130,21 +170,34 @@ def main():
                 # (авиа/экономия) и не включаем обратно, только запоминаем
                 if prev != "off":
                     write_state("off")
+                fails = 0
             else:
                 if prev != "on":
                     write_state("on")
                 conns = wifi_connections()
                 active = [n for n, a in conns if a]
-                if not active:
-                    # радио включено, но связи нет — чиним
-                    profile = PROFILE or (conns[0][0] if conns else "")
-                    if profile:
-                        try_connect(profile)
-                    else:
+                if active:
+                    fails = 0
+                elif not wifi_device_present():
+                    # Wi-Fi-карты нет вовсе (проводной ПК) — не дёргаем nmcli
+                    fails = 0
+                else:
+                    # радио включено, но связи нет — чиним профилем,
+                    # который реально виден в скане (а не первым попавшимся)
+                    profile = pick_profile(conns)
+                    if not profile:
                         sh("nmcli", "device", "wifi", "rescan")
+                        fails = 0
+                    elif try_connect(profile):
+                        fails = 0
+                    else:
+                        fails += 1
         except Exception:
-            pass
-        time.sleep(INTERVAL)
+            fails += 1
+        # при неудачах не долбим сети каждые 15 с — уходим в бэкофф
+        if fails:
+            wait = min(MAX_BACKOFF, INTERVAL * (2 ** min(fails, 5)))
+        time.sleep(wait)
 
 
 if __name__ == "__main__":

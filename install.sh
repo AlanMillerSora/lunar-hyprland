@@ -615,11 +615,16 @@ if [ -f "$REPO/systemd/10-lunar-wifi-powersave-off.sh" ]; then
     || warn "dispatcher не установлен (нужен sudo)"
 fi
 if [ -f "$REPO/systemd/mt7921e-no-aspm.conf" ]; then
-  sudo install -m 0644 -o root -g root \
-    "$REPO/systemd/mt7921e-no-aspm.conf" \
-    /etc/modprobe.d/mt7921e-no-aspm.conf 2>/dev/null \
-    && ok "mt7921e: disable_aspm=1" \
-    || warn "modprobe-конфиг не установлен (нужен sudo)"
+  # только для адаптеров MediaTek mt7921e: на другом чипе файл — мёртвый груз
+  if modinfo mt7921e >/dev/null 2>&1; then
+    sudo install -m 0644 -o root -g root \
+      "$REPO/systemd/mt7921e-no-aspm.conf" \
+      /etc/modprobe.d/mt7921e-no-aspm.conf 2>/dev/null \
+      && ok "mt7921e: disable_aspm=1" \
+      || warn "modprobe-конфиг не установлен (нужен sudo)"
+  else
+    say "mt7921e в системе нет — modprobe-конфиг пропущен (другой Wi-Fi адаптер)"
+  fi
 fi
 
 # ── sudo: белый список агента (OpenCode) + root-хелперы ────────
