@@ -407,7 +407,7 @@ case "$ACTION" in
 esac
 
 # количество шагов для счётчика [n/total]
-LUNAR_TOTAL=9
+LUNAR_TOTAL=11
 [ "$WITH_DEPS" = 1 ] && LUNAR_TOTAL=$((LUNAR_TOTAL + 1))
 [ "$DO_SDDM" = 1 ] && LUNAR_TOTAL=$((LUNAR_TOTAL + 1))
 [ "$DO_PLYMOUTH" = 1 ] && LUNAR_TOTAL=$((LUNAR_TOTAL + 1))
@@ -651,6 +651,41 @@ if [ -f "$REPO/systemd/mt7921e-no-aspm.conf" ]; then
   else
     say "mt7921e в системе нет — modprobe-конфиг пропущен (другой Wi-Fi адаптер)"
   fi
+fi
+
+# ── Telegram: локальный MTProto-прокси (tg-ws-proxy) ───────────
+# Пакет из AUR, headless, живёт как systemd --user-юнит (sudo не нужен).
+# Секрет генерим один раз и держим в env-файле вне репо.
+step "tg-ws-proxy: прокси для Telegram"
+if command -v tg-ws-proxy >/dev/null 2>&1; then
+  ok "tg-ws-proxy установлен"
+elif command -v yay >/dev/null 2>&1; then
+  yay -S --needed --noconfirm tg-ws-proxy-cli >/dev/null 2>&1 \
+    && ok "tg-ws-proxy-cli установлен" \
+    || warn "tg-ws-proxy-cli не поставился (вручную: yay -S tg-ws-proxy-cli)"
+elif command -v paru >/dev/null 2>&1; then
+  paru -S --needed --noconfirm tg-ws-proxy-cli >/dev/null 2>&1 \
+    && ok "tg-ws-proxy-cli установлен" \
+    || warn "tg-ws-proxy-cli не поставился (вручную: paru -S tg-ws-proxy-cli)"
+else
+  warn "нет AUR-помощника — tg-ws-proxy пропущен (yay -S tg-ws-proxy-cli)"
+fi
+
+if command -v tg-ws-proxy >/dev/null 2>&1 && [ -f "$REPO/systemd/lunar-tgproxy.service" ]; then
+  mkdir -p "$HOME/.config/lunar" "$HOME/.cache/lunar" "$HOME/.config/systemd/user"
+  TGE="$HOME/.config/lunar/tgproxy.env"
+  if [ ! -f "$TGE" ]; then
+    sec="$(command -v openssl >/dev/null 2>&1 && openssl rand -hex 16 \
+           || head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n')"
+    printf 'TGWSP_PORT=1443\nTGWSP_SECRET=%s\n' "$sec" > "$TGE"
+    chmod 600 "$TGE"
+    ok "прокси Telegram: секрет сгенерирован"
+  fi
+  cp "$REPO/systemd/lunar-tgproxy.service" "$HOME/.config/systemd/user/"
+  systemctl --user daemon-reload 2>/dev/null || true
+  systemctl --user enable --now lunar-tgproxy.service 2>/dev/null \
+    && ok "прокси Telegram включён и в автозапуске" \
+    || warn "не удалось включить lunar-tgproxy.service"
 fi
 
 # ── sudo: белый список агента (OpenCode) + root-хелперы ────────

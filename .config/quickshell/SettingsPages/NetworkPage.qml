@@ -21,6 +21,11 @@ Item {
     property string zapUpdated: ""
     property string zapMsg: ""
 
+    // ── Telegram: локальный MTProto-прокси (tg-ws-proxy) ──
+    property bool tgActive: false
+    property string tgPort: "1443"
+    property string tgMsg: ""
+
     // ── Vencord (мод Discord) ──
     property string vencState: "notinstalled"
     property string vencInstaller: ""
@@ -247,6 +252,43 @@ Item {
         onExited: pZap.running = true
     }
 
+    // ── Telegram-прокси (tg-ws-proxy): состояние и управление ──
+    Process {
+        id: pTg
+        command: ["bash", "-c", "$HOME/.config/hypr/scripts/eclipse-zapret-tg.sh status"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var m = {}
+                var lines = text.trim().split("\n")
+                for (var i = 0; i < lines.length; ++i) {
+                    var p = lines[i].indexOf("=")
+                    if (p > 0) m[lines[i].substring(0, p)] = lines[i].substring(p + 1)
+                }
+                page.tgActive = (m.state === "active")
+                page.tgPort = m.port || "1443"
+            }
+        }
+    }
+
+    Process {
+        id: pTgAction
+        stdout: StdioCollector { onStreamFinished: { page.tgMsg = text.trim(); pTg.running = true } }
+        stderr: StdioCollector { onStreamFinished: pTg.running = true }
+    }
+
+    function tgToggle() {
+        page.tgMsg = ""
+        pTgAction.command = ["bash", "-c", "$HOME/.config/hypr/scripts/eclipse-zapret-tg.sh toggle"]
+        pTgAction.running = true
+    }
+
+    // ссылка tg://proxy — Telegram сам предложит подключить прокси
+    function tgOpenLink() {
+        page.tgMsg = ""
+        pTgAction.command = ["bash", "-c", "$HOME/.config/hypr/scripts/eclipse-zapret-tg.sh open"]
+        pTgAction.running = true
+    }
+
     // ── Vencord: состояние и управление ────────────────────
     Process {
         id: pVenc
@@ -284,6 +326,7 @@ Item {
         running: page.visible
         onTriggered: {
             pZap.running = true
+            pTg.running = true
             pVenc.running = true
         }
     }
@@ -292,6 +335,7 @@ Item {
         pRadioGet.running = true
         pList.running = true
         pZap.running = true
+        pTg.running = true
         pVenc.running = true
     }
 
@@ -467,6 +511,73 @@ Item {
                                 ZapBtn {
                                     label: "ПОДОБРАТЬ"
                                     onClicked: pZapTune.running = true
+                                }
+                            }
+                        }
+                    }
+
+                    // ── ZAPRET-TG: локальный прокси Telegram (tg-ws-proxy) ──
+                    Rectangle {
+                        width: list.width
+                        height: 112
+                        radius: Theme.radius
+                        color: Theme.bgCard
+                        border.width: 1
+                        border.color: page.tgActive ? Theme.alpha(Theme.accent, 0.45) : Theme.border
+
+                        Column {
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.leftMargin: 14
+                            anchors.rightMargin: 14
+                            spacing: 8
+
+                            Row {
+                                spacing: 9
+
+                                Text {
+                                    text: "ZAPRET-TG"
+                                    color: Theme.text
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 12
+                                    font.bold: true
+                                    font.letterSpacing: 2
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+
+                                Text {
+                                    text: "прокси Telegram · MTProto WebSocket"
+                                    color: Theme.textFaint
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 10
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                            }
+
+                            Text {
+                                width: parent.width
+                                text: (page.tgActive ? "● активен" : "○ выключен")
+                                      + "   ·   127.0.0.1:" + page.tgPort
+                                      + (page.tgMsg ? "   ·   " + page.tgMsg : "")
+                                color: page.tgActive ? Theme.text : Theme.textFaint
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 11
+                                elide: Text.ElideRight
+                            }
+
+                            Row {
+                                spacing: 8
+
+                                ZapBtn {
+                                    label: page.tgActive ? "ВЫКЛЮЧИТЬ" : "ВКЛЮЧИТЬ"
+                                    onClicked: page.tgToggle()
+                                }
+
+                                ZapBtn {
+                                    label: "ОТКРЫТЬ В TG"
+                                    width: 132
+                                    onClicked: page.tgOpenLink()
                                 }
                             }
                         }

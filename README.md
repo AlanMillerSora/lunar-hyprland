@@ -204,6 +204,26 @@ sudo ./install.sh --disable-sddm  # вернуть штатную тему
 
 </div>
 
+<h3 align="center">Zapret-TG — прокси Telegram</h3>
+
+<div align="center">
+
+Локальный MTProto-прокси [tg-ws-proxy](https://github.com/Flowseal/tg-ws-proxy) (AUR `tg-ws-proxy-cli`), чтобы Telegram грузился при блокировках. Слушает `127.0.0.1:1443`, живёт как systemd `--user`-юнит `lunar-tgproxy` и включён в автозапуск. Управление — **Hub → Network → Zapret-TG** (кнопка **ОТКРЫТЬ В TG** открывает `tg://proxy`, Telegram сам подключает прокси):
+
+</div>
+
+```bash
+~/.config/hypr/scripts/eclipse-zapret-tg.sh status   # состояние
+~/.config/hypr/scripts/eclipse-zapret-tg.sh toggle   # вкл/выкл (+ автозапуск)
+~/.config/hypr/scripts/eclipse-zapret-tg.sh link     # tg://proxy-ссылка
+```
+
+<div align="center">
+
+Секрет генерируется при установке и лежит в `~/.config/lunar/tgproxy.env` (в репозиторий не попадает).
+
+</div>
+
 <h3 align="center">Vencord — мод Discord</h3>
 
 <div align="center">
