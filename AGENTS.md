@@ -35,8 +35,8 @@
 - Длинные прогоны (`install.sh`, установка пакетов) — в фоне.
 - После тестов UI **закрывай за собой**: `qs ipc call hub close` / `sidebar close` / `rsidebar close`;
   не оставляй лишних окон и процессов (firefox, sddm-greeter, запись).
-- **Не предлагай ничего ноутбучного** — цель ПК. Яркость удалена (см. §6).
-- BIOS/загрузка: на дев-ноуте BIOS **заблокирован**, систему не переустановить. GRUB, initramfs, EFI —
+- **Только ПК.** Яркость удалена (см. §6).
+- BIOS/загрузка: BIOS **заблокирован**, систему не переустановить. GRUB, initramfs, EFI —
   только с бэкапом и крайней осторожностью. GRUB-тему не делать.
 - В конце задачи — коротко: что сделал, что проверено, что осталось.
 
@@ -82,7 +82,7 @@ strings "$L" | grep -iE "error|not a type|TypeError|ReferenceError|SyntaxError|C
 # 5) IPC:
 qs ipc call hub toggle|open|close|nav N          # nav 0..12 (см. §4)
 qs ipc call sidebar|rsidebar|clipboard|volume|media|power|tray toggle|open|close
-# 6) скриншот (по минимуму): mkdir -p /tmp/shots; grim -o eDP-1 /tmp/shots/x.png
+# 6) скриншот (по минимуму): mkdir -p /tmp/shots; grim -o DP-3 /tmp/shots/x.png
 #    сначала уйди на ПУСТОЙ стол:
 hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 # 7) полная установка: ./install.sh [флаги]      # см. §8
@@ -124,8 +124,8 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
   systemd system: `zapret.service`, `cronie.service`, `fwupd`.
 - Пакеты, которые **не трогать**: chromium, noto-fonts-cjk, nodejs/npm, inter-font, qt5-wayland,
   vim/nano, openssh, wget, smartmontools, socat, lsof, pipewire-jack.
-- Дев-ноут: eDP-1 1920×1080@60, AMD Ryzen 5 7520U + Radeon 610M.
-  Целевой ПК: RTX 5070 + Ryzen 7 7700 + 32 ГБ, 3440×1440.
+- Рабочая машина: RTX 5070 + Ryzen 7 7700 + 32 ГБ, монитор DP-3 3440×1440@165.
+  Работаем на ПК; скриншоты — `grim -o DP-3`.
 
 ## 4. Структура
 
@@ -181,13 +181,13 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 
 ## 6. Закрытые темы (НЕ предлагать)
 
-- Батарея и всё ноутбучное.
+- Батарея и всё ноутбучное — не нужно.
 - Яркость (`XF86MonBrightness`, `brightnessctl`, `ddcutil`, `i2c-dev`) — удалена.
 - Статические PNG-обои и их генератор — удалены; обои только QML-сцена (`LunarWallpaper.qml`).
 - Видео-обои (mpvpaper/awww, webm/zoompan, headless-Chromium) — убраны.
 - `svappy`/редактор скриншотов (PRINT = область в буфер).
 - Мониторные хоткеи (`SUPER+,/.`) — не нужны, один экран.
-- «Discord падает на слабом iGPU» — не баг риса.
+- «Discord падает на слабом GPU» — не баг риса.
 - `LunarLauncher.qml`/`LunarSettings.qml` — мусор, удалены; лаунчер = Hub.
 - Автогашение экрана и автолок — выключены намеренно.
 - Wi-Fi powersave-off и `mt7921e` ASPM — не трогать.
@@ -277,7 +277,7 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
   Журнал читать через `sudo -n /usr/local/lib/lunar/journal-read.sh …` — у raw
   `journalctl` отозваны мутирующие режимы (`--vacuum`/`--rotate`).
 - `eclipse-askpass.py` — интерактивный GTK-диалог пароля (не автоподстановка).
-- Скрины для README: `grim -o eDP-1` (1920×1080) → `magick … -resize 1600x900 -strip`.
+- Скрины для README: `grim -o DP-3` (3440×1440) → `magick … -resize 1600x900 -strip`.
 - `/tmp/shots` может исчезнуть между вызовами — `mkdir -p`.
 - Firefox managed-storage: `{name, type:"storage", data:{…}}`; нужен рестарт.
   `browser.newtabpage.enabled=false` мешает перехвату `about:newtab` — держать `true`.

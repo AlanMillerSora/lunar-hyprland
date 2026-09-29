@@ -204,11 +204,16 @@ Item {
     readonly property var meteorData: makeMeteors()
     readonly property var dustData: makeDust()
 
-    // лёгкий режим: та же карта неба, но каждая третья звезда — небо реже.
+    // лёгкий режим: та же карта неба, но реже — ровно 100 звёзд из 170
+    // (равномерная выборка, чтобы небо не «сбивалось» в одну сторону).
     readonly property var starDataOpt: {
+        var n = 100
+        var src = starData
         var a = []
-        for (var i = 0; i < starData.length; i += 3)
-            a.push(starData[i])
+        if (src.length <= n)
+            return src
+        for (var i = 0; i < n; i++)
+            a.push(src[Math.floor(i * src.length / n)])
         return a
     }
 
@@ -314,7 +319,7 @@ Item {
             radius: width / 2
             color: "#ffffff"
             // мерцание считается от общего времени сцены (без анимации на кадр).
-            // slowT — чтобы не пересчитывать 170 звёзд каждый тик (M66)
+            // slowT — чтобы не пересчитывать все звёзды каждый тик (M66)
             opacity: {
                 var hi = scene.fullEclipse ? Math.min(1, modelData.max * 1.5) : modelData.max
                 var w = Math.PI / (modelData.dur / 1000)

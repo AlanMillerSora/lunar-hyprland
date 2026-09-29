@@ -175,7 +175,7 @@ Item {
                     Text {
                         text: Theme.wallpaperLive
                             ? "звёзды, метеоры, пыль, серп — анимация включена"
-                            : "лёгкий режим: без звёзд/метеоров/пыли (слабое железо)"
+                            : "лёгкий режим: без звёзд/метеоров/пыли"
                         color: Theme.textDim
                         font.family: Theme.fontFamily
                         font.pixelSize: 10
