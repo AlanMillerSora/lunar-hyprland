@@ -256,6 +256,7 @@ local app_ws = {
   -- 1 — игры (Steam/Proton, Heroic, Lutris, эмуляторы)
   ["1"] = { "steam_app_.*", "gamescope", "wine.*", "proton.*",
             "heroic", "com.heroicgameslauncher.hgl", "lutris",
+            "moe.launcher.an-anime-game-launcher",
             "prismlauncher", "Minecraft.*", "retroarch", "dolphin-emu",
             "ryujinx", "citra.*", "ppsspp.*", "osu!.*" },
   -- 2 — браузер
@@ -385,6 +386,17 @@ hl.on("hyprland.start", function()
   end
   if not btop_running then
     hl.exec_cmd("[workspace 9 silent] kitty --class lunar-btop --title btop -e btop")
+  end
+  -- AAGL (An Anime Game Launcher) на столе 01, без перехвата фокуса.
+  -- pgrep -f с [a] — шаблон не матчит сам себя; -x не годится (имя >15 символов).
+  local aagl = io.popen("pgrep -f '[a]n-anime-game-launcher' 2>/dev/null")
+  local aagl_running = false
+  if aagl then
+    aagl_running = (aagl:read("*a") or "") ~= ""
+    aagl:close()
+  end
+  if not aagl_running then
+    hl.exec_cmd("[workspace 1 silent] an-anime-game-launcher")
   end
 end)
 
