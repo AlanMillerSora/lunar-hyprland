@@ -268,12 +268,17 @@ Item {
                 page.tgPort = m.port || "1443"
             }
         }
+        stderr: StdioCollector {
+            onStreamFinished: { if (text.trim() !== "") page.tgMsg = text.trim() }
+        }
     }
 
     Process {
         id: pTgAction
         stdout: StdioCollector { onStreamFinished: { page.tgMsg = text.trim(); pTg.running = true } }
-        stderr: StdioCollector { onStreamFinished: pTg.running = true }
+        stderr: StdioCollector {
+            onStreamFinished: { if (text.trim() !== "") page.tgMsg = text.trim(); pTg.running = true }
+        }
     }
 
     function tgToggle() {
