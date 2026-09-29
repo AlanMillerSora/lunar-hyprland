@@ -16,6 +16,11 @@ Type=simple
 # падает с «no Qt platform plugin» и плодит core dumps. $$ — чтобы $VAR
 # разворачивал shell, а не systemd.
 ExecStartPre=/usr/bin/sh -c 'test -S "$$XDG_RUNTIME_DIR/$$WAYLAND_DISPLAY"'
+# Платформенная тема Qt: через GTK3 Quickshell читает icon-theme из gsettings
+# (org.gnome.desktop.interface.icon-theme = Tela-lunar). Без этого Qt падал в
+# hicolor, и иконки приложений в Hub были цветными. Только для шелла —
+# остальные Qt-приложения продолжают брать тему через портал.
+Environment=QT_QPA_PLATFORMTHEME=gtk3
 ExecStart=/usr/bin/quickshell
 # Перезапуск только при сбое (с лимитом выше) — чистый выход не поднимаем.
 Restart=on-failure
