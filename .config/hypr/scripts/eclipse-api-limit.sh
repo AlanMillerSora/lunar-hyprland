@@ -3,13 +3,13 @@
 #  eclipse-api-limit.sh — расход лимитов OpenCode Go для панели api-limit.
 #    Источник истины — официальный эндпоинт OpenCode Go:
 #       GET https://opencode.ai/zen/go/v1/usage   (Authorization: Bearer)
-#    Отдаёт проценты по окнам rolling(5ч)/weekly/monthly и время сброса.
-#    Ключ берём из локальной БД OpenCode (credential, integration_id
+#    Он отдаёт проценты по окнам rolling(5ч)/weekly/monthly и время сброса.
+#    Ключ беру из локальной БД OpenCode (credential, integration_id
 #    opencode-go) — в репозиторий и логи он не попадает.
-#    Доллары оцениваем как percent/100 × лимит окна (месяц = лимит
-#    ведущей модели; 5ч = 20%, неделя = 50%). Если API недоступен —
-#    считаем сами по session_message (per-message cost + время).
-#    Разбивка по моделям — из session_message (API её не отдаёт).
+#    Доллары оцениваю как percent/100 × лимит окна (месяц = лимит ведущей
+#    модели; 5ч = 20%, неделя = 50%). Если API недоступен — считаю сам
+#    по session_message (per-message cost + время).
+#    Разбивку по моделям беру из session_message (API её не отдаёт).
 #    Секретов в файле нет: только локальная БД и публичный эндпоинт.
 # ════════════════════════════════════════════════════════════════
 set -u
@@ -42,7 +42,7 @@ model_limit() {
     esac
 }
 
-# ведущая модель (по сумме cost) — по ней берём месячный лимит
+# ведущая модель (по сумме cost) — по ней беру месячный лимит
 lead=$(sql "SELECT json_extract(data,'\$.model.id')
 FROM session_message
 WHERE json_extract(data,'\$.cost') > 0
@@ -73,7 +73,7 @@ if [ "$source" = "api" ]; then
     wk=$(awk -v p="$wkpct" -v l="$molim" 'BEGIN{printf "%.4f", p/100*l*0.5}')
     mo=$(awk -v p="$mopct" -v l="$molim" 'BEGIN{printf "%.4f", p/100*l}')
 else
-    # фолбэк: считаем по session_message (точное время каждого ответа)
+    # фолбэк: считаю по session_message (точное время каждого ответа)
     read -r h5 wk mo <<EOF
 $(sql "SELECT
   round(coalesce(sum(CASE WHEN time_created >= $h5_from THEN json_extract(data,'\$.cost') END),0),4) || ' ' ||
