@@ -1,6 +1,12 @@
-# Lunar Eclipse — монохромная заставка при загрузке.
+# Lunar Eclipse — монохромная заставка: загрузка, выключение и перезагрузка.
 # Тёмный фон #050505, кольцо-корона с диском Луны, надпись LUNAR ECLIPSE
-# и тонкая полоса прогресса под ней.
+# и тонкая полоса прогресса под ней (только при загрузке).
+#
+# Отдельного ScriptFile для shutdown в Plymouth нет, но и не нужен:
+# при выключении Plymouth не дёргает boot-progress, поэтому полоса просто
+# остаётся пустой, а логотип и надпись видны. Plymouth.GetMode() в скрипте
+# НЕ вызываем: если бы он вернул не строку, скрипт упал бы до отрисовки
+# лого — рисковать загрузкой ради пустой полосы не стоит.
 
 Window.SetBackgroundTopColor(0.0196, 0.0196, 0.0196);
 Window.SetBackgroundBottomColor(0.0196, 0.0196, 0.0196);
@@ -61,7 +67,19 @@ fun update_progress(duration, progress)
       {
         progress = 1;
       }
-    bar.fill_w = Math.Int(bar.w * progress);
+    # Загрузка у нас быстрая (~9 с), а Plymouth живёт до готовности SDDM.
+    # Реальный progress при этом почти не двигается, поэтому ведём полосу
+    # сами: плавно к 100% примерно за 4 секунды, но не обгоняя реальный.
+    if (bar.t > 1)
+      {
+        bar.t = 1;
+      }
+    bar.t = bar.t + 0.004;
+    if (bar.t < progress)
+      {
+        bar.t = progress;
+      }
+    bar.fill_w = Math.Int(bar.w * bar.t);
     if (bar.fill_w < 1)
       {
         bar.fill_w = 1;
@@ -70,10 +88,23 @@ fun update_progress(duration, progress)
     bar.fill_sprite.SetImage(bar.fill_image);
   }
 
+fun update_status(text)
+  {
+    # загрузка началась — сбрасываем полосу
+    if (text == "boot")
+      {
+        bar.t = 0.0;
+      }
+  }
+
+bar.t = 0.0;
 Plymouth.SetBootProgressFunction(update_progress);
+Plymouth.SetUpdateStatusFunction(update_status);
 
 fun on_quit()
   {
+    bar.t = 1.0;
+    update_progress(0, 1);
     logo.sprite.SetOpacity(1);
     wordmark.sprite.SetOpacity(1);
   }
