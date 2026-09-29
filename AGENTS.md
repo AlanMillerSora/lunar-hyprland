@@ -185,6 +185,10 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 - Яркость (`XF86MonBrightness`, `brightnessctl`, `ddcutil`, `i2c-dev`) — удалена.
 - Профили питания (`power-profiles-daemon`, balanced/powersave) — убраны: CPU всегда
   `performance` (юнит `lunar-cpu-performance`), powersave не возвращать.
+- Игры — только через **Lutris** (официальный установщик). AAGL и всё,
+  что его касается, вырезано навсегда — не возвращать.
+- GPU-выбор — только дискретная NVIDIA: `VK_ICD_FILENAMES=nvidia_icd.json`;
+  GPU-env обязан доходить до systemd --user (иначе запуски из Hub уедут на iGPU).
 - Статические PNG-обои и их генератор — удалены; обои только QML-сцена (`LunarWallpaper.qml`).
 - Видео-обои (mpvpaper/awww, webm/zoompan, headless-Chromium) — убраны.
 - `svappy`/редактор скриншотов (PRINT = область в буфер).
