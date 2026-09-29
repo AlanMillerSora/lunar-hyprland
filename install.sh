@@ -176,7 +176,12 @@ ply_install() {
 }
 
 ply_enable() {
-  command -v plymouthd >/dev/null || { warn "не установлен пакет plymouth"; return 1; }
+  # пакет не в get-deps (нужен только с флагом) — ставим его здесь
+  if ! command -v plymouthd >/dev/null; then
+    say "Plymouth: пакета нет — ставлю plymouth"
+    sudo pacman -S --needed --noconfirm plymouth \
+      || { warn "пакет plymouth не поставился (вручную: sudo pacman -S plymouth)"; return 1; }
+  fi
   ply_install
   ply_hooks_add
   ply_param_add quiet
@@ -603,6 +608,18 @@ if [ -d "$REPO/systemd" ]; then
   # композитора (иначе юнит поднимется раньше Wayland и будет падать).
   systemctl --user disable lunar-quickshell.service 2>/dev/null || true
   ok "юниты поставлены (quickshell стартует из Hyprland)"
+fi
+
+# ── cronie: расписания (timeshift и т.п.) ──────────────────────
+# Пакет ставит get-deps, но включить его должен установщик — иначе снимки
+# timeshift по расписанию не создаются.
+step "cronie: демон расписаний"
+if systemctl list-unit-files cronie.service >/dev/null 2>&1; then
+  sudo systemctl enable --now cronie.service 2>/dev/null \
+    && ok "cronie включён" \
+    || warn "cronie не включился (нужен sudo)"
+else
+  say "cronie не установлен — пропускаю"
 fi
 
 # ── Wi-Fi: powersave off + ASPM ────────────────────────────────
