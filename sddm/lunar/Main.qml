@@ -252,33 +252,16 @@ Rectangle {
                 width: root.avSize
                 height: root.avSize
 
+                // PNG уже круглый (кольцо и прозрачные углы — в самом файле):
+                // Qt6-greeter не принимает ShaderEffect без .qsb, а QSB-шейдеры
+                // на GL-сцене SDDM не грузятся — поэтому маска запечена в PNG.
                 Image {
                     id: avSrc
                     source: "assets/avatar.png"
-                    visible: false
+                    anchors.fill: parent
                     sourceSize.width: Math.round(root.avSize * 1.1)
                     sourceSize.height: Math.round(root.avSize * 1.1)
-                }
-                ShaderEffect {
-                    anchors.fill: parent
-                    property variant src: avSrc
-                    property real px: 1.5 / width
-                    fragmentShader: "
-                        varying highp vec2 qt_TexCoord0;
-                        uniform sampler2D src;
-                        uniform lowp float qt_Opacity;
-                        uniform highp float px;
-                        void main() {
-                            highp vec2 p = qt_TexCoord0 - vec2(0.5, 0.5);
-                            highp float d = length(p);
-                            highp float rImg = 0.5 - 2.0 * px;
-                            lowp vec4 c = texture2D(src, qt_TexCoord0);
-                            highp float aImg = 1.0 - smoothstep(rImg - px, rImg, d);
-                            highp float ring = 1.0 - smoothstep(0.0, 1.4 * px, abs(d - (0.5 - 1.2 * px)));
-                            lowp vec3 rgb = mix(c.rgb, vec3(0.29, 0.29, 0.29), ring);
-                            lowp float alpha = max(c.a * aImg, ring);
-                            gl_FragColor = vec4(rgb * alpha, alpha) * qt_Opacity;
-                        }"
+                    smooth: true
                 }
             }
         }
