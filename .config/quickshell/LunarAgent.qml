@@ -557,7 +557,9 @@ PanelWindow {
         readonly property var qsTargets: ["hub", "sidebar", "rsidebar", "clipboard",
             "volume", "media", "tray", "power", "agent", "overview"]
         readonly property var simpleTools: ["wpctl", "playerctl", "pactl",
-            "grim", "slurp", "wl-copy", "wl-paste", "notify-send"]
+            "grim", "slurp", "wl-copy", "wl-paste", "notify-send",
+            "checkupdates", "df", "free", "uptime", "nvidia-smi", "lscpu",
+            "lsblk", "sensors", "uname"]
         readonly property var systemctlRead: ["status", "is-active", "is-enabled",
             "show", "list-units", "list-unit-files", "cat"]
         // у hyprctl разрешаю только чтение + eval/dispatch с безопасной Lua

@@ -83,4 +83,20 @@ for s in lunar-quickshell lunar-wifi-guard lunar-homepage lunar-tgproxy; do
 done
 echo "Сервисы райса: ${svc% }"
 
+# обновления: список из репозиториев (checkupdates). Кэш 10 минут, чтобы не
+# дёргать сеть на каждый вопрос агенту.
+UPD="${XDG_CACHE_HOME:-$HOME/.cache}/lunar/updates.txt"
+mkdir -p "$(dirname "$UPD")"
+if [ ! -f "$UPD" ] || [ $(( $(date +%s) - $(stat -c %Y "$UPD" 2>/dev/null || echo 0) )) -ge 600 ]; then
+    if command -v checkupdates >/dev/null 2>&1; then
+        checkupdates > "$UPD.tmp" 2>/dev/null && mv "$UPD.tmp" "$UPD"
+    fi
+fi
+if [ -s "$UPD" ]; then
+    echo "Обновления (репозитории, $(wc -l < "$UPD" | tr -d ' ') пакетов):"
+    sed 's/^/  - /' "$UPD"
+else
+    echo "Обновления: нет данных (checkupdates недоступен или сеть)"
+fi
+
 echo "Время: $(date '+%d.%m.%Y %H:%M')"
