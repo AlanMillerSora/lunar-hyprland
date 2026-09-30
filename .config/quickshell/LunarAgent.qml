@@ -227,7 +227,12 @@ PanelWindow {
                         color: Theme.text
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSize(12)
-                        elide: Text.ElideMiddle
+                        // показываю команду целиком, как простой текст: нельзя
+                        // обрезать/спрятать HTML-разметкой
+                        textFormat: Text.PlainText
+                        wrapMode: Text.Wrap
+                        maximumLineCount: 4
+                        elide: Text.ElideRight
                     }
                     Rectangle {
                         Layout.preferredWidth: 118
@@ -420,6 +425,8 @@ PanelWindow {
         property string pendingAction: ""
         // последняя выполненная команда — для возврата результата агенту
         property string lastAction: ""
+        // вывод «читающей» команды (буфер/скриншот/статус) не гоню в облако
+        property bool lastSensitive: false
 
         // витрина ограничена: длинный стрим не растит память бесконечно,
         // контекст диалога живёт в сессии OpenCode (--session)
@@ -516,6 +523,10 @@ PanelWindow {
         function splitArgv(cmd) {
             var c = String(cmd)
             if (/[;&|<>`$\n\r]/.test(c)) return null
+            // скрытые/управляющие Unicode (bidi, zero-width) — чтобы нельзя
+            // было показать в карточке одно, а выполнить другое
+            if (/[\u200B-\u200F\u202A-\u202E\u2066-\u2069\u00AD\uFEFF\u0000-\u0008]/.test(c))
+                return null
             var argv = [], cur = "", quote = ""
             for (var i = 0; i < c.length; i++) {
                 var ch = c[i]
@@ -549,16 +560,40 @@ PanelWindow {
             "grim", "slurp", "wl-copy", "wl-paste", "notify-send"]
         readonly property var systemctlRead: ["status", "is-active", "is-enabled",
             "show", "list-units", "list-unit-files", "cat"]
+        // у hyprctl разрешаю только чтение + eval/dispatch с безопасной Lua
+        readonly property var hyprRead: ["clients", "monitors", "workspaces",
+            "activewindow", "activeworkspace", "layers", "binds", "version",
+            "configerrors", "getoption", "devices", "cursorpos", "reload",
+            "notify", "systeminfo", "splash", "globalshortcuts", "rollinglog"]
+        readonly property var systemctlMutate: ["start", "stop", "restart",
+            "enable", "disable"]
 
         function isTool(prog, name) {
             return prog === name || prog === "/usr/bin/" + name
                 || prog === "/bin/" + name || prog === "/usr/local/bin/" + name
         }
+        function isLunarUnit(u) {
+            return /^lunar-[A-Za-z0-9_.@-]+\.service$/.test(u || "")
+        }
+        // eval/dispatch: только диспетчеры hl.dsp.*, без Lua-побегов в шелл
+        function safeLua(s) {
+            if (s.length === 0 || s.length > 500) return false
+            if (/[\n\r;`$]/.test(s)) return false
+            if (/(\bos\b|\bio\b|\bload\b|\bdofile\b|\brequire\b|\bpackage\b|\bdebug\b|\bexec\b|\bexec_cmd\b|\bpopen\b|\bsystem\b)/.test(s))
+                return false
+            return /^hl\.(dispatch\(hl\.)?dsp\./.test(s)
+        }
 
         function allowedArgv(argv) {
             if (!argv || argv.length === 0) return false
             var prog = expandHome(argv[0])
-            if (isTool(prog, "hyprctl")) return true
+            if (isTool(prog, "hyprctl")) {
+                var sub = argv[1] || ""
+                if (hyprRead.indexOf(sub) !== -1) return true
+                if (sub === "eval" || sub === "dispatch")
+                    return safeLua(argv.slice(2).join(" "))
+                return false
+            }
             if (isTool(prog, "qs")) {
                 if (argv[1] !== "ipc" || argv[2] !== "call") return false
                 return qsTargets.indexOf(argv[3]) !== -1
@@ -566,9 +601,12 @@ PanelWindow {
             if (isTool(prog, "systemctl")) {
                 if (argv[1] !== "--user") return false
                 var verb = argv[2] || ""
-                if (systemctlRead.indexOf(verb) !== -1) return true
-                if (["start", "stop", "restart", "enable", "disable"].indexOf(verb) !== -1)
-                    return (argv[3] || "").indexOf("lunar-") === 0
+                // чтение: без юнита или только lunar-*
+                if (systemctlRead.indexOf(verb) !== -1)
+                    return argv.length === 3 || (argv.length === 4 && isLunarUnit(argv[3]))
+                // мутации: ровно один юнит, только lunar-*
+                if (systemctlMutate.indexOf(verb) !== -1)
+                    return argv.length === 4 && isLunarUnit(argv[3])
                 return false
             }
             for (var i = 0; i < simpleTools.length; i++)
@@ -595,6 +633,8 @@ PanelWindow {
                 return
             }
             argv[0] = expandHome(argv[0])
+            var base = argv[0].substring(argv[0].lastIndexOf("/") + 1)
+            lastSensitive = ["wl-paste", "grim", "systemctl"].indexOf(base) !== -1
             lastAction = cmd
             systemMsg("▶ " + cmd)
             actionProc.command = argv
@@ -614,6 +654,8 @@ PanelWindow {
         // ассистента (без служебной строки-вопроса).
         function followUp(out) {
             if (!root.showing || busy || lastAction === "") return
+            // чувствительный вывод (буфер/скриншот/статус) в облако не шлю
+            if (lastSensitive) return
             var prompt = "Я выполнил действие:\n" + lastAction
                 + "\n\nВывод:\n" + (out !== "" ? out : "(пусто)")
                 + "\n\nПрокомментируй кратко и предложи следующий шаг, если это уместно."
