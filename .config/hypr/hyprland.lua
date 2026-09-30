@@ -400,6 +400,18 @@ hl.on("hyprland.start", function()
   if not btop_running then
     hl.exec_cmd("[workspace 9 silent] kitty --class lunar-btop --title btop -e btop")
   end
+  -- Discord и Firefox в автозапуске, по своим столам и без перехвата фокуса.
+  -- Идемпотентно: если уже запущены — второй раз не поднимаю.
+  local autostart = {
+    { bin = "firefox", cmd = "[workspace 2 silent] firefox" },
+    { bin = "Discord", cmd = "[workspace 3 silent] discord" },
+  }
+  for _, a in ipairs(autostart) do
+    local h = io.popen("pgrep -x " .. a.bin .. " 2>/dev/null")
+    local running = h and (h:read("*a") or "") ~= ""
+    if h then h:close() end
+    if not running then hl.exec_cmd(a.cmd) end
+  end
 end)
 
 -- hyprctl reload откатывает runtime-настройки Game Mode (анимации/blur/tearing),
