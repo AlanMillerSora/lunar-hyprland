@@ -9,7 +9,7 @@ import QtQuick.Layouts
 //  Скрытый слой не рендерится (mask = null): в покое нагрузки ноль.
 //  Вопрос уходит в `opencode run --format json`; ответ стримится
 //  событиями и дописывается в историю. Контекст держу в сессии
-//  (--session), пока не сброшу (＋).
+//  (--session), пока не сброшу (＋). С Hub взаимоисключающий.
 // ════════════════════════════════════════════════════════════════
 PanelWindow {
     id: root
@@ -27,10 +27,7 @@ PanelWindow {
 
     property bool showing: false
 
-    function openPanel() {
-        showing = true
-        agentFocus.restart()
-    }
+    function openPanel() { showing = true }
     function closePanel() {
         // закрыл — гашу незавершённый ответ, чтобы не висел процесс
         if (agent.busy) agent.stop()
@@ -38,6 +35,14 @@ PanelWindow {
         showing = false
     }
     function toggle() { if (showing) closePanel(); else openPanel() }
+
+    // агент и Hub взаимоисключающие: открылся агент — гашу Hub
+    onShowingChanged: {
+        if (showing) {
+            Quickshell.execDetached(["qs", "ipc", "call", "hub", "close"])
+            agentFocus.restart()
+        }
+    }
 
     IpcHandler {
         target: "agent"
@@ -51,6 +56,7 @@ PanelWindow {
         id: backdrop
         anchors.fill: parent
         color: root.showing ? Theme.alpha(Theme.bgPanel, 0.62) : "transparent"
+        Behavior on color { ColorAnimation { duration: 180 } }
         focus: root.showing
         Keys.onEscapePressed: root.closePanel()
 
@@ -70,9 +76,13 @@ PanelWindow {
         color: Theme.bgPanel
         border.color: Theme.border
         border.width: 1
-        // карточка живёт только при открытом оверлее: mask=null гасит ввод,
-        // но отрисовка идёт всегда (см. AGENTS про фон оверлея)
-        visible: root.showing
+        // карточка живёт, пока видна: mask=null гасит только ввод,
+        // а отрисовка идёт всегда (см. AGENTS про фон оверлея)
+        visible: root.showing || opacity > 0
+        opacity: root.showing ? 1 : 0
+        scale: root.showing ? 1 : 0.985
+        Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
 
         // клик по карточке не закрывает оверлей
         MouseArea { anchors.fill: parent }

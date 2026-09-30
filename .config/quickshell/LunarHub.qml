@@ -27,6 +27,9 @@ PanelWindow {
 
     property bool showing: false
 
+    // агент и Hub взаимоисключающие: открылся Hub — гашу оверлей агента
+    onShowingChanged: if (showing) Quickshell.execDetached(["qs", "ipc", "call", "agent", "close"])
+
     function openPanel() { showing = true }
     function closePanel() {
         showing = false
