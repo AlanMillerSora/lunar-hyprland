@@ -137,7 +137,8 @@ hl.config({
       size    = 6,
       passes  = 3,
       ignore_opacity = false,
-      vibrancy = 0.25,
+      vibrancy = 0.20,
+      noise    = 0.05,
       popups   = true,
       xray     = true,           -- меньше перерисовки
       new_optimizations = true,
