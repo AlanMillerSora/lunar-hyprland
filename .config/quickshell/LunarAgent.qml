@@ -63,6 +63,10 @@ PanelWindow {
         function close(): void { root.closePanel() }
         // для отладки/тестов: показать карточку предложенного действия
         function propose(cmd: string): void { agent.pendingAction = cmd }
+        // отправить вопрос извне (тесты/автоматизация)
+        function ask(text: string): void { root.openPanel(); agent.send(text) }
+        // выполнить предложенное действие (для тестов/автоматизации)
+        function run(): void { agent.runAction() }
     }
 
     // клик по фону / Esc — закрыть
@@ -469,13 +473,18 @@ PanelWindow {
             dispatch(full)
         }
 
-        // argv-массив (без shell): кавычки/апострофы в тексте не ломают команду
+        // opencode подвешивается, когда stdout — не tty, поэтому гоняем его
+        // в псевдо-терминале через `script`; текст вопроса квотим вручную
+        function shQuote(s) {
+            return "'" + String(s).replace(/'/g, "'\\''") + "'"
+        }
+
         function dispatch(text) {
             if (text === "") return
-            var args = ["opencode", "run", "--format", "json", "--agent", "lunar"]
-            if (sessionId !== "") { args.push("--session", sessionId) }
-            args.push("--", text)
-            agentProc.command = args
+            var cmd = "opencode run --format json --agent lunar"
+            if (sessionId !== "") cmd += " --session " + shQuote(sessionId)
+            cmd += " -- " + shQuote(text)
+            agentProc.command = ["script", "-qefc", cmd, "/dev/null"]
             agentProc.running = true
             agentWatchdog.restart()
         }
@@ -621,6 +630,7 @@ PanelWindow {
         stdout: SplitParser {
             onRead: function(line) {
                 if (!line) return
+                line = line.replace(/\r/g, "")
                 try {
                     var ev = JSON.parse(line)
                     if (ev.type === "text" && ev.part && ev.part.text !== undefined)
