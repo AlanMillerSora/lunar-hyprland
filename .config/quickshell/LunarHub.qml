@@ -27,8 +27,15 @@ PanelWindow {
 
     property bool showing: false
 
-    // агент и Hub взаимоисключающие: открылся Hub — гашу оверлей агента
-    onShowingChanged: if (showing) Quickshell.execDetached(["qs", "ipc", "call", "agent", "close"])
+    // агент и Hub взаимоисключающие: открылся Hub — гашу агента
+    // (через Theme.activeOverlay, в одном процессе — плавно)
+    onShowingChanged: if (showing) Theme.activeOverlay = "hub"
+    Connections {
+        target: Theme
+        function onActiveOverlayChanged() {
+            if (Theme.activeOverlay !== "hub" && root.showing) root.closePanel()
+        }
+    }
 
     function openPanel() { showing = true }
     function closePanel() {

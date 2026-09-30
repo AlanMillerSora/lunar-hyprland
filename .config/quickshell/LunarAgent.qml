@@ -36,11 +36,19 @@ PanelWindow {
     }
     function toggle() { if (showing) closePanel(); else openPanel() }
 
-    // агент и Hub взаимоисключающие: открылся агент — гашу Hub
+    // агент и Hub взаимоисключающие: открылся агент — гашу Hub.
+    // Через общий флаг Theme, а не внешний qs ipc: переключение в одном
+    // процессе, без задержки на старт процесса и без наложения затемнений.
     onShowingChanged: {
         if (showing) {
-            Quickshell.execDetached(["qs", "ipc", "call", "hub", "close"])
+            Theme.activeOverlay = "agent"
             agentFocus.restart()
+        }
+    }
+    Connections {
+        target: Theme
+        function onActiveOverlayChanged() {
+            if (Theme.activeOverlay !== "agent" && root.showing) root.closePanel()
         }
     }
 
@@ -56,7 +64,7 @@ PanelWindow {
         id: backdrop
         anchors.fill: parent
         color: root.showing ? Theme.alpha(Theme.bgPanel, 0.62) : "transparent"
-        Behavior on color { ColorAnimation { duration: 180 } }
+        Behavior on color { ColorAnimation { duration: Theme.animMed } }
         focus: root.showing
         Keys.onEscapePressed: root.closePanel()
 
@@ -80,9 +88,9 @@ PanelWindow {
         // а отрисовка идёт всегда (см. AGENTS про фон оверлея)
         visible: root.showing || opacity > 0
         opacity: root.showing ? 1 : 0
-        scale: root.showing ? 1 : 0.985
-        Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+        scale: root.showing ? 1 : 0.90
+        Behavior on opacity { NumberAnimation { duration: Theme.animSlow; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: Theme.animSlow; easing.type: Easing.OutBack } }
 
         // клик по карточке не закрывает оверлей
         MouseArea { anchors.fill: parent }
