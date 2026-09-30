@@ -1402,6 +1402,7 @@ PanelWindow {
 
         function dismiss(id) {
             hiddenIds[id] = true
+            if (expandedId === id) expandedId = -1
             rebuild()
             actionProc.command = ["bash", "-c", "makoctl dismiss -n " + id]
             actionProc.running = true
@@ -1412,6 +1413,7 @@ PanelWindow {
             for (var i = 0; i < raw.length; i++) if (raw[i].id > m) m = raw[i].id
             hideBefore = m
             hiddenIds = ({})
+            expandedId = -1
             rebuild()
             actionProc.command = ["bash", "-c", "makoctl dismiss --all"]
             actionProc.running = true

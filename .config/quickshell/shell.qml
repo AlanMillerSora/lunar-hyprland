@@ -11,9 +11,13 @@ ShellRoot {
     // (mako): оно читаемое и попадает в историю уведомлений.
     Component.onCompleted: Quickshell.inhibitReloadPopup()
 
+    // не спамить уведомлениями, если конфиг сыпется подряд
+    Timer { id: reloadFailCooldown; interval: 30000 }
     Connections {
         target: Quickshell
         function onReloadFailed(error) {
+            if (reloadFailCooldown.running) return
+            reloadFailCooldown.start()
             Quickshell.execDetached(["notify-send", "-a", "Lunar Eclipse",
                 "-u", "critical", "Ошибка конфига Quickshell", String(error)])
         }

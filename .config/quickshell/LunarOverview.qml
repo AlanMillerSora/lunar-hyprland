@@ -74,7 +74,8 @@ PanelWindow {
     function normAddr(a) {
         var s = "" + (a || "")
         if (s.indexOf("0x") === 0 || s.indexOf("0X") === 0) s = s.substring(2)
-        return s.toLowerCase()
+        // только hex: адрес уходит в Lua-строку window.move
+        return s.toLowerCase().replace(/[^0-9a-f]/g, "")
     }
     property var winGeo: ({})
     property Process geoProc: Process {
