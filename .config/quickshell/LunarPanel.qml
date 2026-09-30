@@ -333,11 +333,11 @@ PanelWindow {
         return ""
     }
 
-    // Значок живёт только меню: либо сам просит (onlyMenu), либо не умеет
-    // Activate — как индикатор Steam (ayatana), у него есть только меню.
-    function trayMenuOnly(item) {
-        if (!item || !item.hasMenu) return false
-        if (item.onlyMenu) return true
+    // Индикатор Steam (ayatana) не умеет Activate — только меню; ЛКМ по нему
+    // открывает приложение, а не бесполезный activate. Прочие меню-онли —
+    // обычное меню (ПКМ/ЛКМ).
+    function isSteamApp(item) {
+        if (!item) return false
         var key = (item.id || "") + " " + (item.title || "") + " " + (item.tooltipTitle || "")
         return /steam/i.test(key)
     }
@@ -1178,8 +1178,10 @@ PanelWindow {
                                         modelData.secondaryActivate()
                                     } else if (m.button === Qt.RightButton) {
                                         root.trayMenu(modelData, trayIconMouse, m.x, m.y)
-                                    } else if (root.trayMenuOnly(modelData)) {
+                                    } else if (root.isSteamApp(modelData)) {
                                         root.openTrayApp(modelData)
+                                    } else if (modelData.onlyMenu && modelData.hasMenu) {
+                                        root.trayMenu(modelData, trayIconMouse, m.x, m.y)
                                     } else {
                                         modelData.activate()
                                     }
