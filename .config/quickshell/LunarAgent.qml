@@ -9,8 +9,9 @@ import QtQuick.Layouts
 //  Работает под профилем OpenCode `lunar` (свой промпт и память).
 //  Перед отправкой подмешиваю справку: память агента + контекст
 //  системы (активное окно, стол, Game Mode). Вопрос в историю идёт
-//  без справки. Скрытый слой не рендерится (mask = null). С Hub
-//  взаимоисключающий.
+//  без справки. Агент может ПРЕДЛОЖИТЬ действие блоком lunar-action —
+//  оверлей выполняет его только по кнопке и лишь из whitelist.
+//  Скрытый слой не рендерится (mask = null). С Hub взаимоисключающий.
 // ════════════════════════════════════════════════════════════════
 PanelWindow {
     id: root
@@ -33,6 +34,7 @@ PanelWindow {
     function closePanel() {
         // закрыл — гашу незавершённый ответ, чтобы не висел процесс
         if (agent.busy) agent.stop()
+        agent.pendingAction = ""
         agentInput.text = ""
         showing = false
     }
@@ -59,6 +61,8 @@ PanelWindow {
         function toggle(): void { root.toggle() }
         function open(): void { root.openPanel() }
         function close(): void { root.closePanel() }
+        // для отладки/тестов: показать карточку предложенного действия
+        function propose(cmd: string): void { agent.pendingAction = cmd }
     }
 
     // клик по фону / Esc — закрыть
@@ -173,8 +177,9 @@ PanelWindow {
                     width: agentList.width
                     height: msgText.implicitHeight + 16
                     radius: Theme.radius
-                    color: modelData.role === "user" ? Theme.active : Theme.fill
-                    border.width: 1
+                    color: modelData.role === "user" ? Theme.active
+                         : (modelData.role === "system" ? "transparent" : Theme.fill)
+                    border.width: modelData.role === "system" ? 0 : 1
                     border.color: Theme.border
 
                     Text {
@@ -184,11 +189,89 @@ PanelWindow {
                         anchors.top: parent.top
                         anchors.margins: 8
                         text: modelData.text
-                        color: modelData.role === "user" ? Theme.text : Theme.textDim
+                        color: modelData.role === "user" ? Theme.text
+                             : (modelData.role === "system" ? Theme.textFaint : Theme.textDim)
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSize(12)
                         wrapMode: Text.Wrap
                         textFormat: Text.PlainText
+                    }
+                }
+            }
+
+            // предложенное агентом действие — выполняется только по кнопке
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 46
+                visible: agent.pendingAction !== ""
+                radius: Theme.radius
+                color: Theme.bg
+                border.width: 1
+                border.color: Theme.borderAccent
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.margins: 10
+                    spacing: 8
+
+                    Text {
+                        text: "▸"
+                        color: Theme.danger
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(14)
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        text: agent.pendingAction
+                        color: Theme.text
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(12)
+                        elide: Text.ElideMiddle
+                    }
+                    Rectangle {
+                        Layout.preferredWidth: 118
+                        Layout.preferredHeight: 26
+                        radius: Theme.radius
+                        color: runMouse.containsMouse ? Theme.active : Theme.hoverStrong
+                        border.width: 1
+                        border.color: Theme.danger
+                        Text {
+                            anchors.centerIn: parent
+                            text: "ВЫПОЛНИТЬ"
+                            color: Theme.text
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize(11)
+                            font.letterSpacing: 1
+                        }
+                        MouseArea {
+                            id: runMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: agent.runAction()
+                        }
+                    }
+                    Rectangle {
+                        Layout.preferredWidth: 26
+                        Layout.preferredHeight: 26
+                        radius: Theme.radius
+                        color: cancelMouse.containsMouse ? Theme.hover : "transparent"
+                        border.width: 1
+                        border.color: Theme.border
+                        Text {
+                            anchors.centerIn: parent
+                            text: "✕"
+                            color: Theme.textDim
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize(12)
+                        }
+                        MouseArea {
+                            id: cancelMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: agent.pendingAction = ""
+                        }
                     }
                 }
             }
@@ -332,6 +415,8 @@ PanelWindow {
         property string sessionId: ""
         // вопрос, ждущий сборки справки (контекст + память)
         property string pendingText: ""
+        // предложенное агентом действие (ждёт подтверждения)
+        property string pendingAction: ""
 
         // витрина ограничена: длинный стрим не растит память бесконечно,
         // контекст диалога живёт в сессии OpenCode (--session)
@@ -356,6 +441,7 @@ PanelWindow {
 
         function send(text) {
             if (text.trim() === "" || busy) return
+            pendingAction = ""
             messages = capHistory(messages.concat([
                 { role: "user", text: text },
                 { role: "assistant", text: "" }
@@ -397,11 +483,62 @@ PanelWindow {
             var m = messages.slice()
             m[m.length - 1] = { role: "assistant", text: m[m.length - 1].text + chunk }
             messages = capHistory(m)
+            extractAction()
+        }
+
+        // вырезаю из ответа блок ```lunar-action … ``` в предложенное действие
+        function extractAction() {
+            if (messages.length === 0) return
+            var m = messages.slice()
+            var i = m.length - 1
+            var text = m[i].text
+            var re = /```lunar-action\s*\n([\s\S]*?)```/
+            var match = text.match(re)
+            if (!match) return
+            var cmd = (match[1] || "").trim()
+            text = text.replace(re, "").replace(/\n{3,}/g, "\n\n").replace(/\s+$/, "")
+            m[i] = { role: "assistant", text: text }
+            messages = m
+            if (cmd !== "") pendingAction = cmd
+        }
+
+        // whitelist: hyprctl / qs ipc / скрипты райса
+        function allowed(cmd) {
+            var c = cmd.trim()
+            return /^hyprctl\b/.test(c)
+                || /^qs ipc call\b/.test(c)
+                || /^(~|\/home\/sora)\/\.config\/hypr\/scripts\/eclipse-[A-Za-z0-9_-]+\.sh\b/.test(c)
+        }
+
+        function systemMsg(t) {
+            messages = capHistory(messages.concat([{ role: "system", text: t }]))
+        }
+
+        function runAction() {
+            var cmd = pendingAction
+            if (cmd === "") return
+            pendingAction = ""
+            if (!allowed(cmd)) {
+                status = "действие не разрешено"
+                systemMsg("✕ не разрешено: " + cmd)
+                return
+            }
+            systemMsg("▶ " + cmd)
+            actionProc.command = ["bash", "-c", cmd]
+            actionProc.running = true
+        }
+
+        function actionDone() {
+            var out = ((actionOut.text || "") + (actionErr2.text || "")).trim()
+            if (out.length > 2000) out = out.slice(0, 2000) + "…"
+            systemMsg(out !== "" ? out : "готово")
+            status = "готов"
         }
 
         function newSession() {
             ctxProc.running = false
             pendingText = ""
+            pendingAction = ""
             agentProc.running = false
             agentWatchdog.stop()
             busy = false
@@ -474,6 +611,15 @@ PanelWindow {
                 } catch (e) { /* не-JSON строки игнорируем */ }
             }
         }
+    }
+
+    // выполнение подтверждённого действия
+    Process {
+        id: actionProc
+        running: false
+        onExited: (exitCode) => agent.actionDone()
+        stdout: StdioCollector { id: actionOut }
+        stderr: StdioCollector { id: actionErr2 }
     }
 
     Process { id: agentTerm; running: false }
