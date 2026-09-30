@@ -22,6 +22,7 @@ Item {
     // разбор новостей агентом
     property bool agentBusy: false
     property string agentText: ""
+    property string ctxText: ""
     // идёт проверка (pCheck/pNews) — для отдачи кнопке
     property bool checking: false
 
@@ -115,10 +116,20 @@ Item {
         onExited: { page.busy = false; pCheck.running = true }
     }
 
-    // ── разбор новостей агентом (opencode под pty) ─────────────
+    // ── разбор агентом: сначала собираю контекст системы, потом спрашиваю ──
+    Process {
+        id: pCtx
+        command: ["bash", "-c",
+            "$HOME/.config/hypr/scripts/eclipse-agent-context.sh 1"]
+        stdout: StdioCollector {
+            onStreamFinished: page.ctxText = text.trim()
+        }
+        onRunningChanged: page.agentBusy = pCtx.running || pAgent.running
+        onExited: page.sendAgentPrompt()
+    }
     Process {
         id: pAgent
-        onRunningChanged: page.agentBusy = running
+        onRunningChanged: page.agentBusy = pCtx.running || pAgent.running
         stdout: StdioCollector {
             onStreamFinished: page.agentText = text.trim()
         }
@@ -127,16 +138,24 @@ Item {
         return "'" + String(s).replace(/'/g, "'\\''") + "'"
     }
     function runAgentNews() {
-        if (pAgent.running) return
+        if (pAgent.running || pCtx.running) return
+        if (page.newsItems.length === 0) return
+        page.agentText = ""
+        page.agentBusy = true
+        pCtx.running = true
+    }
+    function sendAgentPrompt() {
         var lines = []
         for (var i = 0; i < page.newsItems.length; i++)
             lines.push("- " + page.newsItems[i].date + ": " + page.newsItems[i].en)
-        if (lines.length === 0) return
-        var prompt = "Свежие новости Arch Linux (EN). Переведи на русский кратко и по делу, "
-            + "выдели, на что важно обратить внимание перед обновлением (ручное вмешательство, "
-            + "ломающие изменения, безопасность). Если критичного нет — так и скажи.\n\n"
-            + lines.join("\n")
-        page.agentText = ""
+        if (lines.length === 0) { page.agentBusy = false; return }
+        var prompt = "Состояние системы (память и контекст, не часть вопроса):\n"
+            + (page.ctxText !== "" ? page.ctxText : "(нет данных)")
+            + "\n\nСвежие новости Arch (EN, с датами):\n" + lines.join("\n")
+            + "\n\nЗадача: коротко проанализируй систему и новости. Скажи, надо ли "
+            + "обновляться сейчас или подождать, перечисли висящие пакеты и выдели, "
+            + "на что обратить внимание (ручное вмешательство, ломающие изменения, "
+            + "безопасность). По-русски, по делу. Если всё спокойно — так и скажи."
         // opencode подвешивается без tty — гоняю через script (как в оверлее)
         pAgent.command = ["script", "-qefc",
             "opencode run --agent lunar -- " + shQuote(prompt), "/dev/null"]
