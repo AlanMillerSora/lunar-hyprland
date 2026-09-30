@@ -283,35 +283,35 @@ PanelWindow {
         Rectangle {
             anchors.fill: parent
             color: Theme.bg
-            radius: 6
-            border.color: Theme.accent
+            radius: Theme.radiusL
+            border.color: Theme.borderAccent
             border.width: 1
 
-            // faint corner glow accents, cyberpunk HUD style
+            // приглушённые HUD-скобки: намёк на кибер-рамку, не спорящий с контентом
             Rectangle {
-                width: 40; height: 2; color: Theme.accent2
+                width: 40; height: 2; color: Theme.alpha(Theme.accent, 0.35)
                 anchors { top: parent.top; left: parent.left; margins: 14 }
             }
 
             Rectangle {
-                width: 2; height: 40; color: Theme.accent2
+                width: 2; height: 40; color: Theme.alpha(Theme.accent, 0.35)
                 anchors { top: parent.top; left: parent.left; margins: 14 }
             }
 
             Rectangle {
-                width: 40; height: 2; color: Theme.accent2
+                width: 40; height: 2; color: Theme.alpha(Theme.accent, 0.35)
                 anchors { bottom: parent.bottom; right: parent.right; margins: 14 }
             }
 
             Rectangle {
-                width: 2; height: 40; color: Theme.accent2
+                width: 2; height: 40; color: Theme.alpha(Theme.accent, 0.35)
                 anchors { bottom: parent.bottom; right: parent.right; margins: 14 }
             }
 
             Row {
                 anchors.fill: parent
-                anchors.margins: 28
-                spacing: 28
+                anchors.margins: 32
+                spacing: 32
 
                 // ---------------- Sidebar ----------------
                 Item {
@@ -321,7 +321,7 @@ PanelWindow {
                         id: sidebar
                         width: 158
                         height: parent.height
-                        spacing: 22
+                        spacing: 24
 
                         Text {
                             text: "SETTINGS"

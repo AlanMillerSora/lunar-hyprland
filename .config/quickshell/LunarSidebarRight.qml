@@ -151,7 +151,7 @@ PanelWindow {
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 18
+            anchors.margins: 20
             spacing: 14
 
             RowLayout {
@@ -297,7 +297,7 @@ PanelWindow {
 
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: 14
+                        anchors.margins: 16
                         spacing: 8
 
                         RowLayout {
@@ -478,7 +478,7 @@ PanelWindow {
 
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: 14
+                        anchors.margins: 16
                         spacing: 10
 
                         Text {
@@ -647,7 +647,7 @@ PanelWindow {
 
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: 14
+                        anchors.margins: 16
                         spacing: 10
 
                         Text {
@@ -975,7 +975,7 @@ PanelWindow {
 
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: 14
+                        anchors.margins: 16
                         spacing: 8
 
                         RowLayout {

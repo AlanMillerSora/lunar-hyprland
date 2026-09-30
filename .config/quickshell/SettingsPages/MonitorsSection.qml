@@ -674,7 +674,7 @@ Item {
                         label: "NIGHT LIGHT"
                         icon: "\uf186"
                         value: page.nightlightValue
-                        accentColor: "#ffffff"
+                        accentColor: Theme.accent
 
                         onMoved: value =>
                             page.commitNightlight(value)
@@ -688,19 +688,19 @@ Item {
 
                         color: page.nightlightEnabled
                             ? Theme.active
-                            : Theme.alpha("#A0A0A0", 0.15)
+                            : Theme.alpha(Theme.textDim, 0.15)
 
                         border.width: 1
                         border.color: page.nightlightEnabled
                             ? Theme.accent
-                            : "#A0A0A0"
+                            : Theme.textDim
 
                         Text {
                             anchors.centerIn: parent
                             text: page.nightlightEnabled ? "ON" : "OFF"
                             color: page.nightlightEnabled
                                 ? Theme.accent
-                                : "#A0A0A0"
+                                : Theme.textDim
                             font.family: Theme.fontFamily
                             font.pixelSize: 11
                             font.bold: true
@@ -735,7 +735,7 @@ Item {
                         color: "#00000000"
                         border.width: 1
                         border.color: modelData.focused
-                            ? "#454545"
+                            ? Theme.borderAccent
                             : Theme.border
 
                         Column {
@@ -1077,7 +1077,7 @@ Item {
                         label: "BITRATE"
                         icon: "\uf03d"
                         value: (page.recBitrate - 2) / 48
-                        accentColor: "#ffffff"
+                        accentColor: Theme.accent
 
                         onMoved: value =>
                             page.recBitrate = Math.round(2 + value * 48)

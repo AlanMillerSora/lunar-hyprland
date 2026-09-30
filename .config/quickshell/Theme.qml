@@ -6,29 +6,33 @@ import Quickshell.Io
 QtObject {
     id: theme
 
-    property color bg: Qt.rgba(0, 0, 0, 0.85 * interfaceOpacity)
-    // панель и карточки тоже реагируют на ползунок прозрачности (L43)
-    property color bgPanel: Qt.rgba(5 / 255, 5 / 255, 5 / 255, interfaceOpacity)
-    property color bgCard: Qt.rgba(13 / 255, 13 / 255, 13 / 255, interfaceOpacity)
-    property color border: "#1e1e1e"
-    property color borderAccent: "#2a2a2a"
+    // холодный уголь вместо чистого чёрного: мягче на глаз, но всё ещё монохром.
+    // Базовая альфа ниже единицы — поверх стекла Hyprland панели «дышат»,
+    // а ползунок прозрачности по-прежнему множит её сверху (L43).
+    property color bg: Qt.rgba(8 / 255, 9 / 255, 13 / 255, 0.72 * interfaceOpacity)
+    property color bgPanel: Qt.rgba(12 / 255, 14 / 255, 19 / 255, 0.78 * interfaceOpacity)
+    property color bgCard: Qt.rgba(18 / 255, 21 / 255, 27 / 255, 0.62 * interfaceOpacity)
 
-    property color text: "#ffffff"
-    property color textDim: "#888888"
-    property color textFaint: "#4a4a4a"
+    // рамки — не линии, а намёк: белый на малых альфах (раньше был #1e1e1e)
+    property color border: Qt.rgba(1, 1, 1, 0.08)
+    property color borderAccent: Qt.rgba(1, 1, 1, 0.16)
 
-    property color accent: "#ffffff"
-    property color accent2: "#ffffff"
+    property color text: "#e8ecf2"
+    property color textDim: "#98a1ac"
+    property color textFaint: "#5b636d"
+
+    property color accent: "#e8edf4"
+    property color accent2: "#e8edf4"
     property color danger: "#ff003c"
     property color ok: "#00ff9c"
 
-    property color trackBg: "#161616"
+    property color trackBg: "#181b21"
 
     // ── токены «ритма» интерфейса (Hub и панели) ──
-    property color hover: Qt.rgba(accent.r, accent.g, accent.b, 0.06)        // наведение: строки, карточки
-    property color hoverStrong: Qt.rgba(accent.r, accent.g, accent.b, 0.08)  // наведение: кнопки, чипы
-    property color active: Qt.rgba(accent.r, accent.g, accent.b, 0.12)       // выбранное/включённое
-    property color fill: Qt.rgba(text.r, text.g, text.b, 0.03)               // покой (фон карточек/строк)
+    property color hover: Qt.rgba(accent.r, accent.g, accent.b, 0.07)        // наведение: строки, карточки
+    property color hoverStrong: Qt.rgba(accent.r, accent.g, accent.b, 0.10)  // наведение: кнопки, чипы
+    property color active: Qt.rgba(accent.r, accent.g, accent.b, 0.14)       // выбранное/включённое
+    property color fill: Qt.rgba(text.r, text.g, text.b, 0.04)               // покой (фон карточек/строк)
 
     property string fontFamily: "JetBrains Mono"
     property string iconFont: "JetBrainsMono Nerd Font"
@@ -52,10 +56,10 @@ QtObject {
     // попап громкости открыт — центральный OSD не показываем (без дубля)
     property bool volumePopupOpen: false
 
-    // Единый радиус системы — как у карточки Hub
-    property int radius: 6
-    property int radiusM: 6
-    property int radiusL: 6
+    // Радиусы: мелкое — 8, среднее — 10, крупные поверхности (Hub, сайдбары) — 12
+    property int radius: 8
+    property int radiusM: 10
+    property int radiusL: 12
 
     // сколько значков трея видно в панели (остальные — в списке «+N»)
     property int trayVisible: 2

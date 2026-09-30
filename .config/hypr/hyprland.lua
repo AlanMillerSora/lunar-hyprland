@@ -255,6 +255,10 @@ hl.window_rule({ match = { class = "eclipse-askpass" },    float = true, center 
 hl.layer_rule({ match = { namespace = "lunar-panel" },         blur = true, ignore_alpha = 0.25 })
 hl.layer_rule({ match = { namespace = "lunar-sidebar" },       blur = true, ignore_alpha = 0.25 })
 hl.layer_rule({ match = { namespace = "lunar-sidebar-right" }, blur = true, ignore_alpha = 0.25 })
+-- ВАЖНО: полноэкранные оверлеи (Hub, попапы) блюрить нельзя. Quickshell держит
+-- их как fullscreen-слои, и Hyprland блюрит весь слой, даже когда он пуст —
+-- GPU уходил с ~20% до ~54%. Стекло у оверлеев — только прозрачность и рамки.
+
 
 
 -- ─────────── Автораскладка: приложение → свой стол ───────────

@@ -108,7 +108,7 @@ PanelWindow {
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 18
+            anchors.margins: 20
             spacing: 16
 
             RowLayout {
@@ -230,7 +230,7 @@ PanelWindow {
                     border.width: 1
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: 14
+                        anchors.margins: 16
                         spacing: 10
 
                         RowLayout {
@@ -301,7 +301,7 @@ PanelWindow {
                                     Layout.fillWidth: true
                                     height: 8
                                     radius: 3
-                                    color: "#1a1a1a"
+                                    color: Theme.trackBg
                                     border.color: Theme.border
                                     border.width: 1
                                     Rectangle {
@@ -371,7 +371,7 @@ PanelWindow {
                                         Layout.fillWidth: true
                                         height: 4
                                         radius: 2
-                                        color: "#1a1a1a"
+                                        color: Theme.trackBg
                                         Rectangle {
                                             readonly property real ratio: api.modelsTotal > 0
                                                 ? Math.max(0, Math.min(1, modelData.usd / api.modelsTotal))
@@ -422,7 +422,7 @@ PanelWindow {
                     border.width: 1
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: 14
+                        anchors.margins: 16
                         spacing: 8
                         RowLayout {
                             Layout.fillWidth: true

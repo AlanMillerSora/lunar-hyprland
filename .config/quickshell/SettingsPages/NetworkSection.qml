@@ -407,14 +407,14 @@ Item {
                     width: 76
                     height: 38
                     radius: Theme.radius
-                    color: page.wifiEnabled ? Theme.active : Theme.alpha("#A0A0A0", 0.15)
+                    color: page.wifiEnabled ? Theme.active : Theme.alpha(Theme.textDim, 0.15)
                     border.width: 1
-                    border.color: page.wifiEnabled ? Theme.accent : "#A0A0A0"
+                    border.color: page.wifiEnabled ? Theme.accent : Theme.textDim
 
                     Text {
                         anchors.centerIn: parent
                         text: page.wifiEnabled ? "ON" : "OFF"
-                        color: page.wifiEnabled ? Theme.accent : "#A0A0A0"
+                        color: page.wifiEnabled ? Theme.accent : Theme.textDim
                         font.family: Theme.fontFamily
                         font.pixelSize: 10
                         font.bold: true
