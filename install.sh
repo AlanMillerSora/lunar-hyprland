@@ -407,6 +407,14 @@ PY
 zapret_service() {
   say "zapret: systemd-юнит $ZAPRET_UNIT"
   sudo install -m 0644 "$ZAPRET_DIR/zapret.service" "/etc/systemd/system/$ZAPRET_UNIT"
+
+  # wait-online иначе ждёт неактивный wlan0 все 2 минуты, и zapret (After=
+  # network-online.target) стартует только после таймаута.
+  local wo="/etc/systemd/system/systemd-networkd-wait-online.service.d"
+  sudo mkdir -p "$wo"
+  sudo install -m 0644 "$ZAPRET_DIR/wait-online-any.conf" "$wo/any.conf"
+  say "сеть: wait-online → любой интерфейс ($wo/any.conf)"
+
   sudo systemctl daemon-reload
 
   # Узкое NOPASSWD-правило: только systemctl сервиса (переключатель в Hub).
