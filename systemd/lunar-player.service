@@ -1,0 +1,22 @@
+[Unit]
+Description=Lunar Eclipse — mpv-демон плеера (аудио, IPC)
+# Юнит запускает сам шелл on-demand: `systemctl --user start lunar-player.service`,
+# когда открываю плеер. В автозапуск НЕ ставлю (enable не делаю): иначе mpv
+# висел бы вечно и держал аудио-сессию, даже когда плеер закрыт.
+# Графической сессии не требую — mpv без видео (--no-video) и с --force-window=no,
+# сокет IPC лежит в рантайме пользователя (%t = /run/user/<uid>).
+
+[Service]
+Type=simple
+# Без видео и без окна: mpv работает как «голова» для звука.
+# --idle=yes — не выходить после трека, ждать следующего;
+# --input-ipc-server — сокет, через который шелл рулит плеером
+# (loadfile/pause/seek) вместо перезапуска процесса.
+# --ytdl-format=bestaudio/best — из ссылок (YouTube и т.п.) тянем только звук.
+ExecStart=/usr/bin/mpv --no-video --idle=yes --input-ipc-server=%t/lunar-player.sock --ytdl-format=bestaudio/best --no-osc --force-window=no
+# Упал — поднимаю сам; штатный выход (quit из плеера) не считаю сбоем.
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target

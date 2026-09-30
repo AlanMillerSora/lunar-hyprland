@@ -56,6 +56,12 @@ QtObject {
     // попап громкости открыт — центральный OSD не показываем (без дубля)
     property bool volumePopupOpen: false
 
+    // плеер: окно открыто и активная страница. Живёт в Theme, потому что
+    // оверлей разбит на две поверхности (подложка LunarPlayer + карточка
+    // LunarPlayerCard) и им нужен общий маленький стейт.
+    property bool playerOpen: false
+    property int playerPage: 0
+
     // Радиусы: мелкое — 8, среднее — 10, крупные поверхности (Hub, сайдбары) — 12
     property int radius: 8
     property int radiusM: 10

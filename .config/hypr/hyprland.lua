@@ -258,6 +258,8 @@ hl.layer_rule({ match = { namespace = "lunar-sidebar-right" }, blur = true, igno
 -- ВАЖНО: полноэкранные оверлеи (Hub, попапы) блюрить нельзя. Quickshell держит
 -- их как fullscreen-слои, и Hyprland блюрит весь слой, даже когда он пуст —
 -- GPU уходил с ~20% до ~54%. Стекло у оверлеев — только прозрачность и рамки.
+-- Исключение — плеер: его карточка отдельным окном (~0.9 Мп), блюрю только её.
+hl.layer_rule({ match = { namespace = "lunar-player-card" }, blur = true, ignore_alpha = 0.25 })
 
 
 
@@ -370,6 +372,14 @@ hl.bind("XF86AudioRaiseVolume", dsp.exec_cmd("wpctl set-volume -l 1.5 @DEFAULT_A
 hl.bind("XF86AudioLowerVolume", dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"))
 hl.bind("XF86AudioMute",        dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"))
 hl.bind("XF86AudioMicMute",     dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"))
+
+-- плеер: SUPER+M открывает/закрывает окно плеера (Quickshell),
+-- а XF86-клавиши отдаю eclipse-media.sh — он сам выбирает, кем рулить
+-- (наш mpv-демон, иначе то, что играет, иначе первый плеер).
+hl.bind(M .. " + M",             dsp.exec_cmd("qs ipc call player toggle"))
+hl.bind("XF86AudioPlay",         dsp.exec_cmd("~/.config/hypr/scripts/eclipse-media.sh play-pause"))
+hl.bind("XF86AudioNext",         dsp.exec_cmd("~/.config/hypr/scripts/eclipse-media.sh next"))
+hl.bind("XF86AudioPrev",         dsp.exec_cmd("~/.config/hypr/scripts/eclipse-media.sh previous"))
 
 -- ─────────────────────────────── Автозапуск ─────────────────────────
 hl.on("hyprland.start", function()

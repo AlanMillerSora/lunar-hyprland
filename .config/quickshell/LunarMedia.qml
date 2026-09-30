@@ -37,6 +37,13 @@ PanelWindow {
         function close(): void { root.closePanel() }
     }
 
+    // раскрыть полный плеер (Lunar Player) — мини-попап закрываю
+    Process {
+        id: playerOpenProc
+        command: ["qs", "ipc", "call", "player", "open"]
+        running: false
+    }
+
     // активный плеер: играющий, иначе первый доступный
     readonly property var player: {
         var ps = Mpris.players.values
@@ -137,6 +144,19 @@ PanelWindow {
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(10)
                     font.letterSpacing: 2
+                }
+                Text {
+                    text: "\uf065"
+                    color: expandMouse.containsMouse ? Theme.accent : Theme.textFaint
+                    font.family: Theme.iconFont
+                    font.pixelSize: Theme.fontSize(11)
+                    MouseArea {
+                        id: expandMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: { playerOpenProc.running = true; root.closePanel() }
+                    }
                 }
                 Text {
                     text: "\uf00d"

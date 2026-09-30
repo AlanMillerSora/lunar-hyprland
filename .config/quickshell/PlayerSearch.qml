@@ -1,0 +1,167 @@
+import QtQuick
+import QtQuick.Layouts
+
+// ════════════════════════════════════════════════════════════════
+//  PlayerSearch — страница «ПОИСК»: строка ввода + кнопка, Enter
+//  запускает PlayerCore.search. Результаты — PlayerList; клик играет
+//  (playUrls), «+» кладёт в очередь (enqueue).
+// ════════════════════════════════════════════════════════════════
+Item {
+    id: root
+
+    property bool pageActive: false
+
+    function doSearch() {
+        var q = searchInput.text.trim()
+        if (q.length > 0)
+            PlayerCore.search(q)
+    }
+
+    ColumnLayout {
+        anchors.fill: parent
+        spacing: 10
+
+        Text {
+            text: "ПОИСК"
+            color: Theme.text
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSize(14)
+            font.bold: true
+            font.letterSpacing: 3
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 8
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 38
+                radius: Theme.radius
+                color: Theme.bgCard
+                border.width: 1
+                border.color: searchInput.activeFocus ? Theme.borderAccent : Theme.border
+
+                TextInput {
+                    id: searchInput
+                    anchors.fill: parent
+                    anchors.leftMargin: 12
+                    anchors.rightMargin: 12
+                    verticalAlignment: TextInput.AlignVCenter
+                    color: Theme.text
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(12)
+                    clip: true
+                    selectByMouse: true
+
+                    Text {
+                        anchors.fill: parent
+                        verticalAlignment: Text.AlignVCenter
+                        text: "что искать? (Enter)"
+                        color: Theme.textFaint
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(12)
+                        visible: searchInput.text === ""
+                    }
+
+                    onTextChanged: if (text === "") PlayerCore.clearResults()
+                    Keys.onReturnPressed: root.doSearch()
+                    Keys.onEnterPressed: root.doSearch()
+                    // Esc чистит поле; пустое — отдаю наверх (закрыть окно)
+                    Keys.onEscapePressed: (e) => {
+                        if (text !== "") { text = ""; e.accepted = true }
+                    }
+                }
+            }
+
+            Rectangle {
+                Layout.preferredWidth: 104
+                Layout.preferredHeight: 38
+                radius: Theme.radius
+                color: searchMouse.containsMouse ? Theme.hoverStrong : Theme.bgCard
+                border.width: 1
+                border.color: Theme.border
+
+                Row {
+                    anchors.centerIn: parent
+                    spacing: 8
+                    Text {
+                        text: "\uf002"
+                        color: Theme.accent
+                        font.family: Theme.iconFont
+                        font.pixelSize: Theme.fontSize(12)
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                    Text {
+                        text: "НАЙТИ"
+                        color: Theme.text
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(11)
+                        font.letterSpacing: 1
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+
+                MouseArea {
+                    id: searchMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.doSearch()
+                }
+            }
+        }
+
+        // статус: поиск / ошибка
+        Text {
+            Layout.fillWidth: true
+            visible: PlayerCore.searching || PlayerCore.error.length > 0
+            text: PlayerCore.searching
+                ? "поиск…"
+                : ("ошибка: " + PlayerCore.error)
+            color: PlayerCore.error.length > 0 ? Theme.danger : Theme.textFaint
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSize(10)
+            elide: Text.ElideRight
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 1
+            color: Theme.border
+        }
+
+        PlayerList {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            model: PlayerCore.searchResults
+            emptyText: PlayerCore.searching
+                ? "ищу…"
+                : "введи запрос и нажми Enter"
+            showRight: true
+
+            titleFor: function(item, index) {
+                return item && item.title ? item.title : "без названия"
+            }
+            subtitleFor: function(item, index) {
+                if (!item) return ""
+                var up = item.uploader || ""
+                var d = item.duration > 0 ? PlayerCore.fmt(item.duration) : ""
+                return (up + (up.length > 0 && d.length > 0 ? "  ·  " : "") + d)
+            }
+            rightIconFor: function(item, index) { return "\uf067" }
+
+            onActivated: (index) => {
+                var item = PlayerCore.searchResults[index]
+                if (item && item.url)
+                    PlayerCore.playUrls([item.url])
+            }
+            onRightClicked: (index) => {
+                var item = PlayerCore.searchResults[index]
+                if (item && item.url)
+                    PlayerCore.enqueue([item.url])
+            }
+        }
+    }
+}
