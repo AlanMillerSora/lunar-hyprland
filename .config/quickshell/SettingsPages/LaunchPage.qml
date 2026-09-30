@@ -122,20 +122,16 @@ Item {
                     anchors.centerIn: parent
                     spacing: 8
 
-                    Rectangle {
+                    Item {
                         width: 68
                         height: 68
-                        radius: 14
-                        color: Theme.fill
-                        border.width: hover.containsMouse ? 1 : 0
-                        border.color: Theme.borderAccent
                         anchors.horizontalCenter: parent.horizontalCenter
 
                         Image {
                             id: appIcon
                             anchors.centerIn: parent
-                            width: 52
-                            height: 52
+                            width: 56
+                            height: 56
                             sourceSize: Qt.size(128, 128)
                             fillMode: Image.PreserveAspectFit
                             smooth: true
@@ -152,7 +148,7 @@ Item {
                             text: AppModel.initials(modelData.name)
                             color: Theme.text
                             font.family: Theme.fontFamily
-                            font.pixelSize: 18
+                            font.pixelSize: 20
                             font.bold: true
                         }
                     }
