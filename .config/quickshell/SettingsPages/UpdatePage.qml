@@ -19,6 +19,11 @@ Item {
     property string newsText: ""
     property var newsItems: []
     property bool newsLoaded: false
+    // разбор новостей агентом
+    property bool agentBusy: false
+    property string agentText: ""
+    // идёт проверка (pCheck/pNews) — для отдачи кнопке
+    property bool checking: false
 
     component ActionButton: Rectangle {
         property string label: ""
@@ -62,6 +67,7 @@ Item {
         id: pCheck
         command: ["bash", "-c",
             "$HOME/.config/hypr/scripts/eclipse-update.sh --check 2>&1"]
+        onRunningChanged: page.checking = pCheck.running || pNews.running
         stdout: StdioCollector {
             onStreamFinished: {
                 var t = text.trim()
@@ -79,6 +85,7 @@ Item {
         id: pNews
         command: ["bash", "-c",
             "$HOME/.config/hypr/scripts/eclipse-update.sh --news 2>&1"]
+        onRunningChanged: page.checking = pCheck.running || pNews.running
         stdout: StdioCollector {
             onStreamFinished: {
                 var t = text.trim()
@@ -106,6 +113,34 @@ Item {
         id: pAction
         onRunningChanged: page.busy = running
         onExited: { page.busy = false; pCheck.running = true }
+    }
+
+    // ── разбор новостей агентом (opencode под pty) ─────────────
+    Process {
+        id: pAgent
+        onRunningChanged: page.agentBusy = running
+        stdout: StdioCollector {
+            onStreamFinished: page.agentText = text.trim()
+        }
+    }
+    function shQuote(s) {
+        return "'" + String(s).replace(/'/g, "'\\''") + "'"
+    }
+    function runAgentNews() {
+        if (pAgent.running) return
+        var lines = []
+        for (var i = 0; i < page.newsItems.length; i++)
+            lines.push("- " + page.newsItems[i].date + ": " + page.newsItems[i].en)
+        if (lines.length === 0) return
+        var prompt = "Свежие новости Arch Linux (EN). Переведи на русский кратко и по делу, "
+            + "выдели, на что важно обратить внимание перед обновлением (ручное вмешательство, "
+            + "ломающие изменения, безопасность). Если критичного нет — так и скажи.\n\n"
+            + lines.join("\n")
+        page.agentText = ""
+        // opencode подвешивается без tty — гоняю через script (как в оверлее)
+        pAgent.command = ["script", "-qefc",
+            "opencode run --agent lunar -- " + shQuote(prompt), "/dev/null"]
+        pAgent.running = true
     }
 
     // L39: раньше был kitty --hold → busy висел, пока пользователь сам не
@@ -244,9 +279,14 @@ Item {
                         onClicked: page.showRollback()
                     }
                     ActionButton {
-                        label: "ПРОВЕРИТЬ"
-                        enabledBtn: !page.busy
-                        onClicked: { pCheck.running = true; pNews.running = true }
+                        label: page.checking ? "ПРОВЕРЯЮ…" : "ПРОВЕРИТЬ"
+                        enabledBtn: !page.busy && !page.checking
+                        onClicked: { page.checking = true; pCheck.running = true; pNews.running = true }
+                    }
+                    ActionButton {
+                        label: page.agentBusy ? "АГЕНТ ДУМАЕТ…" : "РАЗБОР АГЕНТОМ"
+                        enabledBtn: !page.busy && !page.agentBusy && page.newsItems.length > 0
+                        onClicked: page.runAgentNews()
                     }
                     ActionButton {
                         label: "ПОЧИСТИТЬ"
@@ -276,6 +316,44 @@ Item {
                 font.pixelSize: 12
                 font.bold: true
                 font.letterSpacing: 2
+            }
+
+            // ── разбор новостей агентом: перевод и на что обратить внимание ──
+            Rectangle {
+                width: col.width
+                visible: page.agentBusy || page.agentText !== ""
+                height: agentCol.implicitHeight + 24
+                radius: Theme.radius
+                color: Theme.bgCard
+                border.width: 1
+                border.color: Theme.accent
+
+                Column {
+                    id: agentCol
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.margins: 12
+                    spacing: 6
+
+                    Text {
+                        text: page.agentBusy ? "АГЕНТ РАЗБИРАЕТ…" : "РАЗБОР ОТ АГЕНТА"
+                        color: page.agentBusy ? Theme.textFaint : Theme.accent
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 11
+                        font.bold: true
+                        font.letterSpacing: 1
+                    }
+                    Text {
+                        width: parent.width
+                        visible: page.agentText !== ""
+                        text: page.agentText
+                        color: Theme.text
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 12
+                        wrapMode: Text.Wrap
+                    }
+                }
             }
 
             Repeater {
