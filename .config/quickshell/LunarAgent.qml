@@ -417,6 +417,8 @@ PanelWindow {
         property string pendingText: ""
         // предложенное агентом действие (ждёт подтверждения)
         property string pendingAction: ""
+        // последняя выполненная команда — для возврата результата агенту
+        property string lastAction: ""
 
         // витрина ограничена: длинный стрим не растит память бесконечно,
         // контекст диалога живёт в сессии OpenCode (--session)
@@ -523,6 +525,7 @@ PanelWindow {
                 systemMsg("✕ не разрешено: " + cmd)
                 return
             }
+            lastAction = cmd
             systemMsg("▶ " + cmd)
             actionProc.command = ["bash", "-c", cmd]
             actionProc.running = true
@@ -533,6 +536,21 @@ PanelWindow {
             if (out.length > 2000) out = out.slice(0, 2000) + "…"
             systemMsg(out !== "" ? out : "готово")
             status = "готов"
+            followUp(out)
+        }
+
+        // возвращаю агенту результат действия, чтобы он прокомментировал.
+        // Только если оверлей открыт и не занят; в историю — лишь ответ
+        // ассистента (без служебной строки-вопроса).
+        function followUp(out) {
+            if (!root.showing || busy || lastAction === "") return
+            var prompt = "Я выполнил действие:\n" + lastAction
+                + "\n\nВывод:\n" + (out !== "" ? out : "(пусто)")
+                + "\n\nПрокомментируй кратко и предложи следующий шаг, если это уместно."
+            messages = capHistory(messages.concat([{ role: "assistant", text: "" }]))
+            busy = true
+            status = "opencode работает…"
+            dispatch(prompt)
         }
 
         function newSession() {
