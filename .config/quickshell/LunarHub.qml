@@ -97,7 +97,6 @@ PanelWindow {
         { name: "Sound",      icon: "\uf028", page: "SoundPage" },
         { name: "Monitors",   icon: "\uf108", page: "MonitorsPage" },
         { name: "Network",    icon: "\uf1eb", page: "NetworkPage" },
-        { name: "Bluetooth",  icon: "󰂯", page: "BluetoothPage" },
         { name: "Interface",  icon: "\uf085", page: "InterfacePage" },
         { name: "Memory",     icon: "󰍛", page: "MemoryPage" },
         { name: "Games",      icon: "\uf11b", page: "GamesPage" },

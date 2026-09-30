@@ -1,429 +1,69 @@
 import QtQuick
-import Quickshell.Io
 import "../"
 
+// ════════════════════════════════════════════════════════════════
+//  NetworkPage — одна вкладка на два раздела: Сеть и Bluetooth.
+//  Сами разделы живут отдельными компонентами (NetworkSection.qml,
+//  BluetoothPage.qml) и создаются лениво: до первого переключения
+//  сегмента страницы нет. Видимость раздела = выбранный сегмент и
+//  открытый Hub — по ней разделы гасят свои таймеры-поллинг.
+// ════════════════════════════════════════════════════════════════
 Item {
     id: page
-    property bool wifiEnabled: true
-    property var networks: []
-    property string pendingSsid: ""
-    property string connectMsg: ""
-    property bool scanning: false
-    property int contentMargin: 0
-    property int contentRightMargin: 48
-    property int contentTopMargin: 0
-    property int contentBottomMargin: 0
 
-    // ── zapret (обход DPI) ──
-    property bool zapActive: false
-    property string zapDesync: "?"
-    property string zapCommit: ""
-    property string zapUpdated: ""
-    property string zapMsg: ""
+    property int segment: 0
+    // какие сегменты уже созданы (первый — сразу)
+    property var segVisited: [true]
 
-    // ── Telegram: локальный MTProto-прокси (tg-ws-proxy) ──
-    property bool tgActive: false
-    property string tgPort: "1443"
-    property string tgMsg: ""
-
-    // ── Vencord (мод Discord) ──
-    property string vencState: "notinstalled"
-    property string vencInstaller: ""
-    property string vencApp: "—"
-
-    // кнопка блока ZAPRET
-    component ZapBtn: Rectangle {
-        property string label: ""
-        signal clicked()
-
-        width: 104
-        height: 32
-        radius: Theme.radius
-        color: zbtn.containsMouse ? Theme.active : "transparent"
-        border.width: 1
-        border.color: zbtn.containsMouse ? Theme.accent : Theme.border
-
-        Text {
-            anchors.centerIn: parent
-            text: parent.label
-            color: zbtn.containsMouse ? Theme.accent : Theme.textDim
-            font.family: Theme.fontFamily
-            font.pixelSize: 10
-            font.letterSpacing: 1
+    function selectSegment(i) {
+        i = Math.max(0, Math.min(1, i))
+        page.segment = i
+        if (page.segVisited[i] !== true) {
+            var v = page.segVisited.slice()
+            v[i] = true
+            page.segVisited = v
         }
-
-        MouseArea {
-            id: zbtn
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: parent.clicked()
-        }
-    }
-
-    Process {
-        id: pRadioGet
-        command: ["nmcli", "radio", "wifi"]
-        running: true
-        stdout: StdioCollector { onStreamFinished: page.wifiEnabled = text.trim() === "enabled" }
-    }
-
-    Process {
-        id: pRadioSet
-        stdout: StdioCollector {
-            onStreamFinished: {
-                pRadioGet.running = true
-                if (page.wifiEnabled) {
-                    pList.running = true
-                } else {
-                    page.networks = []
-                    page.scanning = false
-                }
-            }
-        }
-    }
-
-    function setWifiEnabled(on) {
-        pRadioSet.command = ["nmcli", "radio", "wifi", on ? "on" : "off"]
-        pRadioSet.running = true
-    }
-
-    Process {
-        id: pList
-        command: ["nmcli", "-t", "-f", "IN-USE,SSID,SIGNAL,SECURITY", "device", "wifi", "list"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                var out = []
-                var lines = text.trim().split("\n")
-                for (var i = 0; i < lines.length; ++i) {
-                    var line = lines[i].trim()
-                    if (!line) continue
-                    var fields = [], current = "", escaped = false
-                    for (var j = 0; j < line.length; ++j) {
-                        var ch = line[j]
-                        if (escaped) {
-                            current += ch
-                            escaped = false
-                        } else if (ch === "\\") {
-                            escaped = true
-                        } else if (ch === ":" && fields.length < 3) {
-                            fields.push(current)
-                            current = ""
-                        } else {
-                            current += ch
-                        }
-                    }
-                    fields.push(current)
-                    if (fields.length < 4 || !fields[1]) continue
-                    var signal = parseInt(fields[2])
-                    if (isNaN(signal)) signal = 0
-                    out.push({ssid: fields[1], signal: signal, secured: fields[3] !== "" && fields[3] !== "--", connected: fields[0] === "*"})
-                }
-                page.networks = out
-                page.scanning = false
-            }
-        }
-        stderr: StdioCollector { onStreamFinished: page.scanning = false }
-        onStarted: page.scanning = true
-    }
-
-    Process {
-        id: pConnect
-        stdinEnabled: true
-        // H23: пароль уходит в stdin уже запущенному nmcli (не в argv)
-        property string pendingPassword: ""
-        onStarted: if (pendingPassword !== "") { write(pendingPassword); pendingPassword = "" }
-        function refresh() {
-            page.pendingSsid = ""
-            pList.running = true
-        }
-        stdout: StdioCollector { id: connectOut }
-        stderr: StdioCollector { id: connectErr }
-        // M40: сообщаем об ошибке подключения
-        onExited: (exitCode) => {
-            if (exitCode !== 0) {
-                var raw = ((connectErr.text || "") + "\n" + (connectOut.text || "")).split("\n")
-                var msg = []
-                for (var i = 0; i < raw.length; i++)
-                    if (raw[i].trim() !== "") msg.push(raw[i].trim())
-                page.connectMsg = msg.length ? msg[msg.length - 1]
-                    : "не удалось подключиться (код " + exitCode + ")"
-            } else {
-                page.connectMsg = ""
-            }
-            pConnect.refresh()
-        }
-    }
-
-    function connectOpen(ssid) {
-        if (pConnect.running) { page.connectMsg = "подождите — идёт другая операция"; return }
-        page.connectMsg = ""
-        pConnect.command = ["nmcli", "device", "wifi", "connect", ssid]
-        pConnect.running = true
-    }
-
-    function connectSecured(ssid, password) {
-        if (pConnect.running) { page.connectMsg = "подождите — идёт другая операция"; return }
-        page.connectMsg = ""
-        // H23: пароль не попадает в argv — отдаём его nmcli через stdin (--ask).
-        // Кладём пароль ДО старта, чтобы onStarted гарантированно его увидел.
-        pConnect.pendingPassword = password + "\n"
-        pConnect.command = ["nmcli", "--ask", "device", "wifi", "connect", ssid]
-        pConnect.running = true
-    }
-
-    function disconnect(ssid) {
-        if (pConnect.running) { page.connectMsg = "подождите — идёт другая операция"; return }
-        page.connectMsg = ""
-        pConnect.command = ["nmcli", "connection", "down", "id", ssid]
-        pConnect.running = true
-    }
-
-    Process {
-        id: pRescan
-        stdout: StdioCollector {}
-        stderr: StdioCollector {}
-        onExited: pList.running = true
-    }
-
-    function rescan() {
-        page.connectMsg = ""
-        page.scanning = true
-        pRescan.command = ["bash", "-c", "nmcli device wifi rescan 2>/dev/null; sleep 1"]
-        pRescan.running = true
-    }
-
-    // Автообновление списка, пока страница открыта и радио включено.
-    Timer {
-        interval: 8000
-        repeat: true
-        running: page.visible && page.wifiEnabled
-        onTriggered: pList.running = true
-    }
-
-    // ── zapret: состояние и управление ─────────────────────
-    Process {
-        id: pZap
-        command: ["bash", "-c", "$HOME/.config/hypr/scripts/eclipse-zapret.sh status"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                var m = {}
-                var lines = text.trim().split("\n")
-                for (var i = 0; i < lines.length; ++i) {
-                    var p = lines[i].indexOf("=")
-                    if (p > 0) m[lines[i].substring(0, p)] = lines[i].substring(p + 1)
-                }
-                page.zapActive = (m.state === "active")
-                page.zapDesync = m.desync || "?"
-                page.zapCommit = m.commit || ""
-                page.zapUpdated = m.updated || ""
-            }
-        }
-    }
-
-    Process {
-        id: pZapAction
-        stdout: StdioCollector { onStreamFinished: { page.zapMsg = text.trim(); pZap.running = true } }
-        stderr: StdioCollector { onStreamFinished: pZap.running = true }
-    }
-
-    function zapToggle() {
-        page.zapMsg = ""
-        pZapAction.command = ["bash", "-c", "$HOME/.config/hypr/scripts/eclipse-zapret.sh toggle"]
-        pZapAction.running = true
-    }
-
-    function vencStatusText() {
-        if (page.vencState === "patched") return "● установлен"
-        if (page.vencState === "unpatched") return "○ не пропатчен (обновился Discord?)"
-        return "○ не установлен"
-    }
-
-    // обновление и подбор стратегии — в терминале (там интерактивный sudo и лог)
-    Process {
-        id: pZapUpdate
-        command: ["kitty", "--hold", "-e", "bash", "-c", "$HOME/.config/hypr/scripts/eclipse-zapret.sh update"]
-        onExited: pZap.running = true
-    }
-
-    Process {
-        id: pZapTune
-        command: ["kitty", "--hold", "-e", "bash", "-c", "$HOME/.config/hypr/scripts/eclipse-zapret.sh tune"]
-        onExited: pZap.running = true
-    }
-
-    // ── Telegram-прокси (tg-ws-proxy): состояние и управление ──
-    Process {
-        id: pTg
-        command: ["bash", "-c", "$HOME/.config/hypr/scripts/eclipse-zapret-tg.sh status"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                var m = {}
-                var lines = text.trim().split("\n")
-                for (var i = 0; i < lines.length; ++i) {
-                    var p = lines[i].indexOf("=")
-                    if (p > 0) m[lines[i].substring(0, p)] = lines[i].substring(p + 1)
-                }
-                page.tgActive = (m.state === "active")
-                page.tgPort = m.port || "1443"
-            }
-        }
-        stderr: StdioCollector {
-            onStreamFinished: { if (text.trim() !== "") page.tgMsg = text.trim() }
-        }
-    }
-
-    Process {
-        id: pTgAction
-        stdout: StdioCollector { onStreamFinished: { page.tgMsg = text.trim(); pTg.running = true } }
-        stderr: StdioCollector {
-            onStreamFinished: { if (text.trim() !== "") page.tgMsg = text.trim(); pTg.running = true }
-        }
-    }
-
-    function tgToggle() {
-        page.tgMsg = ""
-        pTgAction.command = ["bash", "-c", "$HOME/.config/hypr/scripts/eclipse-zapret-tg.sh toggle"]
-        pTgAction.running = true
-    }
-
-    // ссылка tg://proxy — Telegram сам предложит подключить прокси
-    function tgOpenLink() {
-        page.tgMsg = ""
-        pTgAction.command = ["bash", "-c", "$HOME/.config/hypr/scripts/eclipse-zapret-tg.sh open"]
-        pTgAction.running = true
-    }
-
-    // ── Vencord: состояние и управление ────────────────────
-    Process {
-        id: pVenc
-        command: ["bash", "-c", "$HOME/.config/hypr/scripts/eclipse-vencord.sh status"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                var m = {}
-                var lines = text.trim().split("\n")
-                for (var i = 0; i < lines.length; ++i) {
-                    var p = lines[i].indexOf("=")
-                    if (p > 0) m[lines[i].substring(0, p)] = lines[i].substring(p + 1)
-                }
-                page.vencState = m.state || "notinstalled"
-                page.vencInstaller = m.installer || ""
-                page.vencApp = m.appdir || "—"
-            }
-        }
-    }
-
-    Process {
-        id: pVencPatch
-        command: ["kitty", "--hold", "-e", "bash", "-c", "$HOME/.config/hypr/scripts/eclipse-vencord.sh patch"]
-        onExited: pVenc.running = true
-    }
-
-    Process {
-        id: pVencUpdate
-        command: ["kitty", "--hold", "-e", "bash", "-c", "$HOME/.config/hypr/scripts/eclipse-vencord.sh update"]
-        onExited: pVenc.running = true
-    }
-
-    Timer {
-        interval: 5000
-        repeat: true
-        running: page.visible
-        onTriggered: {
-            pZap.running = true
-            pTg.running = true
-            pVenc.running = true
-        }
-    }
-
-    Component.onCompleted: {
-        pRadioGet.running = true
-        pList.running = true
-        pZap.running = true
-        pTg.running = true
-        pVenc.running = true
     }
 
     Column {
         anchors.fill: parent
-        anchors.leftMargin: page.contentMargin
-        anchors.rightMargin: page.contentRightMargin
-        anchors.topMargin: page.contentTopMargin
-        anchors.bottomMargin: page.contentBottomMargin
-        spacing: 9
+        spacing: 12
 
-        Item {
-            id: header
-            width: parent.width
-            height: 36
+        // ── переключатель разделов ──
+        Row {
+            spacing: 8
 
-            Text {
-                id: networkTitle
-                text: "NETWORK"
-                color: Theme.text
-                font.family: Theme.fontFamily
-                font.pixelSize: 18
-                font.letterSpacing: 3
-                anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
-            }
+            Repeater {
+                model: ["Сеть", "Bluetooth"]
 
-            Row {
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 8
+                delegate: Rectangle {
+                    required property var modelData
+                    required property int index
 
-                // обновить список сетей (иначе он «замерзал» после первого скана)
-                Rectangle {
-                    id: scanBtn
-                    width: 76
-                    height: 38
+                    width: 120
+                    height: 32
                     radius: Theme.radius
-                    color: scanMouse.containsMouse
-                        ? Theme.hoverStrong
-                        : Theme.fill
+                    color: page.segment === index
+                        ? Theme.active
+                        : (segMouse.containsMouse ? Theme.hover : "transparent")
                     border.width: 1
-                    border.color: scanMouse.containsMouse ? Theme.borderAccent : Theme.border
+                    border.color: page.segment === index ? Theme.accent : Theme.border
 
                     Text {
                         anchors.centerIn: parent
-                        text: "СКАН"
-                        color: Theme.textDim
+                        text: modelData
+                        color: page.segment === index ? Theme.accent : Theme.textDim
                         font.family: Theme.fontFamily
-                        font.pixelSize: 10
+                        font.pixelSize: 11
+                        font.bold: page.segment === index
                     }
 
                     MouseArea {
-                        id: scanMouse
+                        id: segMouse
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: page.rescan()
-                    }
-                }
-
-                Rectangle {
-                    id: wifiToggle
-                    width: 76
-                    height: 38
-                    radius: Theme.radius
-                    color: page.wifiEnabled ? Theme.active : Theme.alpha("#A0A0A0", 0.15)
-                    border.width: 1
-                    border.color: page.wifiEnabled ? Theme.accent : "#A0A0A0"
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: page.wifiEnabled ? "ON" : "OFF"
-                        color: page.wifiEnabled ? Theme.accent : "#A0A0A0"
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 10
-                        font.bold: true
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: page.setWifiEnabled(!page.wifiEnabled)
+                        onClicked: page.selectSegment(index)
                     }
                 }
             }
@@ -435,372 +75,30 @@ Item {
             color: Theme.border
         }
 
+        // ── содержимое выбранного раздела ──
         Item {
             width: parent.width
-            height: parent.height - header.height - 12 - 1
+            height: parent.height - y
+            clip: true
 
-            Flickable {
-                anchors.fill: parent
-                clip: true
-                contentWidth: width
-                contentHeight: list.height
+            Repeater {
+                model: [
+                    { src: "NetworkSection.qml" },
+                    { src: "BluetoothPage.qml" }
+                ]
 
-                Column {
-                    id: list
-                    width: parent.width
-                    spacing: 6
+                delegate: Loader {
+                    required property var modelData
+                    required property int index
 
-                    // ── ZAPRET: обход DPI (Discord / YouTube) ──
-                    Rectangle {
-                        width: list.width
-                        height: 112
-                        radius: Theme.radius
-                        color: Theme.bgCard
-                        border.width: 1
-                        border.color: page.zapActive ? Theme.alpha(Theme.accent, 0.45) : Theme.border
+                    anchors.fill: parent
+                    active: page.segVisited[index] === true
+                    source: active ? modelData.src : ""
 
-                        Column {
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.leftMargin: 14
-                            anchors.rightMargin: 14
-                            spacing: 8
-
-                            Row {
-                                spacing: 9
-
-                                Text {
-                                    text: "ZAPRET"
-                                    color: Theme.text
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: 12
-                                    font.bold: true
-                                    font.letterSpacing: 2
-                                    anchors.verticalCenter: parent.verticalCenter
-                                }
-
-                                Text {
-                                    text: "обход DPI · Discord / YouTube"
-                                    color: Theme.textFaint
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: 10
-                                    anchors.verticalCenter: parent.verticalCenter
-                                }
-                            }
-
-                            Text {
-                                width: parent.width
-                                text: (page.zapActive ? "● активен" : "○ выключен")
-                                      + "   ·   " + page.zapDesync
-                                      + (page.zapCommit ? "   ·   " + page.zapCommit : "")
-                                color: page.zapActive ? Theme.text : Theme.textFaint
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 11
-                                elide: Text.ElideRight
-                            }
-
-                            Row {
-                                spacing: 8
-
-                                ZapBtn {
-                                    label: page.zapActive ? "ВЫКЛЮЧИТЬ" : "ВКЛЮЧИТЬ"
-                                    onClicked: page.zapToggle()
-                                }
-
-                                ZapBtn {
-                                    label: "ОБНОВИТЬ"
-                                    onClicked: pZapUpdate.running = true
-                                }
-
-                                ZapBtn {
-                                    label: "ПОДОБРАТЬ"
-                                    onClicked: pZapTune.running = true
-                                }
-                            }
-                        }
-                    }
-
-                    // ── ZAPRET-TG: локальный прокси Telegram (tg-ws-proxy) ──
-                    Rectangle {
-                        width: list.width
-                        height: 112
-                        radius: Theme.radius
-                        color: Theme.bgCard
-                        border.width: 1
-                        border.color: page.tgActive ? Theme.alpha(Theme.accent, 0.45) : Theme.border
-
-                        Column {
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.leftMargin: 14
-                            anchors.rightMargin: 14
-                            spacing: 8
-
-                            Row {
-                                spacing: 9
-
-                                Text {
-                                    text: "ZAPRET-TG"
-                                    color: Theme.text
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: 12
-                                    font.bold: true
-                                    font.letterSpacing: 2
-                                    anchors.verticalCenter: parent.verticalCenter
-                                }
-
-                                Text {
-                                    text: "прокси Telegram · MTProto WebSocket"
-                                    color: Theme.textFaint
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: 10
-                                    anchors.verticalCenter: parent.verticalCenter
-                                }
-                            }
-
-                            Text {
-                                width: parent.width
-                                text: (page.tgActive ? "● активен" : "○ выключен")
-                                      + "   ·   127.0.0.1:" + page.tgPort
-                                      + (page.tgMsg ? "   ·   " + page.tgMsg : "")
-                                color: page.tgActive ? Theme.text : Theme.textFaint
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 11
-                                elide: Text.ElideRight
-                            }
-
-                            Row {
-                                spacing: 8
-
-                                ZapBtn {
-                                    label: page.tgActive ? "ВЫКЛЮЧИТЬ" : "ВКЛЮЧИТЬ"
-                                    onClicked: page.tgToggle()
-                                }
-
-                                ZapBtn {
-                                    label: "ОТКРЫТЬ В TG"
-                                    width: 132
-                                    onClicked: page.tgOpenLink()
-                                }
-                            }
-                        }
-                    }
-
-                    // ── VENCORD: мод Discord ──
-                    Rectangle {
-                        width: list.width
-                        height: 112
-                        radius: Theme.radius
-                        color: Theme.bgCard
-                        border.width: 1
-                        border.color: page.vencState === "patched" ? Theme.alpha(Theme.accent, 0.45) : Theme.border
-
-                        Column {
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.leftMargin: 14
-                            anchors.rightMargin: 14
-                            spacing: 8
-
-                            Row {
-                                spacing: 9
-
-                                Text {
-                                    text: "VENCORD"
-                                    color: Theme.text
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: 12
-                                    font.bold: true
-                                    font.letterSpacing: 2
-                                    anchors.verticalCenter: parent.verticalCenter
-                                }
-
-                                Text {
-                                    text: "мод Discord · плагины и темы"
-                                    color: Theme.textFaint
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: 10
-                                    anchors.verticalCenter: parent.verticalCenter
-                                }
-                            }
-
-                            Text {
-                                width: parent.width
-                                text: page.vencStatusText()
-                                      + (page.vencInstaller ? "   ·   " + page.vencInstaller : "")
-                                      + (page.vencApp !== "—" ? "   ·   " + page.vencApp : "")
-                                color: page.vencState === "patched" ? Theme.text : Theme.textFaint
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 11
-                                elide: Text.ElideRight
-                            }
-
-                            Row {
-                                spacing: 8
-
-                                ZapBtn {
-                                    label: "ПЕРЕПАТЧИТЬ"
-                                    onClicked: pVencPatch.running = true
-                                }
-
-                                ZapBtn {
-                                    label: "ОБНОВИТЬ"
-                                    onClicked: pVencUpdate.running = true
-                                }
-                            }
-                        }
-                    }
-
-                    Text {
-                        visible: !page.wifiEnabled
-                        width: parent.width
-                        text: "Wi-Fi is disabled"
-                        color: Theme.textDim
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 12
-                        horizontalAlignment: Text.AlignHCenter
-                    }
-
-                    Text {
-                        visible: page.wifiEnabled && !page.networks.length
-                        width: parent.width
-                        // M75: отличаем «идёт скан» от «сетей нет»
-                        text: page.scanning ? "Сканирую сети…" : "Сети не найдены"
-                        color: Theme.textDim
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 12
-                        horizontalAlignment: Text.AlignHCenter
-                    }
-
-                    // M40: обратная связь об ошибке подключения
-                    Text {
-                        visible: page.connectMsg !== ""
-                        width: parent.width
-                        text: page.connectMsg
-                        color: Theme.danger
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 10
-                        wrapMode: Text.Wrap
-                    }
-
-                    Repeater {
-                        model: page.networks
-
-                        delegate: Column {
-                            required property var modelData
-                            width: list.width
-                            spacing: 6
-
-                            Rectangle {
-                                width: parent.width
-                                height: 46
-                                radius: Theme.radius
-                                color: modelData.connected ? Theme.active : "#00000000"
-                                border.width: 1
-                                border.color: modelData.connected ? Theme.accent : Theme.border
-
-                                Row {
-                                    anchors.left: parent.left
-                                    anchors.leftMargin: 14
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    spacing: 9
-
-                                    Text {
-                                        text: ""
-                                        color: modelData.connected ? Theme.accent : Theme.textDim
-                                        font.family: Theme.iconFont
-                                        font.pixelSize: 14
-                                    }
-
-                                    Text {
-                                        visible: modelData.secured
-                                        text: ""
-                                        color: Theme.textFaint
-                                        font.family: Theme.iconFont
-                                        font.pixelSize: 10
-                                    }
-
-                                    Text {
-                                        text: modelData.ssid
-                                        color: Theme.text
-                                        font.family: Theme.fontFamily
-                                        font.pixelSize: 12
-                                        elide: Text.ElideRight
-                                        width: Math.min(implicitWidth, list.width - 170)
-                                    }
-                                }
-
-                                Text {
-                                    anchors.right: parent.right
-                                    anchors.rightMargin: 14
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: modelData.connected ? "DISCONNECT" : "CONNECT"
-                                    color: modelData.connected ? Theme.danger : Theme.accent
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: 10
-
-                                    MouseArea {
-                                        cursorShape: Qt.PointingHandCursor
-                                        anchors.fill: parent
-                                        onClicked: {
-                                            if (modelData.connected) {
-                                                page.disconnect(modelData.ssid)
-                                            } else if (modelData.secured) {
-                                                page.pendingSsid = page.pendingSsid === modelData.ssid ? "" : modelData.ssid
-                                            } else {
-                                                page.connectOpen(modelData.ssid)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            Row {
-                                visible: page.pendingSsid === modelData.ssid
-                                width: parent.width
-                                height: 36
-                                spacing: 10
-
-                                Rectangle {
-                                    width: 220
-                                    height: 36
-                                    color: Theme.bgCard
-                                    border.color: Theme.accent
-                                    border.width: 1
-                                    radius: Theme.radius
-
-                                    TextInput {
-                                        id: pwField
-                                        anchors.fill: parent
-                                        anchors.margins: 8
-                                        color: Theme.text
-                                        font.family: Theme.fontFamily
-                                        font.pixelSize: 12
-                                        echoMode: TextInput.Password
-                                        focus: page.pendingSsid === modelData.ssid
-                                        Keys.onReturnPressed: page.connectSecured(modelData.ssid, text)
-                                    }
-                                }
-
-                                Text {
-                                    text: "CONNECT"
-                                    color: Theme.accent2
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: 11
-                                    anchors.verticalCenter: parent.verticalCenter
-
-                                    MouseArea {
-                                        cursorShape: Qt.PointingHandCursor
-                                        anchors.fill: parent
-                                        onClicked: page.connectSecured(modelData.ssid, pwField.text)
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    onItemChanged: if (item)
+                        item.visible = Qt.binding(function() {
+                            return index === page.segment && page.visible
+                        })
                 }
             }
         }
