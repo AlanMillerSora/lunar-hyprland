@@ -27,6 +27,7 @@ QtObject {
     property string title: ""
     property string artist: ""
     property string artUrl: ""        // mpv не отдаёт обложку по IPC, поле для UI
+    property string artKey: ""        // трек, для которого artUrl уже решён (не спамить пробами)
     property real length: 0
     property real position: 0
     property bool playing: false
@@ -151,6 +152,8 @@ QtObject {
         title = ""
         artist = ""
         artUrl = ""
+        artKey = ""
+        coverProc.running = false
         hasMedia = false
         seekable = false
         idleActive = false
@@ -326,9 +329,67 @@ QtObject {
     }
 
     function updateArt() {
-        artUrl = (queueIndex >= 0 && queueIndex < queue.length)
-            ? youtubeArt(queue[queueIndex].filename)
+        var fn = (queueIndex >= 0 && queueIndex < queue.length)
+            ? String(queue[queueIndex].filename)
             : ""
+        var yt = youtubeArt(fn)
+        if (yt !== "") {
+            artKey = fn
+            coverProc.running = false
+            artUrl = yt
+            return
+        }
+        // этим треком уже занимался — повторно пробу не гоняю
+        if (fn === artKey)
+            return
+        artKey = fn
+        coverProc.running = false
+        artUrl = ""
+        // локальный трек — только абсолютный путь; ссылки (http/https) отсекаю
+        if (fn === "" || fn.charAt(0) !== "/")
+            return
+        var slash = fn.lastIndexOf("/")
+        if (slash <= 0)
+            return
+        var dir = fn.substring(0, slash + 1)
+        // одна проба на смену трека: bash перебирает кандидатов через test -f,
+        // пути передаю argv, без склейки в шелл
+        coverProc.command = ["bash", "-c",
+            "for f in \"$@\"; do if test -f \"$f\"; then printf '%s' \"$f\"; break; fi; done",
+            "--", dir + "cover.jpg", dir + "cover.png", dir + "folder.jpg"]
+        coverProc.running = true
+    }
+
+    // обложка локального файла: одна проба на смену трека, не на каждый тик
+    property Process coverProc: Process {
+        command: []
+        stdout: StdioCollector {
+            id: coverOut
+            onStreamFinished: root.applyLocalCover(coverOut.text)
+        }
+        stderr: StdioCollector {}
+    }
+
+    function applyLocalCover(text) {
+        var p = (text === undefined || text === null) ? "" : String(text).trim()
+        if (p === "")
+            return
+        // старая проба могла доехать после смены трека — беру только свою папку
+        var fn = artKey
+        var slash = fn.lastIndexOf("/")
+        if (slash <= 0)
+            return
+        if (p.indexOf(fn.substring(0, slash + 1)) !== 0)
+            return
+        artUrl = fileUrl(p)
+    }
+
+    // file:// с процентным кодированием: пробелы/решётки в пути не ломают Image
+    function fileUrl(path) {
+        var parts = String(path).split("/")
+        for (var i = 0; i < parts.length; i++)
+            parts[i] = encodeURIComponent(parts[i])
+        return "file://" + parts.join("/")
     }
 
     // у mpv в очереди нет заголовков — запоминаю текущий по ссылке и

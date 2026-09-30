@@ -46,7 +46,14 @@ FloatingWindow {
         list.positionViewAtBeginning()   // прокрутка не «залипает» с прошлого раза (L47)
         root.refresh()
         root.showing = true
-        searchInput.forceActiveFocus()
+        focusTimer.restart()
+    }
+
+    // фокус в поиск после появления окна: SUPER+V сразу пишет в строку
+    Timer {
+        id: focusTimer
+        interval: 60
+        onTriggered: searchInput.forceActiveFocus()
     }
 
     function closePanel() { root.showing = false }

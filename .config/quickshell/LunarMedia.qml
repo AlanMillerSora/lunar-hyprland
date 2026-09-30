@@ -44,10 +44,21 @@ PanelWindow {
         running: false
     }
 
-    // активный плеер: играющий, иначе первый доступный
+    // наш mpv узнаю по имени: identity/desktopEntry начинаются с «mpv»
+    function isOurMpv(p) {
+        if (!p)
+            return false
+        var id = ("" + (p.identity || "")).toLowerCase()
+        var de = ("" + (p.desktopEntry || "")).toLowerCase()
+        return id.indexOf("mpv") === 0 || de.indexOf("mpv") === 0
+    }
+    // активный плеер: играющий mpv в приоритете (Firefox может играть рядом),
+    // иначе первый играющий, иначе первый доступный
     readonly property var player: {
         var ps = Mpris.players.values
         for (var i = 0; i < ps.length; i++)
+            if (ps[i].isPlaying && isOurMpv(ps[i])) return ps[i]
+        for (i = 0; i < ps.length; i++)
             if (ps[i].isPlaying) return ps[i]
         return ps.length > 0 ? ps[0] : null
     }

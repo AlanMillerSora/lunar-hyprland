@@ -170,11 +170,33 @@ PanelWindow {
     }
 
     // ─────────────── mpris ───────────────
+    // Идентификатор mpv-демона (mpv-mpris: identity/desktopEntry «mpv»,
+    // шина org.mpris.MediaPlayer2.mpv) всегда начинается с «mpv» — по нему
+    // узнаю наш плеер среди чужих (Firefox и т.п.).
+    function isMpvPlayer(p) {
+        if (!p)
+            return false
+        var names = [p.identity || "", p.desktopEntry || "", p.dbusName || ""]
+        for (var i = 0; i < names.length; i++)
+            if (names[i].toLowerCase().indexOf("mpv") === 0)
+                return true
+        return false
+    }
+    // Приоритет выбора: сперва играющий mpv-демон, иначе любой играющий,
+    // и лишь в последнюю очередь — первый из списка.
     readonly property var player: {
         var ps = Mpris.players.values
-        for (var i = 0; i < ps.length; i++)
-            if (ps[i].isPlaying)
+        var playingAny = null
+        for (var i = 0; i < ps.length; i++) {
+            if (!ps[i].isPlaying)
+                continue
+            if (playingAny === null)
+                playingAny = ps[i]
+            if (root.isMpvPlayer(ps[i]))
                 return ps[i]
+        }
+        if (playingAny !== null)
+            return playingAny
         return ps.length > 0 ? ps[0] : null
     }
     readonly property bool playing: player !== null && player.isPlaying
@@ -1523,5 +1545,17 @@ PanelWindow {
             cursorShape: Qt.PointingHandCursor
             onClicked: mediaPanelProc.running = true   // попап «сейчас играет»
         }
+    }
+
+    // ── зерно поверх всего бара ──
+    // Рисую последним ребёнком: слой шума ложится на пилюли, часы и медиа
+    // целиком. Image мышь не берёт, поэтому клики и тултипы под ним живут.
+    Image {
+        anchors.fill: parent
+        source: Qt.resolvedUrl("assets/noise.png")
+        fillMode: Image.Tile
+        smooth: false
+        cache: true
+        opacity: 0.12
     }
 }

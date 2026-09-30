@@ -200,6 +200,19 @@ Item {
                 elide: Text.ElideRight
                 maximumLineCount: 1
             }
+            // ошибку плеера вижу и здесь, а не только на странице ПОИСК
+            Text {
+                Layout.fillWidth: true
+                visible: PlayerCore.error !== ""
+                text: PlayerCore.error
+                color: Theme.danger
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize(10)
+                horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.WordWrap
+                maximumLineCount: 2
+                elide: Text.ElideRight
+            }
         }
 
         // ── спектр cava ──
