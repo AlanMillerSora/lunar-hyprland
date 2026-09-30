@@ -46,7 +46,7 @@ PanelWindow {
     readonly property int monId: mon ? mon.id : -1
     readonly property int focusedId: Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id : 1
 
-    function openPanel() { showing = true; refreshGeo() }
+    function openPanel() { showing = true }
     function closePanel() { showing = false }
     function toggle() { if (showing) closePanel(); else openPanel() }
 
@@ -133,14 +133,17 @@ PanelWindow {
     function finishDrag(fromWs, addr, wrap) {
         var target = -1
         try {
-            var p = wrap.mapToItem(board, wrap.width / 2, wrap.height / 2)
+            // tiles выровнен по сетке карточек (board сдвинут на заголовок и
+            // отступ), поэтому цель беру в координатах tiles, а не board
+            var p = wrap.mapToItem(tiles, wrap.width / 2, wrap.height / 2)
             target = wsAt(p.x, p.y)
         } catch (e) {}
-        if (target !== -1 && target !== fromWs) {
+        if (target !== -1 && target !== fromWs)
             moveWindow(fromWs, addr, target)
-        } else {
-            wrap.snapBack()
-        }
+        // в любом случае возвращаю биндинги позиции: при переносе плитка
+        // вскоре сама переедет на новый стол по геометрии, при отмене — на место
+        try { wrap.snapBack() } catch (e) {}
+        refreshGeo()
     }
 
     // клик по фону / Esc — закрыть
@@ -310,7 +313,9 @@ PanelWindow {
                             id: cap
                             anchors.fill: parent
                             captureSource: winWrap.modelData.wayland || null
-                            live: true
+                            // капчу держу только для видимых плиток — иначе
+                            // живые захваты всех окон всех столов впустую
+                            live: winWrap.shown
                         }
 
                         // пока кадр не пришёл — название окна
@@ -322,8 +327,9 @@ PanelWindow {
                             color: Theme.textDim
                             font.family: Theme.fontFamily
                             font.pixelSize: 10
-                            elide: Text.ElideRight
                             wrapMode: Text.Wrap
+                            maximumLineCount: 3
+                            elide: Text.ElideRight
                         }
 
                         Rectangle {
