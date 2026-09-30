@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Io
 import "../"
 import QtQuick.Layouts
+import QtQuick.Effects
 
 // ════════════════════════════════════════════════════════════════
 //  LaunchPage — сетка приложений Hub. Данные и запуск — из общего
@@ -139,7 +140,18 @@ Item {
                             source: modelData.icon
                                 ? Quickshell.iconPath(modelData.icon, true)
                                 : ""
-                            visible: status === Image.Ready
+                            visible: false
+                        }
+
+                        // принудительный монохром: тема Tela-lunar уже серая,
+                        // но иконки-файлы (yazi, brave) приходят цветными —
+                        // гашу насыщенность и чуть поднимаю яркость
+                        MultiEffect {
+                            anchors.fill: appIcon
+                            source: appIcon
+                            visible: appIcon.status === Image.Ready
+                            saturation: -1.0
+                            brightness: 0.15
                         }
 
                         Text {

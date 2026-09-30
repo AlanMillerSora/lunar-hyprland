@@ -28,12 +28,26 @@ if [ ! -d "$DST" ] || [ "${1:-}" = "--force" ]; then
 import os, re, sys
 root = sys.argv[1]
 hexre = re.compile(r'#([0-9a-fA-F]{6})')
+rgbare = re.compile(r'rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([0-9.]+)\s*)?\)')
 
-def mono(m):
+def light(r, g, b):
+    # яркость в светлый диапазон 0.35..1.0: тёмные исходники иначе
+    # становятся тёмно-серыми и на чёрном фоне почти не видны
+    y = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255.0
+    return round((0.35 + 0.65 * y) * 255)
+
+def mono_hex(m):
     h = m.group(1)
     r, g, b = (int(h[i:i + 2], 16) for i in (0, 2, 4))
-    y = round(0.2126 * r + 0.7152 * g + 0.0722 * b)
-    return '#%02x%02x%02x' % (y, y, y)
+    v = light(r, g, b)
+    return '#%02x%02x%02x' % (v, v, v)
+
+def mono_rgb(m):
+    v = light(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+    a = m.group(4)
+    if a is None:
+        return 'rgb(%d,%d,%d)' % (v, v, v)
+    return 'rgba(%d,%d,%d,%s)' % (v, v, v, a)
 
 for dp, _, fs in os.walk(root):
     for fn in fs:
@@ -44,7 +58,8 @@ for dp, _, fs in os.walk(root):
             s = open(p, encoding='utf-8', errors='replace').read()
         except OSError:
             continue
-        s2 = hexre.sub(mono, s)
+        s2 = hexre.sub(mono_hex, s)
+        s2 = rgbare.sub(mono_rgb, s2)
         if s2 != s:
             try:
                 open(p, 'w', encoding='utf-8').write(s2)
