@@ -541,18 +541,38 @@ PanelWindow {
             return p
         }
 
-        // whitelist по argv: hyprctl / qs ipc call <наша цель> / наши скрипты
+        // whitelist по argv: hyprctl / qs ipc call <наша цель> / наши скрипты /
+        // простые системные утилиты / systemctl --user (ограниченно)
         readonly property var qsTargets: ["hub", "sidebar", "rsidebar", "clipboard",
             "volume", "media", "tray", "power", "agent", "overview"]
+        readonly property var simpleTools: ["wpctl", "playerctl", "pactl",
+            "grim", "slurp", "wl-copy", "wl-paste", "notify-send"]
+        readonly property var systemctlRead: ["status", "is-active", "is-enabled",
+            "show", "list-units", "list-unit-files", "cat"]
+
+        function isTool(prog, name) {
+            return prog === name || prog === "/usr/bin/" + name
+                || prog === "/bin/" + name || prog === "/usr/local/bin/" + name
+        }
+
         function allowedArgv(argv) {
             if (!argv || argv.length === 0) return false
             var prog = expandHome(argv[0])
-            if (prog === "hyprctl" || prog === "/usr/bin/hyprctl")
-                return true
-            if (prog === "qs" || prog === "/usr/bin/qs") {
+            if (isTool(prog, "hyprctl")) return true
+            if (isTool(prog, "qs")) {
                 if (argv[1] !== "ipc" || argv[2] !== "call") return false
                 return qsTargets.indexOf(argv[3]) !== -1
             }
+            if (isTool(prog, "systemctl")) {
+                if (argv[1] !== "--user") return false
+                var verb = argv[2] || ""
+                if (systemctlRead.indexOf(verb) !== -1) return true
+                if (["start", "stop", "restart", "enable", "disable"].indexOf(verb) !== -1)
+                    return (argv[3] || "").indexOf("lunar-") === 0
+                return false
+            }
+            for (var i = 0; i < simpleTools.length; i++)
+                if (isTool(prog, simpleTools[i])) return true
             var dir = Quickshell.env("HOME") + "/.config/hypr/scripts/"
             if (prog.indexOf(dir) === 0
                 && /^eclipse-[A-Za-z0-9_-]+\.sh$/.test(prog.substring(dir.length)))
