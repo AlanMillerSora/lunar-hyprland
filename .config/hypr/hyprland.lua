@@ -294,6 +294,7 @@ hl.bind(M .. " + E",       dsp.exec_cmd("thunar"))
 hl.bind(M .. " + V",       dsp.exec_cmd("qs ipc call clipboard toggle"))   -- буфер обмена (cliphist, Quickshell)
 hl.bind(M .. " + SHIFT + E", dsp.exec_cmd("qs ipc call sidebar toggle"))   -- боковая панель слева (Quickshell)
 hl.bind(M .. " + SHIFT + N", dsp.exec_cmd("qs ipc call rsidebar toggle"))  -- панель справа: уведомления/музыка/календарь
+hl.bind(M .. " + A",       dsp.exec_cmd("qs ipc call agent toggle"))      -- оверлей-агент OpenCode (Quickshell)
 hl.bind(M .. " + SHIFT + R", dsp.exec_cmd("~/.config/hypr/scripts/eclipse-record.sh toggle"))  -- запись экрана (start/stop)
 hl.bind(M .. " + SHIFT + G", dsp.exec_cmd("~/.config/hypr/scripts/eclipse-gamemode.sh toggle"))  -- Game Mode (анимации/blur выкл, performance)
 hl.bind(M .. " + SHIFT + P", dsp.window.pin())                             -- закрепить окно поверх всех

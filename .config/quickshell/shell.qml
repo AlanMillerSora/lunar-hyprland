@@ -10,6 +10,7 @@ ShellRoot {
     LunarHub {}
     LunarClipboard {}
     LunarPower {}
+    LunarAgent {}
     LunarSidebar {}
     LunarSidebarRight {}
     LunarOsd {}
