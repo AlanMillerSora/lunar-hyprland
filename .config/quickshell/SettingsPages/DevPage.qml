@@ -13,6 +13,11 @@ import QtQuick.Layouts
 Item {
     id: page
 
+    // Hub держит страницу в кэше (не пересоздаёт при переходе вкладок),
+    // поэтому репозитории пересканирую сам при возврате. До первой загрузки
+    // не дёргаю — её делает Component.onCompleted у projectModel.
+    onVisibleChanged: if (visible && projectModel.loaded) projectModel.load()
+
     // ── кнопка строки проекта ──────────────────────────────────
     component RowButton: Rectangle {
         id: btn

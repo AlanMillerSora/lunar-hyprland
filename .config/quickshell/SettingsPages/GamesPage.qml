@@ -11,6 +11,11 @@ import QtQuick.Layouts
 Item {
     id: page
 
+    // Hub держит страницу в кэше (не пересоздаёт при переходе вкладок),
+    // поэтому список игр обновляю сам при возврате на вкладку. До первой
+    // загрузки не дёргаю — её уже делает Component.onCompleted у gameModel.
+    onVisibleChanged: if (visible && gameModel.loaded) gameModel.load()
+
     ColumnLayout {
         anchors.fill: parent
         spacing: 14

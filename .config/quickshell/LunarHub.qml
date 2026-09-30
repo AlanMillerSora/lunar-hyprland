@@ -58,7 +58,7 @@ PanelWindow {
         function toggle(): void { root.toggle() }
         function open(): void { root.openPanel() }
         function close(): void { root.closePanel() }
-        function nav(idx: int): void { root.selectedIndex = Math.max(0, Math.min(root.navItems.length - 1, idx)) }
+        function nav(idx: int): void { root.selectPage(idx) }
     }
 
     // -------------------------
@@ -109,10 +109,24 @@ PanelWindow {
 
     property int selectedIndex: 0
 
-    // L30: безопасное имя текущей страницы (на случай выхода selectedIndex за границы)
-    readonly property string currentPageFile: {
-        var i = Math.max(0, Math.min(root.navItems.length - 1, root.selectedIndex))
-        return root.navItems[i] ? root.navItems[i].page : ""
+    // H: кэш страниц. Создаю страницу при первом заходе и держу живой —
+    // переключение вкладок не пересобирает QML и не убивает её Process
+    // (System/Network/Monitors и т.д. стартуют один раз). Спящие страницы
+    // не рисуются и гасят свои таймеры по visible. Индекс 0 — сразу.
+    property var visitedPages: [true]
+
+    function ensurePage(i) {
+        if (i < 0 || i >= root.navItems.length || root.visitedPages[i] === true)
+            return
+        var v = root.visitedPages.slice()
+        v[i] = true
+        root.visitedPages = v
+    }
+
+    function selectPage(i) {
+        i = Math.max(0, Math.min(root.navItems.length - 1, i))
+        root.selectedIndex = i
+        root.ensurePage(i)
     }
 
     // -------------------------
@@ -240,7 +254,7 @@ PanelWindow {
         if (i < 0 || i >= root.results.length) return
         var r = root.results[i]
         if (r.kind === "page")
-            root.selectedIndex = r.pageIndex
+            root.selectPage(r.pageIndex)
         else if (r.kind === "action")
             root.searchActions[r.act].run()
         else if (r.kind === "app")
@@ -414,7 +428,7 @@ PanelWindow {
                                         cursorShape: Qt.PointingHandCursor
                                         hoverEnabled: true
                                         anchors.fill: parent
-                                        onClicked: root.selectedIndex = index
+                                        onClicked: root.selectPage(index)
                                     }
                                 }
                             }
@@ -495,50 +509,29 @@ PanelWindow {
                     height: parent.height
                     clip: true
 
-                    Loader {
-                        id: pageLoader
-                        anchors.fill: parent
-                        // Страницу НЕ выгружаем при закрытии Hub: иначе её Process
-                        // убиваются (SIGKILL) посреди долгих операций (обновление
-                        // системы, смена аватара, git). Гейт таймеров — отдельно.
-                        source: root.currentPageFile !== ""
-                            ? "SettingsPages/" + root.currentPageFile + ".qml" : ""
+                    // H: страницы в кэше. Каждая создаётся один раз (при первом
+                    // заходе) и живёт до конца сессии — поэтому переходы мгновенные,
+                    // а её Process не убиваются SIGKILL посреди долгой операции.
+                    // Живая, но не текущая страница = invisible: таймеры-поллинг
+                    // (Network/Bluetooth/Memory/System) спят по page.visible.
+                    Repeater {
+                        model: root.navItems
 
-                        opacity: 0
-                        Component.onCompleted: opacity = 1
-                        onSourceChanged: fadeIn.restart()
-                        onActiveChanged: if (active) fadeIn.restart()
+                        delegate: Loader {
+                            required property var modelData
+                            required property int index
 
-                        // X1: страница живёт всегда (её Process не выгружаем —
-                        // иначе SIGKILL посреди долгих операций), но видимость
-                        // страницы = открыт ли Hub. По ней страницы гасят свои
-                        // таймеры-поллинг (Network/Bluetooth/Memory/System).
-                        // видимость держим и на время затухания карточки
-                        // (opacity ~220 мс), иначе контент гаснет рывком
-                        onItemChanged: if (item)
-                            item.visible = Qt.binding(function() { return root.showing || card.opacity > 0.01 })
+                            anchors.fill: parent
+                            active: root.visitedPages[index] === true
+                            source: active ? "SettingsPages/" + modelData.page + ".qml" : ""
 
-                        Behavior on opacity {
-                            NumberAnimation {
-                                duration: Theme.animMed
-                            }
-                        }
-
-                        SequentialAnimation {
-                            id: fadeIn
-
-                            PropertyAction {
-                                target: pageLoader
-                                property: "opacity"
-                                value: 0
-                            }
-
-                            NumberAnimation {
-                                target: pageLoader
-                                property: "opacity"
-                                to: 1
-                                duration: Theme.animMed
-                            }
+                            // видимость — текущая страница, пока Hub открыт (или пока
+                            // затухает карточка: opacity ~220 мс), иначе контент гаснет рывком
+                            onItemChanged: if (item)
+                                item.visible = Qt.binding(function() {
+                                    return index === root.selectedIndex
+                                        && (root.showing || card.opacity > 0.01)
+                                })
                         }
                     }
 
