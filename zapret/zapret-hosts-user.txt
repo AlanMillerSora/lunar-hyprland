@@ -27,3 +27,24 @@ yt3.ggpht.com
 yt4.ggpht.com
 youtubei.googleapis.com
 youtubekids.com
+
+# --- Facebook / Meta (для работы клиента и CDN) ---
+facebook.com
+fb.com
+fb.watch
+fb.gg
+fbcdn.net
+fbsbx.com
+facebook.net
+messenger.com
+m.me
+
+# --- X (Twitter) ---
+x.com
+twitter.com
+twimg.com
+t.co
+
+# --- Danbooru ---
+donmai.us
+danbooru.donmai.us
