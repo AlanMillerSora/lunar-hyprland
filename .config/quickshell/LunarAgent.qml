@@ -1,6 +1,5 @@
 import Quickshell
 import Quickshell.Io
-import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 
@@ -12,21 +11,18 @@ import QtQuick.Layouts
 //  без справки. Агент может ПРЕДЛОЖИТЬ действие блоком lunar-action —
 //  оверлей выполняет его только по кнопке, без шелла (argv) и лишь из
 //  whitelist программ: hyprctl / qs ipc call / скрипты eclipse-*.sh.
-//  Скрытый слой не рендерится (mask = null). С Hub взаимоисключающий.
+//  Обычное окно (FloatingWindow), скругление/блюр — Hyprland. С Hub взаимоисключающий.
 // ════════════════════════════════════════════════════════════════
-PanelWindow {
+FloatingWindow {
     id: root
 
-    anchors { top: true; left: true; right: true; bottom: true }
-    color: "transparent"
-    exclusionMode: ExclusionMode.Ignore
-
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: root.showing ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
-    WlrLayershell.namespace: "lunar-agent"
-
-    // окно — no-op, пока закрыто (как Hub)
-    mask: Region { item: root.showing ? backdrop : null }
+    title: "Lunar Agent"
+    // фон даёт окно, скругление/блюр — правило Hyprland по заголовку
+    color: Theme.bgPanel
+    visible: root.showing
+    implicitWidth: 1320
+    implicitHeight: 768
+    minimumSize: Qt.size(360, 280)
 
     property bool showing: false
     readonly property string ctxScript: Quickshell.env("HOME") + "/.config/hypr/scripts/eclipse-agent-context.sh"
@@ -66,41 +62,12 @@ PanelWindow {
         function ask(text: string): void { root.openPanel(); agent.send(text) }
     }
 
-    // клик по фону / Esc — закрыть
-    Rectangle {
-        id: backdrop
+    // содержимое — прямо в окне: фон/рамку/радиус даёт FloatingWindow и
+    // правило Hyprland; Esc и клавиатуру вешаю на предмет во весь экран
+    Item {
         anchors.fill: parent
-        color: root.showing ? Theme.alpha(Theme.bgPanel, 0.62) : "transparent"
-        Behavior on color { ColorAnimation { duration: Theme.animMed } }
-        focus: root.showing
+        focus: true
         Keys.onEscapePressed: root.closePanel()
-
-        MouseArea {
-            anchors.fill: parent
-            cursorShape: Qt.PointingHandCursor
-            onClicked: root.closePanel()
-        }
-    }
-
-    Rectangle {
-        id: card
-        anchors.centerIn: parent
-        width: Math.min(1320, parent.width - 80)
-        height: Math.min(768, parent.height - 80)
-        radius: Theme.radius
-        color: Theme.bgPanel
-        border.color: Theme.border
-        border.width: 1
-        // карточка живёт, пока видна: mask=null гасит только ввод,
-        // а отрисовка идёт всегда (см. AGENTS про фон оверлея)
-        visible: root.showing || opacity > 0
-        opacity: root.showing ? 1 : 0
-        scale: root.showing ? 1 : 0.90
-        Behavior on opacity { NumberAnimation { duration: Theme.animSlow; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: Theme.animSlow; easing.type: Easing.OutBack } }
-
-        // клик по карточке не закрывает оверлей
-        MouseArea { anchors.fill: parent }
 
         HudCorners {
             color: Theme.accent

@@ -1,30 +1,24 @@
 import Quickshell
 import Quickshell.Io
-import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 
 // ════════════════════════════════════════════════════════════════
-//  LunarClipboard — модальный оверлей истории буфера (cliphist).
+//  LunarClipboard — модальное окно истории буфера (cliphist).
 //  Открывается по SUPER + V:  qs ipc call clipboard toggle
 //  Поиск, ↑↓ навигация, ENTER — копировать, DEL — удалить, ESC — закрыть.
+//  Обычное окно (FloatingWindow): тянется за края, скругление/блюр — Hyprland.
 // ════════════════════════════════════════════════════════════════
-PanelWindow {
+FloatingWindow {
     id: root
 
-    anchors { top: true; left: true; right: true; bottom: true }
-    color: "transparent"
-    exclusionMode: ExclusionMode.Ignore
-
-    WlrLayershell.layer: WlrLayer.Overlay
-    // Пока окно скрыто — клавиатуру не трогаем; когда открыто — забираем,
-    // чтобы сразу работал ввод в поиске.
-    WlrLayershell.keyboardFocus: root.showing ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-
-    // Без маски поверхность перехватывала бы клики на весь экран даже закрытой.
-    mask: Region {
-        item: root.showing ? backdrop : null
-    }
+    title: "Lunar Clipboard"
+    // фон даёт окно, скругление/блюр — правило Hyprland по заголовку
+    color: Theme.bgPanel
+    visible: root.showing
+    implicitWidth: 720
+    implicitHeight: 600
+    minimumSize: Qt.size(360, 280)
 
     property bool showing: false
     property var items: []          // все записи: [{ id, preview }]
@@ -116,39 +110,12 @@ PanelWindow {
         function close(): void { root.closePanel() }
     }
 
-    // ─────────────────── затемнение фона + клик мимо = закрыть ─────────
-    Rectangle {
-        id: backdrop
+    // содержимое — прямо в окне: фон/рамку/радиус даёт FloatingWindow и
+    // правило Hyprland; Esc и клавиатуру вешаю на предмет во весь экран
+    Item {
         anchors.fill: parent
-        color: "transparent"
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: root.closePanel()
-        }
-    }
-
-    // ───────────────────────────── карточка ────────────────────────────
-    Rectangle {
-        id: card
-        anchors.centerIn: parent
-        width: Math.min(720, root.width - 80)
-        height: Math.min(600, root.height - 120)
-        color: Theme.bgPanel
-        radius: Theme.radius
-        border.color: Theme.accent
-        border.width: 1
-
-        opacity: root.showing ? 1 : 0
-        scale: root.showing ? 1 : 0.97
-        Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
-        Behavior on scale { NumberAnimation { duration: Theme.animFast } }
-
-        // клики по карточке не проваливаются на backdrop
-        MouseArea {
-            anchors.fill: parent
-            onClicked: {}
-        }
+        focus: true
+        Keys.onEscapePressed: root.closePanel()
 
         HudCorners {
             color: Theme.accent

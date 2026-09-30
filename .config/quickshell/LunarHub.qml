@@ -1,29 +1,27 @@
 
 import Quickshell
 import Quickshell.Io
-import Quickshell.Wayland
 import Quickshell.Services.Pipewire
 import QtQuick
 import "SettingsPages"
 
-PanelWindow {
+// ════════════════════════════════════════════════════════════════
+//  LunarHub — настройки/лаунчер обычным окном (FloatingWindow).
+//  Hyprland сам даёт тянуть за края, двигать, блюрит (окно
+//  полупрозрачное) и скругляет — правило в hyprland.lua по
+//  заголовку «Lunar Hub». Раньше был layer-оверлей с затемнением
+//  и закрытием по клику мимо; обычное окно честнее и не гоняет
+//  лишний блюр слоя. IPC: qs ipc call hub toggle|open|close|nav N
+// ════════════════════════════════════════════════════════════════
+FloatingWindow {
     id: root
 
-    anchors { top: true; left: true; right: true; bottom: true }
-    color: "transparent"
-    exclusionMode: ExclusionMode.Ignore
-
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: root.showing ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
-    // Отдельный namespace: убирает блюр Hyprland именно у Hub
-    // (правило layer_rule блюрит namespace "quickshell").
-    WlrLayershell.namespace: "lunar-hub"
-
-    // Only actually grab input/paint when open - mirrors the OSD's mask trick
-    // so the window is a no-op on the compositor while closed.
-    mask: Region {
-        item: root.showing ? backdrop : null
-    }
+    title: "Lunar Hub"
+    color: Theme.bgPanel          // полупрозрачный фон — его и блюрит Hyprland
+    visible: root.showing
+    implicitWidth: 1320
+    implicitHeight: 820
+    minimumSize: Qt.size(820, 560)
 
     property bool showing: false
 
@@ -68,25 +66,6 @@ PanelWindow {
     property var sink: Pipewire.defaultAudioSink
     property real pwVolume: (sink && sink.audio) ? sink.audio.volume : 0
     property bool pwMuted: (sink && sink.audio) ? sink.audio.muted : false
-
-    // -------------------------
-    // Backdrop (click-outside-to-close)
-    // -------------------------
-    Rectangle {
-        id: backdrop
-        anchors.fill: parent
-        // затемнение/блюр только пока открыто
-        color: root.showing ? Theme.alpha(Theme.bgPanel, 0.45) : "transparent"
-
-        focus: root.showing
-        Keys.onEscapePressed: root.closePanel()
-
-        MouseArea {
-            cursorShape: Qt.PointingHandCursor
-            anchors.fill: parent
-            onClicked: root.closePanel()
-        }
-    }
 
     // -------------------------
     // Nav model
@@ -264,51 +243,64 @@ PanelWindow {
     function activateResult() { root.activateIndex(root.resultIndex) }
 
     // -------------------------
-    // Card
+    // Содержимое (бывшая карточка — поднял её прямо в окно)
     // -------------------------
-    PerspectivePanel {
-        id: card
-        anchors.centerIn: parent
-        width: Math.min(1320, root.width - 80)
-        height: Math.min(768, root.height - 80)
-        open: root.showing
+    Item {
+        anchors.fill: parent
+        focus: true
 
-        MouseArea {
-            cursorShape: Qt.PointingHandCursor
-            // swallow clicks so they don't fall through to the backdrop
-            anchors.fill: parent
-            onClicked: {}
+        // клавиатура обычного окна: Esc закрывает, стрелки/Enter — по поиску
+        Keys.onEscapePressed: {
+            if (hubSearch.text !== "") {
+                hubSearch.text = ""
+                root.query = ""
+                root.results = []
+                root.resultIndex = 0
+            } else {
+                root.closePanel()
+            }
+        }
+        Keys.onUpPressed: root.moveResult(-1)
+        Keys.onDownPressed: root.moveResult(1)
+        Keys.onReturnPressed: {
+            // H38: если debounce ещё не сработал — досчитываю сразу
+            if (searchDebounce.running) {
+                searchDebounce.stop()
+                root.applyQuery(root.query)
+            }
+            root.activateResult()
+        }
+        Keys.onPressed: (e) => {
+            // H14: цифры остаются обычным вводом; быстрый выбор — по Ctrl+1…9
+            if (e.key >= Qt.Key_1 && e.key <= Qt.Key_9
+                && (e.modifiers & Qt.ControlModifier)) {
+                root.activateIndex(e.key - Qt.Key_1)
+                e.accepted = true
+            }
+        }
+
+        // приглушённые HUD-скобки: намёк на кибер-рамку, не спорящий с контентом
+        Rectangle {
+            width: 40; height: 2; color: Theme.alpha(Theme.accent, 0.35)
+            anchors { top: parent.top; left: parent.left; margins: 14 }
         }
 
         Rectangle {
-            anchors.fill: parent
-            color: Theme.bg
-            radius: Theme.radiusL
-            border.color: Theme.borderAccent
-            border.width: 1
+            width: 2; height: 40; color: Theme.alpha(Theme.accent, 0.35)
+            anchors { top: parent.top; left: parent.left; margins: 14 }
+        }
 
-            // приглушённые HUD-скобки: намёк на кибер-рамку, не спорящий с контентом
-            Rectangle {
-                width: 40; height: 2; color: Theme.alpha(Theme.accent, 0.35)
-                anchors { top: parent.top; left: parent.left; margins: 14 }
-            }
+        Rectangle {
+            width: 40; height: 2; color: Theme.alpha(Theme.accent, 0.35)
+            anchors { bottom: parent.bottom; right: parent.right; margins: 14 }
+        }
 
-            Rectangle {
-                width: 2; height: 40; color: Theme.alpha(Theme.accent, 0.35)
-                anchors { top: parent.top; left: parent.left; margins: 14 }
-            }
+        Rectangle {
+            width: 2; height: 40; color: Theme.alpha(Theme.accent, 0.35)
+            anchors { bottom: parent.bottom; right: parent.right; margins: 14 }
+        }
 
-            Rectangle {
-                width: 40; height: 2; color: Theme.alpha(Theme.accent, 0.35)
-                anchors { bottom: parent.bottom; right: parent.right; margins: 14 }
-            }
-
-            Rectangle {
-                width: 2; height: 40; color: Theme.alpha(Theme.accent, 0.35)
-                anchors { bottom: parent.bottom; right: parent.right; margins: 14 }
-            }
-
-            Row {
+        Row {
                 anchors.fill: parent
                 anchors.margins: 32
                 spacing: 32
@@ -520,12 +512,10 @@ PanelWindow {
                             active: root.visitedPages[index] === true
                             source: active ? "SettingsPages/" + modelData.page + ".qml" : ""
 
-                            // видимость — текущая страница, пока Hub открыт (или пока
-                            // затухает карточка: opacity ~220 мс), иначе контент гаснет рывком
+                            // видимость — текущая страница, пока Hub открыт
                             onItemChanged: if (item)
                                 item.visible = Qt.binding(function() {
-                                    return index === root.selectedIndex
-                                        && (root.showing || card.opacity > 0.01)
+                                    return index === root.selectedIndex && root.showing
                                 })
                         }
                     }
@@ -637,7 +627,6 @@ PanelWindow {
                 }
             }
         }
-    }
 }
 
 

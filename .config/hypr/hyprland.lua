@@ -116,8 +116,8 @@ hl.config({
   decoration = {
     rounding       = 6,       -- радиус 6, как у Hub
     rounding_power = 2.0,      -- скругленные "сквирклы" как в превью
-    active_opacity   = 1.0,
-    inactive_opacity = 0.95,
+    active_opacity   = 0.94,
+    inactive_opacity = 0.90,
     dim_inactive     = true,
     dim_strength     = 0.12,
 
@@ -262,6 +262,13 @@ hl.layer_rule({ match = { namespace = "lunar-sidebar-right" }, blur = true, igno
 -- со скруглением и полупрозрачностью. Блюр Hyprland даёт сам (окно с
 -- opacity<1), общий blur включён — отдельный слой тут больше не нужен.
 hl.window_rule({ match = { title = "^(Lunar Player)$" }, float = true, center = true, rounding = 12, opacity = "0.94 override 0.94 override" })
+
+-- Крупные модалки — тоже обычные окна (Quickshell FloatingWindow): их можно
+-- тянуть и ресайзить, блюр им даёт прозрачность окна. Заголовки ставлю в QML.
+hl.window_rule({ match = { title = "^(Lunar Hub)$" },       float = true, center = true, rounding = 12, opacity = "0.94 override 0.94 override" })
+hl.window_rule({ match = { title = "^(Lunar Clipboard)$" }, float = true, center = true, rounding = 12, opacity = "0.94 override 0.94 override" })
+hl.window_rule({ match = { title = "^(Lunar Power)$" },     float = true, center = true, rounding = 12, opacity = "0.94 override 0.94 override" })
+hl.window_rule({ match = { title = "^(Lunar Agent)$" },     float = true, center = true, rounding = 12, opacity = "0.94 override 0.94 override" })
 
 
 

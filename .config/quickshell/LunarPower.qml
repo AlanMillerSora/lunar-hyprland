@@ -1,6 +1,5 @@
 import Quickshell
 import Quickshell.Io
-import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 
@@ -8,19 +7,16 @@ import QtQuick.Layouts
 //  LunarPower — меню питания в стиле системы (Quickshell).
 //  Открывается по SUPER + ESC.  IPC: qs ipc call power toggle|open|close
 // ════════════════════════════════════════════════════════════════
-PanelWindow {
+FloatingWindow {
     id: root
 
-    anchors { top: true; left: true; right: true; bottom: true }
-    color: "transparent"
-    exclusionMode: ExclusionMode.Ignore
-
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: root.showing ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-
-    mask: Region {
-        item: root.showing ? backdrop : null
-    }
+    title: "Lunar Power"
+    // фон даёт окно, скругление/блюр — правило Hyprland по заголовку
+    color: Theme.bgPanel
+    visible: root.showing
+    implicitWidth: 440
+    implicitHeight: col.implicitHeight + 44
+    minimumSize: Qt.size(360, 280)
 
     property bool showing: false
     // подтверждение необратимых действий (M69)
@@ -106,14 +102,11 @@ PanelWindow {
         root.run(a.cmd)
     }
 
-    // ── затемнение + закрытие ──
-    Rectangle {
-        id: backdrop
+    // содержимое — прямо в окне: фон/рамку/радиус даёт FloatingWindow и
+    // правило Hyprland; Esc, цифры и клавиатуру вешаю на предмет во весь экран
+    Item {
         anchors.fill: parent
-        // затемнение/блюр только пока открыто
-        color: root.showing ? Theme.alpha(Theme.bgPanel, 0.45) : "transparent"
-        focus: root.showing
-
+        focus: true
         Keys.onEscapePressed: root.closePanel()
         Keys.onPressed: function (event) {
             // цифры работают только «чистыми»: Ctrl/Alt/Shift+1 — не команды (M70).
@@ -126,33 +119,6 @@ PanelWindow {
                 root.runAt(i)
                 event.accepted = true
             }
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: root.closePanel()
-        }
-    }
-
-    // ── карточка ──
-    Rectangle {
-        id: card
-        anchors.centerIn: parent
-        width: 440
-        height: col.implicitHeight + 44
-        color: Theme.bgPanel
-        radius: Theme.radius
-        border.color: Theme.accent
-        border.width: 1
-
-        opacity: root.showing ? 1 : 0
-        scale: root.showing ? 1 : 0.97
-        Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
-        Behavior on scale { NumberAnimation { duration: Theme.animFast } }
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: {}
         }
 
         HudCorners {
