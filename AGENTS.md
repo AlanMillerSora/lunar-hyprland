@@ -141,6 +141,9 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
   не ждёт неактивный `wlan0` (иначе zapret стартует только через 2 минуты).
 - **Автозапуск:** firefox (стол 2) и discord (стол 3) из `hyprland.start`, тихо.
 - **Обзор столов:** `SUPER+O` / `SUPER+SHIFT+TAB`; окна перетаскиваются между столами.
+- **Меню трея (ПКМ):** штатные меню Quickshell работают только в режиме
+  `QApplication` (`//@ pragma UseQApplication` в `shell.qml`); цвета берёт из
+  GTK-темы (юнит задаёт `QT_QPA_PLATFORMTHEME=gtk3`).
 - **faillock:** после 3 неудачных попыток (считается и отменённый polkit-запрос)
   пароль «перестаёт подходить» — лечится `truncate -s 0 /run/faillock/sora`.
 
