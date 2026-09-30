@@ -70,6 +70,9 @@ PanelWindow {
         color: Theme.bgPanel
         border.color: Theme.border
         border.width: 1
+        // карточка живёт только при открытом оверлее: mask=null гасит ввод,
+        // но отрисовка идёт всегда (см. AGENTS про фон оверлея)
+        visible: root.showing
 
         // клик по карточке не закрывает оверлей
         MouseArea { anchors.fill: parent }
