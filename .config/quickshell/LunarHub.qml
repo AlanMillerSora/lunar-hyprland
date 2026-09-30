@@ -102,7 +102,6 @@ PanelWindow {
         { name: "Memory",     icon: "󰍛", page: "MemoryPage" },
         { name: "Games",      icon: "\uf11b", page: "GamesPage" },
         { name: "Dev",        icon: "\uf121", page: "DevPage" },
-        { name: "Wallpapers", icon: "\uf03e", page: "WallpapersPage" },
         { name: "User",       icon: "\uf007", page: "UserPage" },
         { name: "Update",     icon: "\uf021", page: "UpdatePage" }
     ]
