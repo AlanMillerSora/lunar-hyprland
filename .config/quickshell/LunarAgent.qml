@@ -6,10 +6,11 @@ import QtQuick.Layouts
 
 // ════════════════════════════════════════════════════════════════
 //  LunarAgent — оверлей-агент OpenCode по SUPER+A (как Spotlight).
-//  Скрытый слой не рендерится (mask = null): в покое нагрузки ноль.
-//  Вопрос уходит в `opencode run --format json`; ответ стримится
-//  событиями и дописывается в историю. Контекст держу в сессии
-//  (--session), пока не сброшу (＋). С Hub взаимоисключающий.
+//  Работает под профилем OpenCode `lunar` (свой промпт и память).
+//  Перед отправкой подмешиваю справку: память агента + контекст
+//  системы (активное окно, стол, Game Mode). Вопрос в историю идёт
+//  без справки. Скрытый слой не рендерится (mask = null). С Hub
+//  взаимоисключающий.
 // ════════════════════════════════════════════════════════════════
 PanelWindow {
     id: root
@@ -26,6 +27,7 @@ PanelWindow {
     mask: Region { item: root.showing ? backdrop : null }
 
     property bool showing: false
+    readonly property string ctxScript: Quickshell.env("HOME") + "/.config/hypr/scripts/eclipse-agent-context.sh"
 
     function openPanel() { showing = true }
     function closePanel() {
@@ -119,10 +121,24 @@ PanelWindow {
                     font.letterSpacing: 3
                 }
                 Text {
-                    text: "opencode"
+                    text: "opencode · lunar"
                     color: Theme.textFaint
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(11)
+                }
+                // переключатель контекста системы (память подмешивается всегда)
+                Text {
+                    text: "ctx"
+                    color: agent.contextOn ? Theme.accent : Theme.textFaint
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(11)
+                    font.letterSpacing: 1
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: agent.contextOn = !agent.contextOn
+                    }
                 }
                 Item { Layout.fillWidth: true }
                 Text {
@@ -239,7 +255,7 @@ PanelWindow {
                     }
                 }
 
-                // новая сессия (сбросить контекст)
+                // новая сессия (сбросить контекст диалога)
                 Rectangle {
                     Layout.preferredWidth: 42
                     Layout.preferredHeight: 38
@@ -311,13 +327,14 @@ PanelWindow {
         id: agent
         property var messages: []
         property bool busy: false
+        property bool contextOn: true
         property string status: "готов"
         property string sessionId: ""
-        // сообщение, ждущее завершения текущего запуска — не теряем
-        property string queued: ""
+        // вопрос, ждущий сборки справки (контекст + память)
+        property string pendingText: ""
 
         // витрина ограничена: длинный стрим не растит память бесконечно,
-        // контекст агента живёт в сессии OpenCode (--session)
+        // контекст диалога живёт в сессии OpenCode (--session)
         readonly property int maxMessages: 200
         readonly property int maxChars: 180000
 
@@ -344,16 +361,30 @@ PanelWindow {
                 { role: "assistant", text: "" }
             ]))
             busy = true
-            status = "opencode работает…"
+            status = "собираю справку…"
             if (agentInput) agentInput.text = ""
-            dispatch(text)
+            pendingText = text
+            ctxProc.command = ["bash", root.ctxScript, contextOn ? "1" : "0"]
+            ctxProc.running = true
+        }
+
+        // вызывается, когда справка собрана: склеиваю её с вопросом
+        function submit() {
+            if (pendingText === "") return
+            var ctx = (ctxOut.text || "").trim()
+            var full = pendingText
+            if (ctx !== "")
+                full = "Справка (память и контекст системы, не часть вопроса):\n"
+                     + ctx + "\n\nВопрос: " + pendingText
+            pendingText = ""
+            status = "opencode работает…"
+            dispatch(full)
         }
 
         // argv-массив (без shell): кавычки/апострофы в тексте не ломают команду
         function dispatch(text) {
             if (text === "") return
-            if (agentProc.running) { queued = text; return }
-            var args = ["opencode", "run", "--format", "json"]
+            var args = ["opencode", "run", "--format", "json", "--agent", "lunar"]
             if (sessionId !== "") { args.push("--session", sessionId) }
             args.push("--", text)
             agentProc.command = args
@@ -369,9 +400,10 @@ PanelWindow {
         }
 
         function newSession() {
+            ctxProc.running = false
+            pendingText = ""
             agentProc.running = false
             agentWatchdog.stop()
-            queued = ""
             busy = false
             status = "новая сессия"
             if (sessionId !== "") {
@@ -389,9 +421,10 @@ PanelWindow {
         }
 
         function stop() {
+            ctxProc.running = false
+            pendingText = ""
             agentProc.running = false
             agentWatchdog.stop()
-            queued = ""
             busy = false
             status = "остановлено"
         }
@@ -404,9 +437,21 @@ PanelWindow {
         onTriggered: agent.stop()
     }
 
+    // справка: память агента + контекст системы (скрипт)
+    Process {
+        id: ctxProc
+        running: false
+        onExited: (exitCode) => agent.submit()
+        stdout: StdioCollector { id: ctxOut }
+        stderr: StdioCollector {}
+    }
+
     Process {
         id: agentProc
         running: false
+        // рабочая папка агента = папка памяти: запись разрешена только здесь,
+        // а попытки писать в проект упираются в external_directory
+        workingDirectory: Quickshell.env("HOME") + "/.local/state/lunar"
         onExited: (exitCode) => {
             agentWatchdog.stop()
             agent.busy = false
@@ -415,13 +460,6 @@ PanelWindow {
             } else {
                 var e = (agentErr.text || "").trim()
                 agent.status = e !== "" ? e.split("\n").pop() : ("ошибка " + exitCode)
-            }
-            if (agent.queued !== "") {
-                var p = agent.queued
-                agent.queued = ""
-                agent.busy = true
-                agent.status = "opencode работает…"
-                agent.dispatch(p)
             }
         }
         stderr: StdioCollector { id: agentErr }
