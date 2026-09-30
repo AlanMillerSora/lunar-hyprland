@@ -98,7 +98,6 @@ PanelWindow {
         { name: "Monitors",   icon: "\uf108", page: "MonitorsPage" },
         { name: "Network",    icon: "\uf1eb", page: "NetworkPage" },
         { name: "Interface",  icon: "\uf085", page: "InterfacePage" },
-        { name: "Memory",     icon: "󰍛", page: "MemoryPage" },
         { name: "Games",      icon: "\uf11b", page: "GamesPage" },
         { name: "Dev",        icon: "\uf121", page: "DevPage" },
         { name: "User",       icon: "\uf007", page: "UserPage" },
