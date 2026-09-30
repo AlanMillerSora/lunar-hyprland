@@ -248,6 +248,11 @@ hl.window_rule({ match = { class = "eclipse-calendar" },   float = true, center 
 hl.window_rule({ match = { class = "eclipse-cheatsheet" }, float = true, center = true, rounding = 6, border_size = 0 })
 hl.window_rule({ match = { class = "eclipse-askpass" },    float = true, center = true, rounding = 16, border_size = 0 })
 
+-- Telegram: уведомление помечает окно «просящим активацию», и Hyprland прыгал
+-- на его стол. Глушу оба события активации — стол больше не переключается.
+hl.window_rule({ match = { class = "^(org.telegram.desktop)$" }, suppress_event = "activate" })
+hl.window_rule({ match = { class = "^(org.telegram.desktop)$" }, suppress_event = "activatefocus" })
+
 -- Quickshell: единая оболочка Lunar Eclipse (панель, лаунчер, sidebar, настройки, OSD)
 hl.layer_rule({ match = { namespace = "lunar-panel" },         blur = true, ignore_alpha = 0.25 })
 hl.layer_rule({ match = { namespace = "lunar-sidebar" },       blur = true, ignore_alpha = 0.25 })

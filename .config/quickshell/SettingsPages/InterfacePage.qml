@@ -323,7 +323,7 @@ Item {
                     spacing: 8
 
                     Repeater {
-                        model: [1, 2, 3, 4, 5, 6]
+                        model: [1, 2, 3, 4, 5, 6, 8, 10]
 
                         delegate: Rectangle {
                             required property int modelData

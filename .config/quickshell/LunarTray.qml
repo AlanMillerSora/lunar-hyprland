@@ -68,9 +68,37 @@ PanelWindow {
         item.display(root, Math.round(pt.x), Math.round(pt.y))
     }
 
+    // Значок живёт только меню: либо сам просит (onlyMenu), либо не умеет
+    // Activate — как индикатор Steam (ayatana), у него есть только меню.
+    function menuOnly(item) {
+        if (!item || !item.hasMenu) return false
+        if (item.onlyMenu) return true
+        var key = (item.id || "") + " " + (item.title || "") + " " + (item.tooltipTitle || "")
+        return /steam/i.test(key)
+    }
+
+    // Значки без Activate (Steam/ayatana) не умеют активироваться, а штатные
+    // меню Quickshell на Wayland не создаются — поэтому открываю приложение.
+    function openTrayApp(item) {
+        if (!item) return
+        var key = ((item.id || "") + " " + (item.tooltipTitle || "") + " "
+            + (item.title || "")).toLowerCase()
+        var cmd = ""
+        if (key.indexOf("steam") >= 0)
+            cmd = "steam steam://open/games"
+        if (!cmd) return
+        trayLaunchProc.command = ["bash", "-c", "setsid " + cmd + " >/dev/null 2>&1 &"]
+        trayLaunchProc.running = true
+    }
+
+    Process { id: trayLaunchProc; running: false }
+
     function activateItem(item) {
         if (!item) return
-        if (item.onlyMenu && item.hasMenu) return
+        if (menuOnly(item)) {
+            openTrayApp(item)
+            return
+        }
         item.activate()
         closePanel()
     }
@@ -250,8 +278,9 @@ PanelWindow {
                                 modelData.secondaryActivate()
                             } else if (m.button === Qt.RightButton) {
                                 root.showMenu(modelData, rowMouse, m.x, m.y)
-                            } else if (modelData.onlyMenu && modelData.hasMenu) {
-                                root.showMenu(modelData, rowMouse, m.x, m.y)
+                            } else if (root.menuOnly(modelData)) {
+                                root.openTrayApp(modelData)
+                                root.closePanel()
                             } else {
                                 root.activateItem(modelData)
                             }

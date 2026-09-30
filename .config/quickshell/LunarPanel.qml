@@ -296,6 +296,22 @@ PanelWindow {
         trayPanelProc.running = true
     }
 
+    // Значки без Activate (Steam/ayatana) не умеют активироваться, а штатные
+    // меню Quickshell на Wayland не создаются — поэтому ЛКМ просто открываю
+    // приложение. Набор команд маленький и явный.
+    Process { id: trayLaunchProc; running: false }
+    function openTrayApp(item) {
+        if (!item) return
+        var key = ((item.id || "") + " " + (item.tooltipTitle || "") + " "
+            + (item.title || "")).toLowerCase()
+        var cmd = ""
+        if (key.indexOf("steam") >= 0)
+            cmd = "steam steam://open/games"
+        if (!cmd) return
+        trayLaunchProc.command = ["bash", "-c", "setsid " + cmd + " >/dev/null 2>&1 &"]
+        trayLaunchProc.running = true
+    }
+
     // icon у SNI бывает: путь, file:///image:// или имя темы — приводим к Image source.
     // Важно: если иконки нет в теме, image://icon отдаёт заглушку, поэтому
     // сначала проверяем hasThemeIcon и иначе возвращаем "" (в UI будет точка).
@@ -313,6 +329,15 @@ PanelWindow {
         var id = item.id || ""
         if (id && Quickshell.hasThemeIcon(id)) return Quickshell.iconPath(id)
         return ""
+    }
+
+    // Значок живёт только меню: либо сам просит (onlyMenu), либо не умеет
+    // Activate — как индикатор Steam (ayatana), у него есть только меню.
+    function trayMenuOnly(item) {
+        if (!item || !item.hasMenu) return false
+        if (item.onlyMenu) return true
+        var key = (item.id || "") + " " + (item.title || "") + " " + (item.tooltipTitle || "")
+        return /steam/i.test(key)
     }
 
     // показать родное меню приложения (ПКМ)
@@ -1086,12 +1111,18 @@ PanelWindow {
                 }
             }
 
-            // ── трей: место под 3 значка зарезервировано всегда ──
+            // ── трей: место под значки (Theme.trayVisible), лишние — в «+N» ──
             Sep {}
 
             Item {
                 Layout.alignment: Qt.AlignVCenter
-                implicitWidth: root.trayMax * 20 + Math.max(0, root.trayMax - 1) * 9
+                // место ровно под видимые значки (не под весь лимит); при
+                // переполнении добавляю ещё и ширину плашки «+N»
+                implicitWidth: {
+                    var vis = Math.min(root.trayCount, root.trayMax)
+                    return vis * 20 + Math.max(0, vis - 1) * 9
+                        + (root.trayCount > root.trayMax ? moreBox.width + 9 : 0)
+                }
                 implicitHeight: 26
 
                 HoverBg { visible: root.trayCount > 0 }
@@ -1143,8 +1174,10 @@ PanelWindow {
                                 onClicked: function (m) {
                                     if (m.button === Qt.MiddleButton) {
                                         modelData.secondaryActivate()
-                                    } else if (m.button === Qt.RightButton || modelData.onlyMenu) {
+                                    } else if (m.button === Qt.RightButton) {
                                         root.trayMenu(modelData, trayIconMouse, m.x, m.y)
+                                    } else if (root.trayMenuOnly(modelData)) {
+                                        root.openTrayApp(modelData)
                                     } else {
                                         modelData.activate()
                                     }
@@ -1155,6 +1188,7 @@ PanelWindow {
 
                     // сколько значков не влезло — открыть список
                     Rectangle {
+                        id: moreBox
                         visible: root.trayCount > root.trayMax
                         width: moreText.implicitWidth + 12
                         height: 22
