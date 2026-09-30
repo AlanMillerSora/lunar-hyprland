@@ -158,7 +158,7 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 - `shell.qml` — корневой `ShellRoot`. Синглтоны (`pragma Singleton`): `Theme`, `AppModel`.
 - Hub-страницы (nav): 0 Launch ·1 System ·2 Sound ·3 Monitors ·4 Network ·5 Bluetooth ·
   6 Interface ·7 Memory ·8 Games ·9 Dev ·10 Wallpapers ·11 User ·12 Update.
-- Левый сайдбар: 0 чат ·1 заметки. Правый: 0 уведомления ·1 музыка ·2 календарь ·3 запись.
+- Левый сайдбар: 0 api-limit ·1 заметки. Правый: 0 уведомления ·1 музыка ·2 календарь ·3 запись.
 - 9 столов: 1 игры ·2 Firefox ·3 Discord ·4 Steam ·5 затмение/пусто ·6 кодинг ·7/8 пусто ·9 btop.
   **Фаза обоев = номер стола.**
 - **Единый установщик** `install.sh` (флаги в §8). Отдельных sddm/plymouth/zapret-скриптов больше нет.

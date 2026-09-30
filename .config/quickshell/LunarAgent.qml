@@ -10,7 +10,8 @@ import QtQuick.Layouts
 //  Перед отправкой подмешиваю справку: память агента + контекст
 //  системы (активное окно, стол, Game Mode). Вопрос в историю идёт
 //  без справки. Агент может ПРЕДЛОЖИТЬ действие блоком lunar-action —
-//  оверлей выполняет его только по кнопке и лишь из whitelist.
+//  оверлей выполняет его только по кнопке, без шелла (argv) и лишь из
+//  whitelist программ: hyprctl / qs ipc call / скрипты eclipse-*.sh.
 //  Скрытый слой не рендерится (mask = null). С Hub взаимоисключающий.
 // ════════════════════════════════════════════════════════════════
 PanelWindow {
@@ -61,12 +62,8 @@ PanelWindow {
         function toggle(): void { root.toggle() }
         function open(): void { root.openPanel() }
         function close(): void { root.closePanel() }
-        // для отладки/тестов: показать карточку предложенного действия
-        function propose(cmd: string): void { agent.pendingAction = cmd }
         // отправить вопрос извне (тесты/автоматизация)
         function ask(text: string): void { root.openPanel(); agent.send(text) }
-        // выполнить предложенное действие (для тестов/автоматизации)
-        function run(): void { agent.runAction() }
     }
 
     // клик по фону / Esc — закрыть
@@ -513,12 +510,54 @@ PanelWindow {
             if (cmd !== "") pendingAction = cmd
         }
 
-        // whitelist: hyprctl / qs ipc / скрипты райса
-        function allowed(cmd) {
-            var c = cmd.trim()
-            return /^hyprctl\b/.test(c)
-                || /^qs ipc call\b/.test(c)
-                || /^(~|\/home\/sora)\/\.config\/hypr\/scripts\/eclipse-[A-Za-z0-9_-]+\.sh\b/.test(c)
+        // Разбор команды в argv БЕЗ шелла. Возвращает null, если есть
+        // подозрительные символы (цепочки/подстановки/редиректы) или
+        // незакрытая кавычка — тогда действие отклоняется.
+        function splitArgv(cmd) {
+            var c = String(cmd)
+            if (/[;&|<>`$\n\r]/.test(c)) return null
+            var argv = [], cur = "", quote = ""
+            for (var i = 0; i < c.length; i++) {
+                var ch = c[i]
+                if (quote !== "") {
+                    if (ch === quote) quote = ""
+                    else cur += ch
+                } else if (ch === "'" || ch === '"') {
+                    quote = ch
+                } else if (ch === " " || ch === "\t") {
+                    if (cur !== "") { argv.push(cur); cur = "" }
+                } else {
+                    cur += ch
+                }
+            }
+            if (quote !== "") return null
+            if (cur !== "") argv.push(cur)
+            return argv.length ? argv : null
+        }
+
+        function expandHome(p) {
+            if (p.indexOf("~/") === 0)
+                return Quickshell.env("HOME") + p.substring(1)
+            return p
+        }
+
+        // whitelist по argv: hyprctl / qs ipc call <наша цель> / наши скрипты
+        readonly property var qsTargets: ["hub", "sidebar", "rsidebar", "clipboard",
+            "volume", "media", "tray", "power", "agent", "overview"]
+        function allowedArgv(argv) {
+            if (!argv || argv.length === 0) return false
+            var prog = expandHome(argv[0])
+            if (prog === "hyprctl" || prog === "/usr/bin/hyprctl")
+                return true
+            if (prog === "qs" || prog === "/usr/bin/qs") {
+                if (argv[1] !== "ipc" || argv[2] !== "call") return false
+                return qsTargets.indexOf(argv[3]) !== -1
+            }
+            var dir = Quickshell.env("HOME") + "/.config/hypr/scripts/"
+            if (prog.indexOf(dir) === 0
+                && /^eclipse-[A-Za-z0-9_-]+\.sh$/.test(prog.substring(dir.length)))
+                return true
+            return false
         }
 
         function systemMsg(t) {
@@ -529,14 +568,16 @@ PanelWindow {
             var cmd = pendingAction
             if (cmd === "") return
             pendingAction = ""
-            if (!allowed(cmd)) {
+            var argv = splitArgv(cmd)
+            if (!argv || !allowedArgv(argv)) {
                 status = "действие не разрешено"
                 systemMsg("✕ не разрешено: " + cmd)
                 return
             }
+            argv[0] = expandHome(argv[0])
             lastAction = cmd
             systemMsg("▶ " + cmd)
-            actionProc.command = ["bash", "-c", cmd]
+            actionProc.command = argv
             actionProc.running = true
         }
 
