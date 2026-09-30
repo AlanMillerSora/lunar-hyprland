@@ -30,6 +30,7 @@ QtObject {
     property real length: 0
     property real position: 0
     property bool playing: false
+    property bool paused: true        // отдельно от playing: играю = есть медиа, не пауза и не idle
     property bool hasMedia: false
     property bool seekable: false
     property bool shuffle: false
@@ -40,6 +41,7 @@ QtObject {
     property var searchResults: []    // [{id,title,duration,uploader,url}]
     property bool libraryBusy: false
     property var library: []          // [{path,name}]
+    property var pendingLibrary: []   // коплю список тут, отдаю один раз при выходе find
 
     // ── внутреннее состояние ──
     property bool sockWanted: false   // хочу ли держать Socket (файл есть)
@@ -64,7 +66,9 @@ QtObject {
 
     property Timer probeTimer: Timer {
         interval: 1000
-        running: true
+        // пробу держу только когда она нужна: файл есть (следить за обрывом),
+        // плеер открыт или есть отложенный запуск. Иначе не плодим `test -S`.
+        running: root.ready || Theme.playerOpen || root.pendingUrls.length > 0
         repeat: true
         onTriggered: {
             // перезапускаю пробу: так узнаю и о появлении, и об исчезновении
@@ -135,12 +139,27 @@ QtObject {
         }
         if (!ready && !sockWanted)
             return
-        // плеер ушёл — сношу Socket и затираю «живое»
+        // плеер ушёл — сношу Socket и затираю всё «живое», иначе в UI
+        // остаётся последний трек с недостоверными позицией/очередью
         ready = false
         sockWanted = false
         connected = false
         playing = false
+        paused = true
         position = 0
+        length = 0
+        title = ""
+        artist = ""
+        artUrl = ""
+        hasMedia = false
+        seekable = false
+        idleActive = false
+        endedPending = false
+        eofReached = false
+        queue = []
+        queueIndex = -1
+        queueCount = 0
+        rawPlaylist = []
     }
 
     function onConnChanged(c) {
@@ -177,6 +196,14 @@ QtObject {
             return false
         it.write(JSON.stringify({ command: cmd, request_id: ++reqSeq }) + "\n")
         return true
+    }
+
+    // команда, которая не теряется молча: нет связи — поднимаю демон и выхожу
+    function cmd(args) {
+        if (connected)
+            return writeCmd(args)
+        ensurePlayer()
+        return false
     }
 
     // после коннекта сначала подписки, и только потом команды
@@ -221,8 +248,8 @@ QtObject {
 
     function handleProperty(name, data) {
         if (name === "pause") {
-            // pause=true значит «на паузе»: играю, когда флаг снят
-            playing = (data === false)
+            // pause=true значит «на паузе»; «играю» считаю из этого в refreshDerived
+            paused = (data === true)
         } else if (name === "time-pos") {
             position = (data === null || data === undefined) ? 0 : Number(data)
         } else if (name === "duration") {
@@ -343,14 +370,16 @@ QtObject {
 
     function refreshDerived() {
         hasMedia = queueIndex >= 0 && queue.length > 0
+        // «играю» = есть медиа, не на паузе и не idle — так не мигает при коннекте
+        playing = hasMedia && !paused && !idleActive
         seekable = hasMedia && length > 0 && !idleActive
         // связка «доиграли и ушли в idle» — вот это и есть конец очереди
         if (endedPending && idleActive && queueIndex === -1) {
             endedPending = false
-            playing = false
             position = 0
             hasMedia = false
             seekable = false
+            playing = false
         }
     }
 
@@ -367,6 +396,20 @@ QtObject {
             return
         ensureProc.running = false
         ensureProc.running = true
+    }
+
+    property Process stopProc: Process {
+        command: ["systemctl", "--user", "--no-block", "stop", "lunar-player.service"]
+        stderr: StdioCollector {}
+    }
+
+    // гашу демон, когда он больше не нужен: плеер закрыт, ничего не играет и
+    // очередь пуста. Иначе mpv висел бы до перезагрузки (это заметил аудит).
+    function maybeStopDaemon() {
+        if (!Theme.playerOpen && !playing && queue.length === 0 && ready) {
+            stopProc.running = false
+            stopProc.running = true
+        }
     }
 
     function normUrls(urls) {
@@ -436,46 +479,44 @@ QtObject {
     }
 
     function next() {
-        writeCmd(["playlist-next", "weak"])
+        cmd(["playlist-next", "weak"])
     }
 
     function prev() {
-        writeCmd(["playlist-prev", "weak"])
+        cmd(["playlist-prev", "weak"])
     }
 
     function seekTo(sec) {
         var s = Number(sec)
         if (!isFinite(s))
             return
-        writeCmd(["seek", s, "absolute"])
+        cmd(["seek", s, "absolute"])
     }
 
     function seekBy(sec) {
         var s = Number(sec)
         if (!isFinite(s) || s === 0)
             return
-        writeCmd(["seek", s, "relative"])
+        cmd(["seek", s, "relative"])
     }
 
     function jumpTo(index) {
         var i = Math.round(Number(index))
         if (i < 0 || i >= queue.length)
             return
-        writeCmd(["playlist-play-index", i])
+        cmd(["playlist-play-index", i])
     }
 
     function removeAt(index) {
         var i = Math.round(Number(index))
         if (i < 0 || i >= queue.length)
             return
-        writeCmd(["playlist-remove", i])
+        cmd(["playlist-remove", i])
     }
 
     function toggleShuffle() {
-        if (!connected)
-            return
         shuffle = !shuffle
-        writeCmd(["set_property", "shuffle", shuffle])
+        cmd(["set_property", "shuffle", shuffle])
     }
 
     function clearQueue() {
@@ -578,6 +619,8 @@ QtObject {
         }
         stderr: StdioCollector {}
         onExited: (code, st) => {
+            // отдаю список один раз — на большой фонотеке это дешевле построчных присвоений
+            root.library = root.pendingLibrary
             root.libraryBusy = false
         }
     }
@@ -589,6 +632,7 @@ QtObject {
             ? home + "/Music"
             : String(dir)
         library = []
+        pendingLibrary = []
         libraryBusy = true
         findProc.running = false
         findProc.command = [
@@ -606,9 +650,8 @@ QtObject {
         var p = ("" + line).trim()
         if (p.length === 0)
             return
-        var res = library.slice()
-        res.push({ path: p, name: baseName(p) })
-        library = res
+        // коплю в отдельный массив: не перестраиваю список на каждый файл
+        pendingLibrary.push({ path: p, name: baseName(p) })
     }
 
     // ═══════════════ мелкие помощники ═══════════════

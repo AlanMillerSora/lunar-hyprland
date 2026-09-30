@@ -5,9 +5,9 @@
 font=JetBrains Mono 11
 
 ### Стиль по умолчанию
-background-color=#050505E6
-text-color=#FFFFFFFF
-border-color=#FFFFFFFF
+background-color=#0c0e13E6
+text-color=#e8ecf2FF
+border-color=#23262dFF
 border-size=1
 border-radius=3
 padding=12
@@ -23,11 +23,11 @@ max-visible=5
 # не даём истории уведомлений (её показывает правый сайдбар) расти бесконечно
 max-history=20
 
-progress-color=over #FFFFFFFF
+progress-color=over #e8edf4FF
 
 [urgency=low]
-background-color=#05050599
-border-color=#888888FF
+background-color=#0c0e1399
+border-color=#98a1acFF
 default-timeout=3000
 
 [urgency=critical]

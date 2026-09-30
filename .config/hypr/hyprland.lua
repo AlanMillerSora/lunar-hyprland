@@ -258,8 +258,10 @@ hl.layer_rule({ match = { namespace = "lunar-sidebar-right" }, blur = true, igno
 -- ВАЖНО: полноэкранные оверлеи (Hub, попапы) блюрить нельзя. Quickshell держит
 -- их как fullscreen-слои, и Hyprland блюрит весь слой, даже когда он пуст —
 -- GPU уходил с ~20% до ~54%. Стекло у оверлеев — только прозрачность и рамки.
--- Исключение — плеер: его карточка отдельным окном (~0.9 Мп), блюрю только её.
-hl.layer_rule({ match = { namespace = "lunar-player-card" }, blur = true, ignore_alpha = 0.25 })
+-- Плеер — обычное окно (Quickshell FloatingWindow): плавающее, по центру,
+-- со скруглением и полупрозрачностью. Блюр Hyprland даёт сам (окно с
+-- opacity<1), общий blur включён — отдельный слой тут больше не нужен.
+hl.window_rule({ match = { title = "^(Lunar Player)$" }, float = true, center = true, rounding = 12, opacity = "0.94 override 0.94 override" })
 
 
 

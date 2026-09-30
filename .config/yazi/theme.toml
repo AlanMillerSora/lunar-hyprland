@@ -1,94 +1,94 @@
 # ════════════════════════════════════════════════════════════════
-#  yazi — тема Lunar Eclipse (монохром, как вся система)
-#  фон #050505, текст #ffffff, dim #888888, рамки #1e1e1e, danger #ff003c
+#  yazi — тема Lunar Eclipse (холодный монохром, как вся система)
+#  фон #08090d, текст #e8ecf2, dim #98a1ac, рамки #23262d, danger #ff003c
 #  Переопределяем только цвета поверх дефолтов yazi.
 # ════════════════════════════════════════════════════════════════
 
 [mgr]
-cwd = { fg = "#ffffff", bold = true }
-find_keyword = { fg = "#ffffff", bold = true, underline = true }
-find_position = { fg = "#888888" }
-symlink_target = { fg = "#888888", italic = true }
+cwd = { fg = "#e8ecf2", bold = true }
+find_keyword = { fg = "#e8edf4", bold = true, underline = true }
+find_position = { fg = "#98a1ac" }
+symlink_target = { fg = "#98a1ac", italic = true }
 
-marker_copied   = { fg = "#888888", bg = "#888888" }
-marker_cut      = { fg = "#ffffff", bg = "#ffffff" }
-marker_marked   = { fg = "#ffffff", bg = "#ffffff" }
-marker_selected = { fg = "#ffffff", bg = "#ffffff" }
+marker_copied   = { fg = "#98a1ac", bg = "#98a1ac" }
+marker_cut      = { fg = "#e8edf4", bg = "#e8edf4" }
+marker_marked   = { fg = "#e8edf4", bg = "#e8edf4" }
+marker_selected = { fg = "#e8edf4", bg = "#e8edf4" }
 marker_symbol   = "│"
 
-count_copied   = { fg = "#050505", bg = "#888888" }
-count_cut      = { fg = "#050505", bg = "#ffffff" }
-count_selected = { fg = "#050505", bg = "#ffffff" }
+count_copied   = { fg = "#08090d", bg = "#98a1ac" }
+count_cut      = { fg = "#08090d", bg = "#e8edf4" }
+count_selected = { fg = "#08090d", bg = "#e8edf4" }
 
 border_symbol = "│"
-border_style  = { fg = "#1e1e1e" }
+border_style  = { fg = "#23262d" }
 
 [tabs]
-active   = { fg = "#050505", bg = "#ffffff", bold = true }
-inactive = { fg = "#888888", bg = "#1a1a1a" }
+active   = { fg = "#08090d", bg = "#e8edf4", bold = true }
+inactive = { fg = "#98a1ac", bg = "#181b21" }
 sep_inner = { open = "", close = "" }
 sep_outer = { open = "", close = "" }
 
 [mode]
-normal_main = { fg = "#050505", bg = "#ffffff", bold = true }
-normal_alt  = { fg = "#ffffff", bg = "#1a1a1a" }
-select_main = { fg = "#050505", bg = "#ffffff", bold = true }
-select_alt  = { fg = "#ffffff", bg = "#1a1a1a" }
-unset_main  = { fg = "#050505", bg = "#888888", bold = true }
-unset_alt   = { fg = "#888888", bg = "#1a1a1a" }
+normal_main = { fg = "#08090d", bg = "#e8edf4", bold = true }
+normal_alt  = { fg = "#e8ecf2", bg = "#181b21" }
+select_main = { fg = "#08090d", bg = "#e8edf4", bold = true }
+select_alt  = { fg = "#e8ecf2", bg = "#181b21" }
+unset_main  = { fg = "#08090d", bg = "#98a1ac", bold = true }
+unset_alt   = { fg = "#98a1ac", bg = "#181b21" }
 
 [indicator]
-parent  = { fg = "#888888" }
-current = { fg = "#ffffff", bold = true }
+parent  = { fg = "#98a1ac" }
+current = { fg = "#e8ecf2", bold = true }
 preview = { underline = true }
 padding = { open = "", close = "" }
 
 [status]
-perm_sep   = { fg = "#4a4a4a" }
-perm_type  = { fg = "#ffffff" }
-perm_read  = { fg = "#888888" }
-perm_write = { fg = "#888888" }
-perm_exec  = { fg = "#888888" }
-progress_label  = { fg = "#ffffff", bold = true }
-progress_normal = { fg = "#ffffff", bg = "#050505" }
-progress_error  = { fg = "#050505", bg = "#ff003c" }
+perm_sep   = { fg = "#5b636d" }
+perm_type  = { fg = "#e8ecf2" }
+perm_read  = { fg = "#98a1ac" }
+perm_write = { fg = "#98a1ac" }
+perm_exec  = { fg = "#98a1ac" }
+progress_label  = { fg = "#e8ecf2", bold = true }
+progress_normal = { fg = "#e8ecf2", bg = "#08090d" }
+progress_error  = { fg = "#08090d", bg = "#ff003c" }
 sep_left  = { open = "", close = "" }
 sep_right = { open = "", close = "" }
 
 [which]
-border          = { fg = "#1e1e1e" }
+border          = { fg = "#23262d" }
 cols            = 3
-cand            = { fg = "#ffffff" }
-rest            = { fg = "#888888" }
-desc            = { fg = "#888888" }
+cand            = { fg = "#e8ecf2" }
+rest            = { fg = "#98a1ac" }
+desc            = { fg = "#98a1ac" }
 separator       = "  "
-separator_style = { fg = "#4a4a4a" }
+separator_style = { fg = "#5b636d" }
 
 [confirm]
-border     = { fg = "#1e1e1e" }
-title      = { fg = "#ffffff" }
+border     = { fg = "#23262d" }
+title      = { fg = "#e8ecf2" }
 btn_yes    = { reversed = true }
 btn_labels = [ "  [Y]es  ", "  (N)o  " ]
 
 [notify]
-title_info  = { fg = "#ffffff" }
-title_warn  = { fg = "#888888" }
+title_info  = { fg = "#e8ecf2" }
+title_warn  = { fg = "#98a1ac" }
 title_error = { fg = "#ff003c" }
 icon_info   = ""
 icon_warn   = ""
 icon_error  = ""
 
 [pick]
-border   = { fg = "#1e1e1e" }
-active   = { fg = "#ffffff", bold = true }
+border   = { fg = "#23262d" }
+active   = { fg = "#e8ecf2", bold = true }
 inactive = {}
 
 [input]
-border   = { fg = "#1e1e1e" }
+border   = { fg = "#23262d" }
 selected = { reversed = true }
 
 [cmp]
-border   = { fg = "#1e1e1e" }
+border   = { fg = "#23262d" }
 active   = { reversed = true }
 inactive = {}
 icon_file    = ""
@@ -96,12 +96,12 @@ icon_folder  = ""
 icon_command = ""
 
 [tasks]
-border  = { fg = "#1e1e1e" }
-hovered = { fg = "#ffffff", bold = true }
+border  = { fg = "#23262d" }
+hovered = { fg = "#e8edf4", bold = true }
 
 [help]
-border  = { fg = "#1e1e1e" }
-chord   = { fg = "#ffffff" }
+border  = { fg = "#23262d" }
+chord   = { fg = "#e8ecf2" }
 hovered = { reversed = true, bold = true }
 
 [fd]
@@ -114,16 +114,16 @@ position = { at = "top-center", y = 2, w = 80, h = 3 }
 
 [filetype]
 rules = [
-	{ mime = "**/image/*", fg = "#888888" },
-	{ mime = "**/{audio,video}/*", fg = "#888888" },
-	{ mime = "**/application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", fg = "#888888" },
-	{ mime = "**/application/{pdf,doc,rtf}", fg = "#888888" },
-	{ mime = "vfs/{absent,stale}", fg = "#4a4a4a" },
+	{ mime = "**/image/*", fg = "#98a1ac" },
+	{ mime = "**/{audio,video}/*", fg = "#98a1ac" },
+	{ mime = "**/application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", fg = "#98a1ac" },
+	{ mime = "**/application/{pdf,doc,rtf}", fg = "#98a1ac" },
+	{ mime = "vfs/{absent,stale}", fg = "#5b636d" },
 	{ url = "*", is = "orphan", bg = "#ff003c" },
-	{ url = "*", is = "exec", fg = "#ffffff" },
+	{ url = "*", is = "exec", fg = "#e8edf4" },
 	{ url = "*", is = "dummy", bg = "#ff003c" },
 	{ url = "*/", is = "dummy", bg = "#ff003c" },
-	{ url = "*/", fg = "#ffffff" },
+	{ url = "*/", fg = "#e8edf4" },
 ]
 
 # Иконки — чистый текст, без цветных глифов (только стрелки папок)
@@ -133,7 +133,7 @@ dirs  = []
 files = []
 exts  = []
 conds = [
-	{ if = "dir & hovered", text = "▸", fg = "#ffffff" },
-	{ if = "dir",           text = "▸", fg = "#888888" },
-	{ if = "!dir",          text = "",  fg = "#888888" },
+	{ if = "dir & hovered", text = "▸", fg = "#e8edf4" },
+	{ if = "dir",           text = "▸", fg = "#98a1ac" },
+	{ if = "!dir",          text = "",  fg = "#98a1ac" },
 ]

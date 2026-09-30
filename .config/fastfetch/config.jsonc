@@ -1,33 +1,33 @@
 {
     "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
 
-    // монохром: «цвета» ASCII-логотипа — оттенки серого
+    // холодный монохром: «цвета» ASCII-логотипа — оттенки серого
     "logo": {
         "color": {
-            "1": "white",
-            "2": "#888888",
-            "3": "#cccccc",
-            "4": "#dddddd",
-            "5": "white",
-            "6": "white",
-            "7": "white",
-            "8": "white",
-            "9": "white"
+            "1": "#e8ecf2",
+            "2": "#98a1ac",
+            "3": "#c9d2db",
+            "4": "#e8edf4",
+            "5": "#e8ecf2",
+            "6": "#e8ecf2",
+            "7": "#e8ecf2",
+            "8": "#e8ecf2",
+            "9": "#e8ecf2"
         }
     },
 
     "display": {
         "separator": "  ",
-        // ключи — белые, значения — светло-серые, разделитель — faint
+        // ключи — светлые, значения — приглушённые, разделитель — faint
         "color": {
-            "keys": "white",
-            "title": "white",
-            "output": "#dddddd",
-            "separator": "#4a4a4a"
+            "keys": "#e8ecf2",
+            "title": "#e8edf4",
+            "output": "#c9d2db",
+            "separator": "#5b636d"
         },
         "key": {
             "type": "string",
-            "color": "white"
+            "color": "#e8edf4"
         },
         "percent": {
             "type": [

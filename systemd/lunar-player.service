@@ -13,7 +13,10 @@ Type=simple
 # --input-ipc-server — сокет, через который шелл рулит плеером
 # (loadfile/pause/seek) вместо перезапуска процесса.
 # --ytdl-format=bestaudio/best — из ссылок (YouTube и т.п.) тянем только звук.
-ExecStart=/usr/bin/mpv --no-video --idle=yes --input-ipc-server=%t/lunar-player.sock --ytdl-format=bestaudio/best --no-osc --force-window=no
+ExecStart=/usr/bin/mpv --no-video --idle=yes --input-ipc-server=%t/lunar-player.sock --ytdl-format=bestaudio/best --no-osc --force-window=no --demuxer-max-bytes=24M --demuxer-max-back-bytes=8M
+# Сокет mpv сам не убирает: без этого после остановки остаётся мёртвый файл,
+# и шелл по нему долбится (ConnectionRefused). Чищу за собой.
+ExecStopPost=-/usr/bin/rm -f %t/lunar-player.sock
 # Упал — поднимаю сам; штатный выход (quit из плеера) не считаю сбоем.
 Restart=on-failure
 RestartSec=2

@@ -111,7 +111,7 @@ sudo pacman -S --needed --noconfirm \
   gamescope mangohud lib32-mangohud gamemode \
   lutris \
   retroarch dolphin-emu \
-  obs-studio mpv \
+  obs-studio mpv yt-dlp mpv-mpris \
   && ok "gamescope · mangohud · gamemode · lutris · obs" \
   || warn "часть игровых пакетов не поставилась — см. вывод"
 

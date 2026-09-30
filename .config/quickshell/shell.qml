@@ -36,7 +36,6 @@ ShellRoot {
     LunarOverview {}
     LunarPolkit {}
     LunarPlayer {}
-    LunarPlayerCard {}
     LunarSidebar {}
     LunarSidebarRight {}
     LunarOsd {}
