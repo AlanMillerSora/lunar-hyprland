@@ -28,6 +28,13 @@ QtObject {
 
     property color trackBg: "#181b21"
 
+    // ── панель-бар: чуть мягче и холоднее общего текста (правил отдельно,
+    //    чтобы не выцветал текст оверлеев) ──
+    property color barText: "#c9d2db"
+    property color barDim: "#98a1ac"
+    property color barFaint: "#5b636d"
+    property color barPill: Qt.rgba(12 / 255, 14 / 255, 19 / 255, 0.72 * interfaceOpacity)
+
     // ── токены «ритма» интерфейса (Hub и панели) ──
     property color hover: Qt.rgba(accent.r, accent.g, accent.b, 0.07)        // наведение: строки, карточки
     property color hoverStrong: Qt.rgba(accent.r, accent.g, accent.b, 0.10)  // наведение: кнопки, чипы

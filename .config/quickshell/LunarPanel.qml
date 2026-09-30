@@ -35,7 +35,7 @@ PanelWindow {
     //   фон «таблеток» — как у оверлеев (Theme.bg, реагирует на ползунок
     //   «прозрачность интерфейса»), рамки — Theme.border,
     //   акценты — Theme.accent через Theme.alpha().
-    readonly property color pillBg: Theme.bg
+    readonly property color pillBg: Theme.barPill
     readonly property color pillHover: Theme.hoverStrong
     readonly property color pillBorder: Theme.border
 
@@ -629,7 +629,7 @@ PanelWindow {
                     anchors.verticalCenter: parent.verticalCenter
                     text: "LUNAR " + (root.focusedPhase > 0
                         ? ("0" + root.focusedPhase).slice(-2) : "--")
-                    color: Theme.textDim
+                    color: Theme.barDim
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(14)
                     font.letterSpacing: 1.5
@@ -803,7 +803,7 @@ PanelWindow {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "󰁅"
-                        color: Theme.textDim
+                        color: Theme.barDim
                         font.family: Theme.iconFont
                         font.pixelSize: Theme.fontSize(15)
                     }
@@ -811,14 +811,14 @@ PanelWindow {
                         anchors.verticalCenter: parent.verticalCenter
                         width: fm15.advanceWidth("00.0K")
                         text: root.netFmt(root.netDown)
-                        color: Theme.text
+                        color: Theme.barText
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSize(15)
                     }
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "󰁝"
-                        color: Theme.textDim
+                        color: Theme.barDim
                         font.family: Theme.iconFont
                         font.pixelSize: Theme.fontSize(15)
                     }
@@ -826,7 +826,7 @@ PanelWindow {
                         anchors.verticalCenter: parent.verticalCenter
                         width: fm15.advanceWidth("00.0K")
                         text: root.netFmt(root.netUp)
-                        color: Theme.text
+                        color: Theme.barText
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSize(15)
                     }
@@ -834,7 +834,7 @@ PanelWindow {
                         anchors.verticalCenter: parent.verticalCenter
                         width: Math.max(fmIcon17.advanceWidth("󰈀"), fmIcon17.advanceWidth("\uf1eb"))
                         text: root.netKind === "eth" ? "󰈀" : "\uf1eb"
-                        color: root.netKind === "off" ? Theme.textFaint : Theme.text
+                        color: root.netKind === "off" ? Theme.barFaint : Theme.barText
                         font.family: Theme.iconFont
                         font.pixelSize: Theme.fontSize(17)
                     }
@@ -865,7 +865,7 @@ PanelWindow {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "\uf11b"
-                        color: root.gameMode ? Theme.danger : Theme.textDim
+                        color: root.gameMode ? Theme.danger : Theme.barDim
                         font.family: Theme.iconFont
                         font.pixelSize: Theme.fontSize(17)
                         MouseArea {
@@ -910,7 +910,7 @@ PanelWindow {
                             id: recLabel
                             anchors.centerIn: parent
                             text: root.recording ? "■ REC" : "● REC"
-                            color: root.recording ? Theme.danger : Theme.textDim
+                            color: root.recording ? Theme.danger : Theme.barDim
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.fontSize(11)
                             font.bold: root.recording
@@ -950,7 +950,7 @@ PanelWindow {
 
                         Text {
                             text: "\uf4bc"
-                            color: Theme.textFaint
+                            color: Theme.barFaint
                             font.family: Theme.iconFont
                             font.pixelSize: Theme.fontSize(14)
                             height: 26
@@ -959,7 +959,7 @@ PanelWindow {
                         Text {
                             width: fm14.advanceWidth("100%")
                             text: root.padNum(root.cpuPct < 0 ? "--%" : root.cpuPct + "%", 4)
-                            color: Theme.text
+                            color: Theme.barText
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.fontSize(14)
                             height: 26
@@ -968,7 +968,7 @@ PanelWindow {
                         Text {
                             visible: root.tempC > 0
                             text: "\uf2c8"
-                            color: Theme.textFaint
+                            color: Theme.barFaint
                             font.family: Theme.iconFont
                             font.pixelSize: Theme.fontSize(13)
                             height: 26
@@ -978,7 +978,7 @@ PanelWindow {
                             visible: root.tempC > 0
                             width: fm14.advanceWidth("100°")
                             text: root.padNum(root.tempC + "°", 4)
-                            color: Theme.textDim
+                            color: Theme.barDim
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.fontSize(14)
                             height: 26
@@ -997,7 +997,7 @@ PanelWindow {
 
                 Text {
                     text: "│"
-                    color: Theme.textFaint
+                    color: Theme.barFaint
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(14)
                     height: 26
@@ -1017,7 +1017,7 @@ PanelWindow {
 
                         Text {
                             text: "\u{F035B}"
-                            color: Theme.textFaint
+                            color: Theme.barFaint
                             font.family: Theme.iconFont
                             font.pixelSize: Theme.fontSize(14)
                             height: 26
@@ -1026,7 +1026,7 @@ PanelWindow {
                         Text {
                             width: fm14.advanceWidth("100%")
                             text: root.padNum(root.ramPct < 0 ? "--%" : root.ramPct + "%", 4)
-                            color: Theme.text
+                            color: Theme.barText
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.fontSize(14)
                             height: 26
@@ -1046,7 +1046,7 @@ PanelWindow {
                 Text {
                     visible: root.gpuLoad !== ""
                     text: "│"
-                    color: Theme.textFaint
+                    color: Theme.barFaint
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(14)
                     height: 26
@@ -1067,7 +1067,7 @@ PanelWindow {
 
                         Text {
                             text: "\uf108"
-                            color: Theme.textFaint
+                            color: Theme.barFaint
                             font.family: Theme.iconFont
                             font.pixelSize: Theme.fontSize(14)
                             height: 26
@@ -1076,7 +1076,7 @@ PanelWindow {
                         Text {
                             width: fm14.advanceWidth("100%")
                             text: root.padNum(root.gpuLoad + "%", 4)
-                            color: Theme.text
+                            color: Theme.barText
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.fontSize(14)
                             height: 26
@@ -1085,7 +1085,7 @@ PanelWindow {
                         Text {
                             visible: root.gpuTemp !== ""
                             text: "\uf2c8"
-                            color: Theme.textFaint
+                            color: Theme.barFaint
                             font.family: Theme.iconFont
                             font.pixelSize: Theme.fontSize(13)
                             height: 26
@@ -1095,7 +1095,7 @@ PanelWindow {
                             visible: root.gpuTemp !== ""
                             width: fm14.advanceWidth("100°")
                             text: root.padNum(root.gpuTemp + "°", 4)
-                            color: Theme.textDim
+                            color: Theme.barDim
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.fontSize(14)
                             height: 26
@@ -1160,7 +1160,7 @@ PanelWindow {
                                 anchors.centerIn: parent
                                 visible: !trayImg.visible
                                 text: "\uf111"
-                                color: Theme.textFaint
+                                color: Theme.barFaint
                                 font.family: Theme.iconFont
                                 font.pixelSize: Theme.fontSize(8)
                             }
@@ -1206,7 +1206,7 @@ PanelWindow {
                             id: moreText
                             anchors.centerIn: parent
                             text: "+" + (root.trayCount - root.trayMax)
-                            color: moreMouse.containsMouse ? Theme.accent : Theme.textDim
+                            color: moreMouse.containsMouse ? Theme.accent : Theme.barDim
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.fontSize(10)
                             font.bold: true
@@ -1244,7 +1244,7 @@ PanelWindow {
                         anchors.verticalCenter: parent.verticalCenter
                         width: fm14.advanceWidth("EN")
                         text: root.kbLayout
-                        color: Theme.text
+                        color: Theme.barText
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSize(14)
                         font.bold: true
@@ -1261,8 +1261,8 @@ PanelWindow {
                         width: Math.max(fmIcon15.advanceWidth("\uf1f6"), fmIcon15.advanceWidth("\uf0f3"))
                         text: root.dnd ? "\uf1f6" : "\uf0f3"
                         color: root.dnd
-                            ? Theme.textFaint
-                            : (root.notifCount > 0 ? Theme.text : Theme.textDim)
+                            ? Theme.barFaint
+                            : (root.notifCount > 0 ? Theme.barText : Theme.barDim)
                         font.family: Theme.iconFont
                         font.pixelSize: Theme.fontSize(15)
                         MouseArea {
@@ -1305,7 +1305,7 @@ PanelWindow {
                                 text: root.muted
                                     ? "󰖁"
                                     : (root.vol < 0.34 ? "󰕿" : (root.vol < 0.67 ? "󰖀" : "󰕾"))
-                                color: root.muted ? Theme.textFaint : Theme.text
+                                color: root.muted ? Theme.barFaint : Theme.barText
                                 font.family: Theme.iconFont
                                 font.pixelSize: Theme.fontSize(19)
                                 height: 26
@@ -1314,7 +1314,7 @@ PanelWindow {
                             Text {
                                 width: fm14.advanceWidth("100%")
                                 text: root.muted ? "mute" : Math.round(root.vol * 100) + "%"
-                                color: Theme.textDim
+                                color: Theme.barDim
                                 font.family: Theme.fontFamily
                                 font.pixelSize: Theme.fontSize(14)
                                 height: 26
@@ -1364,7 +1364,7 @@ PanelWindow {
                 Text {
                     id: clockLabel
                     text: root.clockText.substring(0, 2)
-                    color: Theme.text
+                    color: Theme.barText
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(15)
                     font.bold: true
@@ -1375,7 +1375,7 @@ PanelWindow {
                 Text {
                     id: clockColon
                     text: ":"
-                    color: Theme.text
+                    color: Theme.barText
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(15)
                     font.bold: true
@@ -1390,7 +1390,7 @@ PanelWindow {
                 Text {
                     id: clockMin
                     text: root.clockText.substring(3)
-                    color: Theme.text
+                    color: Theme.barText
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(15)
                     font.bold: true
@@ -1410,7 +1410,7 @@ PanelWindow {
             Text {
                 id: dayLabel
                 text: root.dayText + " " + root.dateText
-                color: Theme.textDim
+                color: Theme.barDim
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSize(13)
                 height: 26
@@ -1497,7 +1497,7 @@ PanelWindow {
                     verticalAlignment: Text.AlignVCenter
                     horizontalAlignment: Text.AlignHCenter
                     text: root.playing ? "\uf04c" : "\uf04b"
-                    color: root.playing ? Theme.accent : Theme.textFaint
+                    color: root.playing ? Theme.accent : Theme.barFaint
                     font.family: Theme.iconFont
                     font.pixelSize: Theme.fontSize(13)
                 }
@@ -1511,7 +1511,7 @@ PanelWindow {
                     text: mediaBox.showViz
                         ? root.marqueeText(mediaBox.mqChars)
                         : root.marqueeText(Math.max(4, Math.floor((width - 8) / mediaBox.mqCharW)))
-                    color: Theme.text
+                    color: Theme.barText
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(12)
                 }
