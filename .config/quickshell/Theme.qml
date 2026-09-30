@@ -58,7 +58,7 @@ QtObject {
     property int radiusL: 6
 
     // сколько значков трея видно в панели (остальные — в списке «+N»)
-    property int trayVisible: 3
+    property int trayVisible: 2
 
     // тултип панели: панель выставляет, LunarTooltip показывает
     property bool tooltipShown: false
@@ -154,7 +154,7 @@ QtObject {
             id: uiAdapter
             property real interfaceOpacity: 1.0
             property real fontScale: 1.0
-            property int trayVisible: 3
+            property int trayVisible: 2
             property bool wallpaperLive: true
             property int blurSize: -1
             property int blurPasses: 3
