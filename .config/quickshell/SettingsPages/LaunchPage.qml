@@ -83,8 +83,8 @@ Item {
             id: grid
             Layout.fillWidth: true
             Layout.fillHeight: true
-            cellWidth: 120
-            cellHeight: 132
+            cellWidth: 116
+            cellHeight: 124
             clip: true
             model: AppModel.apps
             currentIndex: 0
@@ -96,8 +96,8 @@ Item {
                 required property var modelData
                 required property int index
 
-                width: 112
-                height: 124
+                width: 108
+                height: 116
                 radius: Theme.radiusM
                 color: index === grid.currentIndex
                     ? Theme.active
@@ -121,18 +121,18 @@ Item {
 
                 Column {
                     anchors.centerIn: parent
-                    spacing: 8
+                    spacing: 6
 
                     Item {
-                        width: 68
-                        height: 68
+                        width: 56
+                        height: 56
                         anchors.horizontalCenter: parent.horizontalCenter
 
                         Image {
                             id: appIcon
                             anchors.centerIn: parent
-                            width: 56
-                            height: 56
+                            width: 44
+                            height: 44
                             sourceSize: Qt.size(128, 128)
                             fillMode: Image.PreserveAspectFit
                             smooth: true
@@ -160,7 +160,7 @@ Item {
                             text: AppModel.initials(modelData.name)
                             color: Theme.text
                             font.family: Theme.fontFamily
-                            font.pixelSize: 20
+                            font.pixelSize: 16
                             font.bold: true
                         }
                     }
@@ -170,7 +170,7 @@ Item {
                         color: Theme.text
                         font.family: Theme.fontFamily
                         font.pixelSize: 11
-                        width: 102
+                        width: 96
                         horizontalAlignment: Text.AlignHCenter
                         wrapMode: Text.WordWrap
                         maximumLineCount: 2
