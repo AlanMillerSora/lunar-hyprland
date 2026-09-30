@@ -94,8 +94,7 @@ PanelWindow {
     property var navItems: [
         { name: "Launch",     icon: "\uf120", page: "LaunchPage" },
         { name: "System",     icon: "󰒓", page: "SystemPage" },
-        { name: "Sound",      icon: "\uf028", page: "SoundPage" },
-        { name: "Monitors",   icon: "\uf108", page: "MonitorsPage" },
+        { name: "Devices",    icon: "\uf108", page: "DevicesPage" },
         { name: "Network",    icon: "\uf1eb", page: "NetworkPage" },
         { name: "Interface",  icon: "\uf085", page: "InterfacePage" },
         { name: "Games",      icon: "\uf11b", page: "GamesPage" },
