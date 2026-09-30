@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import Quickshell.Io
 import "../"
 
@@ -129,10 +130,23 @@ Item {
     }
     Process {
         id: pAgent
+        // рабочая папка = папка памяти агента: агент не должен писать вне неё
+        // (контекст содержит заголовки окон — возможна инъекция)
+        workingDirectory: Quickshell.env("HOME") + "/.local/state/lunar"
         onRunningChanged: page.agentBusy = pCtx.running || pAgent.running
         stdout: StdioCollector {
             onStreamFinished: page.agentText = text.trim()
         }
+    }
+    // предохранитель от подвисшего opencode
+    Timer {
+        id: agentWatchdog
+        interval: 180000
+        onTriggered: if (pAgent.running) { pAgent.running = false; page.agentBusy = false; page.agentText = "(агент не ответил за 3 минуты)" }
+    }
+    Connections {
+        target: pAgent
+        function onRunningChanged() { if (pAgent.running) agentWatchdog.restart() }
     }
     function shQuote(s) {
         return "'" + String(s).replace(/'/g, "'\\''") + "'"

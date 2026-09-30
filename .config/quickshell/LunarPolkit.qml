@@ -26,8 +26,21 @@ PanelWindow {
         id: polkit
         onAuthenticationRequestStarted: root.openPanel()
         onIsActiveChanged: if (!polkit.isActive) root.closePanel()
+        // если агент не зарегистрировался (уже есть чужой/гонка) — предупредить:
+        // иначе запросы пароля молча не появятся
+        onIsRegisteredChanged: if (!polkit.isRegistered)
+            Quickshell.execDetached(["notify-send", "-a", "Lunar Eclipse", "-u", "critical",
+                "polkit-агент не активен", "Запросы пароля могут не показываться"])
     }
     readonly property var flow: polkit.flow
+
+    // при ошибке — чищу поле, чтобы вводить заново
+    Connections {
+        target: root.flow
+        function onSupplementaryMessageChanged() {
+            if (root.flow && root.flow.supplementaryIsError) pw.text = ""
+        }
+    }
 
     function openPanel() {
         pw.text = ""
@@ -101,6 +114,7 @@ PanelWindow {
                 font.family: Theme.fontFamily
                 font.pixelSize: 12
                 wrapMode: Text.Wrap
+                textFormat: Text.PlainText
             }
 
             Rectangle {
@@ -123,6 +137,7 @@ PanelWindow {
                     font.pixelSize: 13
                     echoMode: (root.flow && root.flow.responseVisible) ? TextInput.Normal : TextInput.Password
                     clip: true
+                    Keys.onEscapePressed: root.cancel()
                     onAccepted: root.submit()
                 }
                 Text {
@@ -134,6 +149,7 @@ PanelWindow {
                     color: Theme.textFaint
                     font.family: Theme.fontFamily
                     font.pixelSize: 12
+                    textFormat: Text.PlainText
                 }
             }
 
@@ -145,6 +161,7 @@ PanelWindow {
                 font.family: Theme.fontFamily
                 font.pixelSize: 11
                 wrapMode: Text.Wrap
+                textFormat: Text.PlainText
             }
 
             RowLayout {

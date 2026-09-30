@@ -350,16 +350,27 @@ PanelWindow {
 
                         property bool hovered: containsMouse
                         property bool pressDown: false
+                        property real pressX: 0
+                        property real pressY: 0
 
                         onPressed: function(m) {
-                            if (m.button === Qt.LeftButton) tile.pressDown = true
+                            if (m.button === Qt.LeftButton) {
+                                tile.pressDown = true
+                                tile.pressX = m.x
+                                tile.pressY = m.y
+                            }
                         }
                         onReleased: function(m) {
                             if (m.button !== Qt.LeftButton) return
                             tile.pressDown = false
-                            // тащим или просто клик — решает позиция отпускания
-                            if (winWrap.shown)
-                                root.finishDrag(winWrap.ws, winWrap.addr, winWrap)
+                            if (!winWrap.shown) return
+                            // клик почти без движения не переносит окно (иначе
+                            // центром плитки легко попасть в соседний стол)
+                            if (Math.abs(m.x - tile.pressX) + Math.abs(m.y - tile.pressY) < 8) {
+                                winWrap.snapBack()
+                                return
+                            }
+                            root.finishDrag(winWrap.ws, winWrap.addr, winWrap)
                         }
                         onClicked: function(m) {
                             if (m.button === Qt.LeftButton) {

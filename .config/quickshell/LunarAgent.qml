@@ -563,10 +563,10 @@ PanelWindow {
         readonly property var systemctlRead: ["status", "is-active", "is-enabled",
             "show", "list-units", "list-unit-files", "cat"]
         // у hyprctl разрешаю только чтение + eval/dispatch с безопасной Lua
+        // строго чтение: reload/notify/rollinglog убраны (мутация/дамп лога/фишинг)
         readonly property var hyprRead: ["clients", "monitors", "workspaces",
             "activewindow", "activeworkspace", "layers", "binds", "version",
-            "configerrors", "getoption", "devices", "cursorpos", "reload",
-            "notify", "systeminfo", "splash", "globalshortcuts", "rollinglog"]
+            "configerrors", "getoption", "devices", "cursorpos", "systeminfo"]
         readonly property var systemctlMutate: ["start", "stop", "restart",
             "enable", "disable"]
 
@@ -577,13 +577,31 @@ PanelWindow {
         function isLunarUnit(u) {
             return /^lunar-[A-Za-z0-9_.@-]+\.service$/.test(u || "")
         }
-        // eval/dispatch: только диспетчеры hl.dsp.*, без Lua-побегов в шелл
+        // eval/dispatch: ТОЛЬКО явный список диспетчеров, ровно один вызов,
+        // аргументы — простые литералы. Никаких вложенных вызовов, конкатенации
+        // (..), индексации ([]), os/io/exec_*: иначе через hyprctl eval
+        // агент уходил в произвольное исполнение (exec_raw, _G["o".."s"]).
+        readonly property var safeDispatchers: [
+            "focus", "layout", "submap",
+            "window.move", "window.close", "window.fullscreen", "window.float",
+            "window.pseudo", "window.pin", "window.cycle_next", "window.swap",
+            "window.center", "window.resize", "window.alter_zorder", "window.tag",
+            "workspace.toggle_special", "workspace.change_id", "workspace.rename",
+            "group.toggle", "group.lock_active", "group.active",
+            "cursor.move", "cursor.move_to_corner"
+        ]
         function safeLua(s) {
-            if (s.length === 0 || s.length > 500) return false
-            if (/[\n\r;`$]/.test(s)) return false
-            if (/(\bos\b|\bio\b|\bload\b|\bdofile\b|\brequire\b|\bpackage\b|\bdebug\b|\bexec\b|\bexec_cmd\b|\bpopen\b|\bsystem\b)/.test(s))
-                return false
-            return /^hl\.(dispatch\(hl\.)?dsp\./.test(s)
+            var t = String(s).trim()
+            if (t.length === 0 || t.length > 300) return false
+            if (/[\u200B-\u200F\u202A-\u202E]/.test(t)) return false
+            var m = t.match(/^hl\.dispatch\(hl\.dsp\.([a-z_]+(?:\.[a-z_]+)*)\(([^()]*)\)\)$/)
+                 || t.match(/^hl\.dsp\.([a-z_]+(?:\.[a-z_]+)*)\(([^()]*)\)$/)
+            if (!m) return false
+            if (safeDispatchers.indexOf(m[1]) === -1) return false
+            var args = m[2]
+            if (args.indexOf("..") !== -1) return false
+            // аргументы: числа, строки, ключи, скобки объекта; без ()[];`$\
+            return /^[A-Za-z0-9_\-\=\"'{}\s,.:]*$/.test(args)
         }
 
         function allowedArgv(argv) {
@@ -641,9 +659,11 @@ PanelWindow {
             systemMsg("▶ " + cmd)
             actionProc.command = argv
             actionProc.running = true
+            actionWatchdog.restart()
         }
 
         function actionDone() {
+            actionWatchdog.stop()
             var out = ((actionOut.text || "") + (actionErr2.text || "")).trim()
             if (out.length > 2000) out = out.slice(0, 2000) + "…"
             systemMsg(out !== "" ? out : "готово")
@@ -753,6 +773,18 @@ PanelWindow {
         onExited: (exitCode) => agent.actionDone()
         stdout: StdioCollector { id: actionOut }
         stderr: StdioCollector { id: actionErr2 }
+    }
+    // предохранитель: команда вроде `nvidia-smi -l 1` не должна подвешивать агента
+    Timer {
+        id: actionWatchdog
+        interval: 15000
+        onTriggered: {
+            if (actionProc.running) {
+                actionProc.running = false
+                agent.systemMsg("⏱ действие остановлено по таймауту")
+                agent.status = "готов"
+            }
+        }
     }
 
     Process { id: agentTerm; running: false }

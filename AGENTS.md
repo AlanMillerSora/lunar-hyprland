@@ -41,6 +41,12 @@
   только с бэкапом и крайней осторожностью. GRUB-тему не делать.
 - В конце задачи — коротко: что сделал, что проверено, что осталось.
 
+- **Агент риса (`LunarAgent`).** Действия сам не запускает: предлагает блок
+  `lunar-action`, оверлей показывает карточку и выполняет только из белого списка
+  и **без shell** (argv). `hyprctl` — чтение и `eval`/`dispatch` только с
+  диспетчерами `hl.dsp.*` (без `exec_raw`/`os`/`io`/`..`). Не расширять whitelist
+  без проверки: это единственная граница между агентом и системой.
+
 ## 1.1 Аудит субагентами: сначала материал, потом запуск
 
 Перед запуском аудиторов (`rice-adversary`, `rice-reviewer`) и любых субагентов
@@ -83,7 +89,7 @@ strings "$L" | grep -iE "error|not a type|TypeError|ReferenceError|SyntaxError|C
 # 5) IPC:
 qs ipc call hub toggle|open|close|nav N          # nav 0..12 (см. §4)
 qs ipc call sidebar|rsidebar|clipboard|volume|media|power|tray toggle|open|close
-# 6) скриншот (по минимуму): mkdir -p /tmp/shots; grim -o DP-3 /tmp/shots/x.png
+# 6) скриншот (по минимуму): mkdir -p /tmp/shots; grim -o DP-2 /tmp/shots/x.png
 #    сначала уйди на ПУСТОЙ стол:
 hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 # 7) полная установка: ./install.sh [флаги]      # см. §8
@@ -125,8 +131,18 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
   systemd system: `zapret.service`, `cronie.service`, `fwupd`.
 - Пакеты, которые **не трогать**: chromium, noto-fonts-cjk, nodejs/npm, inter-font, qt5-wayland,
   vim/nano, openssh, wget, smartmontools, socat, lsof, pipewire-jack.
-- Рабочая машина: RTX 5070 + Ryzen 7 7700 + 32 ГБ, монитор DP-3 3440×1440@165.
-  Работаем на ПК; скриншоты — `grim -o DP-3`.
+- Рабочая машина: RTX 5070 + Ryzen 7 7700 + 32 ГБ, монитор DP-2 3440×1440@165.
+  Работаем на ПК; скриншоты — `grim -o DP-2`.
+- **polkit:** свой агент `LunarPolkit.qml` (`Quickshell.Services.Polkit`) вместо
+  `polkit-kde-authentication-agent-1` (его запуск убран из `hyprland.lua`).
+- **Quickshell reload:** встроенный светлый попап о сбое заглушён
+  (`QS_NO_RELOAD_POPUP=1` в юните), ошибка идёт уведомлением mako (`shell.qml`).
+- **Сеть:** дроп-ин `zapret/wait-online-any.conf` — `systemd-networkd-wait-online`
+  не ждёт неактивный `wlan0` (иначе zapret стартует только через 2 минуты).
+- **Автозапуск:** firefox (стол 2) и discord (стол 3) из `hyprland.start`, тихо.
+- **Обзор столов:** `SUPER+O` / `SUPER+SHIFT+TAB`; окна перетаскиваются между столами.
+- **faillock:** после 3 неудачных попыток (считается и отменённый polkit-запрос)
+  пароль «перестаёт подходить» — лечится `truncate -s 0 /run/faillock/sora`.
 
 ## 4. Структура
 
@@ -134,12 +150,12 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 /home/sora/rice/
 ├── .config/
 │   ├── hypr/{hyprland.lua, hypridle.conf, scripts/}
-│   │   └── scripts/eclipse-{status,gamemode,record,cleanup,transparency,zapret,vencord,backup,update,perf,avatar}.sh,
+│   │   └── scripts/eclipse-{status,gamemode,record,cleanup,transparency,zapret,vencord,backup,update,perf,avatar,launch,agent-context}.sh,
 │   │       eclipse-calendar.py, eclipse-cheatsheet.py, eclipse-askpass.py, eclipse-wifi-guard.py
 │   ├── quickshell/
 │   │   ├── shell.qml грузит: LunarWallpaper, LunarPanel, LunarHub, LunarSidebar,
 │   │   │   LunarSidebarRight, LunarOsd, LunarVolume, LunarMedia, LunarTray, LunarTooltip,
-│   │   │   LunarClipboard, LunarPower
+│   │   │   LunarClipboard, LunarPower, LunarAgent, LunarOverview, LunarPolkit
 │   │   ├── Lunar*.qml, LunarWallpaperScene.qml, preview.qml, Slider.qml, Theme.qml,
 │   │   │   AppModel.qml, HudCorners.qml, PerspectivePanel.qml
 │   │   ├── SettingsPages/ (13 страниц), assets/ (+moon-phases/, crop-frame.png), pfp3.png,
@@ -287,7 +303,7 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
   `/usr/local/lib/lunar/cpu-performance.sh` (root, вне sudoers); он же гасит
   `power-profiles-daemon` (balanced/powersave).
 - `eclipse-askpass.py` — интерактивный GTK-диалог пароля (не автоподстановка).
-- Скрины для README: `grim -o DP-3` (3440×1440) → `magick … -resize 1600x900 -strip`.
+- Скрины для README: `grim -o DP-2` (3440×1440) → `magick … -resize 1600x900 -strip`.
 - `/tmp/shots` может исчезнуть между вызовами — `mkdir -p`.
 - Firefox managed-storage: `{name, type:"storage", data:{…}}`; нужен рестарт.
   `browser.newtabpage.enabled=false` мешает перехвату `about:newtab` — держать `true`.
