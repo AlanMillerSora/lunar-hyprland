@@ -1192,8 +1192,8 @@ PanelWindow {
                     Rectangle {
                         id: moreBox
                         visible: root.trayCount > root.trayMax
-                        width: moreText.implicitWidth + 12
-                        height: 22
+                        width: moreText.implicitWidth + 20
+                        height: 24
                         radius: Theme.radius
                         anchors.verticalCenter: parent.verticalCenter
                         color: moreMouse.containsMouse ? Theme.active : "transparent"
@@ -1226,6 +1226,8 @@ PanelWindow {
             // ── раскладка · уведомления · громкость — у самого края ──
             Item {
                 Layout.alignment: Qt.AlignVCenter
+                // отступ от трея, чтобы «+N» не сливалась с раскладкой «RU»
+                Layout.leftMargin: 10
                 implicitWidth: rightRow.implicitWidth
                 implicitHeight: 26
                 HoverBg {}
