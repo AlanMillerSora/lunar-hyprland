@@ -313,9 +313,10 @@ hl.bind(M .. " + F",       dsp.window.float())
 hl.bind(M .. " + P",       dsp.window.pseudo())
 hl.bind(M .. " + SPACE",   dsp.window.cycle_next())
 
--- альт-таб: следующее/предыдущее окно по кругу
+-- альт-таб: следующее окно по кругу
 hl.bind(M .. " + TAB",  dsp.window.cycle_next({ next = true }))
-hl.bind(M .. " + SHIFT + TAB", dsp.window.cycle_next({ next = false }))
+-- SHIFT+TAB открывает обзор столов (в дополнение к SUPER+O)
+hl.bind(M .. " + SHIFT + TAB", dsp.exec_cmd("qs ipc call overview toggle"))
 
 -- фокус: HJKL и стрелки
 hl.bind(M .. " + LEFT",  dsp.focus({ direction = "left" }))
