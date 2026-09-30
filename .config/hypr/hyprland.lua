@@ -385,7 +385,7 @@ hl.on("hyprland.start", function()
   -- sh -c '… || true': падение wl-paste не оставляет автозапуск «тихо мёртвым»
   hl.exec_cmd("sh -c 'wl-paste --type text  --watch cliphist store || true'")
   hl.exec_cmd("sh -c 'wl-paste --type image --watch cliphist store || true'")
-  hl.exec_cmd("/usr/lib/polkit-kde-authentication-agent-1")
+  -- polkit-агент — свой, в Quickshell (LunarPolkit.qml); светлый KDE не нужен.
   hl.exec_cmd("~/.config/hypr/scripts/eclipse-transparency.sh")
   -- курсор Bibata (тема применяется на лету)
   hl.exec_cmd("hyprctl setcursor Bibata-Modern-Ice 24")

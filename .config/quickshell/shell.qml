@@ -30,6 +30,7 @@ ShellRoot {
     LunarPower {}
     LunarAgent {}
     LunarOverview {}
+    LunarPolkit {}
     LunarSidebar {}
     LunarSidebarRight {}
     LunarOsd {}
