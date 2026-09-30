@@ -50,6 +50,8 @@ PanelWindow {
         var ic = item.icon || ""
         if (ic.indexOf("file://") === 0 || ic.indexOf("qrc:") === 0) return ic
         if (ic.indexOf("image://icon/") === 0) {
+            // значок с явным путём темы (Steam: «?path=…») провайдер резолвит сам
+            if (ic.indexOf("?") !== -1) return ic
             var n = ic.substring("image://icon/".length)
             return Quickshell.hasThemeIcon(n) ? ic : ""
         }
