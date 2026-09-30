@@ -373,21 +373,32 @@ PanelWindow {
                             model: notif.items
 
                             delegate: Rectangle {
+                                id: notifItem
                                 required property var modelData
+                                readonly property bool expanded: notif.expandedId === modelData.id
+
                                 width: notifList.width
                                 height: bodyCol.implicitHeight + 16
                                 radius: Theme.radius
-                                color: itemMouse.containsMouse
-                                    ? Theme.hover
-                                    : "transparent"
+                                color: itemMouse.containsMouse ? Theme.hover : "transparent"
                                 border.width: 1
-                                border.color: Theme.border
+                                border.color: notifItem.expanded ? Theme.accent : Theme.border
+
+                                // клик — раскрыть/свернуть; крестик убирает (ниже)
+                                MouseArea {
+                                    id: itemMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: notif.toggleExpand(modelData.id)
+                                }
 
                                 Column {
                                     id: bodyCol
                                     anchors.left: parent.left
                                     anchors.right: parent.right
-                                    anchors.margins: 10
+                                    anchors.leftMargin: 10
+                                    anchors.rightMargin: 28
                                     anchors.verticalCenter: parent.verticalCenter
                                     spacing: 2
 
@@ -405,7 +416,9 @@ PanelWindow {
                                         color: Theme.text
                                         font.family: Theme.fontFamily
                                         font.pixelSize: Theme.fontSize(14)
-                                        elide: Text.ElideRight
+                                        wrapMode: notifItem.expanded ? Text.Wrap : Text.NoWrap
+                                        elide: notifItem.expanded ? Text.ElideNone : Text.ElideRight
+                                        maximumLineCount: notifItem.expanded ? 6 : 1
                                     }
                                     Text {
                                         width: parent.width
@@ -414,16 +427,32 @@ PanelWindow {
                                         color: Theme.textDim
                                         font.family: Theme.fontFamily
                                         font.pixelSize: Theme.fontSize(13)
-                                        elide: Text.ElideRight
+                                        wrapMode: notifItem.expanded ? Text.Wrap : Text.NoWrap
+                                        elide: notifItem.expanded ? Text.ElideNone : Text.ElideRight
+                                        maximumLineCount: notifItem.expanded ? 100 : 1
                                     }
                                 }
 
-                                MouseArea {
-                                    id: itemMouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: notif.dismiss(modelData.id)
+                                // крестик — убрать уведомление (поверх клика-раскрытия)
+                                Text {
+                                    id: dismissBtn
+                                    anchors.top: parent.top
+                                    anchors.right: parent.right
+                                    anchors.topMargin: 5
+                                    anchors.rightMargin: 8
+                                    text: "\uf00d"
+                                    color: dismissMouse.containsMouse ? Theme.danger : Theme.textFaint
+                                    font.family: Theme.iconFont
+                                    font.pixelSize: Theme.fontSize(12)
+                                    z: 1
+                                    MouseArea {
+                                        id: dismissMouse
+                                        anchors.fill: parent
+                                        anchors.margins: -6
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: notif.dismiss(modelData.id)
+                                    }
                                 }
                             }
                         }
@@ -1344,6 +1373,11 @@ PanelWindow {
         property bool dnd: false
         property int hideBefore: -1   // «очистить»: прячем всё с id <= этого
         property var hiddenIds: ({})  // точечно скрытые (dismiss)
+        property var expandedId: -1   // развёрнутое уведомление (клик — раскрыть)
+
+        function toggleExpand(id) {
+            expandedId = (expandedId === id) ? -1 : id
+        }
 
         function rebuild() {
             var out = []
