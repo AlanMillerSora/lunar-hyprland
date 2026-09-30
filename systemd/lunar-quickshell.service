@@ -21,6 +21,10 @@ ExecStartPre=/usr/bin/sh -c 'test -S "$$XDG_RUNTIME_DIR/$$WAYLAND_DISPLAY"'
 # hicolor, и иконки приложений в Hub были цветными. Только для шелла —
 # остальные Qt-приложения продолжают брать тему через портал.
 Environment=QT_QPA_PLATFORMTHEME=gtk3
+# Светлый встроенный попап Quickshell о провале перезагрузки конфига не в
+# стиле риса и не читается — глушу его; об ошибке сообщаю уведомлением из
+# shell.qml (reloadFailed -> notify-send).
+Environment=QS_NO_RELOAD_POPUP=1
 ExecStart=/usr/bin/quickshell
 # Перезапуск только при сбое (с лимитом выше) — чистый выход не поднимаем.
 Restart=on-failure
