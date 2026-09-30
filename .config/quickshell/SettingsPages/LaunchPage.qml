@@ -6,7 +6,9 @@ import QtQuick.Layouts
 
 // ════════════════════════════════════════════════════════════════
 //  LaunchPage — сетка приложений Hub. Данные и запуск — из общего
-//  синглтона AppModel; поиск теперь единый (внизу сайдбара Hub).
+//  синглтона AppModel; поиск — единый (внизу сайдбара Hub).
+//  Крупные плитки: иконка 52 на подложке, имя в две строки, мягкая
+//  подсветка. Выбранная клавиатурой помечена акцентной чертой.
 // ════════════════════════════════════════════════════════════════
 Item {
     id: page
@@ -15,8 +17,8 @@ Item {
         anchors.fill: parent
         spacing: 14
 
-        // ── заголовок ───────────────────────────────────────────
-        Row {
+        // ── заголовок + обновление ──────────────────────────────
+        RowLayout {
             Layout.fillWidth: true
             height: 36
             spacing: 12
@@ -27,7 +29,7 @@ Item {
                 font.family: Theme.fontFamily
                 font.pixelSize: 18
                 font.letterSpacing: 3
-                anchors.verticalCenter: parent.verticalCenter
+                Layout.alignment: Qt.AlignVCenter
             }
 
             Text {
@@ -37,40 +39,26 @@ Item {
                 color: Theme.textFaint
                 font.family: Theme.fontFamily
                 font.pixelSize: 9
-                anchors.verticalCenter: parent.verticalCenter
+                Layout.alignment: Qt.AlignVCenter
             }
-        }
-
-        Rectangle {
-            Layout.fillWidth: true
-            height: 1
-            color: Theme.border
-        }
-
-        // ── обновить список ─────────────────────────────────────
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 8
 
             Item { Layout.fillWidth: true }
 
             Rectangle {
-                Layout.preferredWidth: 120
-                Layout.preferredHeight: 42
+                Layout.preferredWidth: 34
+                Layout.preferredHeight: 34
+                Layout.alignment: Qt.AlignVCenter
                 radius: Theme.radius
-                color: refreshMouse.containsMouse
-                    ? Theme.active
-                    : Theme.fill
+                color: refreshMouse.containsMouse ? Theme.active : "transparent"
                 border.width: 1
                 border.color: refreshMouse.containsMouse ? Theme.borderAccent : Theme.border
 
                 Text {
                     anchors.centerIn: parent
-                    text: "ОБНОВИТЬ"
+                    text: "\uf021"
                     color: refreshMouse.containsMouse ? Theme.accent : Theme.textDim
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 10
-                    font.letterSpacing: 1
+                    font.family: Theme.iconFont
+                    font.pixelSize: 13
                 }
 
                 MouseArea {
@@ -83,13 +71,19 @@ Item {
             }
         }
 
+        Rectangle {
+            Layout.fillWidth: true
+            height: 1
+            color: Theme.border
+        }
+
         // ── сетка приложений ────────────────────────────────────
         GridView {
             id: grid
             Layout.fillWidth: true
             Layout.fillHeight: true
-            cellWidth: 140
-            cellHeight: 104
+            cellWidth: 120
+            cellHeight: 132
             clip: true
             model: AppModel.apps
             currentIndex: 0
@@ -101,34 +95,48 @@ Item {
                 required property var modelData
                 required property int index
 
-                width: 132
-                height: 96
-                radius: Theme.radius
+                width: 112
+                height: 124
+                radius: Theme.radiusM
                 color: index === grid.currentIndex
                     ? Theme.active
-                    : (mouse.containsMouse ? Theme.hover : Theme.fill)
-                border.color: index === grid.currentIndex ? Theme.accent : Theme.border
-                border.width: 1
+                    : (hover.containsMouse ? Theme.hover : "transparent")
+                border.width: index === grid.currentIndex ? 1 : 0
+                border.color: Theme.accent
+                scale: hover.containsMouse ? 1.02 : 1
+                Behavior on scale { NumberAnimation { duration: Theme.animFast } }
+                Behavior on color { ColorAnimation { duration: Theme.animFast } }
+
+                // HUD-штрих у выбранной плитки
+                Rectangle {
+                    visible: index === grid.currentIndex
+                    width: 22
+                    height: 2
+                    color: Theme.accent2
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: 6
+                }
 
                 Column {
                     anchors.centerIn: parent
                     spacing: 8
 
                     Rectangle {
-                        width: 46
-                        height: 46
-                        radius: Theme.radius
-                        color: Theme.hoverStrong
+                        width: 68
+                        height: 68
+                        radius: 14
+                        color: Theme.fill
+                        border.width: hover.containsMouse ? 1 : 0
                         border.color: Theme.borderAccent
-                        border.width: 1
                         anchors.horizontalCenter: parent.horizontalCenter
 
                         Image {
                             id: appIcon
                             anchors.centerIn: parent
-                            width: 32
-                            height: 32
-                            sourceSize: Qt.size(64, 64)
+                            width: 52
+                            height: 52
+                            sourceSize: Qt.size(128, 128)
                             fillMode: Image.PreserveAspectFit
                             smooth: true
                             asynchronous: true
@@ -144,7 +152,7 @@ Item {
                             text: AppModel.initials(modelData.name)
                             color: Theme.text
                             font.family: Theme.fontFamily
-                            font.pixelSize: 14
+                            font.pixelSize: 18
                             font.bold: true
                         }
                     }
@@ -153,18 +161,20 @@ Item {
                         text: modelData.name
                         color: Theme.text
                         font.family: Theme.fontFamily
-                        font.pixelSize: 10
-                        width: 120
-                        elide: Text.ElideRight
+                        font.pixelSize: 11
+                        width: 102
                         horizontalAlignment: Text.AlignHCenter
+                        wrapMode: Text.WordWrap
+                        maximumLineCount: 2
+                        elide: Text.ElideRight
                     }
                 }
 
                 MouseArea {
-                    cursorShape: Qt.PointingHandCursor
-                    id: mouse
+                    id: hover
                     anchors.fill: parent
                     hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
                     onEntered: grid.currentIndex = index
                     onClicked: AppModel.launch(modelData)
                 }
