@@ -68,7 +68,7 @@ if sudo pacman -S --needed --noconfirm \
   git base-devel \
   $VULKAN_PKGS \
   hyprland hypridle \
-  quickshell \
+  quickshell qt6ct \
   xdg-desktop-portal-hyprland xdg-desktop-portal-gtk \
   kitty fastfetch chafa \
   zsh starship eza zsh-autosuggestions zsh-syntax-highlighting \
