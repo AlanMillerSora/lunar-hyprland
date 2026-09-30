@@ -1,3 +1,7 @@
+// Нужно для штатных меню приложений в трее (QMenu): без QApplication
+// Quickshell их не создаёт. Меню берут цвета из GTK-темы (юнит задаёт gtk3).
+//@ pragma UseQApplication
+
 import Quickshell
 import QtQuick
 
