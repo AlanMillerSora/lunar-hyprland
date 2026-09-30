@@ -1409,13 +1409,15 @@ PanelWindow {
         }
 
         function clear() {
-            var m = -1
-            for (var i = 0; i < raw.length; i++) if (raw[i].id > m) m = raw[i].id
-            hideBefore = m
+            // mako не умеет чистить историю (`dismiss --all` её не трогает),
+            // поэтому перезапускаю mako — история и активные обнуляются.
+            // id начнутся заново, так что фильтры сбрасываю.
+            hideBefore = -1
             hiddenIds = ({})
             expandedId = -1
             rebuild()
-            actionProc.command = ["bash", "-c", "makoctl dismiss --all"]
+            actionProc.command = ["bash", "-c",
+                "pkill -x mako; sleep 0.3; setsid mako >/dev/null 2>&1 &"]
             actionProc.running = true
         }
 
