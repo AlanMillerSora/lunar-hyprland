@@ -1,0 +1,57 @@
+# ═══ Lunar Eclipse · btop theme (единая палитра: {{preset}}) ═══
+# Сгенерировано eclipse-palette.py. Руками не правь.
+# Подключение: в btop.conf уже стоит color_theme = "lunar" — этот файл
+# и есть тема (btop берёт её из ~/.config/btop/themes/).
+
+theme[main_bg]="{{bg}}"
+theme[main_fg]="{{text}}"
+theme[title]="{{accent}}"
+theme[hi_fg]="{{accent}}"
+theme[selected_bg]="{{bgTrack}}"
+theme[selected_fg]="{{text}}"
+theme[inactive_fg]="{{textFaint}}"
+theme[graph_text]="{{textDim}}"
+theme[meter_bg]="{{bgTrack}}"
+theme[proc_misc]="{{accent}}"
+
+theme[cpu_box]="{{textDim}}"
+theme[mem_box]="{{textDim}}"
+theme[net_box]="{{textDim}}"
+theme[proc_box]="{{textDim}}"
+theme[div_line]="{{borderSolid}}"
+
+theme[temp_start]="{{textDim}}"
+theme[temp_mid]="{{barText}}"
+theme[temp_end]="{{danger}}"
+
+theme[cpu_start]="{{textDim}}"
+theme[cpu_mid]="{{barText}}"
+theme[cpu_end]="{{accent}}"
+
+theme[free_start]="{{textFaint}}"
+theme[free_mid]="{{textDim}}"
+theme[free_end]="{{barText}}"
+
+theme[cached_start]="{{textDim}}"
+theme[cached_mid]="{{barText}}"
+theme[cached_end]="{{accent}}"
+
+theme[available_start]="{{textDim}}"
+theme[available_mid]="{{barText}}"
+theme[available_end]="{{accent}}"
+
+theme[used_start]="{{textDim}}"
+theme[used_mid]="{{barText}}"
+theme[used_end]="{{accent}}"
+
+theme[download_start]="{{textDim}}"
+theme[download_mid]="{{barText}}"
+theme[download_end]="{{accent}}"
+
+theme[upload_start]="{{textDim}}"
+theme[upload_mid]="{{barText}}"
+theme[upload_end]="{{accent}}"
+
+theme[process_start]="{{textDim}}"
+theme[process_mid]="{{barText}}"
+theme[process_end]="{{accent}}"

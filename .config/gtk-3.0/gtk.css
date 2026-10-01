@@ -4,28 +4,10 @@
  *  Рамка 1px · радиус 6 · JetBrains Mono
  * ════════════════════════════════════════════════════════════════ */
 
-@define-color theme_bg_color #08090d;
-@define-color theme_base_color #08090d;
-@define-color theme_fg_color #e8ecf2;
-@define-color theme_text_color #e8ecf2;
-@define-color theme_selected_bg_color #1c2027;
-@define-color theme_selected_fg_color #e8ecf2;
-@define-color theme_unfocused_bg_color #08090d;
-@define-color theme_unfocused_base_color #08090d;
-@define-color theme_unfocused_fg_color #98a1ac;
-@define-color theme_unfocused_text_color #98a1ac;
-@define-color insensitive_fg_color #5b636d;
-@define-color borders #23262d;
-@define-color unfocused_borders #23262d;
-@define-color warning_color #ff003c;
-@define-color error_color #ff003c;
-@define-color success_color #00ff9c;
-
-@define-color lunar_dim #98a1ac;
-@define-color lunar_faint #5b636d;
-@define-color lunar_hover rgba(232, 237, 244, 0.06);
-@define-color lunar_active #1c2027;
-@define-color lunar_raised #12151b;
+/* Цвета — из единой палитры: файл lunar-colors.css пишет
+ * eclipse-palette.py (пресеты lunar/graphite/steel, Hub → Interface).
+ * Старый блок @define-color убран — он дублировал те же значения. */
+@import url("lunar-colors.css");
 
 * { outline-color: #e8edf4; outline-style: none; }
 

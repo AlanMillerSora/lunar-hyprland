@@ -6,40 +6,79 @@ import Quickshell.Io
 QtObject {
     id: theme
 
+    // ── палитра ──────────────────────────────────────────────
+    // Цвета приходят из ~/.cache/lunar/palette.json (генератор
+    // eclipse-palette.py, пресеты lunar/graphite/steel). Если файла нет —
+    // работают прежние значения риса: шелл не зависит от генератора.
+    property var palette: ({})
+
+    // hex → color; понимаю и #RRGGBBAA (палитра пишет альфу в конце),
+    // потому что Qt в такой строке ждёт #AARRGGBB и перепутает каналы
+    function hexColor(h, fallback) {
+        if (typeof h !== "string" || h.length < 7)
+            return fallback
+        var r = parseInt(h.substr(1, 2), 16) / 255
+        var g = parseInt(h.substr(3, 2), 16) / 255
+        var b = parseInt(h.substr(5, 2), 16) / 255
+        var a = h.length >= 9 ? parseInt(h.substr(7, 2), 16) / 255 : 1
+        return Qt.rgba(r, g, b, a)
+    }
+
     // холодный уголь вместо чистого чёрного: мягче на глаз, но всё ещё монохром.
     // Базовая альфа ниже единицы — поверх стекла Hyprland панели «дышат»,
     // а ползунок прозрачности по-прежнему множит её сверху (L43).
-    property color bg: Qt.rgba(8 / 255, 9 / 255, 13 / 255, 0.72 * interfaceOpacity)
-    property color bgPanel: Qt.rgba(12 / 255, 14 / 255, 19 / 255, 0.78 * interfaceOpacity)
-    property color bgCard: Qt.rgba(18 / 255, 21 / 255, 27 / 255, 0.62 * interfaceOpacity)
+    readonly property color _bgBase: hexColor(palette.bg, Qt.rgba(8 / 255, 9 / 255, 13 / 255, 1))
+    readonly property color _bgPanelBase: hexColor(palette.bgPanel, Qt.rgba(12 / 255, 14 / 255, 19 / 255, 1))
+    readonly property color _bgCardBase: hexColor(palette.bgCard, Qt.rgba(18 / 255, 21 / 255, 27 / 255, 1))
+    readonly property color _barPillBase: hexColor(palette.barPill, Qt.rgba(12 / 255, 14 / 255, 19 / 255, 1))
+    property color bg: Qt.rgba(_bgBase.r, _bgBase.g, _bgBase.b, 0.72 * interfaceOpacity)
+    property color bgPanel: Qt.rgba(_bgPanelBase.r, _bgPanelBase.g, _bgPanelBase.b, 0.78 * interfaceOpacity)
+    property color bgCard: Qt.rgba(_bgCardBase.r, _bgCardBase.g, _bgCardBase.b, 0.62 * interfaceOpacity)
 
     // рамки — не линии, а намёк: белый на малых альфах (раньше был #1e1e1e)
-    property color border: Qt.rgba(1, 1, 1, 0.08)
-    property color borderAccent: Qt.rgba(1, 1, 1, 0.16)
+    property color border: hexColor(palette.border, Qt.rgba(1, 1, 1, 0.08))
+    property color borderAccent: hexColor(palette.borderAccent, Qt.rgba(1, 1, 1, 0.16))
 
-    property color text: "#e8ecf2"
-    property color textDim: "#98a1ac"
-    property color textFaint: "#5b636d"
+    property color text: hexColor(palette.text, "#e8ecf2")
+    property color textDim: hexColor(palette.textDim, "#98a1ac")
+    property color textFaint: hexColor(palette.textFaint, "#5b636d")
 
-    property color accent: "#e8edf4"
-    property color accent2: "#e8edf4"
-    property color danger: "#ff003c"
-    property color ok: "#00ff9c"
+    property color accent: hexColor(palette.accent, "#e8edf4")
+    property color accent2: hexColor(palette.accent2, "#e8edf4")
+    property color danger: hexColor(palette.danger, "#ff003c")
+    property color ok: hexColor(palette.ok, "#00ff9c")
 
-    property color trackBg: "#181b21"
+    property color trackBg: hexColor(palette.bgTrack, "#181b21")
 
     // ── панель-бар: чуть мягче и холоднее общего текста (правил отдельно,
     //    чтобы не выцветал текст оверлеев) ──
-    property color barText: "#c9d2db"
-    property color barDim: "#98a1ac"
-    property color barFaint: "#5b636d"
-    property color barPill: Qt.rgba(12 / 255, 14 / 255, 19 / 255, 0.72 * interfaceOpacity)
+    property color barText: hexColor(palette.barText, "#c9d2db")
+    property color barDim: hexColor(palette.barDim, "#98a1ac")
+    property color barFaint: hexColor(palette.barFaint, "#5b636d")
+    property color barPill: Qt.rgba(_barPillBase.r, _barPillBase.g, _barPillBase.b, 0.72 * interfaceOpacity)
 
     // ── токены «ритма» интерфейса (Hub и панели) ──
     property color hover: Qt.rgba(accent.r, accent.g, accent.b, 0.07)        // наведение: строки, карточки
     property color hoverStrong: Qt.rgba(accent.r, accent.g, accent.b, 0.10)  // наведение: кнопки, чипы
     property color active: Qt.rgba(accent.r, accent.g, accent.b, 0.14)       // выбранное/включённое
     property color fill: Qt.rgba(text.r, text.g, text.b, 0.04)               // покой (фон карточек/строк)
+
+    // палитру переписывает генератор; watchChanges подхватит на лету
+    property FileView paletteFile: FileView {
+        path: Quickshell.env("HOME") + "/.cache/lunar/palette.json"
+        watchChanges: true
+        printErrors: false
+        onFileChanged: reload()
+        onLoaded: {
+            try {
+                var t = text()
+                theme.palette = (t && t.trim() !== "") ? JSON.parse(t) : ({})
+            } catch (e) {
+                console.warn("[Theme] палитра не прочитана: " + e)
+                theme.palette = ({})
+            }
+        }
+    }
 
     // Раньше стояло "JetBrains Mono" — такого семейства в системе нет
     // (ставится только JetBrainsMono Nerd Font), и Qt молча подставлял

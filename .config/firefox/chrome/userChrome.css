@@ -5,46 +5,46 @@
    ════════════════════════════════════════════════════════════════ */
 
 :root {
-  --lunar-bg:     #050505;
-  --lunar-bg2:    #0d0d0d;
+  --lunar-bg:     #08090d;
+  --lunar-bg2:    #12151b;
   --lunar-bg3:    #1a1a1a;
-  --lunar-fg:     #ffffff;
-  --lunar-dim:    #888888;
-  --lunar-faint:  #4a4a4a;
-  --lunar-border: #1e1e1e;
+  --lunar-fg:     #e8ecf2;
+  --lunar-dim:    #98a1ac;
+  --lunar-faint:  #5b636d;
+  --lunar-border: #23262d;
   --lunar-danger: #ff003c;
 
   /* перекрываем переменные Firefox */
-  --toolbar-bgcolor: #050505 !important;
-  --toolbar-color: #ffffff !important;
-  --toolbarbutton-icon-fill: #ffffff !important;
+  --toolbar-bgcolor: #08090d !important;
+  --toolbar-color: #e8ecf2 !important;
+  --toolbarbutton-icon-fill: #e8ecf2 !important;
   --toolbarbutton-hover-background: #1a1a1a !important;
   --toolbarbutton-active-background: #262626 !important;
-  --lwt-toolbarbutton-icon-fill: #ffffff !important;
-  --lwt-toolbarbutton-icon-fill-attention: #ffffff !important;
-  --lwt-accent-color: #050505 !important;
-  --lwt-text-color: #ffffff !important;
+  --lwt-toolbarbutton-icon-fill: #e8ecf2 !important;
+  --lwt-toolbarbutton-icon-fill-attention: #e8ecf2 !important;
+  --lwt-accent-color: #08090d !important;
+  --lwt-text-color: #e8ecf2 !important;
   --tab-selected-bgcolor: #1a1a1a !important;
-  --tab-selected-textcolor: #ffffff !important;
-  --tab-selected-outline-color: #ffffff !important;
-  --tab-hover-textcolor: #ffffff !important;
-  --tabs-border-color: #1e1e1e !important;
-  --newtab-background-color: #050505 !important;
-  --arrowpanel-background: #050505 !important;
-  --arrowpanel-color: #ffffff !important;
-  --arrowpanel-border-color: #1e1e1e !important;
-  --focus-outline-color: #ffffff !important;
-  --input-bgcolor: #0d0d0d !important;
-  --input-color: #ffffff !important;
-  --input-border-color: #1e1e1e !important;
-  --urlbar-box-bgcolor: #0d0d0d !important;
-  --urlbar-box-focus-bgcolor: #0d0d0d !important;
+  --tab-selected-textcolor: #e8ecf2 !important;
+  --tab-selected-outline-color: #e8ecf2 !important;
+  --tab-hover-textcolor: #e8ecf2 !important;
+  --tabs-border-color: #23262d !important;
+  --newtab-background-color: #08090d !important;
+  --arrowpanel-background: #08090d !important;
+  --arrowpanel-color: #e8ecf2 !important;
+  --arrowpanel-border-color: #23262d !important;
+  --focus-outline-color: #e8ecf2 !important;
+  --input-bgcolor: #12151b !important;
+  --input-color: #e8ecf2 !important;
+  --input-border-color: #23262d !important;
+  --urlbar-box-bgcolor: #12151b !important;
+  --urlbar-box-focus-bgcolor: #12151b !important;
   --urlbar-box-hover-bgcolor: #1a1a1a !important;
-  --urlbar-popup-url-color: #ffffff !important;
-  --autocomplete-popup-background: #050505 !important;
-  --autocomplete-popup-color: #ffffff !important;
+  --urlbar-popup-url-color: #e8ecf2 !important;
+  --autocomplete-popup-background: #08090d !important;
+  --autocomplete-popup-color: #e8ecf2 !important;
   --autocomplete-popup-highlight-background: #1a1a1a !important;
-  --autocomplete-popup-highlight-color: #ffffff !important;
+  --autocomplete-popup-highlight-color: #e8ecf2 !important;
 }
 
 /* ── всё монохромное: гасим цветные иконки ─────────────────────── */
@@ -96,7 +96,7 @@ menupopup image {
 }
 .tabbrowser-tab .tab-icon-image { filter: grayscale(1) !important; }
 .tab-close-button { color: var(--lunar-dim) !important; }
-.tab-close-button:hover { background: var(--lunar-danger) !important; color: #000 !important; }
+.tab-close-button:hover { background: var(--lunar-danger) !important; color: #050505 !important; }
 
 /* панель вкладок прячется, если вкладка одна */
 #TabsToolbar:has(#tabbrowser-tabs .tabbrowser-tab:only-of-type) {

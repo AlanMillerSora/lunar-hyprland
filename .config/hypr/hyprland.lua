@@ -15,14 +15,14 @@
 
 local COL = {
   -- Hyprland Lua: цвета в формате 0xAARRGGBB (альфа — ПЕРВЫЙ байт!)
-  bg        = "0xff000000",
-  surface   = "0xb70a0a0a",  -- rgba(10,10,10,0.72)
+  bg        = "0xff08090d",
+  surface   = "0xb708090d",  -- rgba(8,9,13,0.72)
   border    = "0x19ffffff",  -- rgba(255,255,255,0.10)
   glow      = "0x59ffffff",  -- rgba(255,255,255,0.35)
-  text      = "0xffe6e6e6",
-  dim       = "0xff6f6f6f",
-  accent    = "0xff7ea6ff",
-  accentDim = "0xffb7ccff",
+  text      = "0xffe8ecf2",
+  dim       = "0xff98a1ac",
+  accent    = "0xffe8edf4",
+  accentDim = "0xffc9d2db",
 }
 
 -- ─────────────────────────────── Окружение ────────────────────

@@ -1,0 +1,65 @@
+/* ═══ Lunar Eclipse · GTK — цвета из единой палитры ═══
+ * Сгенерировано eclipse-palette.py (пресет: {{preset}}). Руками не правь.
+ * Подключение: в gtk-3.0/gtk.css и gtk-4.0/gtk.css добавить
+ *   @import url("lunar-colors.css");
+ * (в начале файла; если хочется, чтобы палитра перебивала собственные
+ *  @define-color из gtk.css — замени ими старый блок @define-color).
+ */
+
+@define-color theme_bg_color {{bg}};
+@define-color theme_fg_color {{text}};
+@define-color theme_base_color {{bgPanel}};
+@define-color theme_text_color {{text}};
+@define-color theme_selected_bg_color {{bgTrack}};
+@define-color theme_selected_fg_color {{text}};
+@define-color borders {{borderSolid}};
+@define-color warning_color {{danger}};
+@define-color error_color {{danger}};
+@define-color success_color {{ok}};
+@define-color insensitive_fg_color {{textFaint}};
+@define-color insensitive_bg_color {{bgCard}};
+
+/* производные оттенки, которыми пользуется остальной gtk.css */
+@define-color lunar_dim {{textDim}};
+@define-color lunar_faint {{textFaint}};
+@define-color lunar_hover {{accentHoverRgba}};
+@define-color lunar_active {{bgTrack}};
+@define-color lunar_raised {{bgCard}};
+
+/* ── GTK4 / libadwaita (нужны приложениям GTK4; в GTK3 безвредны) ── */
+@define-color window_bg_color {{bg}};
+@define-color window_fg_color {{text}};
+@define-color view_bg_color {{bg}};
+@define-color view_fg_color {{text}};
+@define-color headerbar_bg_color {{bgPanel}};
+@define-color headerbar_fg_color {{text}};
+@define-color headerbar_border_color {{borderSolid}};
+@define-color headerbar_backdrop_color {{bg}};
+@define-color headerbar_shade_color {{shadeRgba}};
+@define-color sidebar_bg_color {{bgPanel}};
+@define-color sidebar_fg_color {{textDim}};
+@define-color sidebar_backdrop_color {{bg}};
+@define-color sidebar_shade_color {{shadeRgba}};
+@define-color secondary_sidebar_bg_color {{bgPanel}};
+@define-color secondary_sidebar_fg_color {{textDim}};
+@define-color card_bg_color {{bgCard}};
+@define-color card_fg_color {{text}};
+@define-color card_shade_color {{shadeRgba}};
+@define-color popover_bg_color {{bgCard}};
+@define-color popover_fg_color {{text}};
+@define-color dialog_bg_color {{bg}};
+@define-color dialog_fg_color {{text}};
+@define-color accent_bg_color {{accent}};
+@define-color accent_fg_color {{bg}};
+@define-color accent_color {{accent}};
+@define-color destructive_bg_color {{danger}};
+@define-color destructive_fg_color {{text}};
+@define-color destructive_color {{danger}};
+@define-color success_bg_color {{ok}};
+@define-color success_fg_color {{bg}};
+@define-color success_color {{ok}};
+@define-color warning_bg_color {{danger}};
+@define-color warning_fg_color {{text}};
+@define-color error_bg_color {{danger}};
+@define-color error_fg_color {{text}};
+@define-color dim_label {{textDim}};

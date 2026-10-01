@@ -1,0 +1,91 @@
+# ════════════════════════════════════════════════════════════════
+#  Lunar Eclipse · единая палитра
+#  Один источник цветов для всего риса. Отсюда цвета раскидывает
+#  генератор ~/.config/hypr/scripts/eclipse-palette.py по приложениям
+#  (kitty, GTK3/4, qt6ct, mako, btop, yazi) и пишет кэш для QML:
+#  ~/.cache/lunar/palette.json — его читает Theme.qml.
+#
+#  Как пользоваться:
+#    eclipse-palette.py                 — dry-run, показывает план
+#    eclipse-palette.py --apply         — разложить активный пресет
+#    eclipse-palette.py --preset steel --apply
+#
+#  active — имя пресета, который сейчас рулит. Меняешь одну строку —
+#  и весь рис перекрашивается после --apply (плюс перезапуск приложений).
+# ════════════════════════════════════════════════════════════════
+
+active = "lunar"
+
+
+# ── lunar: текущая холодная палитра риса ────────────────────────
+#  Угольный монохром без цветного акцента: «акцент» — это просто
+#  самый светлый оттенок. Рамки — белый на малой альфе, поэтому
+#  они корректно ложатся и на стекло, и на глухой фон.
+[presets.lunar]
+bg           = "#08090d"
+bgPanel      = "#0c0e13"
+bgCard       = "#12151b"
+bgTrack      = "#181b21"
+text         = "#e8ecf2"
+textDim      = "#98a1ac"
+textFaint    = "#5b636d"
+accent       = "#e8edf4"
+accent2      = "#e8edf4"
+danger       = "#ff003c"
+ok           = "#00ff9c"
+border       = "#ffffff14"
+borderAccent = "#ffffff29"
+barText      = "#c9d2db"
+barDim       = "#98a1ac"
+barFaint     = "#5b636d"
+barPill      = "#0c0e13"
+cursor       = "#e8ecf2"
+
+
+# ── graphite: по мотивам 43PR ───────────────────────────────────
+#  Чистый чёрный + белый, максимальный контраст, никаких холодных
+#  подтонов. Рамки — плотные серые (#151515), а не альфа.
+[presets.graphite]
+bg           = "#000000"
+bgPanel      = "#050505"
+bgCard       = "#0d0d0d"
+bgTrack      = "#161616"
+text         = "#ffffff"
+textDim      = "#c2c2c2"
+textFaint    = "#4a4a4a"
+accent       = "#ffffff"
+accent2      = "#ffffff"
+danger       = "#ff003c"
+ok           = "#00ff9c"
+border       = "#151515"
+borderAccent = "#2a2a2a"
+barText      = "#ffffff"
+barDim       = "#8b93a7"
+barFaint     = "#4a4a4a"
+barPill      = "#141414"
+cursor       = "#cccccc"
+
+
+# ── steel: холодный серо-синий с одним тихим акцентом ───────────
+#  Тот же характер, что lunar, но с настоящим цветом: синий акцент
+#  (#7aa2f7) на сине-серых поверхностях. Для тех, кому монохром
+#  кажется слишком стерильным.
+[presets.steel]
+bg           = "#070a10"
+bgPanel      = "#0b1018"
+bgCard       = "#111823"
+bgTrack      = "#17202e"
+text         = "#dfe7f2"
+textDim      = "#93a1b5"
+textFaint    = "#556377"
+accent       = "#7aa2f7"
+accent2      = "#b7ccff"
+danger       = "#ff4d6a"
+ok           = "#5ee6b5"
+border       = "#ffffff14"
+borderAccent = "#7aa2f733"
+barText      = "#cfd9e8"
+barDim       = "#93a1b5"
+barFaint     = "#556377"
+barPill      = "#0b1018"
+cursor       = "#dfe7f2"

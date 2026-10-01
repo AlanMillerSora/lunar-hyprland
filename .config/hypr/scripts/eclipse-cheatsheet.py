@@ -69,37 +69,37 @@ SECTIONS = [
     ]),
 ]
 
-# палитра Lunar Eclipse: фон #050505, текст #ffffff, dim #888888, рамки #1e1e1e
+# палитра Lunar Eclipse: фон #08090d, текст #e8ecf2, dim #98a1ac, рамки #23262d
 CSS = b"""
 window.background {
-    background: #050505;
-    border: 1px solid #ffffff;
+    background: #08090d;
+    border: 1px solid #e8ecf2;
     border-radius: 6px;
 }
 .title {
     font-family: "JetBrains Mono", monospace;
     font-size: 20px;
     font-weight: bold;
-    color: #ffffff;
+    color: #e8ecf2;
     letter-spacing: 4px;
 }
 .subtitle {
     font-family: "JetBrains Mono", monospace;
     font-size: 10px;
-    color: #4a4a4a;
+    color: #5b636d;
     letter-spacing: 2px;
 }
 .sec {
     font-family: "JetBrains Mono", monospace;
     font-size: 13px;
     font-weight: bold;
-    color: #ffffff;
+    color: #e8ecf2;
     letter-spacing: 2px;
 }
 .key {
     font-family: "JetBrains Mono", monospace;
     font-size: 12px;
-    color: #ffffff;
+    color: #e8ecf2;
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 6px;
@@ -108,16 +108,16 @@ window.background {
 .desc {
     font-family: "JetBrains Mono", monospace;
     font-size: 12px;
-    color: #888888;
+    color: #98a1ac;
 }
 .hint {
     font-family: "JetBrains Mono", monospace;
     font-size: 10px;
-    color: #4a4a4a;
+    color: #5b636d;
     letter-spacing: 1px;
 }
 .sep {
-    background: #1e1e1e;
+    background: #23262d;
 }
 """
 

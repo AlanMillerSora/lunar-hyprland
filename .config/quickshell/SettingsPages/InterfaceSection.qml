@@ -46,6 +46,28 @@ Item {
         }
     }
 
+    // ── палитра: пресеты цвета (генератор eclipse-palette.py) ──
+    // Меняю цвета всего риса разом: генератор пишет palette.json (его читает
+    // Theme.qml) и файлы для kitty/GTK/qt6ct/mako/btop/yazi. Kitty и mako
+    // перечитывают конфиг сразу, остальные — при следующем запуске.
+    property bool paletteBusy: false
+
+    Process {
+        id: paletteProc
+        running: false
+        onExited: (exitCode) => page.paletteBusy = false
+    }
+
+    function applyPalette(name) {
+        if (paletteBusy)
+            return
+        paletteBusy = true
+        paletteProc.command = ["bash", "-c",
+            "$HOME/.config/hypr/scripts/eclipse-palette.py --preset " + name + " --apply >/dev/null && "
+            + "(pidof kitty >/dev/null && kill -USR1 $(pidof kitty); makoctl reload 2>/dev/null); true"]
+        paletteProc.running = true
+    }
+
     // M47: uiState может загрузиться позже blurGet — тогда ползунок блюра
     // показывал бы значение из Hyprland, а не сохранённое. Подхватываем Theme.
     Connections {
@@ -391,6 +413,82 @@ Item {
                     color: Theme.text
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(12)
+                }
+            }
+
+            // ── палитра: пресеты цвета всего риса ──
+            Rectangle {
+                width: parent.width
+                height: 1
+                color: Theme.border
+            }
+
+            Text {
+                text: "ПАЛИТРА"
+                color: Theme.text
+                font.family: page.mono
+                font.pixelSize: Theme.fontTitle
+                font.bold: true
+                font.letterSpacing: 3
+            }
+
+            Column {
+                width: parent.width
+                spacing: Theme.space2
+
+                Row {
+                    spacing: Theme.space2
+
+                    Repeater {
+                        model: [
+                            { id: "lunar", name: "LUNAR" },
+                            { id: "graphite", name: "GRAPHITE" },
+                            { id: "steel", name: "STEEL" }
+                        ]
+
+                        delegate: Rectangle {
+                            required property var modelData
+                            readonly property bool cur: Theme.palette.preset === modelData.id
+                            width: palLabel.implicitWidth + 28
+                            height: Theme.rowHCompact
+                            radius: Theme.radiusM
+                            color: cur ? Theme.active
+                                : (palMouse.containsMouse ? Theme.hoverStrong : Theme.fill)
+                            border.width: cur ? 1 : 0
+                            border.color: Theme.accent
+
+                            Text {
+                                id: palLabel
+                                anchors.centerIn: parent
+                                text: modelData.name
+                                color: cur ? Theme.accent : Theme.textDim
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSmall
+                                font.bold: cur
+                                font.letterSpacing: 2
+                            }
+
+                            MouseArea {
+                                id: palMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: page.applyPalette(modelData.id)
+                            }
+                        }
+                    }
+                }
+
+                Text {
+                    width: parent.width
+                    text: Theme.palette.preset
+                        ? "текущая: " + Theme.palette.preset
+                          + " · цвета идут в шелл, kitty, GTK, qt6ct, mako, btop, yazi"
+                        : "пресет не выбран — работает палитра по умолчанию"
+                    color: Theme.textFaint
+                    font.family: page.mono
+                    font.pixelSize: 10
+                    wrapMode: Text.WordWrap
                 }
             }
 

@@ -11,14 +11,14 @@ Rectangle {
     id: root
     width: Screen.width
     height: Screen.height
-    color: "#050505"
+    color: "#08090d"
 
     // ── палитра (как Theme.qml риса) ──
-    readonly property color cText:   "#ffffff"
-    readonly property color cDim:    "#888888"
-    readonly property color cFaint:  "#4a4a4a"
+    readonly property color cText:   "#e8ecf2"
+    readonly property color cDim:    "#98a1ac"
+    readonly property color cFaint:  "#5b636d"
     readonly property color cDanger: "#ff003c"
-    readonly property color cField:  "#0d0d0d"
+    readonly property color cField:  "#12151b"
 
     // масштаб под высоту экрана: за 1080p принят 1.0
     readonly property real k: Math.min(width / 1920, height / 1080)
@@ -204,7 +204,7 @@ Rectangle {
                     borderColor: cFaint
                     focusColor: cText
                     hoverColor: cText
-                    menuColor: "#0d0d0d"
+                    menuColor: "#12151b"
                     textColor: cText
                     arrowColor: "transparent"
                     arrowIcon: "assets/chevron.png"
@@ -294,7 +294,7 @@ Rectangle {
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: "ВОЙТИ"
-                    color: loginArea.containsMouse ? "#050505" : cText
+                    color: loginArea.containsMouse ? "#08090d" : cText
                     font.family: fBold.name
                     font.pixelSize: Math.round(15 * k)
                     font.letterSpacing: Math.round(3 * k)
@@ -302,7 +302,7 @@ Rectangle {
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: "→"
-                    color: loginArea.containsMouse ? "#050505" : cText
+                    color: loginArea.containsMouse ? "#08090d" : cText
                     font.family: fReg.name
                     font.pixelSize: Math.round(17 * k)
                 }
@@ -339,7 +339,7 @@ Rectangle {
                 borderColor: cFaint
                 focusColor: cText
                 hoverColor: cText
-                menuColor: "#0d0d0d"
+                menuColor: "#12151b"
                 textColor: cText
                 arrowColor: "transparent"
                 arrowIcon: "assets/chevron.png"

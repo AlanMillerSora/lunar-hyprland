@@ -1,0 +1,143 @@
+# ════════════════════════════════════════════════════════════════
+#  yazi — flavor Lunar Eclipse (единая палитра: {{preset}})
+#  Сгенерировано eclipse-palette.py. Руками не правь.
+#  Подключение: в ~/.config/yazi/yazi.toml добавить
+#    [flavor]
+#    dark = "lunar"
+#  yazi сам подхватит flavors/lunar.yazi/flavor.toml и наложит его
+#  поверх дефолтной темы (основной theme.toml не трогаем).
+# ════════════════════════════════════════════════════════════════
+
+[mgr]
+cwd = { fg = "{{text}}", bold = true }
+find_keyword = { fg = "{{accent}}", bold = true, underline = true }
+find_position = { fg = "{{textDim}}" }
+symlink_target = { fg = "{{textDim}}", italic = true }
+
+marker_copied   = { fg = "{{textDim}}", bg = "{{textDim}}" }
+marker_cut      = { fg = "{{accent}}", bg = "{{accent}}" }
+marker_marked   = { fg = "{{accent}}", bg = "{{accent}}" }
+marker_selected = { fg = "{{accent}}", bg = "{{accent}}" }
+marker_symbol   = "│"
+
+count_copied   = { fg = "{{bg}}", bg = "{{textDim}}" }
+count_cut      = { fg = "{{bg}}", bg = "{{accent}}" }
+count_selected = { fg = "{{bg}}", bg = "{{accent}}" }
+
+border_symbol = "│"
+border_style  = { fg = "{{borderSolid}}" }
+
+[tabs]
+active   = { fg = "{{bg}}", bg = "{{accent}}", bold = true }
+inactive = { fg = "{{textDim}}", bg = "{{bgTrack}}" }
+sep_inner = { open = "", close = "" }
+sep_outer = { open = "", close = "" }
+
+[mode]
+normal_main = { fg = "{{bg}}", bg = "{{accent}}", bold = true }
+normal_alt  = { fg = "{{text}}", bg = "{{bgTrack}}" }
+select_main = { fg = "{{bg}}", bg = "{{accent}}", bold = true }
+select_alt  = { fg = "{{text}}", bg = "{{bgTrack}}" }
+unset_main  = { fg = "{{bg}}", bg = "{{textDim}}", bold = true }
+unset_alt   = { fg = "{{textDim}}", bg = "{{bgTrack}}" }
+
+[indicator]
+parent  = { fg = "{{textDim}}" }
+current = { fg = "{{text}}", bold = true }
+preview = { underline = true }
+padding = { open = "", close = "" }
+
+[status]
+perm_sep   = { fg = "{{textFaint}}" }
+perm_type  = { fg = "{{text}}" }
+perm_read  = { fg = "{{textDim}}" }
+perm_write = { fg = "{{textDim}}" }
+perm_exec  = { fg = "{{textDim}}" }
+progress_label  = { fg = "{{text}}", bold = true }
+progress_normal = { fg = "{{text}}", bg = "{{bg}}" }
+progress_error  = { fg = "{{bg}}", bg = "{{danger}}" }
+sep_left  = { open = "", close = "" }
+sep_right = { open = "", close = "" }
+
+[which]
+border          = { fg = "{{borderSolid}}" }
+cols            = 3
+cand            = { fg = "{{text}}" }
+rest            = { fg = "{{textDim}}" }
+desc            = { fg = "{{textDim}}" }
+separator       = "  "
+separator_style = { fg = "{{textFaint}}" }
+
+[confirm]
+border     = { fg = "{{borderSolid}}" }
+title      = { fg = "{{text}}" }
+btn_yes    = { reversed = true }
+btn_labels = [ "  [Y]es  ", "  (N)o  " ]
+
+[notify]
+title_info  = { fg = "{{text}}" }
+title_warn  = { fg = "{{textDim}}" }
+title_error = { fg = "{{danger}}" }
+icon_info   = ""
+icon_warn   = ""
+icon_error  = ""
+
+[pick]
+border   = { fg = "{{borderSolid}}" }
+active   = { fg = "{{text}}", bold = true }
+inactive = {}
+
+[input]
+border   = { fg = "{{borderSolid}}" }
+selected = { reversed = true }
+
+[cmp]
+border   = { fg = "{{borderSolid}}" }
+active   = { reversed = true }
+inactive = {}
+icon_file    = ""
+icon_folder  = ""
+icon_command = ""
+
+[tasks]
+border  = { fg = "{{borderSolid}}" }
+hovered = { fg = "{{accent}}", bold = true }
+
+[help]
+border  = { fg = "{{borderSolid}}" }
+chord   = { fg = "{{text}}" }
+hovered = { reversed = true, bold = true }
+
+[fd]
+title    = "поиск по имени (fd):"
+position = { at = "top-center", y = 2, w = 80, h = 3 }
+
+[rg]
+title    = "поиск по содержимому (rg):"
+position = { at = "top-center", y = 2, w = 80, h = 3 }
+
+[filetype]
+rules = [
+	{ mime = "**/image/*", fg = "{{textDim}}" },
+	{ mime = "**/{audio,video}/*", fg = "{{textDim}}" },
+	{ mime = "**/application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", fg = "{{textDim}}" },
+	{ mime = "**/application/{pdf,doc,rtf}", fg = "{{textDim}}" },
+	{ mime = "vfs/{absent,stale}", fg = "{{textFaint}}" },
+	{ url = "*", is = "orphan", bg = "{{danger}}" },
+	{ url = "*", is = "exec", fg = "{{accent}}" },
+	{ url = "*", is = "dummy", bg = "{{danger}}" },
+	{ url = "*/", is = "dummy", bg = "{{danger}}" },
+	{ url = "*/", fg = "{{accent}}" },
+]
+
+# Иконки — чистый текст, без цветных глифов (только стрелки папок)
+[icon]
+globs = []
+dirs  = []
+files = []
+exts  = []
+conds = [
+	{ if = "dir & hovered", text = "▸", fg = "{{accent}}" },
+	{ if = "dir",           text = "▸", fg = "{{textDim}}" },
+	{ if = "!dir",          text = "",  fg = "{{textDim}}" },
+]

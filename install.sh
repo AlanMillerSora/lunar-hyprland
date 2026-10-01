@@ -551,6 +551,18 @@ done || true
 mkdir -p "$HOME/.config"
 cp -r "$REPO/.config/." "$HOME/.config/"
 chmod +x "$HOME"/.config/hypr/scripts/* 2>/dev/null || true
+
+# ── единая палитра: цвета приложений из palette.toml ───────────
+# Генератор читает ~/.config/lunar/palette.toml + шаблоны и раскладывает
+# цвета в kitty/GTK/qt6ct/mako/btop/yazi и в ~/.cache/lunar/palette.json
+# (его читает Theme.qml). Без python3 остаётся палитра по умолчанию.
+if command -v python3 >/dev/null 2>&1; then
+  if python3 "$HOME/.config/hypr/scripts/eclipse-palette.py" --apply >/dev/null 2>&1; then
+    ok "палитра: цвета разложены по приложениям"
+  else
+    warn "палитра: генератор не отработал — останется палитра по умолчанию"
+  fi
+fi
 ok "конфиги обновлены"
 
 # Hyprland: сразу проверяю, что новый конфиг принят (если работаем в живой сессии)

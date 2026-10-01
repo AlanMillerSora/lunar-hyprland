@@ -3,43 +3,10 @@
  *  (GTK4-приложения под HUD-палитру риса)
  * ════════════════════════════════════════════════════════════════ */
 
-@define-color window_bg_color #08090d;
-@define-color window_fg_color #e8ecf2;
-@define-color view_bg_color #08090d;
-@define-color view_fg_color #e8ecf2;
-@define-color headerbar_bg_color #0c0e13;
-@define-color headerbar_fg_color #e8ecf2;
-@define-color headerbar_border_color #23262d;
-@define-color headerbar_backdrop_color #08090d;
-@define-color headerbar_shade_color rgba(8, 9, 13, 0.4);
-@define-color sidebar_bg_color #0c0e13;
-@define-color sidebar_fg_color #98a1ac;
-@define-color sidebar_backdrop_color #08090d;
-@define-color sidebar_shade_color rgba(8, 9, 13, 0.4);
-@define-color secondary_sidebar_bg_color #0c0e13;
-@define-color secondary_sidebar_fg_color #98a1ac;
-@define-color card_bg_color #12151b;
-@define-color card_fg_color #e8ecf2;
-@define-color card_shade_color rgba(8, 9, 13, 0.4);
-@define-color popover_bg_color #12151b;
-@define-color popover_fg_color #e8ecf2;
-@define-color dialog_bg_color #08090d;
-@define-color dialog_fg_color #e8ecf2;
-@define-color accent_bg_color #e8edf4;
-@define-color accent_fg_color #08090d;
-@define-color accent_color #e8edf4;
-@define-color destructive_bg_color #ff003c;
-@define-color destructive_fg_color #e8ecf2;
-@define-color destructive_color #ff003c;
-@define-color success_bg_color #00ff9c;
-@define-color success_fg_color #08090d;
-@define-color success_color #00ff9c;
-@define-color warning_bg_color #ff003c;
-@define-color warning_fg_color #e8ecf2;
-@define-color error_bg_color #ff003c;
-@define-color error_fg_color #e8ecf2;
-@define-color borders #23262d;
-@define-color dim_label #98a1ac;
+/* Цвета — из единой палитры: файл lunar-colors.css пишет
+ * eclipse-palette.py (пресеты lunar/graphite/steel, Hub → Interface).
+ * Старый блок @define-color убран — он дублировал те же значения. */
+@import url("lunar-colors.css");
 
 window {
   font-family: "JetBrains Mono", monospace;

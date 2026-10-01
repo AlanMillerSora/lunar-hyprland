@@ -1,0 +1,21 @@
+{
+  "preset": "{{preset}}",
+  "bg": "{{bg}}",
+  "bgPanel": "{{bgPanel}}",
+  "bgCard": "{{bgCard}}",
+  "bgTrack": "{{bgTrack}}",
+  "text": "{{text}}",
+  "textDim": "{{textDim}}",
+  "textFaint": "{{textFaint}}",
+  "accent": "{{accent}}",
+  "accent2": "{{accent2}}",
+  "danger": "{{danger}}",
+  "ok": "{{ok}}",
+  "border": "{{border}}",
+  "borderAccent": "{{borderAccent}}",
+  "barText": "{{barText}}",
+  "barDim": "{{barDim}}",
+  "barFaint": "{{barFaint}}",
+  "barPill": "{{barPill}}",
+  "cursor": "{{cursor}}"
+}

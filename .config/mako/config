@@ -25,6 +25,10 @@ max-history=20
 
 progress-color=over #e8edf4FF
 
+# цвета — из единой палитры (eclipse-palette.py).
+# include обязан идти до первой секции — после [urgency=…] mako конфиг не парсит.
+include=~/.config/mako/colors.conf
+
 [urgency=low]
 background-color=#0c0e1399
 border-color=#98a1acFF

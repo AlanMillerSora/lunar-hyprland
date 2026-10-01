@@ -17,7 +17,7 @@ GLib.set_prgname("eclipse-askpass")
 
 CSS = b"""
 window.background {
-    background: rgba(10, 10, 10, 0.97);
+    background: rgba(8, 9, 13, 0.97);
     border: 1px solid rgba(255, 255, 255, 0.10);
     border-radius: 16px;
 }
@@ -29,20 +29,20 @@ button, button:hover, button:active, button:focus {
 label.prompt {
     font-family: "Inter", sans-serif;
     font-size: 13px;
-    color: #e6e6e6;
+    color: #e8ecf2;
     padding: 16px 18px 4px 18px;
 }
 entry {
     font-family: "JetBrains Mono", monospace;
     font-size: 13px;
-    color: #ffffff;
+    color: #e8ecf2;
     background: rgba(255, 255, 255, 0.06);
     border: none;
     border-radius: 10px;
     padding: 9px 12px;
     margin: 6px 18px;
 }
-entry:focus { box-shadow: inset 0 0 0 1px rgba(126, 166, 255, 0.55); }
+entry:focus { box-shadow: inset 0 0 0 1px rgba(232, 237, 244, 0.55); }
 button {
     font-family: "Inter", sans-serif;
     font-size: 12px;
@@ -53,9 +53,9 @@ button {
     padding: 7px 16px;
     margin: 8px 4px 14px 4px;
 }
-button:hover { background: rgba(255, 255, 255, 0.12); color: #ffffff; }
-button.suggested { background: rgba(126, 166, 255, 0.20); color: #b7ccff; }
-button.suggested:hover { background: rgba(126, 166, 255, 0.32); color: #ffffff; }
+button:hover { background: rgba(255, 255, 255, 0.12); color: #e8ecf2; }
+button.suggested { background: rgba(232, 237, 244, 0.20); color: #c9d2db; }
+button.suggested:hover { background: rgba(232, 237, 244, 0.32); color: #e8ecf2; }
 """
 
 

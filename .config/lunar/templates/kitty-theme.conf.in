@@ -1,0 +1,38 @@
+# ═══ kitty · Lunar Eclipse — цвета из единой палитры ═══
+# Сгенерировано eclipse-palette.py (пресет: {{preset}}). Руками не правь —
+# меняй palette.toml и перезапускай генератор.
+# Подключение: в ~/.config/kitty/kitty.conf добавить строку
+#   include lunar-theme.conf
+
+foreground            {{text}}
+background            {{bgPanel}}
+background_opacity    0.78
+dynamic_background_opacity no
+selection_background  {{selectionBg}}
+selection_foreground  {{text}}
+url_color             {{accent}}
+cursor                {{cursor}}
+
+# 16 цветов — монохром: градации от фона к тексту, danger/ok отдельно.
+color0  {{color0}}
+color1  {{color1}}
+color2  {{color2}}
+color3  {{color3}}
+color4  {{color4}}
+color5  {{color5}}
+color6  {{color6}}
+color7  {{color7}}
+color8  {{color8}}
+color9  {{color9}}
+color10 {{color10}}
+color11 {{color11}}
+color12 {{color12}}
+color13 {{color13}}
+color14 {{color14}}
+color15 {{color15}}
+
+# вкладки
+active_tab_foreground   {{bg}}
+active_tab_background   {{accent}}
+inactive_tab_foreground {{textDim}}
+inactive_tab_background {{bgPanel}}

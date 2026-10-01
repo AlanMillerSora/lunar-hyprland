@@ -1,0 +1,21 @@
+# ═══ mako · Lunar Eclipse — цвета из единой палитры ═══
+# Сгенерировано eclipse-palette.py (пресет: {{preset}}). Руками не правь.
+# Подключение: в ~/.config/mako/config добавить строку
+#   include=~/.config/mako/colors.conf
+
+background-color={{makoBg}}
+text-color={{makoText}}
+border-color={{makoBorder}}
+progress-color=over {{makoProgress}}
+
+[urgency=low]
+background-color={{makoLowBg}}
+border-color={{makoLowBorder}}
+
+[urgency=normal]
+background-color={{makoBg}}
+border-color={{makoBorder}}
+
+[urgency=critical]
+background-color={{makoCritBg}}
+border-color={{makoCritBorder}}
