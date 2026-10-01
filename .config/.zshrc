@@ -78,3 +78,15 @@ ZSH_HIGHLIGHT_STYLES[alias]='fg=white'
 ZSH_HIGHLIGHT_STYLES[path]='fg=245'
 ZSH_HIGHLIGHT_STYLES[comment]='fg=240'
 ZSH_HIGHLIGHT_STYLES[unknown-token]='fg=245'
+
+# ── OpenCode под предохранителем ─────────────────────────────────
+# Сессия живёт сутками (scratchpad, SUPER+S) и может раздуться в десятки
+# гигабайт — раньше это валило всю систему в OOM. Запускаю opencode в
+# отдельном scope: MemoryHigh мягко тормозит, MemoryMax убивает ТОЛЬКО
+# саму сессию, а система (браузер, игры, Discord) остаётся живой.
+# Лимиты (ГБ) поднимай/опускай под себя; 0 у MemorySwapMax = без swap.
+opencode() {
+  systemd-run --user --scope --collect \
+    -p MemoryHigh=8G -p MemoryMax=12G -p MemorySwapMax=2G \
+    -- /usr/bin/opencode "$@"
+}
