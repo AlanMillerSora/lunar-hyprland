@@ -146,7 +146,7 @@ QtObject {
     property int barRadius: 8
 
     // мягкая реакция на наведение — масштаб глифа, без переверстки
-    property real hoverGrow: 1.14
+    property real hoverGrow: 1.25
 
     // сколько значков трея видно в панели (остальные — в списке «+N»)
     property int trayVisible: 2
