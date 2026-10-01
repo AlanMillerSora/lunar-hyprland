@@ -513,7 +513,7 @@ FloatingWindow {
                         anchors.fill: parent
                         visible: root.query.trim() !== ""
                         color: Theme.alpha(Theme.bgPanel, 0.97)
-                        radius: 6
+                        radius: Theme.radiusL
                         border.color: Theme.border
                         border.width: 1
                         clip: true
@@ -540,7 +540,7 @@ FloatingWindow {
                                     required property int index
                                     width: parent.width
                                     height: 30
-                                    radius: 4
+                                    radius: Theme.radius
                                     color: index === root.resultIndex
                                         ? Theme.active
                                         : (rowMouse.containsMouse ? Theme.hover : "transparent")

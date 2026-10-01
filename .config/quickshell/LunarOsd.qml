@@ -88,7 +88,7 @@ PanelWindow {
         anchors.topMargin: 54
         width: 340
         height: 54
-        radius: Theme.radiusM
+        radius: Theme.radiusL
         color: Theme.bg
         border.color: Theme.border
         border.width: 1
