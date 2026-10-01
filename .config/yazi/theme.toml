@@ -1,94 +1,94 @@
 # ════════════════════════════════════════════════════════════════
 #  yazi — тема Lunar Eclipse (холодный монохром, как вся система)
-#  фон #08090d, текст #e8ecf2, dim #98a1ac, рамки #25272d, danger #ff003c
+#  фон #070a10, текст #dfe7f2, dim #93a1b5, рамки #242a34, danger #ff4d6a
 #  Переопределяем только цвета поверх дефолтов yazi.
 # ════════════════════════════════════════════════════════════════
 
 [mgr]
-cwd = { fg = "#e8ecf2", bold = true }
-find_keyword = { fg = "#e8edf4", bold = true, underline = true }
-find_position = { fg = "#98a1ac" }
-symlink_target = { fg = "#98a1ac", italic = true }
+cwd = { fg = "#dfe7f2", bold = true }
+find_keyword = { fg = "#7aa2f7", bold = true, underline = true }
+find_position = { fg = "#93a1b5" }
+symlink_target = { fg = "#93a1b5", italic = true }
 
-marker_copied   = { fg = "#98a1ac", bg = "#98a1ac" }
-marker_cut      = { fg = "#e8edf4", bg = "#e8edf4" }
-marker_marked   = { fg = "#e8edf4", bg = "#e8edf4" }
-marker_selected = { fg = "#e8edf4", bg = "#e8edf4" }
+marker_copied   = { fg = "#93a1b5", bg = "#93a1b5" }
+marker_cut      = { fg = "#7aa2f7", bg = "#7aa2f7" }
+marker_marked   = { fg = "#7aa2f7", bg = "#7aa2f7" }
+marker_selected = { fg = "#7aa2f7", bg = "#7aa2f7" }
 marker_symbol   = "│"
 
-count_copied   = { fg = "#08090d", bg = "#98a1ac" }
-count_cut      = { fg = "#08090d", bg = "#e8edf4" }
-count_selected = { fg = "#08090d", bg = "#e8edf4" }
+count_copied   = { fg = "#070a10", bg = "#93a1b5" }
+count_cut      = { fg = "#070a10", bg = "#7aa2f7" }
+count_selected = { fg = "#070a10", bg = "#7aa2f7" }
 
 border_symbol = "│"
-border_style  = { fg = "#25272d" }
+border_style  = { fg = "#242a34" }
 
 [tabs]
-active   = { fg = "#08090d", bg = "#e8edf4", bold = true }
-inactive = { fg = "#98a1ac", bg = "#181b21" }
+active   = { fg = "#070a10", bg = "#7aa2f7", bold = true }
+inactive = { fg = "#93a1b5", bg = "#17202e" }
 sep_inner = { open = "", close = "" }
 sep_outer = { open = "", close = "" }
 
 [mode]
-normal_main = { fg = "#08090d", bg = "#e8edf4", bold = true }
-normal_alt  = { fg = "#e8ecf2", bg = "#181b21" }
-select_main = { fg = "#08090d", bg = "#e8edf4", bold = true }
-select_alt  = { fg = "#e8ecf2", bg = "#181b21" }
-unset_main  = { fg = "#08090d", bg = "#98a1ac", bold = true }
-unset_alt   = { fg = "#98a1ac", bg = "#181b21" }
+normal_main = { fg = "#070a10", bg = "#7aa2f7", bold = true }
+normal_alt  = { fg = "#dfe7f2", bg = "#17202e" }
+select_main = { fg = "#070a10", bg = "#7aa2f7", bold = true }
+select_alt  = { fg = "#dfe7f2", bg = "#17202e" }
+unset_main  = { fg = "#070a10", bg = "#93a1b5", bold = true }
+unset_alt   = { fg = "#93a1b5", bg = "#17202e" }
 
 [indicator]
-parent  = { fg = "#98a1ac" }
-current = { fg = "#e8ecf2", bold = true }
+parent  = { fg = "#93a1b5" }
+current = { fg = "#dfe7f2", bold = true }
 preview = { underline = true }
 padding = { open = "", close = "" }
 
 [status]
-perm_sep   = { fg = "#5b636d" }
-perm_type  = { fg = "#e8ecf2" }
-perm_read  = { fg = "#98a1ac" }
-perm_write = { fg = "#98a1ac" }
-perm_exec  = { fg = "#98a1ac" }
-progress_label  = { fg = "#e8ecf2", bold = true }
-progress_normal = { fg = "#e8ecf2", bg = "#08090d" }
-progress_error  = { fg = "#08090d", bg = "#ff003c" }
+perm_sep   = { fg = "#556377" }
+perm_type  = { fg = "#dfe7f2" }
+perm_read  = { fg = "#93a1b5" }
+perm_write = { fg = "#93a1b5" }
+perm_exec  = { fg = "#93a1b5" }
+progress_label  = { fg = "#dfe7f2", bold = true }
+progress_normal = { fg = "#dfe7f2", bg = "#070a10" }
+progress_error  = { fg = "#070a10", bg = "#ff4d6a" }
 sep_left  = { open = "", close = "" }
 sep_right = { open = "", close = "" }
 
 [which]
-border          = { fg = "#25272d" }
+border          = { fg = "#242a34" }
 cols            = 3
-cand            = { fg = "#e8ecf2" }
-rest            = { fg = "#98a1ac" }
-desc            = { fg = "#98a1ac" }
+cand            = { fg = "#dfe7f2" }
+rest            = { fg = "#93a1b5" }
+desc            = { fg = "#93a1b5" }
 separator       = "  "
-separator_style = { fg = "#5b636d" }
+separator_style = { fg = "#556377" }
 
 [confirm]
-border     = { fg = "#25272d" }
-title      = { fg = "#e8ecf2" }
+border     = { fg = "#242a34" }
+title      = { fg = "#dfe7f2" }
 btn_yes    = { reversed = true }
 btn_labels = [ "  [Y]es  ", "  (N)o  " ]
 
 [notify]
-title_info  = { fg = "#e8ecf2" }
-title_warn  = { fg = "#98a1ac" }
-title_error = { fg = "#ff003c" }
+title_info  = { fg = "#dfe7f2" }
+title_warn  = { fg = "#93a1b5" }
+title_error = { fg = "#ff4d6a" }
 icon_info   = ""
 icon_warn   = ""
 icon_error  = ""
 
 [pick]
-border   = { fg = "#25272d" }
-active   = { fg = "#e8ecf2", bold = true }
+border   = { fg = "#242a34" }
+active   = { fg = "#dfe7f2", bold = true }
 inactive = {}
 
 [input]
-border   = { fg = "#25272d" }
+border   = { fg = "#242a34" }
 selected = { reversed = true }
 
 [cmp]
-border   = { fg = "#25272d" }
+border   = { fg = "#242a34" }
 active   = { reversed = true }
 inactive = {}
 icon_file    = ""
@@ -96,12 +96,12 @@ icon_folder  = ""
 icon_command = ""
 
 [tasks]
-border  = { fg = "#25272d" }
-hovered = { fg = "#e8edf4", bold = true }
+border  = { fg = "#242a34" }
+hovered = { fg = "#7aa2f7", bold = true }
 
 [help]
-border  = { fg = "#25272d" }
-chord   = { fg = "#e8ecf2" }
+border  = { fg = "#242a34" }
+chord   = { fg = "#dfe7f2" }
 hovered = { reversed = true, bold = true }
 
 [fd]
@@ -114,16 +114,16 @@ position = { at = "top-center", y = 2, w = 80, h = 3 }
 
 [filetype]
 rules = [
-	{ mime = "**/image/*", fg = "#98a1ac" },
-	{ mime = "**/{audio,video}/*", fg = "#98a1ac" },
-	{ mime = "**/application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", fg = "#98a1ac" },
-	{ mime = "**/application/{pdf,doc,rtf}", fg = "#98a1ac" },
-	{ mime = "vfs/{absent,stale}", fg = "#5b636d" },
-	{ url = "*", is = "orphan", bg = "#ff003c" },
-	{ url = "*", is = "exec", fg = "#e8edf4" },
-	{ url = "*", is = "dummy", bg = "#ff003c" },
-	{ url = "*/", is = "dummy", bg = "#ff003c" },
-	{ url = "*/", fg = "#e8edf4" },
+	{ mime = "**/image/*", fg = "#93a1b5" },
+	{ mime = "**/{audio,video}/*", fg = "#93a1b5" },
+	{ mime = "**/application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", fg = "#93a1b5" },
+	{ mime = "**/application/{pdf,doc,rtf}", fg = "#93a1b5" },
+	{ mime = "vfs/{absent,stale}", fg = "#556377" },
+	{ url = "*", is = "orphan", bg = "#ff4d6a" },
+	{ url = "*", is = "exec", fg = "#7aa2f7" },
+	{ url = "*", is = "dummy", bg = "#ff4d6a" },
+	{ url = "*/", is = "dummy", bg = "#ff4d6a" },
+	{ url = "*/", fg = "#7aa2f7" },
 ]
 
 # Иконки — чистый текст, без цветных глифов (только стрелки папок)
@@ -133,7 +133,7 @@ dirs  = []
 files = []
 exts  = []
 conds = [
-	{ if = "dir & hovered", text = "▸", fg = "#e8edf4" },
-	{ if = "dir",           text = "▸", fg = "#98a1ac" },
-	{ if = "!dir",          text = "",  fg = "#98a1ac" },
+	{ if = "dir & hovered", text = "▸", fg = "#7aa2f7" },
+	{ if = "dir",           text = "▸", fg = "#93a1b5" },
+	{ if = "!dir",          text = "",  fg = "#93a1b5" },
 ]
