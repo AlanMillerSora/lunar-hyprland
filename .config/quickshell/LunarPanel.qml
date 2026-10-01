@@ -458,7 +458,7 @@ PanelWindow {
             source: nzL
             maskEnabled: true
             maskSource: nmL
-            opacity: 0.10
+            opacity: 0.07
         }
         Rectangle {
             id: nmL
@@ -467,16 +467,6 @@ PanelWindow {
             color: "white"
             visible: false
             layer.enabled: true
-        }
-
-        // стеклянный блик сверху — плашка читается как стекло
-        Rectangle {
-            anchors.fill: parent
-            radius: Theme.barRadius
-            gradient: Gradient {
-                GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.05) }
-                GradientStop { position: 0.5; color: "transparent" }
-            }
         }
 
         RowLayout {
@@ -678,7 +668,7 @@ PanelWindow {
             source: nzC
             maskEnabled: true
             maskSource: nmC
-            opacity: 0.10
+            opacity: 0.07
         }
         Rectangle {
             id: nmC
@@ -687,16 +677,6 @@ PanelWindow {
             color: "white"
             visible: false
             layer.enabled: true
-        }
-
-        // стеклянный блик сверху — плашка читается как стекло
-        Rectangle {
-            anchors.fill: parent
-            radius: Theme.barRadius
-            gradient: Gradient {
-                GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.05) }
-                GradientStop { position: 0.5; color: "transparent" }
-            }
         }
 
         // ── телеметрия и управление: прижаты к правому краю ──
@@ -1083,7 +1063,7 @@ PanelWindow {
             source: nzR
             maskEnabled: true
             maskSource: nmR
-            opacity: 0.10
+            opacity: 0.07
         }
         Rectangle {
             id: nmR
@@ -1092,16 +1072,6 @@ PanelWindow {
             color: "white"
             visible: false
             layer.enabled: true
-        }
-
-        // стеклянный блик сверху — плашка читается как стекло
-        Rectangle {
-            anchors.fill: parent
-            radius: Theme.barRadius
-            gradient: Gradient {
-                GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.05) }
-                GradientStop { position: 0.5; color: "transparent" }
-            }
         }
 
         Row {
