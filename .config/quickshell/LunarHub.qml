@@ -303,6 +303,7 @@ FloatingWindow {
         Row {
                 anchors.fill: parent
                 anchors.margins: Theme.space6
+                anchors.bottomMargin: Theme.space6 + hubSearchBox.height + Theme.space4
                 spacing: Theme.space6
 
                 // ---------------- Sidebar ----------------
@@ -331,7 +332,7 @@ FloatingWindow {
                         Flickable {
                             id: navFlick
                             width: parent.width
-                            height: Math.max(0, sidebar.height - y - hubSearchBox.height - 12)
+                            height: Math.max(0, sidebar.height - y)
                             contentWidth: width
                             contentHeight: navColumn.implicitHeight
                             clip: true
@@ -415,66 +416,6 @@ FloatingWindow {
                             }
                         }
                     }
-                    // поиск (глобальный) — внизу сайдбара
-                    Rectangle {
-                        id: hubSearchBox
-                        anchors.bottom: parent.bottom
-                        width: parent.width
-                        height: Theme.rowH
-                        radius: Theme.radiusM
-                        color: Theme.bgCard
-                        border.width: 1
-                        border.color: hubSearch.activeFocus ? Theme.borderAccent : Theme.border
-
-                        TextInput {
-                            id: hubSearch
-                            anchors.fill: parent
-                            anchors.leftMargin: 10
-                            anchors.rightMargin: 10
-                            verticalAlignment: TextInput.AlignVCenter
-                            color: Theme.text
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 11
-                            clip: true
-                            selectByMouse: true
-
-                            Text {
-                                anchors.fill: parent
-                                verticalAlignment: Text.AlignVCenter
-                                text: "поиск по Hub…"
-                                color: Theme.textFaint
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 11
-                                visible: hubSearch.text === ""
-                            }
-
-                            onTextChanged: root.setQuery(text)
-                            Keys.onEscapePressed: {
-                                if (text !== "")
-                                    text = ""
-                                else
-                                    root.closePanel()
-                            }
-                            Keys.onUpPressed: root.moveResult(-1)
-                            Keys.onDownPressed: root.moveResult(1)
-                            Keys.onReturnPressed: {
-                                // H38: если debounce ещё не сработал — досчитываем сразу
-                                if (searchDebounce.running) {
-                                    searchDebounce.stop()
-                                    root.applyQuery(root.query)
-                                }
-                                root.activateResult()
-                            }
-                            Keys.onPressed: (e) => {
-                                // H14: цифры остаются обычным вводом; быстрый выбор — по Ctrl+1…9
-                                if (e.key >= Qt.Key_1 && e.key <= Qt.Key_9
-                                    && (e.modifiers & Qt.ControlModifier)) {
-                                    root.activateIndex(e.key - Qt.Key_1)
-                                    e.accepted = true
-                                }
-                            }
-                        }
-                    }
                 }
 
                 // ---------------- Page content ----------------
@@ -529,8 +470,8 @@ FloatingWindow {
 
                         Column {
                             anchors.fill: parent
-                            anchors.margins: 12
-                            spacing: 3
+                            anchors.margins: Theme.space4
+                            spacing: Theme.space1
 
                             Repeater {
                                 model: root.results
@@ -539,8 +480,8 @@ FloatingWindow {
                                     required property var modelData
                                     required property int index
                                     width: parent.width
-                                    height: 30
-                                    radius: Theme.radius
+                                    height: Theme.rowH
+                                    radius: Theme.radiusM
                                     color: index === root.resultIndex
                                         ? Theme.active
                                         : (rowMouse.containsMouse ? Theme.hover : "transparent")
@@ -548,31 +489,31 @@ FloatingWindow {
                                     Row {
                                         anchors.verticalCenter: parent.verticalCenter
                                         anchors.left: parent.left
-                                        anchors.leftMargin: 10
-                                        height: 30
-                                        spacing: 10
+                                        anchors.leftMargin: Theme.space4
+                                        height: Theme.rowH
+                                        spacing: Theme.space3
 
                                         Text {
-                                            width: 14
+                                            width: 18
                                             text: index < 9 ? (index + 1) : ""
                                             color: Theme.textFaint
                                             font.family: Theme.fontFamily
-                                            font.pixelSize: 10
+                                            font.pixelSize: Theme.fontSmall
                                             anchors.verticalCenter: parent.verticalCenter
                                         }
                                         Text {
-                                            width: 18
+                                            width: 22
                                             visible: modelData.kind !== "app"
                                             text: modelData.icon || ""
-                                            color: index === root.resultIndex ? Theme.accent : Theme.textDim
+                                            color: index === root.resultIndex ? Theme.accent : Theme.text
                                             font.family: Theme.iconFont
-                                            font.pixelSize: 14
+                                            font.pixelSize: 16
                                             horizontalAlignment: Text.AlignHCenter
                                             anchors.verticalCenter: parent.verticalCenter
                                         }
                                         Image {
-                                            width: 18
-                                            height: 18
+                                            width: 22
+                                            height: 22
                                             visible: modelData.kind === "app"
                                                 && source != "" && status === Image.Ready
                                             source: modelData.kind === "app" && modelData.app.icon
@@ -584,17 +525,17 @@ FloatingWindow {
                                         }
                                         Text {
                                             text: modelData.label
-                                            color: index === root.resultIndex ? Theme.text : Theme.textDim
+                                            color: index === root.resultIndex ? Theme.text : Theme.barText
                                             font.family: Theme.fontFamily
-                                            font.pixelSize: 12
+                                            font.pixelSize: Theme.fontBody
                                             anchors.verticalCenter: parent.verticalCenter
                                         }
                                         Text {
                                             text: modelData.kind === "page" ? "страница"
                                                 : (modelData.kind === "action" ? "действие" : "приложение")
-                                            color: Theme.textFaint
+                                            color: Theme.textDim
                                             font.family: Theme.fontFamily
-                                            font.pixelSize: 9
+                                            font.pixelSize: Theme.fontTiny
                                             anchors.verticalCenter: parent.verticalCenter
                                         }
                                     }
@@ -613,7 +554,69 @@ FloatingWindow {
                     }
                 }
             }
+
+            // поиск по Hub — во всю ширину окна, внизу: место под длинные запросы
+            // и подсказку про быстрый выбор
+            Rectangle {
+                id: hubSearchBox
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                anchors.margins: Theme.space6
+                height: Theme.rowH
+                radius: Theme.radiusM
+                color: Theme.bgCard
+                border.width: 1
+                border.color: hubSearch.activeFocus ? Theme.borderAccent : Theme.border
+
+                TextInput {
+                    id: hubSearch
+                    anchors.fill: parent
+                    anchors.leftMargin: Theme.space4
+                    anchors.rightMargin: Theme.space4
+                    verticalAlignment: TextInput.AlignVCenter
+                    color: Theme.text
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontBody
+                    clip: true
+                    selectByMouse: true
+
+                    Text {
+                        anchors.fill: parent
+                        verticalAlignment: Text.AlignVCenter
+                        text: "поиск по Hub…   (Ctrl+1…9 — быстрый выбор)"
+                        color: Theme.textFaint
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontBody
+                        visible: hubSearch.text === ""
+                    }
+
+                    onTextChanged: root.setQuery(text)
+                    Keys.onEscapePressed: {
+                        if (text !== "")
+                            text = ""
+                        else
+                            root.closePanel()
+                    }
+                    Keys.onUpPressed: root.moveResult(-1)
+                    Keys.onDownPressed: root.moveResult(1)
+                    Keys.onReturnPressed: {
+                        // H38: если debounce ещё не сработал — досчитываем сразу
+                        if (searchDebounce.running) {
+                            searchDebounce.stop()
+                            root.applyQuery(root.query)
+                        }
+                        root.activateResult()
+                    }
+                    Keys.onPressed: (e) => {
+                        // H14: цифры остаются обычным вводом; быстрый выбор — по Ctrl+1…9
+                        if (e.key >= Qt.Key_1 && e.key <= Qt.Key_9
+                            && (e.modifiers & Qt.ControlModifier)) {
+                            root.activateIndex(e.key - Qt.Key_1)
+                            e.accepted = true
+                        }
+                    }
+                }
+            }
         }
 }
-
-

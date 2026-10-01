@@ -101,8 +101,8 @@ end
 hl.config({
   general = {
     border_size = 0,          -- без обводки: окно держат тень и радиус (как в 43PR)
-    gaps_in    = 8,           -- воздух вокруг окна, но не разреженно
-    gaps_out   = 14,
+    gaps_in    = 5,           -- плотно: окна крупные, как у 43PR
+    gaps_out   = 10,
     layout     = "dwindle",
     resize_on_border = false,
     allow_tearing = false,
@@ -262,15 +262,15 @@ hl.layer_rule({ match = { namespace = "lunar-sidebar-right" }, blur = true, igno
 -- Плеер — обычное окно (Quickshell FloatingWindow): плавающее, по центру,
 -- со скруглением и полупрозрачностью. Блюр Hyprland даёт сам (окно с
 -- opacity<1), общий blur включён — отдельный слой тут больше не нужен.
-hl.window_rule({ match = { title = "^(Lunar Player)$" }, float = true, center = true, rounding = 10, opacity = "0.94 override 0.94 override" })
+hl.window_rule({ match = { title = "^(Lunar Player)$" }, float = true, center = true, rounding = 10, opacity = "0.97 override 0.97 override" })
 
 -- Крупные модалки — тоже обычные окна (Quickshell FloatingWindow): их можно
 -- тянуть и ресайзить, блюр им даёт прозрачность окна. Заголовки ставлю в QML.
 -- Радиус 14 (чуть больше системного): без обводки форму читает именно угол.
-hl.window_rule({ match = { title = "^(Lunar Hub)$" },       float = true, center = true, rounding = 10, opacity = "0.94 override 0.94 override" })
-hl.window_rule({ match = { title = "^(Lunar Clipboard)$" }, float = true, center = true, rounding = 10, opacity = "0.94 override 0.94 override" })
-hl.window_rule({ match = { title = "^(Lunar Power)$" },     float = true, center = true, rounding = 10, opacity = "0.94 override 0.94 override" })
-hl.window_rule({ match = { title = "^(Lunar Agent)$" },     float = true, center = true, rounding = 10, opacity = "0.94 override 0.94 override" })
+hl.window_rule({ match = { title = "^(Lunar Hub)$" },       float = true, center = true, rounding = 10, opacity = "0.97 override 0.97 override" })
+hl.window_rule({ match = { title = "^(Lunar Clipboard)$" }, float = true, center = true, rounding = 10, opacity = "0.97 override 0.97 override" })
+hl.window_rule({ match = { title = "^(Lunar Power)$" },     float = true, center = true, rounding = 10, opacity = "0.97 override 0.97 override" })
+hl.window_rule({ match = { title = "^(Lunar Agent)$" },     float = true, center = true, rounding = 10, opacity = "0.97 override 0.97 override" })
 
 
 

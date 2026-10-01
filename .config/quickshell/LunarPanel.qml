@@ -749,20 +749,22 @@ PanelWindow {
                         }
                     }
 
-                    // питание: CPU всегда performance, powersave убран.
-                    // Красный — сигнал, что юнит не сработал и governor не performance.
+                    // питание: CPU всегда performance — в норме подписи нет вовсе,
+                    // PERF всплывает красным только как тревога (governor уехал)
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
+                        visible: root.cpuGovernor !== "" && root.cpuGovernor !== "performance"
                         width: fm13.advanceWidth("PERF")
                         text: "PERF"
-                        color: root.cpuGovernor === "performance" ? Theme.accent : Theme.danger
+                        color: Theme.danger
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSize(13)
                         font.bold: true
                     }
 
-                    // запись экрана
+                    // запись экрана — показываю только когда пишу
                     Rectangle {
+                        visible: root.recording
                         width: fm11.advanceWidth("● REC") + 20
                         height: 24
                         radius: Theme.radius

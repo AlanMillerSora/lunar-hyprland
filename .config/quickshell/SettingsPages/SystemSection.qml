@@ -30,8 +30,8 @@ Item {
 
     property var cpuPrev: null
 
-    property int hardwareLabelSize: 12
-    property int hardwareTextSize: 12
+    property int hardwareLabelSize: 13
+    property int hardwareTextSize: 13
     property string mono: "JetBrainsMono Nerd Font"
     property int rightMargin: 36
 

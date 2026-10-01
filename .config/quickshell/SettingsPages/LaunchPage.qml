@@ -132,8 +132,8 @@ Item {
                     spacing: 6
 
                     Item {
-                        width: 54
-                        height: 54
+                        width: 58
+                        height: 58
                         anchors.horizontalCenter: parent.horizontalCenter
 
                         // подложка: даёт иконкам одинаковый вес и «плитку»,
@@ -149,9 +149,9 @@ Item {
                         Image {
                             id: appIcon
                             anchors.centerIn: parent
-                            width: 40
-                            height: 40
-                            sourceSize: Qt.size(128, 128)
+                            width: 46
+                            height: 46
+                            sourceSize: Qt.size(160, 160)
                             fillMode: Image.PreserveAspectFit
                             smooth: true
                             asynchronous: true
@@ -169,8 +169,8 @@ Item {
                             source: appIcon
                             visible: appIcon.status === Image.Ready
                             saturation: -1.0
-                            brightness: 0.12
-                            contrast: 0.08
+                            brightness: 0.18
+                            contrast: 0.10
                         }
 
                         Text {
