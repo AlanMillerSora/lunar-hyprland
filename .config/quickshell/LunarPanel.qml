@@ -72,63 +72,6 @@ PanelWindow {
             Hyprland.dispatch("workspace " + id)
     }
 
-    // ─────────────── system stats ───────────────
-    property int cpuPct: -1
-    property int ramPct: -1
-    property int tempC: -1
-    property real _prevIdle: -1
-    property real _prevTotal: -1
-
-    function applySys(t) {
-        var lines = t.trim().split("\n")
-        var i
-        if (lines.length > 0 && lines[0].indexOf("cpu") === 0) {
-            var parts = lines[0].trim().split(/\s+/).slice(1).map(Number)
-            var idle = (parts[3] || 0) + (parts[4] || 0)
-            var total = 0
-            for (i = 0; i < parts.length; i++)
-                total += parts[i]
-            if (root._prevTotal >= 0 && total > root._prevTotal)
-                root.cpuPct = Math.max(0, Math.min(100,
-                    Math.round(100 * (1 - (idle - root._prevIdle) / (total - root._prevTotal)))))
-            root._prevIdle = idle
-            root._prevTotal = total
-        }
-        var memTotal = 0, memAvail = 0, temp = -1
-        for (i = 0; i < lines.length; i++) {
-            var l = lines[i]
-            if (l.indexOf("MemTotal:") === 0)
-                memTotal = parseInt(l.split(/\s+/)[1])
-            else if (l.indexOf("MemAvailable:") === 0)
-                memAvail = parseInt(l.split(/\s+/)[1])
-            else if (/^\d+$/.test(l.trim()))
-                temp = Math.round(parseInt(l.trim()) / 1000)
-        }
-        if (memTotal > 0)
-            root.ramPct = Math.round(100 * (memTotal - memAvail) / memTotal)
-        if (temp > 0)
-            root.tempC = temp
-    }
-
-    Process {
-        id: sysProc
-        running: false
-        command: ["bash", "-c",
-            "head -1 /proc/stat; " +
-            "grep -E '^MemTotal:|^MemAvailable:' /proc/meminfo; " +
-            "for h in /sys/class/hwmon/hwmon*; do " +
-            "n=$(cat \"$h/name\" 2>/dev/null); " +
-            "[ \"$n\" = k10temp ] && cat \"$h/temp1_input\"; done"]
-        stdout: StdioCollector { onStreamFinished: root.applySys(text) }
-    }
-    // каждый замер — это bash + ~5 процессов, поэтому не чаще раза в 2 с
-    Timer {
-        interval: 2000
-        running: true
-        repeat: true
-        onTriggered: if (!sysProc.running) sysProc.running = true
-    }
-
     // ─────────────── clock ───────────────
     readonly property var dayNames: ["вс", "пн", "вт", "ср", "чт", "пт", "сб"]
     property string clockText: Qt.formatTime(new Date(), "HH:mm")
@@ -362,16 +305,10 @@ PanelWindow {
 
     // ─────────── сеть / раскладка / уведомления ───────────
     property string netKind: "off"      // eth | wifi | off
-    property int netSignal: 0
-    property real netDown: 0            // байт/с, приём
-    property real netUp: 0              // байт/с, передача
     property string kbLayout: "EN"
     property string kbDevice: ""
     property bool dnd: false
     property int notifCount: 0
-    property string gpuLoad: ""
-    property real gpuEma: -1          // сглаживание gpu_busy_percent (APU дёргается 0/100)
-    property string gpuTemp: ""
     property bool gameMode: false
     property string cpuGovernor: ""
     property bool recording: false
@@ -391,13 +328,8 @@ PanelWindow {
                         continue
                     var k = kv[0], v = kv[1]
                     if (k === "net") {
-                        if (v.indexOf("wifi:") === 0) {
-                            root.netKind = "wifi"
-                            root.netSignal = parseInt(v.substring(5)) || 0
-                        } else {
-                            root.netKind = v
-                            root.netSignal = 0
-                        }
+                        // сигнал не показываем — только вид подключения
+                        root.netKind = v.indexOf("wifi:") === 0 ? "wifi" : v
                     } else if (k === "kb") {
                         root.kbLayout = v
                     } else if (k === "kbdev") {
@@ -406,14 +338,6 @@ PanelWindow {
                         root.dnd = (v === "1")
                     } else if (k === "notif") {
                         root.notifCount = parseInt(v) || 0
-                    } else if (k === "gpu") {
-                        var g = parseInt(v)
-                        if (!isNaN(g)) {
-                            root.gpuEma = (root.gpuEma < 0) ? g : (root.gpuEma * 0.6 + g * 0.4)
-                            root.gpuLoad = String(Math.round(root.gpuEma))
-                        }
-                    } else if (k === "gput") {
-                        root.gpuTemp = v
                     } else if (k === "gm") {
                         root.gameMode = (v === "1")
                     } else if (k === "pp") {
@@ -431,67 +355,6 @@ PanelWindow {
         running: true
         repeat: true
         onTriggered: statusProc.running = true
-    }
-
-    // ── скорость сети (байт/с) из /proc/net/dev ───────────────
-    // /proc/net/dev отдаёт счётчики байт с момента загрузки. Читаем
-    // снимок мгновенно (cat), храним предыдущий снимок и время, дельту
-    // и скорость считаем в QML. Так всплески между замерами не теряются
-    // (окно — ровно интервал таймера), и нет спящего процесса.
-    property double netRxPrev: -1
-    property double netTxPrev: -1
-    property double netTimePrev: 0
-
-    Process {
-        id: netProc
-        running: false
-        command: ["cat", "/proc/net/dev"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                var lines = text.split("\n")
-                if (lines.length < 3)
-                    return
-                var rx = 0, tx = 0
-                for (var i = 2; i < lines.length; i++) {
-                    var line = lines[i]
-                    var c = line.indexOf(":")
-                    if (c < 0)
-                        continue
-                    if (line.substring(0, c).trim() === "lo")
-                        continue
-                    var p = line.substring(c + 1).trim().split(/\s+/)
-                    if (p.length < 9)
-                        continue
-                    rx += parseInt(p[0]) || 0
-                    tx += parseInt(p[8]) || 0
-                }
-                var now = Date.now()
-                if (root.netRxPrev >= 0 && now > root.netTimePrev) {
-                    var dt = (now - root.netTimePrev) / 1000
-                    root.netDown = Math.max(0, (rx - root.netRxPrev) / dt)
-                    root.netUp = Math.max(0, (tx - root.netTxPrev) / dt)
-                }
-                root.netRxPrev = rx
-                root.netTxPrev = tx
-                root.netTimePrev = now
-            }
-        }
-    }
-
-    Timer {
-        interval: 1000
-        running: true
-        repeat: true
-        onTriggered: if (!netProc.running) netProc.running = true
-    }
-
-    // человекочитаемая скорость: КБ/с и МБ/с одной буквой, без дубля единицы
-    function netFmt(bps) {
-        if (bps < 1024)
-            return Math.round(bps) + "Б"
-        if (bps < 1048576)
-            return (bps / 1024).toFixed(bps < 10240 ? 1 : 0) + "К"
-        return (bps / 1048576).toFixed(1) + "М"
     }
 
     // По отдельному Process на каждое действие: общий процесс затирал команду,
@@ -559,22 +422,12 @@ PanelWindow {
     // Метрики моношрифта: по ним считаем ширины числовых полей, чтобы
     // цифры при скачках значений не дёргали раскладку.
     FontMetrics { id: fm11; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSize(11) }
-    FontMetrics { id: fm12; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSize(12) }
     FontMetrics { id: fm13; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSize(13) }
     FontMetrics { id: fm14; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSize(14) }
-    FontMetrics { id: fm15; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSize(15) }
     // иконки из разных наборов Nerd Font бывают разной ширины — тоже чиним
     FontMetrics { id: fmIcon15; font.family: Theme.iconFont; font.pixelSize: Theme.fontSize(15) }
     FontMetrics { id: fmIcon17; font.family: Theme.iconFont; font.pixelSize: Theme.fontSize(17) }
     FontMetrics { id: fmIcon19; font.family: Theme.iconFont; font.pixelSize: Theme.fontSize(19) }
-
-    // Дополнить строку слева пробелами до ширины w (моношрифт → ровно)
-    function padNum(s, w) {
-        s = "" + s
-        while (s.length < w)
-            s = " " + s
-        return s
-    }
 
     // ── ЛЕВАЯ ЧАСТЬ: марка LUNAR + рабочие столы ──
     Rectangle {
@@ -816,37 +669,6 @@ PanelWindow {
                     height: 26
                     spacing: 6
 
-                    // стрелка и число — отдельно: число в поле фикс. ширины
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: "󰁅"
-                        color: Theme.barDim
-                        font.family: Theme.iconFont
-                        font.pixelSize: Theme.fontSize(15)
-                    }
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: fm15.advanceWidth("00.0K")
-                        text: root.netFmt(root.netDown)
-                        color: Theme.barText
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize(15)
-                    }
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: "󰁝"
-                        color: Theme.barDim
-                        font.family: Theme.iconFont
-                        font.pixelSize: Theme.fontSize(15)
-                    }
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: fm15.advanceWidth("00.0K")
-                        text: root.netFmt(root.netUp)
-                        color: Theme.barText
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize(15)
-                    }
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         width: Math.max(fmIcon17.advanceWidth("󰈀"), fmIcon17.advanceWidth("\uf1eb"))
@@ -932,181 +754,6 @@ PanelWindow {
                             cursorShape: Qt.PointingHandCursor
                             onClicked: root.toggleRecording()
                         }
-                    }
-                }
-            }
-
-            // ── статистика: [CPU °] [RAM] [GPU °] ──
-            // Иконки (приглушённые) + значения (белые) + температуры (dim),
-            // группы разделены тонкими линиями. Числа — фикс. ширины.
-            Row {
-                id: statsRow
-                Layout.alignment: Qt.AlignVCenter
-                height: 26
-                spacing: Theme.space3
-
-                // — процессор: загрузка + температура —
-                Item {
-                    id: cpuGrp
-                    height: 26
-                    implicitWidth: cpuRow.implicitWidth
-                    scale: hCpu.hovered ? Theme.hoverGrow : 1
-                    Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
-                    HoverHandler { id: hCpu }
-
-                    Row {
-                        id: cpuRow
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: 5
-
-                        Text {
-                            text: "\uf4bc"
-                            color: Theme.barFaint
-                            font.family: Theme.iconFont
-                            font.pixelSize: Theme.fontSize(14)
-                            height: 26
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        Text {
-                            width: fm14.advanceWidth("100%")
-                            text: root.padNum(root.cpuPct < 0 ? "--%" : root.cpuPct + "%", 4)
-                            color: Theme.barText
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(14)
-                            height: 26
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        Text {
-                            visible: root.tempC > 0
-                            text: "\uf2c8"
-                            color: Theme.barFaint
-                            font.family: Theme.iconFont
-                            font.pixelSize: Theme.fontSize(13)
-                            height: 26
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        Text {
-                            visible: root.tempC > 0
-                            width: fm14.advanceWidth("100°")
-                            text: root.padNum(root.tempC + "°", 4)
-                            color: Theme.barDim
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(14)
-                            height: 26
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        acceptedButtons: Qt.NoButton
-                        onEntered: root.showTip("процессор: загрузка и температура", cpuGrp)
-                        onExited: Theme.tooltipShown = false
-                    }
-                }
-
-                // — оперативная память —
-                Item {
-                    id: ramGrp
-                    height: 26
-                    implicitWidth: ramRow.implicitWidth
-                    scale: hRam.hovered ? Theme.hoverGrow : 1
-                    Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
-                    HoverHandler { id: hRam }
-
-                    Row {
-                        id: ramRow
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: 5
-
-                        Text {
-                            text: "\u{F035B}"
-                            color: Theme.barFaint
-                            font.family: Theme.iconFont
-                            font.pixelSize: Theme.fontSize(14)
-                            height: 26
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        Text {
-                            width: fm14.advanceWidth("100%")
-                            text: root.padNum(root.ramPct < 0 ? "--%" : root.ramPct + "%", 4)
-                            color: Theme.barText
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(14)
-                            height: 26
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        acceptedButtons: Qt.NoButton
-                        onEntered: root.showTip("оперативная память: занято", ramGrp)
-                        onExited: Theme.tooltipShown = false
-                    }
-                }
-
-                // — видеокарта: загрузка + температура —
-                Item {
-                    id: gpuGrp
-                    visible: root.gpuLoad !== ""
-                    height: 26
-                    implicitWidth: gpuRow.implicitWidth
-                    scale: hGpu.hovered ? Theme.hoverGrow : 1
-                    Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
-                    HoverHandler { id: hGpu }
-
-                    Row {
-                        id: gpuRow
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: 5
-
-                        Text {
-                            text: "\uf108"
-                            color: Theme.barFaint
-                            font.family: Theme.iconFont
-                            font.pixelSize: Theme.fontSize(14)
-                            height: 26
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        Text {
-                            width: fm14.advanceWidth("100%")
-                            text: root.padNum(root.gpuLoad + "%", 4)
-                            color: Theme.barText
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(14)
-                            height: 26
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        Text {
-                            visible: root.gpuTemp !== ""
-                            text: "\uf2c8"
-                            color: Theme.barFaint
-                            font.family: Theme.iconFont
-                            font.pixelSize: Theme.fontSize(13)
-                            height: 26
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        Text {
-                            visible: root.gpuTemp !== ""
-                            width: fm14.advanceWidth("100°")
-                            text: root.padNum(root.gpuTemp + "°", 4)
-                            color: Theme.barDim
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(14)
-                            height: 26
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        acceptedButtons: Qt.NoButton
-                        onEntered: root.showTip("видеокарта: загрузка и температура", gpuGrp)
-                        onExited: Theme.tooltipShown = false
                     }
                 }
             }

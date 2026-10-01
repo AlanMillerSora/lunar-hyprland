@@ -11,6 +11,7 @@ Item {
     property string os: "..."
     property string cpu: "Loading..."
     property string gpu: "Loading..."
+    property string gpuTemp: "—"
     property string memory: "Loading..."
     property string ramSpeed: "Loading..."
     property int updateCount: -1
@@ -156,6 +157,14 @@ Item {
         cpuTemp = isNaN(value)
             ? "—"
             : Math.round(value) + "°C"
+    }
+
+    function updateGpuTemp(value) {
+        var v = parseFloat(String(value).trim())
+
+        gpuTemp = isNaN(v)
+            ? "—"
+            : Math.round(v) + "°C"
     }
 
     function updateClock() {
@@ -319,6 +328,13 @@ Item {
         command: [
             "sh",
             "-c",
+            // hwmon напрямую (k10temp/zenpower/coretemp): быстро, без sensors;
+            // если датчика нет — откат на sensors
+            "for h in /sys/class/hwmon/hwmon*; do " +
+            "n=$(cat \"$h/name\" 2>/dev/null); " +
+            "case \"$n\" in k10temp|zenpower|coretemp) " +
+            "v=$(cat \"$h/temp1_input\" 2>/dev/null); " +
+            "[ -n \"$v\" ] && { echo $((v / 1000)); exit 0; }; ;; esac; done; " +
             "sensors 2>/dev/null | awk '/Package id 0:|Tctl:|Tdie:/ {for(i=1;i<=NF;i++) if($i ~ /\\+?[0-9]+(\\.[0-9]+)?°C/) {gsub(/[+°C]/, \"\", $i); print $i; exit}}'"
         ]
 
@@ -366,6 +382,26 @@ Item {
 
         stdout: StdioCollector {
             onStreamFinished: page.updateGpu(text)
+        }
+    }
+
+    Process {
+        id: pGpuTemp
+
+        command: [
+            "sh",
+            "-c",
+            // NVIDIA: nvidia-smi; AMD/Intel: sysfs (миллиградусы → градусы)
+            "if command -v nvidia-smi >/dev/null 2>&1; then " +
+            "nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits 2>/dev/null | head -1; " +
+            "else v=$(cat /sys/class/drm/card*/device/hwmon/hwmon*/temp1_input 2>/dev/null | head -1); " +
+            "[ -n \"$v\" ] && echo $((v / 1000)); fi"
+        ]
+
+        running: true
+
+        stdout: StdioCollector {
+            onStreamFinished: page.updateGpuTemp(text)
         }
     }
 
@@ -449,11 +485,12 @@ Item {
             pCpuUsage.running = true
             pCpuTemp.running = true
             pGpuUsage.running = true
+            pGpuTemp.running = true
         }
     }
 
     Timer {
-        interval: 2000
+        interval: 1000
         running: page.visible
         repeat: true
 
@@ -777,6 +814,15 @@ Item {
 
                     Text {
                         text: "USAGE  " + Math.round(page.gpuUsage) + "%"
+                        color: Theme.text
+                        font.family: page.mono
+                        font.pixelSize: Theme.fontSmall
+
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Text {
+                        text: "TEMP  " + page.gpuTemp
                         color: Theme.text
                         font.family: page.mono
                         font.pixelSize: Theme.fontSmall
