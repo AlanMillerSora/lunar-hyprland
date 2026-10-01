@@ -749,17 +749,17 @@ PanelWindow {
                         }
                     }
 
-                    // питание: CPU всегда performance — в норме подписи нет вовсе,
-                    // PERF всплывает красным только как тревога (governor уехал)
+                    // питание: CPU всегда performance. PERF — индикатор: в норме
+                    // тихий серый, красным горит только когда governor уехал
+                    // (значит юнит lunar-cpu-performance не сработал).
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
-                        visible: root.cpuGovernor !== "" && root.cpuGovernor !== "performance"
                         width: fm13.advanceWidth("PERF")
                         text: "PERF"
-                        color: Theme.danger
+                        color: root.cpuGovernor === "performance" ? Theme.barFaint : Theme.danger
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSize(13)
-                        font.bold: true
+                        font.bold: root.cpuGovernor !== "performance"
                     }
 
                     // запись экрана — показываю только когда пишу
