@@ -8,7 +8,7 @@
 #  Что делает:
 #    · пишет ~/.cache/lunar/palette.json (его читает Theme.qml);
 #    · раскладывает цвета по приложениям — kitty, GTK3/4, qt6ct,
-#      mako, btop, yazi и шаблон fastfetch.
+#      mako, btop, yazi и fastfetch.
 #  Основные конфиги НЕ перезаписываю: генерирую отдельные файлы,
 #  которые подключаются через include/@import.
 #
@@ -178,8 +178,8 @@ def build_artifacts(preset: dict, name: str, templates_dir: Path):
          render(load_template(templates_dir, "btop-theme.in"), ctx)),
         ("yazi/theme.toml",
          render(load_template(templates_dir, "yazi-theme.toml.in"), ctx)),
-        ("lunar/templates/fastfetch-colors.jsonc",
-         render(load_template(templates_dir, "fastfetch-colors.jsonc.in"), ctx)),
+        ("fastfetch/config.jsonc",
+         render(load_template(templates_dir, "fastfetch-config.jsonc.in"), ctx)),
     ], render(load_template(templates_dir, "palette.json.in"), ctx)
 
 

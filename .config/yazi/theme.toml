@@ -1,6 +1,6 @@
 # ════════════════════════════════════════════════════════════════
 #  yazi — тема Lunar Eclipse (холодный монохром, как вся система)
-#  фон #08090d, текст #e8ecf2, dim #98a1ac, рамки #23262d, danger #ff003c
+#  фон #08090d, текст #e8ecf2, dim #98a1ac, рамки #25272d, danger #ff003c
 #  Переопределяем только цвета поверх дефолтов yazi.
 # ════════════════════════════════════════════════════════════════
 
@@ -21,7 +21,7 @@ count_cut      = { fg = "#08090d", bg = "#e8edf4" }
 count_selected = { fg = "#08090d", bg = "#e8edf4" }
 
 border_symbol = "│"
-border_style  = { fg = "#23262d" }
+border_style  = { fg = "#25272d" }
 
 [tabs]
 active   = { fg = "#08090d", bg = "#e8edf4", bold = true }
@@ -56,7 +56,7 @@ sep_left  = { open = "", close = "" }
 sep_right = { open = "", close = "" }
 
 [which]
-border          = { fg = "#23262d" }
+border          = { fg = "#25272d" }
 cols            = 3
 cand            = { fg = "#e8ecf2" }
 rest            = { fg = "#98a1ac" }
@@ -65,7 +65,7 @@ separator       = "  "
 separator_style = { fg = "#5b636d" }
 
 [confirm]
-border     = { fg = "#23262d" }
+border     = { fg = "#25272d" }
 title      = { fg = "#e8ecf2" }
 btn_yes    = { reversed = true }
 btn_labels = [ "  [Y]es  ", "  (N)o  " ]
@@ -79,16 +79,16 @@ icon_warn   = ""
 icon_error  = ""
 
 [pick]
-border   = { fg = "#23262d" }
+border   = { fg = "#25272d" }
 active   = { fg = "#e8ecf2", bold = true }
 inactive = {}
 
 [input]
-border   = { fg = "#23262d" }
+border   = { fg = "#25272d" }
 selected = { reversed = true }
 
 [cmp]
-border   = { fg = "#23262d" }
+border   = { fg = "#25272d" }
 active   = { reversed = true }
 inactive = {}
 icon_file    = ""
@@ -96,11 +96,11 @@ icon_folder  = ""
 icon_command = ""
 
 [tasks]
-border  = { fg = "#23262d" }
+border  = { fg = "#25272d" }
 hovered = { fg = "#e8edf4", bold = true }
 
 [help]
-border  = { fg = "#23262d" }
+border  = { fg = "#25272d" }
 chord   = { fg = "#e8ecf2" }
 hovered = { reversed = true, bold = true }
 

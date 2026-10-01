@@ -533,7 +533,7 @@ done < <(find "$HOME/.config" -type f \
            -not -path "*/.config/btop/themes/lunar.theme" \
            -not -path "*/.config/qt6ct/colors/lunar.conf" \
            -not -path "*/.config/yazi/flavors/*" \
-           -not -path "*/.config/lunar/templates/fastfetch-colors.jsonc" \
+           -not -path "*/.config/fastfetch/config.jsonc" \
            -size -2M 2>/dev/null)
 
 if [ -n "$LOCAL_DIFF" ]; then

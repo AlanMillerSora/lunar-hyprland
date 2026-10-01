@@ -29,8 +29,8 @@ Rectangle {
     readonly property int cardH:  Math.round(134 * k)
     readonly property int notch:  Math.round(34 * k)   // насколько круг врезается в карточку
 
-    FontLoader { id: fReg;  source: "fonts/JetBrainsMono-Regular.ttf" }
-    FontLoader { id: fBold; source: "fonts/JetBrainsMono-Bold.ttf" }
+    FontLoader { id: fReg;  source: "fonts/IosevkaNerdFontMono-Regular.ttf" }
+    FontLoader { id: fBold; source: "fonts/IosevkaNerdFontMono-Bold.ttf" }
 
     // ── часы ──
     property date now: new Date()
