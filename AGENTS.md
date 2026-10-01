@@ -222,6 +222,13 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 - Wi-Fi powersave-off и `mt7921e` ASPM — не трогать.
 - Параллакс обоев к курсору — не нужен.
 - `ShaderEffect`/`.qsb` для короны (Quickshell, Qt6) — не подключать.
+- Полноэкранный блюр layer-оверлеев (`layer_rule … blur` на fullscreen-слой) — НЕ включать:
+  Quickshell держит оверлеи fullscreen-слоями, Hyprland блюрит слой целиком → GPU 20→54%.
+  Крупные модалки (Hub/буфер/питание/агент/плеер) для этого переведены в обычные окна.
+- `decoration:screen_shader` — НЕ включать: он отключает damage tracking, и Hyprland сам пишет
+  «massively increase GPU utilization». Зерно делаем тайлами (`blur:noise` + PNG-шум), не шейдером.
+- Обёртку `opencode` в scope с `MemoryHigh/Max` (функция в `~/.zshrc`) — не убирать: она держит
+  OOM сессии внутри scope, чтобы не ронять всю систему.
 - GRUB-тема — не делать (BIOS заблокирован).
 - «Экономный» пресет — уже есть тумблер **OPTIMIZE** (Hub → Interface), по умолчанию включён.
 - Отдельные установщики sddm/plymouth/zapret — не возвращать, всё в `install.sh`.
@@ -340,3 +347,37 @@ sudo mkinitcpio -P                                                 # сборк�
 (`.github/workflows/release.yml`) сам создаёт Release с заметками из коммитов.
 Перед релизом рабочее дерево должно быть чистым.
 Зависимости: `./get-deps.sh`.
+
+## 9. Lunar Player, окна, стекло и зерно (1.76–1.79)
+
+**Плеер.** `PlayerCore.qml` (синглтон) — прямой JSON IPC к mpv: юнит `lunar-player.service`
+(on-demand; `ExecStopPost` чистит сокет), поиск через `yt-dlp`, локальная `~/Music`, очередь,
+обложки YouTube. UI — окно `LunarPlayer.qml` (`FloatingWindow`, хоткей `SUPER+M`, IPC `player`):
+страницы СЕЙЧАС/ОЧЕРЕДЬ/ПОИСК/ЛОКАЛЬНЫЕ, винил, cava, «лунный seek»; вспомогательные —
+`PlayerNowPlaying/PlayerQueue/PlayerSearch/PlayerLibrary/PlayerList/PlayerBar.qml`, конфиг cava —
+`cava-player.conf`. Демон гашу, когда плеер закрыт, ничего не играет и очередь пуста
+(`maybeStopDaemon`). Грабли сокета — issue #1180 Quickshell (первый неудачный коннект навсегда):
+держу `test -S` → `LazyLoader` + пересоздание, иначе Socket «застревает». Ошибки
+`PeerClosed/ConnectionRefused` при остановке mpv — норма (юнит теперь сам убирает сокет).
+
+**Оверлеи — обычные окна.** Hub, буфер, питание, агент и плеер — `FloatingWindow`:
+Hyprland сам двигает/тянет за края/блюрит/скругляет (`window_rule` по заголовку «Lunar …»).
+Слоями остались панель, сайдбары, обзор столов и мелкие попапы (OSD/громкость/медиа/трей/тултип).
+Клик «мимо» окна больше не закрывает — закрытие Esc/хоткеем/IPC.
+
+**Стекло и зерно.** Блюр — только у мелких поверхностей (панель/сайдбары/окна) плюс всем окнам
+`active_opacity 0.94 / inactive 0.90` и `blur:popups`. Зерно — тайлами, НЕ шейдером:
+`blur:noise 0.05` + PNG-шум. Терминал — `/home/sora/.config/kitty/noise.png` (RGB `#0c0e13`,
+шум в альфе ~0.23; kitty уважает альфу тайла, но НЕ применяет `background_opacity` к картинке).
+Бар — `assets/noise.png` (`Image { opacity: 0.12 }` в `LunarPanel.qml`). Полная инструкция и
+команды пересборки шума — в комментарии `kitty.conf` (блок «ЗЕРНО В ТЕРМИНАЛЕ»).
+
+**Палитра.** Выровнена по всей системе: kitty, GTK3/4, qt6ct/меню, kdeglobals, btop, mako, yazi,
+fastfetch/bat, схема `LunarEclipse.colors`. Бар использует отдельные токены
+`Theme.barText/barDim/barFaint/barPill` (текст `#c9d2db`, пилюли `#0c0e13`). Живой kitty
+перечитывает конфиг без перезапуска: `kill -USR1 $(pgrep -x kitty)`.
+
+**Предохранитель OpenCode.** Сессию в scratchpad (`SUPER+S`) держат сутками, и она может
+раздуться в десятки ГБ (был OOM на ~25 ГБ → фриз всей системы). В `~/.zshrc` — функция `opencode`
+запускает её в user-scope с `MemoryHigh=8G/MemoryMax=12G/MemorySwapMax=2G`: при разгоне убьёт
+только сессию. Это НЕ рис, но чинить больно — оставить.
