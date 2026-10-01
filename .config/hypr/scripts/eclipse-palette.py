@@ -43,6 +43,7 @@ DEFAULT_TEMPLATES = CONFIG_ROOT / "lunar" / "templates"
 # Куда пишем при --apply.
 APPLY_CONFIG_ROOT = HOME / ".config"
 APPLY_CACHE_JSON = HOME / ".cache" / "lunar" / "palette.json"
+APPLY_STATE_PRESET = HOME / ".cache" / "lunar" / "preset"
 
 
 # ── цвета ───────────────────────────────────────────────────────
@@ -203,7 +204,10 @@ def main() -> int:
     with palette_path.open("rb") as fh:
         data = tomllib.load(fh)
     presets = data.get("presets", {})
-    name = args.preset or data.get("active")
+    # выбранный в Hub пресет помню в ~/.cache/lunar/preset: palette.toml
+    # остаётся «заводским» (репо == живое), а выбор переживает install.sh
+    saved = APPLY_STATE_PRESET.read_text(encoding="utf-8").strip() if APPLY_STATE_PRESET.exists() else ""
+    name = args.preset or (saved if saved in presets else data.get("active"))
     if name not in presets:
         print(f"нет пресета {name!r} в {palette_path}", file=sys.stderr)
         print("доступно: " + ", ".join(presets), file=sys.stderr)
@@ -251,6 +255,7 @@ def main() -> int:
         dst.write_text(content, encoding="utf-8")
     APPLY_CACHE_JSON.parent.mkdir(parents=True, exist_ok=True)
     APPLY_CACHE_JSON.write_text(palette_json, encoding="utf-8")
+    APPLY_STATE_PRESET.write_text(name + "\n", encoding="utf-8")
     print(f"[пресет] {name}")
     print(f"[режим]  apply — записано в ~/.config и {APPLY_CACHE_JSON}")
     for rel, _ in artifacts:

@@ -182,9 +182,9 @@ Item {
                 text: "OUTPUT"
                 color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontTitle
+                font.pixelSize: 12
                 font.bold: true
-                font.letterSpacing: 3
+                font.letterSpacing: 2
                 anchors.verticalCenter: parent.verticalCenter
             }
         }
@@ -301,9 +301,9 @@ Item {
 
                 color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontTitle
+                font.pixelSize: 12
                 font.bold: true
-                font.letterSpacing: 3
+                font.letterSpacing: 2
 
                 anchors.verticalCenter: parent.verticalCenter
             }

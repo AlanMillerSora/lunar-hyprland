@@ -427,9 +427,9 @@ Item {
                 text: "ПАЛИТРА"
                 color: Theme.text
                 font.family: page.mono
-                font.pixelSize: Theme.fontTitle
+                font.pixelSize: 12
                 font.bold: true
-                font.letterSpacing: 3
+                font.letterSpacing: 2
             }
 
             Column {
@@ -503,9 +503,9 @@ Item {
                 text: "ОБОИ · ЖИВАЯ СЦЕНА"
                 color: Theme.text
                 font.family: page.mono
-                font.pixelSize: Theme.fontTitle
+                font.pixelSize: 12
                 font.bold: true
-                font.letterSpacing: 3
+                font.letterSpacing: 2
             }
 
             Column {

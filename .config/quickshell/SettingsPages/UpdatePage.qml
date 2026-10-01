@@ -347,9 +347,9 @@ Item {
                 text: "НОВОСТИ ARCH (ПЕРЕВОД)"
                 color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontTitle
+                font.pixelSize: 12
                 font.bold: true
-                font.letterSpacing: 3
+                font.letterSpacing: 2
             }
 
             // ── разбор новостей агентом: перевод и на что обратить внимание ──

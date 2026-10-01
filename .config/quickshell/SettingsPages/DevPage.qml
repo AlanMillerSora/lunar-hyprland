@@ -474,9 +474,9 @@ Item {
                 text: "ВЕТКИ"
                 color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontTitle
+                font.pixelSize: 12
                 font.bold: true
-                font.letterSpacing: 3
+                font.letterSpacing: 2
             }
 
             Flow {
@@ -664,9 +664,9 @@ Item {
                 text: "ВЫВОД"
                 color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontTitle
+                font.pixelSize: 12
                 font.bold: true
-                font.letterSpacing: 3
+                font.letterSpacing: 2
             }
 
             Flickable {
