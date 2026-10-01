@@ -14,6 +14,18 @@ import QtQuick.Effects
 Item {
     id: page
 
+    // общие заглушки тем иконок: у таких приложений лучше читаются инициалы,
+    // чем серый квадрат «исполняемый файл»
+    readonly property var genericIcons: [
+        "application-x-executable", "application-default-icon",
+        "exec", "qt", "unknown", "qv4l2", "qvidcap", "qmlscene", ""
+    ]
+
+    function hasRealIcon(app) {
+        return app.icon !== undefined && app.icon !== ""
+            && genericIcons.indexOf(String(app.icon).toLowerCase()) < 0
+    }
+
     ColumnLayout {
         anchors.fill: parent
         spacing: Theme.space4
@@ -143,23 +155,22 @@ Item {
                             fillMode: Image.PreserveAspectFit
                             smooth: true
                             asynchronous: true
-                            source: modelData.icon
+                            source: page.hasRealIcon(modelData)
                                 ? Quickshell.iconPath(modelData.icon, true)
                                 : ""
                             visible: false
                         }
 
-                        // принудительный монохром: тема Tela-lunar уже серая, но
-                        // иконки-файлы (yazi, brave) приходят цветными — гашу
-                        // насыщенность, поднимаю яркость и чуть контраст, чтобы
-                        // после перевода в серое не терялись детали
+                        // монохром: гашу насыщенность и лишь чуть поднимаю
+                        // яркость. Сильная яркость+контраст выбеливали иконки —
+                        // у Telegram пропадал самолётик, у Lutris — росчерк
                         MultiEffect {
                             anchors.fill: appIcon
                             source: appIcon
                             visible: appIcon.status === Image.Ready
                             saturation: -1.0
-                            brightness: 0.20
-                            contrast: 0.22
+                            brightness: 0.12
+                            contrast: 0.08
                         }
 
                         Text {

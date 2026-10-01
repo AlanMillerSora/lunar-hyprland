@@ -852,13 +852,26 @@ PanelWindow {
                                 sourceSize.height: 18
                                 smooth: true
                                 fillMode: Image.PreserveAspectFit
-                                visible: source != "" && status !== Image.Error
+                                visible: false
+                            }
+
+                            // монохром: значок трея в тон панели (как иконки лаунчера),
+                            // чтобы цветные логи приложений не пестрили в баре
+                            MultiEffect {
+                                anchors.centerIn: parent
+                                width: 18
+                                height: 18
+                                source: trayImg
+                                visible: trayImg.source != "" && trayImg.status !== Image.Error
+                                saturation: -1.0
+                                brightness: 0.12
+                                contrast: 0.08
                             }
 
                             // если у приложения нет иконки — точка-фолбэк
                             Text {
                                 anchors.centerIn: parent
-                                visible: !trayImg.visible
+                                visible: !(trayImg.source != "" && trayImg.status !== Image.Error)
                                 text: "\uf111"
                                 color: Theme.barFaint
                                 font.family: Theme.iconFont
