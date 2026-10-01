@@ -10,6 +10,41 @@ Item {
     property string mono: "JetBrainsMono Nerd Font"
     property int rightMargin: 36
 
+    // ── обои-картинки: полка из ~/Pictures и ~/Wallpapers ──
+    property var walls: []
+
+    // страницу видно — перечитываю полку (картинки могли добавить)
+    onVisibleChanged: if (visible) wallScan.running = true
+
+    Process {
+        id: wallScan
+        running: true
+        command: ["bash", "-c",
+            "find \"$HOME/Pictures\" \"$HOME/Wallpapers\" \"$HOME/Pictures/Wallpapers\" " +
+            "-maxdepth 2 -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \\) " +
+            "2>/dev/null | sort | head -24"]
+        stdout: StdioCollector {
+            onStreamFinished: page.walls = text.trim().split("\n").filter(function(x) { return x.length > 0 })
+        }
+    }
+
+    Process {
+        id: pickProc
+        running: false
+        command: ["bash", "-c",
+            "zenity --file-selection --title='Обои' " +
+            "--file-filter='Изображения | *.jpg *.jpeg *.png *.webp' 2>/dev/null"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var f = text.trim()
+                if (f !== "") {
+                    Theme.wallpaperPath = f
+                    Theme.wallpaperMode = "image"
+                }
+            }
+        }
+    }
+
     // ── обои (перенесено со страницы WALLPAPERS) ───────────────
     // живое превью: показываем фазу активного стола (или выбранную).
     // L40: фаза строго 1..9, внемерные столы не мапим молча.
@@ -500,7 +535,7 @@ Item {
             }
 
             Text {
-                text: "ОБОИ · ЖИВАЯ СЦЕНА"
+                text: "ОБОИ"
                 color: Theme.text
                 font.family: page.mono
                 font.pixelSize: 12
@@ -508,9 +543,52 @@ Item {
                 font.letterSpacing: 2
             }
 
+            // выбор: живая сцена затмения или обычная картинка
+            Row {
+                spacing: Theme.space2
+
+                Repeater {
+                    model: [
+                        { id: "scene", name: "СЦЕНА · ФАЗЫ" },
+                        { id: "image", name: "КАРТИНКА" }
+                    ]
+
+                    delegate: Rectangle {
+                        required property var modelData
+                        readonly property bool cur: Theme.wallpaperMode === modelData.id
+                        width: wmLabel.implicitWidth + 28
+                        height: Theme.rowHCompact
+                        radius: Theme.radiusM
+                        color: cur ? Theme.active : (wmMouse.containsMouse ? Theme.hoverStrong : Theme.fill)
+                        border.width: cur ? 1 : 0
+                        border.color: Theme.accent
+
+                        Text {
+                            id: wmLabel
+                            anchors.centerIn: parent
+                            text: modelData.name
+                            color: cur ? Theme.accent : Theme.textDim
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSmall
+                            font.bold: cur
+                            font.letterSpacing: 2
+                        }
+
+                        MouseArea {
+                            id: wmMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: Theme.wallpaperMode = modelData.id
+                        }
+                    }
+                }
+            }
+
             Column {
                 width: parent.width
                 spacing: Theme.space3
+                visible: Theme.wallpaperMode !== "image"
 
                 Text {
                     text: previewPhase > 0
@@ -585,10 +663,138 @@ Item {
                 }
             }
 
-            // ── режим обоев (живые QML / лёгкий) ──
+            // ── обои-картинка: превью, выбор файла и полка ──
+            Column {
+                width: parent.width
+                spacing: Theme.space3
+                visible: Theme.wallpaperMode === "image"
+
+                Item {
+                    width: Math.min(parent.width, 512)
+                    height: width * 9 / 16
+                    clip: true
+
+                    Rectangle {
+                        anchors.fill: parent
+                        color: Theme.fill
+                        radius: Theme.radius
+                    }
+
+                    Image {
+                        anchors.fill: parent
+                        visible: Theme.wallpaperPath !== ""
+                        source: Theme.wallpaperPath !== "" ? "file://" + Theme.wallpaperPath : ""
+                        fillMode: Image.PreserveAspectCrop
+                        asynchronous: true
+                        cache: false
+                    }
+
+                    Text {
+                        anchors.centerIn: parent
+                        visible: Theme.wallpaperPath === ""
+                        text: "выбери картинку ниже"
+                        color: Theme.textFaint
+                        font.family: page.mono
+                        font.pixelSize: 10
+                    }
+
+                    Rectangle {
+                        anchors.fill: parent
+                        color: "transparent"
+                        radius: Theme.radius
+                        border.color: Theme.border
+                        border.width: 1
+                    }
+                }
+
+                Row {
+                    spacing: Theme.space3
+
+                    Rectangle {
+                        width: pickLabel.implicitWidth + 28
+                        height: Theme.rowHCompact
+                        radius: Theme.radiusM
+                        color: pickMouse.containsMouse ? Theme.active : Theme.fill
+                        border.width: 1
+                        border.color: pickMouse.containsMouse ? Theme.accent : Theme.border
+
+                        Text {
+                            id: pickLabel
+                            anchors.centerIn: parent
+                            text: "ВЫБРАТЬ ФАЙЛ…"
+                            color: Theme.text
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSmall
+                        }
+
+                        MouseArea {
+                            id: pickMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: pickProc.running = true
+                        }
+                    }
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: Math.max(0, parent.width - 220)
+                        text: Theme.wallpaperPath !== ""
+                            ? Theme.wallpaperPath
+                            : "полка: " + page.walls.length + " картинок в ~/Pictures и ~/Wallpapers"
+                        color: Theme.textDim
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSmall
+                        elide: Text.ElideMiddle
+                    }
+                }
+
+                Grid {
+                    width: parent.width
+                    columns: 6
+                    spacing: Theme.space2
+
+                    Repeater {
+                        model: page.walls
+
+                        delegate: Rectangle {
+                            required property string modelData
+                            readonly property bool cur: Theme.wallpaperPath === modelData
+                            width: 84
+                            height: 48
+                            radius: Theme.radius
+                            color: Theme.fill
+                            border.width: cur ? 1 : 0
+                            border.color: Theme.accent
+
+                            Image {
+                                anchors.fill: parent
+                                source: "file://" + modelData
+                                fillMode: Image.PreserveAspectCrop
+                                asynchronous: true
+                                cache: false
+                                sourceSize: Qt.size(168, 96)
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    Theme.wallpaperPath = modelData
+                                    Theme.wallpaperMode = "image"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ── режим обоев (живые QML / лёгкий) — только для сцены ──
             Row {
                 width: parent.width
                 spacing: Theme.space3
+                visible: Theme.wallpaperMode !== "image"
 
                 Text {
                     text: "\uf03e"

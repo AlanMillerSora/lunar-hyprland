@@ -60,10 +60,29 @@ PanelWindow {
         onExited: if (Theme.blurSize >= 0) Theme.applyBlur()
     }
 
+    // ── обычная картинка (если выбрана в Hub → Interface) ──
+    Rectangle {
+        anchors.fill: parent
+        visible: Theme.wallpaperMode === "image"
+        color: Theme.bg
+    }
+
+    Image {
+        anchors.fill: parent
+        visible: Theme.wallpaperMode === "image" && Theme.wallpaperPath !== ""
+        source: Theme.wallpaperPath !== "" ? "file://" + Theme.wallpaperPath : ""
+        fillMode: Image.PreserveAspectCrop
+        asynchronous: true
+        cache: false
+        smooth: true
+    }
+
+    // ── живая сцена затмения: спит, когда показываем картинку ──
     LunarWallpaperScene {
         anchors.fill: parent
+        visible: Theme.wallpaperMode !== "image"
         phase: Math.max(1, Math.min(9, root.wsId))
-        live: Theme.wallpaperLive
+        live: Theme.wallpaperLive && Theme.wallpaperMode !== "image"
         optimize: true
         tickMs: 40
     }

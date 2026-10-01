@@ -93,6 +93,10 @@ QtObject {
     // живые обои (QML-сцена): false — «лёгкий режим» без звёзд/метеоров/пыли
     property bool wallpaperLive: true
 
+    // обои: "scene" — живая сцена затмения (фаза по столу), "image" — обычная картинка
+    property string wallpaperMode: "scene"
+    property string wallpaperPath: ""
+
     // Производительность: единственный облегчённый режим (см. eclipse-perf.sh
     // и LunarWallpaper). Пресеты NORMAL/OPTIMIZE убраны.
 
@@ -247,6 +251,8 @@ QtObject {
             property real fontScale: 1.0
             property int trayVisible: 2
             property bool wallpaperLive: true
+            property string wallpaperMode: "scene"
+            property string wallpaperPath: ""
             property int blurSize: -1
             property int blurPasses: 3
 
@@ -255,6 +261,8 @@ QtObject {
             onFontScaleChanged: { theme.uiInternal = true; theme.fontScale = fontScale; theme.uiInternal = false }
             onTrayVisibleChanged: { theme.uiInternal = true; theme.trayVisible = trayVisible; theme.uiInternal = false }
             onWallpaperLiveChanged: { theme.uiInternal = true; theme.wallpaperLive = wallpaperLive; theme.uiInternal = false }
+            onWallpaperModeChanged: { theme.uiInternal = true; theme.wallpaperMode = wallpaperMode; theme.uiInternal = false }
+            onWallpaperPathChanged: { theme.uiInternal = true; theme.wallpaperPath = wallpaperPath; theme.uiInternal = false }
             onBlurSizeChanged: { theme.uiInternal = true; theme.blurSize = blurSize; theme.uiInternal = false }
             onBlurPassesChanged: { theme.uiInternal = true; theme.blurPasses = blurPasses; theme.uiInternal = false }
         }
@@ -266,6 +274,8 @@ QtObject {
     onFontScaleChanged: if (!uiInternal) { markUI(); uiAdapter.fontScale = fontScale }
     onTrayVisibleChanged: if (!uiInternal) { markUI(); uiAdapter.trayVisible = trayVisible }
     onWallpaperLiveChanged: if (!uiInternal) { markUI(); uiAdapter.wallpaperLive = wallpaperLive }
+    onWallpaperModeChanged: if (!uiInternal) { markUI(); uiAdapter.wallpaperMode = wallpaperMode }
+    onWallpaperPathChanged: if (!uiInternal) { markUI(); uiAdapter.wallpaperPath = wallpaperPath }
     onBlurSizeChanged: {
         if (!uiInternal) { markUI(); uiAdapter.blurSize = blurSize }
         blurApply.restart()
