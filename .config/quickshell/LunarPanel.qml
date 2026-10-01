@@ -545,13 +545,19 @@ PanelWindow {
     // центру экрана, телеметрия — у правого края. Секции разделены 1px (Sep).
     // подсветка интерактивной секции при наведении
     component HoverBg: Rectangle {
+        id: hb
         anchors.fill: parent
         radius: Theme.radius
         color: Theme.hoverStrong
         opacity: hh.hovered ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: 120 } }
+        Behavior on opacity { NumberAnimation { duration: 150 } }
+        readonly property bool hovered: hh.hovered
         HoverHandler { id: hh }
     }
+
+    // Живость как у 43PR: группа мягко подрастает под курсором.
+    // scale — визуальный, раскладку не трогает, поэтому ничего не «плывёт».
+    component Grow: Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
 
     // Метрики моношрифта: по ним считаем ширины числовых полей, чтобы
     // цифры при скачках значений не дёргали раскладку.
@@ -635,8 +641,10 @@ PanelWindow {
                 Layout.alignment: Qt.AlignVCenter
                 implicitWidth: wsRow.implicitWidth
                 implicitHeight: 26
+                scale: wsBg.hovered ? Theme.hoverGrow : 1
+                Grow {}
 
-                HoverBg {}
+                HoverBg { id: wsBg }
 
                 // тонкая «орбита» за фазами — связывает индикаторы в цикл
                 Rectangle {
@@ -670,6 +678,16 @@ PanelWindow {
                             width: 28
                             height: 26
                             color: "transparent"
+
+                            // мягкое гало под активной фазой — «стол светится»
+                            Rectangle {
+                                anchors.centerIn: parent
+                                width: 28
+                                height: 28
+                                radius: 14
+                                color: Theme.alpha(Theme.accent, wsPill.isFocused ? 0.10 : 0)
+                                Behavior on color { ColorAnimation { duration: Theme.animMed } }
+                            }
 
                             // тонкое кольцо-выделение активного стола
                             Rectangle {
@@ -790,8 +808,10 @@ PanelWindow {
                 Layout.rightMargin: 10
                 implicitWidth: netRow.implicitWidth
                 implicitHeight: 26
+                scale: netBg.hovered ? Theme.hoverGrow : 1
+                Grow {}
 
-                HoverBg {}
+                HoverBg { id: netBg }
 
                 Row {
                     id: netRow
@@ -852,7 +872,9 @@ PanelWindow {
                 Layout.alignment: Qt.AlignVCenter
                 implicitWidth: actionRow.implicitWidth
                 implicitHeight: 26
-                HoverBg {}
+                scale: actBg.hovered ? Theme.hoverGrow : 1
+                Grow {}
+                HoverBg { id: actBg }
                 Row {
                     id: actionRow
                     anchors.centerIn: parent
@@ -931,6 +953,9 @@ PanelWindow {
                     id: cpuGrp
                     height: 26
                     implicitWidth: cpuRow.implicitWidth
+                    scale: hCpu.hovered ? Theme.hoverGrow : 1
+                    Grow {}
+                    HoverHandler { id: hCpu }
 
                     Row {
                         id: cpuRow
@@ -989,6 +1014,9 @@ PanelWindow {
                     id: ramGrp
                     height: 26
                     implicitWidth: ramRow.implicitWidth
+                    scale: hRam.hovered ? Theme.hoverGrow : 1
+                    Grow {}
+                    HoverHandler { id: hRam }
 
                     Row {
                         id: ramRow
@@ -1029,6 +1057,9 @@ PanelWindow {
                     visible: root.gpuLoad !== ""
                     height: 26
                     implicitWidth: gpuRow.implicitWidth
+                    scale: hGpu.hovered ? Theme.hoverGrow : 1
+                    Grow {}
+                    HoverHandler { id: hGpu }
 
                     Row {
                         id: gpuRow
@@ -1095,7 +1126,9 @@ PanelWindow {
                 }
                 implicitHeight: 26
 
-                HoverBg { visible: root.trayCount > 0 }
+                scale: trayBg.hovered ? Theme.hoverGrow : 1
+                Grow {}
+                HoverBg { id: trayBg; visible: root.trayCount > 0 }
 
                 Row {
                     id: trayRow
@@ -1200,7 +1233,9 @@ PanelWindow {
                 Layout.leftMargin: 10
                 implicitWidth: rightRow.implicitWidth
                 implicitHeight: 26
-                HoverBg {}
+                scale: rrBg.hovered ? Theme.hoverGrow : 1
+                Grow {}
+                HoverBg { id: rrBg }
                 Row {
                     id: rightRow
                     anchors.centerIn: parent
@@ -1315,6 +1350,9 @@ PanelWindow {
         color: root.pillBg
         clip: true
         width: centerRow.implicitWidth + 2 * Theme.barPad
+        scale: clockHover.hovered ? 1.04 : 1
+        Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
+        HoverHandler { id: clockHover }
 
         // зерно на стекле: лежит под содержимым, чтобы буквы оставались чёткими
         Image {

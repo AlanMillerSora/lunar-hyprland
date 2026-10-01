@@ -79,7 +79,7 @@ palette.toml ──> eclipse-palette.py ──┬──> ~/.cache/lunar/palette.
 ~/.config/hypr/scripts/eclipse-palette.py --apply         # разложить цвета
 ```
 
-Ритм интерфейса — токены в `quickshell/Theme.qml`: отступы `space1..6` (4/8/12/16/24/32), высоты строк `rowHCompact/rowH/rowHComfy` (34/42/48), радиусы `radius/radiusM/radiusL/radiusXL` (8/10/12/16), шкала шрифтов `fontTiny..fontTitle` (10/11/13/20), геометрия панели (`barH`, `barGap`, `barMargin`, `barPad`). Меняешь токен — меняется весь рис.
+Ритм интерфейса — токены в `quickshell/Theme.qml`: отступы `space1..6` (4/8/12/16/24/32), высоты строк `rowHCompact/rowH/rowHComfy` (34/42/48), радиусы `radius/radiusM/radiusL/radiusXL` (8/10/12/16), шкала шрифтов `fontTiny..fontTitle` (10/11/13/20), геометрия панели (`barH`, `barMargin`, `barPad`, `barRadius`). Меняешь токен — меняется весь рис.
 
 **Hub → Interface**: прозрачность, размытие, размер шрифта, тумблер **OPTIMIZE**, пресеты палитры, курсор Bibata-Modern-Ice. Размытие и профиль сохраняются и переживают `hyprctl reload`.
 

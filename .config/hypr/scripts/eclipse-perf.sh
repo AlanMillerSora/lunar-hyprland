@@ -14,4 +14,4 @@
 # ════════════════════════════════════════════════════════════
 set -uo pipefail
 
-hyprctl eval 'hl.config({ decoration = { blur = { passes = 2, size = 5, vibrancy = 0.20, noise = 0.05, popups = true }, dim_inactive = true, shadow = { range = 12 } } })' >/dev/null 2>&1
+hyprctl eval 'hl.config({ decoration = { blur = { passes = 2, size = 5, vibrancy = 0.20, noise = 0.05, popups = true }, dim_inactive = true, shadow = { range = 18 } } })' >/dev/null 2>&1

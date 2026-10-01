@@ -116,7 +116,6 @@ QtObject {
     property int radius: 8
     property int radiusM: 10
     property int radiusL: 12
-    property int radiusXL: 16
 
     // ── ритм интерфейса ──────────────────────────────────────────
     // Всё, что раньше было «магическими числами» по файлам, свожу сюда:
@@ -142,7 +141,6 @@ QtObject {
 
     // панель-острова (этап 1): высота плашки, зазоры, поля, отступ внутри
     property int barH: 36
-    property int barGap: 6
     property int barMargin: 8
     property int barPad: 12
     property int barRadius: 12
