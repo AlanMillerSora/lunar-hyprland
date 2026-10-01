@@ -64,7 +64,7 @@ PanelWindow {
         command: ["bash", "-c",
             "find \"$HOME/Pictures\" \"$HOME/Wallpapers\" \"$HOME/Pictures/Wallpapers\" " +
             "-maxdepth 2 -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \\) " +
-            "2>/dev/null | sort | head -60"]
+            "2>/dev/null | sort -u | head -60"]
         stdout: StdioCollector {
             onStreamFinished: {
                 root.walls = text.trim().split("\n").filter(function(x) { return x.length > 0 })
