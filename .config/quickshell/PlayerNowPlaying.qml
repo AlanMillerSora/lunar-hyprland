@@ -172,46 +172,104 @@ Item {
         }
 
         // ── трек ──
-        ColumnLayout {
+        // кладу текст и кнопку в общий Item: ColumnLayout растягиваю на всю
+        // ширину (текст по центру не съезжает), а кнопку держу поверх справа
+        Item {
             Layout.fillWidth: true
-            spacing: 4
+            Layout.preferredHeight: trackCol.implicitHeight
 
-            Text {
-                Layout.fillWidth: true
-                text: PlayerCore.hasMedia
-                    ? (PlayerCore.title.length > 0 ? PlayerCore.title : "без названия")
-                    : "ничего не играет"
-                color: Theme.text
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize(22)
-                font.bold: true
-                horizontalAlignment: Text.AlignHCenter
-                elide: Text.ElideRight
-                maximumLineCount: 1
+            ColumnLayout {
+                id: trackCol
+                anchors.left: parent.left
+                anchors.right: parent.right
+                // не захожу под кнопку «MPV» справа
+                anchors.rightMargin: watchBtn.width + 10
+                spacing: 4
+
+                Text {
+                    Layout.fillWidth: true
+                    text: PlayerCore.hasMedia
+                        ? (PlayerCore.title.length > 0 ? PlayerCore.title : "без названия")
+                        : "ничего не играет"
+                    color: Theme.text
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(22)
+                    font.bold: true
+                    horizontalAlignment: Text.AlignHCenter
+                    elide: Text.ElideRight
+                    maximumLineCount: 1
+                }
+                Text {
+                    Layout.fillWidth: true
+                    visible: PlayerCore.artist.length > 0
+                    text: PlayerCore.artist
+                    color: Theme.textDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(13)
+                    horizontalAlignment: Text.AlignHCenter
+                    elide: Text.ElideRight
+                    maximumLineCount: 1
+                }
+                // ошибку плеера вижу и здесь, а не только на странице ПОИСК
+                Text {
+                    Layout.fillWidth: true
+                    visible: PlayerCore.error !== ""
+                    text: PlayerCore.error
+                    color: Theme.danger
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(10)
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.WordWrap
+                    maximumLineCount: 2
+                    elide: Text.ElideRight
+                }
             }
-            Text {
-                Layout.fillWidth: true
-                visible: PlayerCore.artist.length > 0
-                text: PlayerCore.artist
-                color: Theme.textDim
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize(13)
-                horizontalAlignment: Text.AlignHCenter
-                elide: Text.ElideRight
-                maximumLineCount: 1
-            }
-            // ошибку плеера вижу и здесь, а не только на странице ПОИСК
-            Text {
-                Layout.fillWidth: true
-                visible: PlayerCore.error !== ""
-                text: PlayerCore.error
-                color: Theme.danger
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize(10)
-                horizontalAlignment: Text.AlignHCenter
-                wrapMode: Text.WordWrap
-                maximumLineCount: 2
-                elide: Text.ElideRight
+
+            // ── «смотреть в mpv» ──: только когда есть трек; открываю видео
+            //    отдельным окном (демон держит аудио-only и общий сокет)
+            Rectangle {
+                id: watchBtn
+                visible: PlayerCore.hasMedia
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                width: watchRow.implicitWidth + 18
+                height: 26
+                radius: Theme.radius
+                color: watchArea.containsMouse ? Theme.hoverStrong : "transparent"
+                border.width: 1
+                border.color: watchArea.containsMouse ? Theme.accent : Theme.border
+                Behavior on color { ColorAnimation { duration: Theme.animFast } }
+                Behavior on border.color { ColorAnimation { duration: Theme.animFast } }
+
+                RowLayout {
+                    id: watchRow
+                    anchors.centerIn: parent
+                    spacing: 6
+
+                    Text {
+                        text: "\uf03d"
+                        color: watchArea.containsMouse ? Theme.accent : Theme.textDim
+                        font.family: Theme.iconFont
+                        font.pixelSize: Theme.fontSize(12)
+                        Behavior on color { ColorAnimation { duration: Theme.animFast } }
+                    }
+                    Text {
+                        text: "MPV"
+                        color: watchArea.containsMouse ? Theme.accent : Theme.textDim
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(10)
+                        font.bold: true
+                        Behavior on color { ColorAnimation { duration: Theme.animFast } }
+                    }
+                }
+
+                MouseArea {
+                    id: watchArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: PlayerCore.watchInMpv()
+                }
             }
         }
 

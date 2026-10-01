@@ -12,6 +12,10 @@ Item {
 
     property bool pageActive: false
 
+    // зашёл на страницу с пустой фонотекой — сразу сканирую, не гоняю вручную
+    onPageActiveChanged: if (pageActive && !PlayerCore.libraryBusy
+                             && PlayerCore.library.length === 0) root.rescan()
+
     // смотрю только ~/Music: по всему дому find слишком тяжёл
     property string scanDir: Quickshell.env("HOME") + "/Music"
 

@@ -35,9 +35,12 @@ QtObject {
     property bool hasMedia: false
     property bool seekable: false
     property bool shuffle: false
+    property real volume: 100       // громкость mpv, 0..100
+    property bool muted: false
     property var queue: []            // [{id,title,duration,filename,current}]
     property int queueIndex: -1       // playlist-pos, -1 = ничего не играет
-    property string error: ""
+    property string error: ""         // ошибки воспроизведения
+    property string searchError: ""   // отдельно: «ничего не нашлось» и т.п.
     property bool searching: false
     property var searchResults: []    // [{id,title,duration,uploader,url}]
     property bool libraryBusy: false
@@ -163,6 +166,12 @@ QtObject {
         queueIndex = -1
         queueCount = 0
         rawPlaylist = []
+        volume = 100
+        muted = false
+        titleMap = ({})
+        durationMap = ({})
+        error = ""
+        searchError = ""
     }
 
     function onConnChanged(c) {
@@ -222,6 +231,8 @@ QtObject {
         observe("eof-reached", 9)
         observe("idle-active", 10)
         observe("shuffle", 11)
+        observe("volume", 12)
+        observe("mute", 13)
     }
 
     function observe(name, id) {
@@ -280,6 +291,10 @@ QtObject {
             }
         } else if (name === "shuffle") {
             shuffle = (data === true)
+        } else if (name === "volume") {
+            volume = (data === null || data === undefined) ? 0 : Number(data)
+        } else if (name === "mute") {
+            muted = (data === true)
         }
         refreshDerived()
     }
@@ -536,7 +551,10 @@ QtObject {
             ensurePlayer()
             return
         }
-        writeCmd(["set_property", "pause", !playing])
+        // «cycle pause» переключает паузу силами самого mpv: не завишу от
+        // того, насколько свежо успел приехать observe-статус (иначе кнопка
+        // могла слать уже актуальное значение и «не работала»)
+        writeCmd(["cycle", "pause"])
     }
 
     function next() {
@@ -574,6 +592,69 @@ QtObject {
             return
         cmd(["playlist-remove", i])
     }
+
+    // перестановка треков в очереди (перетаскивание): playlist-move <from> <to>.
+    // Грабля mpv: при движении ВНИЗ запись встаёт ПЕРЕД целевой (на слот выше),
+    // поэтому целимся на to+1; to == count валиден и кладёт запись в конец.
+    function moveInQueue(from, to) {
+        var a = Math.round(Number(from))
+        var b = Math.round(Number(to))
+        if (!isFinite(a) || !isFinite(b))
+            return
+        if (a < 0 || a >= queue.length || b < 0 || b >= queue.length || a === b)
+            return
+        var target = (a < b) ? Math.min(queue.length, b + 1) : b
+        cmd(["playlist-move", a, target])
+    }
+
+    // ── «смотреть в mpv»: демон аудио-only и держит общий сокет, поэтому
+    //    видео открываю отдельным процессом без IPC-сокета, отвязав от шелла
+    function currentUrl() {
+        if (queueIndex >= 0 && queueIndex < queue.length)
+            return String(queue[queueIndex].filename)
+        return ""
+    }
+
+    property Process videoProc: Process {
+        // без StdioCollector: setsid --fork отвязывается, коллектор мог бы не закрыться
+        command: []
+    }
+
+    function watchInMpv() {
+        var u = currentUrl()
+        if (u.length === 0)
+            return
+        // защита от двойного клика: тот же трек подряд игнорирую пару секунд
+        var now = Date.now()
+        if (u === lastVideoUrl && (now - lastVideoAt) < 2000)
+            return
+        lastVideoUrl = u
+        lastVideoAt = now
+        videoProc.running = false
+        videoProc.command = ["setsid", "--fork", "mpv",
+            "--input-ipc-server=",                    // не воюю за сокет демона
+            "--ytdl-format=bestvideo+bestaudio/best", // для ссылок; локальный файл игнорирует
+            "--", u]
+        videoProc.running = true
+    }
+
+    property string lastVideoUrl: ""
+    property double lastVideoAt: 0
+
+    function setVolume(v) {
+        var n = Number(v)
+        if (!isFinite(n))
+            return
+        n = Math.max(0, Math.min(100, n))
+        // до коннекта не выставляю «оптимистично»: observe всё равно перезапишет
+        if (connected)
+            volume = n // сразу в UI, mpv подтвердит через observe
+        cmd(["set_property", "volume", n])
+    }
+
+    function volumeStep(delta) { setVolume(volume + Number(delta)) }
+
+    function toggleMute() { cmd(["cycle", "mute"]) }
 
     function toggleShuffle() {
         shuffle = !shuffle
@@ -613,7 +694,7 @@ QtObject {
             return
         searchResults = []
         searching = true
-        error = ""
+        searchError = ""
         searchProc.running = false
         searchProc.command = [
             "yt-dlp",
@@ -623,13 +704,13 @@ QtObject {
             "--ignore-config",
             "--socket-timeout", "8",
             "--playlist-end", "20",
-            "--print", "%(id)s\t%(title)s\t%(duration)s\t%(uploader)s",
+            "--print", "%(id)s\t%(title)s\t%(duration)s\t%(uploader)s\t%(ie_key)s\t%(url)s",
             "ytsearch20:" + q
         ]
         searchProc.running = true
     }
 
-    // yt-dlp печатает строку на видео: id \t title \t duration \t uploader
+    // yt-dlp печатает строку на видео: id \t title \t duration \t uploader \t ie_key \t url
     function onSearchLine(line) {
         var t = "" + line
         if (t.length === 0)
@@ -638,11 +719,28 @@ QtObject {
         var id = (p.length > 0 ? p[0] : "").trim()
         if (id.length === 0)
             return
+        // ytsearch подмешивает каналы и плейлисты (ie_key=YoutubeTab): их
+        // watch?v=… не играется — mpv отвечает «unrecognized file format».
+        // Беру только настоящие видео и их готовую ссылку.
+        var ie = (p.length > 4) ? p[4].trim() : ""
+        var url = (p.length > 5) ? p[5].trim() : ""
+        // каналы/плейлисты (YoutubeTab) не играются — отбрасываю; видео беру по
+        // ссылке, а если yt-dlp отдал только id — собираю watch-ссылку сам
+        if (ie === "YoutubeTab")
+            return
+        var isVideo = url.indexOf("watch?v=") >= 0 || url.indexOf("/shorts/") >= 0
+        if (!isVideo && id.length === 11) {
+            url = "https://www.youtube.com/watch?v=" + id
+            isVideo = true
+        }
+        if (!isVideo)
+            return
         var dur = (p.length > 2) ? parseFloat(p[2]) : NaN
         if (!isFinite(dur) || dur < 0)
             dur = 0 // у лайвов duration = null/NA, делить на него нельзя
         var res = searchResults.slice()
-        var url = "https://www.youtube.com/watch?v=" + id
+        if (searchError !== "")
+            searchError = "" // пришёл результат — старая ошибка неактуальна
         var tt = (p.length > 1 && p[1].length > 0) ? p[1] : id
         // запоминаю название по ссылке — иначе очередь покажет сырой URL
         var tm = titleMap
@@ -659,16 +757,21 @@ QtObject {
     }
 
     function onSearchDone(code) {
+        // отменённый/устаревший поиск (поле очистили) не должен ругаться ошибкой
+        if (!searching)
+            return
         searching = false
         if (code !== 0 && searchResults.length === 0)
-            error = "поиск не удался (yt-dlp код " + code + ")"
+            searchError = "поиск не удался (yt-dlp код " + code + ")"
+        else if (code === 0 && searchResults.length === 0)
+            searchError = "ничего не нашлось"
     }
 
     function clearResults() {
         searchProc.running = false
         searching = false
         searchResults = []
-        error = ""
+        searchError = ""
     }
 
     // ═══════════════ библиотека (find по дому) ═══════════════

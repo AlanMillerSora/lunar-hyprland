@@ -6,6 +6,8 @@ import QtQuick
 //  вызывающий через функции-слоты titleFor/subtitleFor/rightIconFor;
 //  клики уходят сигналами activated/rightClicked. Текущий трек
 //  подсвечивается через highlightIndex. Появление строк — мягкое.
+//  При reorderable=true строки тащатся: за порогом 8px поднимаю
+//  выбранную и по отпусканию шлю reordered(from, to).
 // ════════════════════════════════════════════════════════════════
 Item {
     id: root
@@ -15,6 +17,15 @@ Item {
     property int rowHeight: 46
     property int highlightIndex: -1
     property bool showRight: true
+    // тащу строки за собой: включаю только там, где порядок имеет смысл
+    property bool reorderable: false
+
+    // состояние перетаскивания: откуда тащу, куда целюсь, идёт ли драг
+    property bool dragActive: false
+    property int dragFrom: -1
+    property int dragTarget: -1
+    // драг только что закончился — грядущий clicked() это не активация
+    property bool justDragged: false
 
     // слоты разметки: (item, index) → текст/иконка
     property var titleFor: function(item, index) { return "" }
@@ -23,6 +34,8 @@ Item {
 
     signal activated(int index)
     signal rightClicked(int index)
+    // перетащил строку from на место to — что делать, решает вызывающий
+    signal reordered(int from, int to)
 
     ListView {
         id: list
@@ -45,6 +58,26 @@ Item {
             }
         }
 
+        // модель пересобралась (duration/media-title пересобирают очередь) —
+        // перетаскивание становится невалидным, снимаю его
+        Connections {
+            target: list
+            function onCountChanged() {
+                root.dragActive = false
+                root.dragFrom = -1
+                root.dragTarget = -1
+            }
+        }
+        // длина могла не измениться — ловлю и переподстановку модели
+        Connections {
+            target: root
+            function onModelChanged() {
+                root.dragActive = false
+                root.dragFrom = -1
+                root.dragTarget = -1
+            }
+        }
+
         delegate: Rectangle {
             id: row
             required property var modelData
@@ -55,12 +88,19 @@ Item {
             radius: Theme.radius
 
             readonly property bool current: index === root.highlightIndex
+            // строку поднял курсором — приподнимаю её над соседями
+            readonly property bool lifting: root.dragActive && root.dragFrom === index
 
-            color: current
-                ? Theme.active
-                : (rowMouse.containsMouse ? Theme.hover : "transparent")
-            border.width: current ? 1 : 0
+            color: lifting
+                ? Theme.hoverStrong
+                : (current ? Theme.active
+                           : (rowMouse.containsMouse ? Theme.hover : "transparent"))
+            border.width: (current || lifting) ? 1 : 0
             border.color: Theme.alpha(Theme.accent, 0.45)
+
+            // поднятая строка выше остальных и чуть крупнее — «взял в руку»
+            z: lifting ? 2 : 0
+            scale: lifting ? 1.02 : 1.0
 
             // мягкое появление новых строк (у переиспользованных делегатов
             // Component.onCompleted повторно не срабатывает — не мигают)
@@ -69,6 +109,7 @@ Item {
             Component.onCompleted: appeared = true
             Behavior on opacity { NumberAnimation { duration: Theme.animMed; easing.type: Easing.OutCubic } }
             Behavior on color { ColorAnimation { duration: Theme.animFast } }
+            Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
 
             Column {
                 anchors.verticalCenter: parent.verticalCenter
@@ -112,14 +153,68 @@ Item {
                 font.pixelSize: Theme.fontSize(12)
             }
 
-            // клик по строке — поверх мыши строки, но ниже правой кнопки
+            // клик по строке — поверх мыши строки, но ниже правой кнопки.
+            // Тут же живой драг: ход меньше 8px — это клик, иначе тащу строку.
             MouseArea {
                 id: rowMouse
                 anchors.fill: parent
                 anchors.rightMargin: rightHit.visible ? rightHit.width + 18 : 0
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                onClicked: root.activated(index)
+
+                property real pressY: 0
+
+                onPressed: (mouse) => {
+                    // самолечение: если прошлый драг оборвался на пересборке
+                    // модели, состояние могло залипнуть — сбрасываю
+                    root.dragActive = false
+                    root.dragFrom = -1
+                    root.dragTarget = -1
+                    root.justDragged = false
+                    pressY = mouse.y
+                }
+
+                onPositionChanged: (mouse) => {
+                    if (!root.reorderable)
+                        return
+                    // порог: мелкое дрожание остаётся кликом
+                    if (!root.dragActive && Math.abs(mouse.y - pressY) < 8)
+                        return
+                    if (!root.dragActive) {
+                        root.dragActive = true
+                        root.dragFrom = index
+                    }
+                    if (root.dragFrom !== index)
+                        return
+                    // цель считаю по курсору в содержимом списка: contentY уже
+                    // сдвинул делегат, а rowHeight + spacing задают шаг строки
+                    var inList = list.mapFromItem(row, 0, mouse.y)
+                    var contentY = list.contentY + inList.y
+                    var step = root.rowHeight + list.spacing
+                    var t = Math.round((contentY - root.rowHeight / 2) / step)
+                    root.dragTarget = Math.max(0, Math.min(list.count - 1, t))
+                }
+
+                onReleased: (mouse) => {
+                    if (!root.dragActive || root.dragFrom !== index)
+                        return
+                    var to = root.dragTarget
+                    root.dragActive = false
+                    root.dragFrom = -1
+                    root.dragTarget = -1
+                    // драг кончился — гашу грядущий clicked, это не активация
+                    root.justDragged = true
+                    if (to >= 0 && to !== index)
+                        root.reordered(index, to)
+                }
+
+                onClicked: {
+                    if (root.justDragged) {
+                        root.justDragged = false
+                        return
+                    }
+                    root.activated(index)
+                }
             }
 
             MouseArea {

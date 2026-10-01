@@ -12,6 +12,9 @@ Item {
     id: root
 
     property bool active: true
+    // прогресс в полосе: на странице «СЕЙЧАС» он дублирует большой «лунный seek»,
+    // поэтому там его прячу — остаётся ровно один ползунок
+    property bool showProgress: true
     signal expandRequested()
 
     implicitHeight: 84
@@ -37,7 +40,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: Theme.radius
+        radius: Theme.radiusL
         color: Theme.bgCard
         border.color: Theme.border
         border.width: 1
@@ -47,8 +50,8 @@ Item {
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 10
-            spacing: 6
+            anchors.margins: 12
+            spacing: 8
 
             RowLayout {
                 Layout.fillWidth: true
@@ -228,13 +231,55 @@ Item {
                             onClicked: root.expandRequested()
                         }
                     }
+
+                    // ── громкость: динамик (клик — mute, колесо — шаг) + слайдер ──
+                    Row {
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 8
+
+                        Slider {
+                            width: 84
+                            implicitHeight: 26
+                            trackHeight: 3
+                            handleSize: 10
+                            showLabel: false
+                            value: PlayerCore.volume / 100
+                            accentColor: PlayerCore.muted ? Theme.textFaint : Theme.accent
+                            anchors.verticalCenter: parent.verticalCenter
+                            onMoved: (v) => PlayerCore.setVolume(v * 100)
+                        }
+
+                        Text {
+                            id: volIcon
+                            text: (PlayerCore.muted || PlayerCore.volume <= 0)
+                                ? "\uf026"
+                                : (PlayerCore.volume < 50 ? "\uf027" : "\uf028")
+                            color: (PlayerCore.muted || PlayerCore.volume <= 0)
+                                ? Theme.textFaint
+                                : (volMouse.containsMouse ? Theme.accent : Theme.textDim)
+                            font.family: Theme.iconFont
+                            font.pixelSize: Theme.fontSize(14)
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            MouseArea {
+                                id: volMouse
+                                anchors.fill: parent
+                                anchors.margins: -6
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: PlayerCore.toggleMute()
+                                onWheel: (e) => PlayerCore.volumeStep(e.angleDelta.y > 0 ? 5 : -5)
+                            }
+                        }
+                    }
                 }
             }
 
-            // ── время + тонкий прогресс ──
+            // ── время + тонкий прогресс (на «СЕЙЧАС» прячу — там свой «лунный seek») ──
             RowLayout {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 12
+                Layout.preferredHeight: root.showProgress ? 12 : 0
+                visible: root.showProgress
                 spacing: 8
 
                 Text {

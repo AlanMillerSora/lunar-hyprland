@@ -11,6 +11,9 @@ Item {
 
     property bool pageActive: false
 
+    // зашёл на страницу — сразу отдаю фокус строке, иначе надо кликать по ней
+    onPageActiveChanged: if (pageActive) searchInput.forceActiveFocus()
+
     function doSearch() {
         var q = searchInput.text.trim()
         if (q.length > 0)
@@ -70,6 +73,7 @@ Item {
                     // Esc чистит поле; пустое — отдаю наверх (закрыть окно)
                     Keys.onEscapePressed: (e) => {
                         if (text !== "") { text = ""; e.accepted = true }
+                        else { e.accepted = false }
                     }
                 }
             }
@@ -112,14 +116,14 @@ Item {
             }
         }
 
-        // статус: поиск / ошибка
+        // статус: поиск / ошибка (только поисковая — ошибки загрузки видно на «Сейчас»)
         Text {
             Layout.fillWidth: true
-            visible: PlayerCore.searching || PlayerCore.error.length > 0
+            visible: PlayerCore.searching || PlayerCore.searchError.length > 0
             text: PlayerCore.searching
                 ? "поиск…"
-                : ("ошибка: " + PlayerCore.error)
-            color: PlayerCore.error.length > 0 ? Theme.danger : Theme.textFaint
+                : PlayerCore.searchError
+            color: PlayerCore.searchError.length > 0 ? Theme.danger : Theme.textFaint
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSize(10)
             elide: Text.ElideRight

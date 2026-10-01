@@ -4,6 +4,7 @@ import QtQuick.Layouts
 // ════════════════════════════════════════════════════════════════
 //  PlayerQueue — страница «ОЧЕРЕДЬ»: список PlayerCore.queue.
 //  Клик — прыжок к треку, крестик — удалить, текущий подсвечен.
+//  Тяну строку — переставляю порядок очереди через mpv playlist-move.
 // ════════════════════════════════════════════════════════════════
 Item {
     id: root
@@ -51,6 +52,9 @@ Item {
             emptyText: "очередь пуста"
             highlightIndex: PlayerCore.queueIndex
 
+            // порядок очереди можно менять перетаскиванием
+            reorderable: true
+
             titleFor: function(item, index) {
                 return item && item.title ? item.title : "трек " + (index + 1)
             }
@@ -63,6 +67,7 @@ Item {
 
             onActivated: (index) => PlayerCore.jumpTo(index)
             onRightClicked: (index) => PlayerCore.removeAt(index)
+            onReordered: (from, to) => PlayerCore.moveInQueue(from, to)
         }
     }
 }
