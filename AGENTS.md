@@ -159,15 +159,17 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 │   │   └── scripts/eclipse-{status,gamemode,record,cleanup,transparency,zapret,vencord,backup,update,perf,avatar,launch,agent-context}.sh,
 │   │       eclipse-calendar.py, eclipse-cheatsheet.py, eclipse-askpass.py, eclipse-wifi-guard.py
 │   ├── quickshell/
-│   │   ├── shell.qml грузит: LunarWallpaper, LunarPanel, LunarHub, LunarSidebar,
-│   │   │   LunarSidebarRight, LunarOsd, LunarVolume, LunarMedia, LunarTray, LunarTooltip,
-│   │   │   LunarClipboard, LunarPower, LunarAgent, LunarOverview, LunarPolkit
+│   │   ├── shell.qml грузит: LunarWallpaper, LunarPanel, LunarHub, LunarWallpapers,
+│   │   │   LunarSidebar, LunarSidebarRight, LunarOsd, LunarVolume, LunarMedia, LunarTray,
+│   │   │   LunarTooltip, LunarClipboard, LunarPower, LunarAgent, LunarOverview, LunarPolkit
 │   │   ├── Lunar*.qml, LunarWallpaperScene.qml, preview.qml, Slider.qml, Theme.qml,
 │   │   │   AppModel.qml, HudCorners.qml, PerspectivePanel.qml
-│   │   ├── SettingsPages/ (13 страниц), assets/ (+moon-phases/, crop-frame.png), pfp3.png,
+│   │   ├── SettingsPages/ (8 страниц), assets/ (+moon-phases/, crop-frame.png), pfp3.png,
 │   │   │   cava-lunar.conf, cava-lunar-wide.conf
 │   ├── avatars/avatar.png       ← единый аватар (рис + экран входа)
 │   ├── lunar/{home/firefox-home.html, lunar.bash, gamemode-pause.conf}
+│   ├── lunar/{palette.toml, templates/*.in}   ← единая палитра: пресеты + шаблоны
+│   ├── fontconfig/fonts.conf                  ← хинтинг/сглаживание (чёткие буквы)
 │   ├── bat/ Code/ yazi/ firefox/ hypridle/ mako/ kitty/ fastfetch/ btop/
 │   └── gtk-3.0/ gtk-4.0/ kdeglobals/ .zshrc starship.toml
 ├── systemd/  color-schemes/  assets/(+screens/)  zapret/
@@ -178,28 +180,42 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 ```
 
 - `shell.qml` — корневой `ShellRoot`. Синглтоны (`pragma Singleton`): `Theme`, `AppModel`.
-- Hub-страницы (nav): 0 Launch ·1 System ·2 Sound ·3 Monitors ·4 Network ·5 Bluetooth ·
-  6 Interface ·7 Memory ·8 Games ·9 Dev ·10 Wallpapers ·11 User ·12 Update.
+- Hub-страницы (nav, 8): 0 Launch ·1 System ·2 Devices ·3 Network ·4 Interface ·
+  5 Games ·6 Dev ·7 Update. Обои (сцена или картинки) — внутри Interface и в окне
+  подбора `LunarWallpapers` (IPC `wallpapers`, хоткей `SUPER + B`).
 - Левый сайдбар: 0 api-limit ·1 заметки. Правый: 0 уведомления ·1 музыка ·2 календарь ·3 запись.
 - 9 столов: 1 игры ·2 Firefox ·3 Discord ·4 Steam ·5 затмение/пусто ·6 кодинг ·7/8 пусто ·9 btop.
   **Фаза обоев = номер стола.**
 - **Единый установщик** `install.sh` (флаги в §8). Отдельных sddm/plymouth/zapret-скриптов больше нет.
 - Настройки записи: `~/.config/lunar/record.json` (Hub → Monitors), читает `eclipse-record.sh`.
+- Палитра: `~/.config/lunar/palette.toml` + шаблоны `lunar/templates/*.in` →
+  `hypr/scripts/eclipse-palette.py` → `~/.cache/lunar/palette.json` (читает Theme.qml)
+  и файлы приложений (kitty include, GTK @import, mako include, qt6ct, btop, yazi, fastfetch).
+  Выбор пресета: `~/.cache/lunar/preset`, картинка фотопалитры: `~/.cache/lunar/photo`.
 - `assets/screens/` — галерея README, не удалять.
 
 ## 5. Стиль
 
-- Палитра: фон `#050505`, текст `#ffffff`, dim `#888888`, faint `#4a4a4a`,
-  danger `#ff003c`, ok `#00ff9c`. Рамка 1px, радиус 6, HUD-скобки, JetBrains Mono, монохром.
-  Всё в `Theme.qml`.
-- Токены ритма: `Theme.hover` = accent .06, `hoverStrong` = .08, `active` = .12, `fill` = text .03.
-  Прочие: `interfaceOpacity`, `fontScale`, `trayVisible`, `wallpaperLive`, `optimizeMode`,
-  `blurSize/-1`, `blurPasses`, `tooltipShown/…`, `volumePopupOpen`, `radius`, `animFast/Med/Slow`,
-  `fontFamily`, `iconFont`.
-- HUD-заголовки секций: 12px, letterSpacing 2, bold, белый. Заголовки страниц Hub: 18px, letterSpacing 3.
+- Палитра — из `~/.cache/lunar/palette.json` (пишет `eclipse-palette.py` из `lunar/palette.toml`).
+  Пресеты: **lunar** (по умолчанию, холодный монохром), **graphite** (чёрный, но с лёгким
+  холодом — чистый нейтрал на тёплых матрицах читается коричневым), **steel** (серо-синий
+  с акцентом), **photo** (`--from-image`: цвет считается с обоев). В `Theme.qml` цвета
+  читаются через `hexColor()`: палитра пишет `#RRGGBBAA`, а Qt ждёт `#AARRGGBB`.
+- Флэт, без глянца: плашки панели плотные (`barPill` альфа 1.0), радиус плашек и окон 8,
+  зазоры окон 5/10, тень короткая (`range 8`, `render_power 3`), зерно тихое (0.07).
+  Градиент-блик сверху («стекло») не добавлять — это читается глянцем из нулевых.
+- Шрифт интерфейса — `Iosevka NFM` (семейство `Iosevka Nerd Font Mono`), иконки —
+  `JetBrainsMono Nerd Font`. `"JetBrains Mono"` в системе НЕТ — Qt молча рисовал Noto.
+- Токены `Theme.qml`: отступы `space1..6` 4/8/12/16/24/32; строки `rowHCompact/rowH/rowHComfy`
+  34/42/48, `headerH` 44; радиусы `radius/radiusM/radiusL/radiusXL` 8/10/12/16; текст
+  `fontTiny..fontClock` 11/12/14/22/16; панель `barH/barMargin/barPad/barRadius` 36/8/12/8;
+  `hoverGrow` 1.25 (ховер-рост групп панели); `hover/hoverStrong/active/fill`; `clamp()`.
+- HUD-заголовки секций: 12px, letterSpacing 2, bold. Заголовки страниц Hub: `fontTitle`.
+- Ховер: `scale` (визуальный, раскладку не трогает) + фоновая подсветка.
 - Плавные заполнения: анимация 200 мс (`Behavior on width`) и заполнение с нуля
   (старт 0 → `Timer{interval:60}` → целевое; `enabled: !pressed`).
-- Один акцент — белый; красный — «опасное», зелёный — «ок».
+- Один акцент — белый (или акцент пресета); красный — «опасное». Зелёного в рисе нет:
+  `ok` в палитре тоже нейтральный (светлый) — зелёные «успехи» пользователь убрал.
 - Классические серпы/«монеты»/тёмная сторона у иконок фаз — не использовать.
 
 ## 6. Закрытые темы (НЕ предлагать)
@@ -212,7 +228,9 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
   AAGL и всё, что его касается, вырезано навсегда — не возвращать.
 - GPU-выбор — только дискретная NVIDIA: `VK_ICD_FILENAMES=nvidia_icd.json`;
   GPU-env обязан доходить до systemd --user (иначе запуски из Hub уедут на iGPU).
-- Статические PNG-обои и их генератор — удалены; обои только QML-сцена (`LunarWallpaper.qml`).
+- Обои: два режима (`Theme.wallpaperMode`) — `scene` (QML-сцена затмения, по умолчанию)
+  и `image` (картинка с диска; подбор — окно `LunarWallpapers`, `SUPER + B`). Смена картинки
+  идёт кроссфейдом в `LunarWallpaper.qml`; в режиме `image` сцена не тикает.
 - Видео-обои (mpvpaper/awww, webm/zoompan, headless-Chromium) — убраны.
 - `svappy`/редактор скриншотов (PRINT = область в буфер).
 - Мониторные хоткеи (`SUPER+,/.`) — не нужны, один экран.
@@ -265,6 +283,17 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
   вывод самого `hyprctl reload`. Общее правило: имена хостовых API (Lua/QML/Quickshell)
   не угадывать по бинарю, а сверять по докам/стабам и живым вызовом.
 
+**Quickshell / QML (свежее, 1.81–1.100)**
+- `Behavior` нельзя объявить отдельным компонентом (`component Grow: Behavior on scale …`)
+  и подставлять объектом — Quickshell падает на старте и упирается в `start-limit-hit`.
+  Только инлайн рядом со свойством: `Behavior on scale { … }`.
+- `anchors.fill` внутри `Row` — ошибка верстки («Row will not function»): оборачивай в `Item`.
+- `FloatingWindow` — не `Item`: `Keys.*` и `forceActiveFocus()` на нём не работают,
+  вешай их на внутренний `Item` с `focus: true`.
+- Палитра: выбранный пресет помню в `~/.cache/lunar/preset`, картинка фотопалитры —
+  в `~/.cache/lunar/photo` (иначе переустановка вернёт «заводской» пресет).
+- `SUPER + W` занят разворотом окна — подбор обоев на `SUPER + B`.
+
 **Quickshell / QML**
 
 - Имена свойств не могут начинаться с заглавной буквы → страница не грузится.
@@ -304,6 +333,13 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 
 **Живая система и мелочи**
 
+- mako: `include=` обязан идти ДО первой секции (`[urgency=…]`), иначе «InvalidConfig»;
+  цвета urgency — только из include, в основном конфиге остаются лишь таймауты.
+- Проверки экрана: `grim -g "X,Y WxH"` (не `WxH+X+Y`), `-o` и `-g` несовместимы. Окно
+  OpenCode живёт в scratchpad (`kitty`, почти во весь экран) — для чистых скринов его прятать
+  (`hl.dsp.workspace.toggle_special("scratchpad")`) или замерять пиксель у самого края экрана.
+- Цвет из картинки: `eclipse-palette.py --from-image ФАЙЛ --apply` (доминирующий цвет через
+  ImageMagick → фон/панель/акцент/текст; результат — пресет `photo`).
 - `cliphist delete` читает stdin: `cliphist list | grep -P '^ID\t' | cliphist delete`.
 - DND: `makoctl mode -t do-not-disturb`.
 - Круглая маска magick: `magick in -resize 512x512 \( -size 512x512 xc:black -fill white -draw "circle 256,256 256,2" \) -alpha off -compose CopyOpacity -composite PNG32:out`.
@@ -335,6 +371,11 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 
 ```sh
 ./install.sh [--sddm|--plymouth|--zapret|--status|--disable-sddm|--disable-plymouth|--plymouth-rescue|--no-deps|--deps-only]
+~/.config/hypr/scripts/eclipse-palette.py                      # палитра: dry-run
+~/.config/hypr/scripts/eclipse-palette.py --preset graphite --apply
+~/.config/hypr/scripts/eclipse-palette.py --from-image ~/Pictures/wall.jpg --apply
+qs ipc call wallpapers toggle|open|close                       # подбор обоев (SUPER + B)
+qs ipc call hub nav N                                          # 0..7 (см. §4)
 sddm-greeter --test-mode --theme /usr/share/sddm/themes/lunar      # предпросмотр входа
 ~/.config/hypr/scripts/eclipse-avatar.sh pick|apply <cs> <cx> <cy> [/путь]
 ~/.config/hypr/scripts/eclipse-record.sh probe                     # проверка записи

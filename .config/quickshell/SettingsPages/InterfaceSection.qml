@@ -33,23 +33,6 @@ Item {
         photoProc.running = true
     }
 
-    Process {
-        id: pickProc
-        running: false
-        command: ["bash", "-c",
-            "zenity --file-selection --title='Обои' " +
-            "--file-filter='Изображения | *.jpg *.jpeg *.png *.webp' 2>/dev/null"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                var f = text.trim()
-                if (f !== "") {
-                    Theme.wallpaperPath = f
-                    Theme.wallpaperMode = "image"
-                }
-            }
-        }
-    }
-
     // ── обои (перенесено со страницы WALLPAPERS) ───────────────
     // живое превью: показываем фазу активного стола (или выбранную).
     // L40: фаза строго 1..9, внемерные столы не мапим молча.
@@ -722,32 +705,6 @@ Item {
 
                 Row {
                     spacing: Theme.space3
-
-                    Rectangle {
-                        width: pickLabel.implicitWidth + 28
-                        height: Theme.rowHCompact
-                        radius: Theme.radiusM
-                        color: pickMouse.containsMouse ? Theme.active : Theme.fill
-                        border.width: 1
-                        border.color: pickMouse.containsMouse ? Theme.accent : Theme.border
-
-                        Text {
-                            id: pickLabel
-                            anchors.centerIn: parent
-                            text: "ВЫБРАТЬ ФАЙЛ…"
-                            color: Theme.text
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSmall
-                        }
-
-                        MouseArea {
-                            id: pickMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: pickProc.running = true
-                        }
-                    }
 
                     Rectangle {
                         width: pickLabel.implicitWidth + 28

@@ -169,7 +169,7 @@ def palette_from_image(path: Path) -> dict:
         "accent":       hsl_to_hex(h, max(0.35, min(0.62, s * 1.15)), 0.66),
         "accent2":      hsl_to_hex(h, max(0.28, min(0.50, s * 0.90)), 0.80),
         "danger":       "#ff003c",
-        "ok":           "#00ff9c",
+        "ok":           hsl_to_hex(h, 0.08, 0.90),
         "border":       "#ffffff12",
         "borderAccent": hsl_to_hex(h, 0.50, 0.60) + "33",
         "barText":      hsl_to_hex(h, 0.07, 0.88),
@@ -302,8 +302,18 @@ def main() -> int:
     saved = APPLY_STATE_PRESET.read_text(encoding="utf-8").strip() if APPLY_STATE_PRESET.exists() else ""
 
     photo = Path(args.from_image) if args.from_image else None
-    if photo is None and saved == "photo" and APPLY_PHOTO_PATH.exists():
-        photo = Path(APPLY_PHOTO_PATH.read_text(encoding="utf-8").strip())
+    # сохранённую фотопалитру беру только если пресет не задан явно
+    if photo is None and args.preset is None and saved == "photo":
+        if APPLY_PHOTO_PATH.exists():
+            cand = Path(APPLY_PHOTO_PATH.read_text(encoding="utf-8").strip())
+            if cand.is_file():
+                photo = cand
+            else:
+                print(f"картинка фотопалитры пропала ({cand}) — беру пресет из palette.toml",
+                      file=sys.stderr)
+        else:
+            print("нет записи о картинке фотопалитры — беру пресет из palette.toml",
+                  file=sys.stderr)
 
     if photo is not None:
         if not photo.is_file():

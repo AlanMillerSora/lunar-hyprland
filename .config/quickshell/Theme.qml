@@ -46,7 +46,7 @@ QtObject {
     property color accent: hexColor(palette.accent, "#e8edf4")
     property color accent2: hexColor(palette.accent2, "#e8edf4")
     property color danger: hexColor(palette.danger, "#ff003c")
-    property color ok: hexColor(palette.ok, "#00ff9c")
+    property color ok: hexColor(palette.ok, "#e8edf4")   // без зелёного: «ок» — светлый
 
     property color trackBg: hexColor(palette.bgTrack, "#181b21")
 
