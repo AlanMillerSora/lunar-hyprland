@@ -151,11 +151,11 @@ PanelWindow {
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 20
-            spacing: 14
+            anchors.margins: Theme.space5
+            spacing: Theme.space4
 
             RowLayout {
-                spacing: 8
+                spacing: Theme.space2
                 Text {
                     text: "LUNAR"
                     color: Theme.text
@@ -222,12 +222,12 @@ PanelWindow {
             // ── вкладки ──
             Item {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 36
+                Layout.preferredHeight: Theme.rowHCompact
 
                 RowLayout {
                     id: rightTabRow
                     anchors.fill: parent
-                    spacing: 4
+                    spacing: Theme.space1
                     Repeater {
                         id: rightTabRep
                         model: ["уведомления", "музыка", "календарь", "запись"]
@@ -235,7 +235,7 @@ PanelWindow {
                             required property int index
                             required property string modelData
                             Layout.fillWidth: true
-                            height: 36
+                            height: Theme.rowHCompact
                             radius: Theme.radius
                             color: root.tabIndex === index
                                 ? Theme.active
@@ -292,17 +292,15 @@ PanelWindow {
                 Rectangle {
                     color: Theme.bgCard
                     radius: Theme.radius
-                    border.color: Theme.border
-                    border.width: 1
 
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: 16
-                        spacing: 8
+                        anchors.margins: Theme.space4
+                        spacing: Theme.space2
 
                         RowLayout {
                             Layout.fillWidth: true
-                            spacing: 8
+                            spacing: Theme.space2
                             Text {
                                 text: "уведомления"
                                 color: Theme.textDim
@@ -378,11 +376,11 @@ PanelWindow {
                                 readonly property bool expanded: notif.expandedId === modelData.id
 
                                 width: notifList.width
-                                height: bodyCol.implicitHeight + 16
+                                height: bodyCol.implicitHeight + Theme.space4
                                 radius: Theme.radius
-                                color: itemMouse.containsMouse ? Theme.hover : "transparent"
-                                border.width: 1
-                                border.color: notifItem.expanded ? Theme.accent : Theme.border
+                                color: notifItem.expanded
+                                    ? Theme.active
+                                    : (itemMouse.containsMouse ? Theme.hover : "transparent")
 
                                 // клик — раскрыть/свернуть; крестик убирает (ниже)
                                 MouseArea {
@@ -397,7 +395,7 @@ PanelWindow {
                                     id: bodyCol
                                     anchors.left: parent.left
                                     anchors.right: parent.right
-                                    anchors.leftMargin: 10
+                                    anchors.leftMargin: Theme.space3
                                     anchors.rightMargin: 28
                                     anchors.verticalCenter: parent.verticalCenter
                                     spacing: 2
@@ -439,7 +437,7 @@ PanelWindow {
                                     anchors.top: parent.top
                                     anchors.right: parent.right
                                     anchors.topMargin: 5
-                                    anchors.rightMargin: 8
+                                    anchors.rightMargin: Theme.space2
                                     text: "\uf00d"
                                     color: dismissMouse.containsMouse ? Theme.danger : Theme.textFaint
                                     font.family: Theme.iconFont
@@ -473,13 +471,11 @@ PanelWindow {
                 Rectangle {
                     color: Theme.bgCard
                     radius: Theme.radius
-                    border.color: Theme.border
-                    border.width: 1
 
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: 16
-                        spacing: 10
+                        anchors.margins: Theme.space4
+                        spacing: Theme.space3
 
                         Text {
                             text: "сейчас играет"
@@ -543,7 +539,7 @@ PanelWindow {
                                 ? root.player.trackTitle : "ничего не играет"
                             color: Theme.text
                             font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(18)
+                            font.pixelSize: Theme.fontTitle
                             font.bold: true
                             horizontalAlignment: Text.AlignHCenter
                             elide: Text.ElideRight
@@ -642,13 +638,11 @@ PanelWindow {
                 Rectangle {
                     color: Theme.bgCard
                     radius: Theme.radius
-                    border.color: Theme.border
-                    border.width: 1
 
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: 16
-                        spacing: 10
+                        anchors.margins: Theme.space4
+                        spacing: Theme.space3
 
                         Text {
                             Layout.fillWidth: true
@@ -674,7 +668,7 @@ PanelWindow {
                             Column {
                                 id: monthsColumn
                                 width: monthFlick.width
-                                spacing: 18
+                                spacing: Theme.space4
 
                                 Repeater {
                                     model: root.months
@@ -731,7 +725,7 @@ PanelWindow {
                                                     required property var modelData
                                                     // H12: ширина дня считается от ширины контейнера
                                                     width: Math.floor(monthsColumn.width / 7)
-                                                    height: 42
+                                                    height: Theme.rowH
                                                     radius: Theme.radius
                                                     readonly property bool isSel: modelData.day > 0 && cal.selected === modelData.date
                                                     // M34: «сегодня» считаем от текущей даты, а не из зафиксированного при старте значения
@@ -841,7 +835,7 @@ PanelWindow {
                                 delegate: RowLayout {
                                     required property var modelData
                                     Layout.fillWidth: true
-                                    spacing: 8
+                                    spacing: Theme.space2
                                     Text {
                                         text: (modelData.time && modelData.time.length > 0) ? modelData.time : "весь"
                                         color: Theme.textDim
@@ -885,8 +879,8 @@ PanelWindow {
                                     TextInput {
                                         id: calTitle
                                         anchors.fill: parent
-                                        anchors.leftMargin: 8
-                                        anchors.rightMargin: 8
+                                        anchors.leftMargin: Theme.space2
+                                        anchors.rightMargin: Theme.space2
                                         verticalAlignment: TextInput.AlignVCenter
                                         color: Theme.text
                                         font.family: Theme.fontFamily
@@ -970,17 +964,15 @@ PanelWindow {
                 Rectangle {
                     color: Theme.bgCard
                     radius: Theme.radius
-                    border.color: Theme.border
-                    border.width: 1
 
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: 16
-                        spacing: 8
+                        anchors.margins: Theme.space4
+                        spacing: Theme.space2
 
                         RowLayout {
                             Layout.fillWidth: true
-                            spacing: 8
+                            spacing: Theme.space2
 
                             Text {
                                 text: "запись экрана"
@@ -1062,8 +1054,6 @@ PanelWindow {
                                 height: 54
                                 radius: Theme.radius
                                 color: recMouse.containsMouse ? Theme.hover : "transparent"
-                                border.width: 1
-                                border.color: Theme.border
 
                                 MouseArea {
                                     id: recMouse
@@ -1075,9 +1065,9 @@ PanelWindow {
 
                                 RowLayout {
                                     anchors.fill: parent
-                                    anchors.leftMargin: 10
-                                    anchors.rightMargin: 10
-                                    spacing: 10
+                                    anchors.leftMargin: Theme.space3
+                                    anchors.rightMargin: Theme.space3
+                                    spacing: Theme.space3
 
                                     Text {
                                         text: "\uf03d"

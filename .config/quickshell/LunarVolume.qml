@@ -151,7 +151,7 @@ PanelWindow {
 
         Rectangle {
             anchors.fill: parent
-            radius: 3
+            radius: Theme.radius
             color: row.active
                 ? Theme.active
                 : (rowMouse.containsMouse ? Theme.hover : "transparent")
@@ -161,7 +161,7 @@ PanelWindow {
             anchors.fill: parent
             anchors.leftMargin: 6
             anchors.rightMargin: 6
-            spacing: 8
+            spacing: Theme.space2
 
             Text {
                 text: root.devIcon(row.device)
@@ -192,7 +192,7 @@ PanelWindow {
     Rectangle {
         id: card
         width: 360
-        height: col.implicitHeight + 32
+        height: col.implicitHeight + Theme.space6
         anchors.top: parent.top
         anchors.topMargin: 52
         anchors.right: parent.right
@@ -222,13 +222,13 @@ PanelWindow {
         ColumnLayout {
             id: col
             anchors.fill: parent
-            anchors.margins: 16
-            spacing: 10
+            anchors.margins: Theme.space4
+            spacing: Theme.space3
 
             // ── шапка: mute · процент · микшер · закрыть ──
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 8
+                spacing: Theme.space2
 
                 Text {
                     text: root.muted
@@ -314,7 +314,7 @@ PanelWindow {
             // ── вывод звука (список, если есть из чего выбирать) ──
             ColumnLayout {
                 Layout.fillWidth: true
-                spacing: 4
+                spacing: Theme.space1
                 visible: root.sinks.length > 1
 
                 Text {
@@ -341,7 +341,7 @@ PanelWindow {
             // ── вход: микрофон ──
             ColumnLayout {
                 Layout.fillWidth: true
-                spacing: 4
+                spacing: Theme.space1
                 visible: root.sources.length > 1
 
                 Text {

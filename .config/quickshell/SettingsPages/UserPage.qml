@@ -127,13 +127,13 @@ Item {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.rightMargin: page.rightMargin
-            spacing: 20
+            spacing: Theme.space5
 
             Text {
                 text: "USER"
                 color: Theme.text
                 font.family: page.mono
-                font.pixelSize: 18
+                font.pixelSize: Theme.fontTitle
                 font.letterSpacing: 3
             }
 
@@ -142,8 +142,9 @@ Item {
             // ── обычный вид: аватар и кнопка ──
             Column {
                 visible: !page.cropping
-                spacing: 20
+                spacing: Theme.space5
 
+                // аватар: фиксированный квадрат 200×200, трогать не стал
                 Image {
                     width: 200
                     height: 200
@@ -157,9 +158,10 @@ Item {
 
                 Rectangle {
                     width: Math.max(170, changeText.implicitWidth + 36)
-                    height: 38
+                    height: Theme.rowH
                     radius: Theme.radius
                     color: changeArea.containsMouse ? Theme.active : "transparent"
+                    // кнопка: рамка — аффорданс, оставляю
                     border.width: 1
                     border.color: changeArea.containsMouse ? Theme.accent : Theme.border
                     Behavior on color { ColorAnimation { duration: Theme.animFast } }
@@ -197,7 +199,7 @@ Item {
             // ── вид обрезки ──
             Column {
                 visible: page.cropping
-                spacing: 16
+                spacing: Theme.space4
 
                 Text {
                     text: "ОБРЕЗКА · перетащи мышью, колесо — масштаб"
@@ -207,6 +209,8 @@ Item {
                     font.letterSpacing: 1
                 }
 
+                // окно обрезки: квадрат viewSize (260) — намеренно фиксирован,
+                // координаты кропа считаю от него; трогать нельзя
                 Item {
                     id: cropArea
                     width: page.viewSize
@@ -268,11 +272,11 @@ Item {
                 }
 
                 Row {
-                    spacing: 14
+                    spacing: Theme.space4
 
                     Rectangle {
                         width: 150
-                        height: 38
+                        height: Theme.rowH
                         radius: Theme.radius
                         color: saveArea.containsMouse ? Theme.active : "transparent"
                         border.width: 1
@@ -297,7 +301,7 @@ Item {
 
                     Rectangle {
                         width: 130
-                        height: 38
+                        height: Theme.rowH
                         radius: Theme.radius
                         color: cancelArea.containsMouse ? Theme.active : "transparent"
                         border.width: 1

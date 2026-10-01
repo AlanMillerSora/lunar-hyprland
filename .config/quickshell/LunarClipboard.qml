@@ -134,12 +134,12 @@ FloatingWindow {
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 22
-            spacing: 12
+            spacing: Theme.space3
 
             // ── шапка ──
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 10
+                spacing: Theme.space3
 
                 Text {
                     text: "CLIPBOARD"
@@ -176,7 +176,7 @@ FloatingWindow {
                 Text {
                     id: searchIcon
                     anchors.left: parent.left
-                    anchors.leftMargin: 12
+                    anchors.leftMargin: Theme.space3
                     anchors.verticalCenter: parent.verticalCenter
                     text: "\uf002"
                     font.family: Theme.iconFont
@@ -187,9 +187,9 @@ FloatingWindow {
                 TextInput {
                     id: searchInput
                     anchors.left: searchIcon.right
-                    anchors.leftMargin: 10
+                    anchors.leftMargin: Theme.space3
                     anchors.right: parent.right
-                    anchors.rightMargin: 12
+                    anchors.rightMargin: Theme.space3
                     anchors.verticalCenter: parent.verticalCenter
                     color: Theme.text
                     font.family: Theme.fontFamily
@@ -254,19 +254,17 @@ FloatingWindow {
                         required property int index
 
                         width: list.width
-                        height: 40
+                        height: Theme.rowHCompact
                         radius: Theme.radius
                         color: root.selectedIndex === index
                             ? Theme.active
                             : (rowMouse.containsMouse ? Theme.hover : "transparent")
-                        border.width: root.selectedIndex === index ? 1 : 0
-                        border.color: Theme.borderAccent
 
                         RowLayout {
                             anchors.fill: parent
-                            anchors.leftMargin: 12
-                            anchors.rightMargin: 12
-                            spacing: 10
+                            anchors.leftMargin: Theme.space3
+                            anchors.rightMargin: Theme.space3
+                            spacing: Theme.space3
 
                             Text {
                                 text: String(index + 1).padStart(2, "0")

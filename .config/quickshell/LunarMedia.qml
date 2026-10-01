@@ -134,13 +134,13 @@ PanelWindow {
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 18
-            spacing: 14
+            anchors.margins: Theme.space4
+            spacing: Theme.space4
 
             // ── шапка ──
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 8
+                spacing: Theme.space2
 
                 Text {
                     text: root.playing ? "\uf04c" : "\uf04b"
@@ -187,7 +187,7 @@ PanelWindow {
             // ── обложка + трек ──
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 16
+                spacing: Theme.space4
 
                 // обложка: монохром/лёгкий дуотон (или заглушка)
                 Item {
@@ -219,8 +219,6 @@ PanelWindow {
                         anchors.fill: parent
                         visible: root.art.length === 0 || coverImg.status === Image.Error
                         color: Theme.bgCard
-                        border.color: Theme.border
-                        border.width: 1
                         Text {
                             anchors.centerIn: parent
                             text: "\uf001"
@@ -234,7 +232,7 @@ PanelWindow {
                 ColumnLayout {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignTop
-                    spacing: 8
+                    spacing: Theme.space2
 
                     Text {
                         Layout.fillWidth: true

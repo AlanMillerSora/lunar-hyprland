@@ -167,8 +167,8 @@ PanelWindow {
     Item {
         id: board
         anchors.centerIn: parent
-        width: root.boardW + 32
-        height: header.height + 12 + root.boardH + 16
+        width: root.boardW + Theme.space6
+        height: header.height + Theme.space3 + root.boardH + Theme.space4
         visible: root.showing
         opacity: root.showing ? 1 : 0
         scale: root.showing ? 1 : 0.97
@@ -182,7 +182,7 @@ PanelWindow {
             id: header
             anchors.top: parent.top
             anchors.left: parent.left
-            anchors.leftMargin: 4
+            anchors.leftMargin: Theme.space1
             text: "ОБЗОР СТОЛОВ"
             color: Theme.text
             font.family: Theme.fontFamily
@@ -192,7 +192,7 @@ PanelWindow {
         }
         Text {
             anchors.left: header.right
-            anchors.leftMargin: 12
+            anchors.leftMargin: Theme.space3
             anchors.baseline: header.baseline
             text: "тяни окно на другой стол · ЛКМ фокус · СКМ закрыть"
             color: Theme.textFaint
@@ -204,7 +204,7 @@ PanelWindow {
         Grid {
             id: grid
             anchors.top: header.bottom
-            anchors.topMargin: 12
+            anchors.topMargin: Theme.space3
             anchors.horizontalCenter: parent.horizontalCenter
             columns: root.cols
             columnSpacing: root.gap

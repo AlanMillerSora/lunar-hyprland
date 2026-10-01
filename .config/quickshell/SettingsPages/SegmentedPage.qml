@@ -29,11 +29,11 @@ Item {
 
     Column {
         anchors.fill: parent
-        spacing: 12
+        spacing: Theme.space3
 
         // ── переключатель разделов ──
         Row {
-            spacing: 8
+            spacing: Theme.space2
 
             Repeater {
                 model: page.items
@@ -43,8 +43,8 @@ Item {
                     required property int index
 
                     width: 120
-                    height: 32
-                    radius: Theme.radius
+                    height: Theme.rowHCompact
+                    radius: Theme.radiusM
                     color: page.segment === index
                         ? Theme.active
                         : (segMouse.containsMouse ? Theme.hover : "transparent")

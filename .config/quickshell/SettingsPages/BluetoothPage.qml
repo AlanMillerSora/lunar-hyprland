@@ -154,7 +154,7 @@ Item {
         anchors.rightMargin: page.contentRightMargin
         anchors.topMargin: page.contentTopMargin
         anchors.bottomMargin: page.contentBottomMargin
-        spacing: 8
+        spacing: Theme.space2
         Item {
             id: header
             width: parent.width
@@ -163,7 +163,7 @@ Item {
                 text: "BLUETOOTH"
                 color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: 18
+                font.pixelSize: Theme.fontTitle
                 font.letterSpacing: 3
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
@@ -173,7 +173,7 @@ Item {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
                 width: 76
-                height: 38
+                height: Theme.rowHCompact
                 radius: Theme.radius
                 color: page.powered ? Theme.active : Theme.alpha(Theme.textDim, 0.15)
                 border.width: 1
@@ -183,7 +183,7 @@ Item {
                     text: page.powered ? "ON" : "OFF"
                     color: page.powered ? Theme.accent : Theme.textDim
                     font.family: Theme.fontFamily
-                    font.pixelSize: 10
+                    font.pixelSize: Theme.fontTiny
                     font.bold: true
                 }
                 MouseArea {
@@ -204,7 +204,7 @@ Item {
             text: page.statusText
             color: Theme.accent
             font.family: Theme.fontFamily
-            font.pixelSize: 10
+            font.pixelSize: Theme.fontTiny
             horizontalAlignment: Text.AlignHCenter
         }
         // L41: скрытые устройства можно вернуть — список только рос
@@ -245,7 +245,7 @@ Item {
                         text: "NO BLUETOOTH ADAPTER"
                         color: Theme.textDim
                         font.family: Theme.fontFamily
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontSmall
                         font.letterSpacing: 1
                     }
                 }
@@ -255,7 +255,7 @@ Item {
                     visible: page.adapter && !page.powered
                     Column {
                         anchors.centerIn: parent
-                        spacing: 8
+                        spacing: Theme.space2
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: "\uf294"
@@ -268,7 +268,7 @@ Item {
                             text: "BLUETOOTH IS OFF"
                             color: Theme.textDim
                             font.family: Theme.fontFamily
-                            font.pixelSize: 11
+                            font.pixelSize: Theme.fontSmall
                             font.letterSpacing: 1
                         }
                         Text {
@@ -286,7 +286,7 @@ Item {
                     visible: page.powered && repeater.count === 0
                     Column {
                         anchors.centerIn: parent
-                        spacing: 8
+                        spacing: Theme.space2
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: "\uf1eb"
@@ -299,7 +299,7 @@ Item {
                             text: "SCANNING FOR DEVICES..."
                             color: Theme.textDim
                             font.family: Theme.fontFamily
-                            font.pixelSize: 11
+                            font.pixelSize: Theme.fontSmall
                             font.letterSpacing: 1
                         }
                         Text {
@@ -321,16 +321,14 @@ Item {
                         readonly property string deviceKey: modelData.address || modelData.name || ""
                         visible: !page.removingDevices[deviceKey]
                         width: list.width
-                        height: visible ? 52 : 0
+                        height: visible ? Theme.rowHComfy : 0
                         radius: Theme.radius
                         color: isConnected
                             ? Theme.active
                             : Theme.fill
-                        border.width: 1
-                        border.color: isConnected ? Theme.accent : Theme.border
                         Row {
                             anchors.left: parent.left
-                            anchors.leftMargin: 14
+                            anchors.leftMargin: Theme.space4
                             anchors.verticalCenter: parent.verticalCenter
                             spacing: 10
                             Text {
@@ -370,14 +368,14 @@ Item {
                         }
                         Row {
                             anchors.right: parent.right
-                            anchors.rightMargin: 14
+                            anchors.rightMargin: Theme.space4
                             anchors.verticalCenter: parent.verticalCenter
                             spacing: 12
                             Text {
                                 text: page.actionLabel(card.modelData)
                                 color: card.isConnected ? Theme.danger : Theme.accent
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 10
+                                font.pixelSize: Theme.fontTiny
                                 anchors.verticalCenter: parent.verticalCenter
                                 MouseArea {
                                     anchors.fill: parent
@@ -413,7 +411,7 @@ Item {
                                     y: (parent.height - height) / 2
                                     width: tooltipText.width + 16
                                     height: 24
-                                    radius: 4
+                                    radius: Theme.radius
                                     color: Theme.bgPanel
                                     border.width: 1
                                     border.color: Theme.border
@@ -423,7 +421,7 @@ Item {
                                         text: "Разорвать связь"
                                         color: Theme.text
                                         font.family: Theme.fontFamily
-                                        font.pixelSize: 10
+                                        font.pixelSize: Theme.fontTiny
                                     }
                                 }
                             }
@@ -455,7 +453,7 @@ Item {
 
             Column {
                 anchors.centerIn: parent
-                spacing: 16
+                spacing: Theme.space4
 
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -488,7 +486,7 @@ Item {
                             text: "ОТМЕНА"
                             color: cancelMouse.containsMouse ? Theme.accent : Theme.textDim
                             font.family: Theme.fontFamily
-                            font.pixelSize: 10
+                            font.pixelSize: Theme.fontTiny
                         }
                         MouseArea {
                             id: cancelMouse
@@ -513,7 +511,7 @@ Item {
                             text: "РАЗОРВАТЬ"
                             color: Theme.danger
                             font.family: Theme.fontFamily
-                            font.pixelSize: 10
+                            font.pixelSize: Theme.fontTiny
                         }
                         MouseArea {
                             id: confirmMouse

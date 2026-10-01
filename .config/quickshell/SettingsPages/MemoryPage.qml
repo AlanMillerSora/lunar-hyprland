@@ -131,13 +131,13 @@ Item {
     ColumnLayout {
         anchors.fill: parent
         anchors.rightMargin: 36
-        spacing: 8
+        spacing: Theme.space2
 
         Text {
             text: "MEMORY"
             color: Theme.text
             font.family: Theme.fontFamily
-            font.pixelSize: 18
+            font.pixelSize: Theme.fontTitle
             font.letterSpacing: 3
         }
 
@@ -151,14 +151,12 @@ Item {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 112
-            color: Theme.bgCard
+            color: Theme.fill
             radius: Theme.radius
-            border.width: 1
-            border.color: Theme.border
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 12
+                anchors.margins: Theme.space3
                 spacing: 6
 
                 RowLayout {
@@ -177,13 +175,13 @@ Item {
                         text: page.gb(page.memUsed) + " / " + page.gb(page.memTotal) + " GB"
                         color: Theme.textDim
                         font.family: Theme.fontFamily
-                        font.pixelSize: 10
+                        font.pixelSize: Theme.fontTiny
                     }
                     Text {
                         text: Math.round(page.memPct * 100) + "%"
                         color: Theme.text
                         font.family: Theme.fontFamily
-                        font.pixelSize: 13
+                        font.pixelSize: Theme.fontBody
                         font.bold: true
                     }
                 }
@@ -194,8 +192,6 @@ Item {
                     Layout.preferredHeight: 10
                     radius: 5
                     color: Theme.trackBg
-                    border.width: 1
-                    border.color: Theme.border
 
                     Rectangle {
                         width: parent.width * page.memPct
@@ -218,14 +214,12 @@ Item {
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 8
-                        radius: 4
+                        radius: Theme.radius
                         color: Theme.trackBg
-                        border.width: 1
-                        border.color: Theme.border
                         Rectangle {
                             width: parent.width * page.memAllPct
                             height: parent.height
-                            radius: 4
+                            radius: Theme.radius
                             color: page.memAllPct > 0.9 ? Theme.danger : Theme.accent2
                             Behavior on width { NumberAnimation { duration: 200 } }
                         }
@@ -234,7 +228,7 @@ Item {
                         text: Math.round(page.memAllPct * 100) + "%"
                         color: Theme.text
                         font.family: Theme.fontFamily
-                        font.pixelSize: 10
+                        font.pixelSize: Theme.fontTiny
                         font.bold: true
                     }
                 }
@@ -251,12 +245,12 @@ Item {
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 6
-                        radius: 3
+                        radius: Theme.radius
                         color: Theme.trackBg
                         Rectangle {
                             width: parent.width * page.swapPct
                             height: parent.height
-                            radius: 3
+                            radius: Theme.radius
                             color: Theme.textDim
                             Behavior on width { NumberAnimation { duration: 200 } }
                         }
@@ -279,15 +273,15 @@ Item {
             text: "ОЧИСТКА СИСТЕМЫ — ненужные пакеты, старые кэши и логи"
             color: Theme.textDim
             font.family: Theme.fontFamily
-            font.pixelSize: 10
+            font.pixelSize: Theme.fontTiny
         }
 
         // ── опции в две колонки ──
         GridLayout {
             Layout.fillWidth: true
             columns: 2
-            columnSpacing: 8
-            rowSpacing: 4
+            columnSpacing: Theme.space2
+            rowSpacing: Theme.space1
 
             Repeater {
                 model: page.options
@@ -299,16 +293,14 @@ Item {
                     Layout.preferredHeight: 28
                     radius: Theme.radius
                     color: page.isOn(modelData.key)
-                        ? Theme.hover
-                        : "transparent"
-                    border.width: 1
-                    border.color: optMouse.containsMouse ? Theme.borderAccent : Theme.border
+                        ? Theme.active
+                        : Theme.fill
 
                     Row {
                         anchors.left: parent.left
-                        anchors.leftMargin: 8
+                        anchors.leftMargin: Theme.space2
                         anchors.verticalCenter: parent.verticalCenter
-                        spacing: 8
+                        spacing: Theme.space2
 
                         Rectangle {
                             width: 14
@@ -338,7 +330,7 @@ Item {
                             text: modelData.label
                             color: page.isOn(modelData.key) ? Theme.text : Theme.textDim
                             font.family: Theme.fontFamily
-                            font.pixelSize: 10
+                            font.pixelSize: Theme.fontTiny
                         }
                     }
 
@@ -356,11 +348,11 @@ Item {
         // ── кнопки ──
         RowLayout {
             Layout.fillWidth: true
-            spacing: 8
+            spacing: Theme.space2
 
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 38
+                Layout.preferredHeight: Theme.rowHCompact
                 radius: Theme.radius
                 color: page.running
                     ? Theme.hover
@@ -390,7 +382,7 @@ Item {
 
             Rectangle {
                 Layout.preferredWidth: 140
-                Layout.preferredHeight: 38
+                Layout.preferredHeight: Theme.rowHCompact
                 radius: Theme.radius
                 color: dryMouse.containsMouse ? Theme.alpha(Theme.text, 0.06) : "transparent"
                 border.width: 1
@@ -401,7 +393,7 @@ Item {
                     text: "СУХОЙ ПРОГОН"
                     color: Theme.textDim
                     font.family: Theme.fontFamily
-                    font.pixelSize: 10
+                    font.pixelSize: Theme.fontTiny
                 }
 
                 MouseArea {
@@ -416,7 +408,7 @@ Item {
 
             Rectangle {
                 Layout.preferredWidth: 120
-                Layout.preferredHeight: 38
+                Layout.preferredHeight: Theme.rowHCompact
                 radius: Theme.radius
                 color: termMouse.containsMouse ? Theme.alpha(Theme.text, 0.06) : "transparent"
                 border.width: 1
@@ -427,7 +419,7 @@ Item {
                     text: "В ТЕРМИНАЛЕ"
                     color: Theme.textFaint
                     font.family: Theme.fontFamily
-                    font.pixelSize: 10
+                    font.pixelSize: Theme.fontTiny
                 }
 
                 MouseArea {
@@ -446,14 +438,12 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.minimumHeight: 60
-            color: Theme.bgCard
+            color: Theme.fill
             radius: Theme.radius
-            border.width: 1
-            border.color: Theme.border
 
             Flickable {
                 anchors.fill: parent
-                anchors.margins: 10
+                anchors.margins: Theme.space3
                 clip: true
                 contentWidth: width
                 contentHeight: logItem.implicitHeight
@@ -466,7 +456,7 @@ Item {
                         : "отчёт об очистке появится здесь…"
                     color: page.logText.length > 0 ? Theme.text : Theme.textFaint
                     font.family: Theme.fontFamily
-                    font.pixelSize: 10
+                    font.pixelSize: Theme.fontTiny
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                 }
             }

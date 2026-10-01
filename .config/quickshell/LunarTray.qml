@@ -117,7 +117,7 @@ PanelWindow {
     Rectangle {
         id: card
         width: 300
-        height: Math.min(44 + root.listMax, 44 + col.height)
+        height: Math.min(Theme.headerH + root.listMax, Theme.headerH + col.height)
         anchors.top: parent.top
         anchors.topMargin: 52
         anchors.right: parent.right
@@ -150,13 +150,13 @@ PanelWindow {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
-            anchors.leftMargin: 12
-            anchors.rightMargin: 12
-            anchors.topMargin: 12
+            anchors.leftMargin: Theme.space3
+            anchors.rightMargin: Theme.space3
+            anchors.topMargin: Theme.space3
             spacing: 2
 
             Row {
-                spacing: 8
+                spacing: Theme.space2
                 width: col.width
 
                 Text {
@@ -176,7 +176,7 @@ PanelWindow {
                 }
             }
 
-            Item { width: 1; height: 4 }
+            Item { width: 1; height: Theme.space1 }
 
             Text {
                 visible: root.collapsed.length === 0
@@ -203,18 +203,16 @@ PanelWindow {
                 delegate: Rectangle {
                     required property var modelData
                     width: list.width
-                    height: 34
+                    height: Theme.rowHCompact
                     radius: Theme.radius
                     color: rowMouse.containsMouse ? Theme.hoverStrong : "transparent"
-                    border.width: rowMouse.containsMouse ? 1 : 0
-                    border.color: Theme.border
 
                     Item {
                         id: rowIconBox
                         width: 18
                         height: 18
                         anchors.left: parent.left
-                        anchors.leftMargin: 8
+                        anchors.leftMargin: Theme.space2
                         anchors.verticalCenter: parent.verticalCenter
 
                         Image {
@@ -241,9 +239,9 @@ PanelWindow {
 
                     Text {
                         anchors.left: rowIconBox.right
-                        anchors.leftMargin: 10
+                        anchors.leftMargin: Theme.space3
                         anchors.right: rowHint.left
-                        anchors.rightMargin: 8
+                        anchors.rightMargin: Theme.space2
                         anchors.verticalCenter: parent.verticalCenter
                         text: modelData.tooltipTitle || modelData.title || modelData.id
                         color: Theme.text
@@ -255,7 +253,7 @@ PanelWindow {
                     Text {
                         id: rowHint
                         anchors.right: parent.right
-                        anchors.rightMargin: 8
+                        anchors.rightMargin: Theme.space2
                         anchors.verticalCenter: parent.verticalCenter
                         visible: modelData.hasMenu
                         text: "ПКМ"

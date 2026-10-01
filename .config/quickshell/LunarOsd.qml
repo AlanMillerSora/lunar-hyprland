@@ -88,7 +88,7 @@ PanelWindow {
         anchors.topMargin: 54
         width: 340
         height: 54
-        radius: Theme.radius
+        radius: Theme.radiusM
         color: Theme.bg
         border.color: Theme.border
         border.width: 1
@@ -98,12 +98,12 @@ PanelWindow {
         Behavior on opacity { NumberAnimation { duration: 120 } }
         Behavior on scale { NumberAnimation { duration: 120 } }
 
-        HudCorners { color: Theme.accent; size: 16; thickness: 1; margin: 6 }
+        HudCorners { color: Theme.accent; size: 16; thickness: 1; margin: Theme.space3 }
 
         RowLayout {
             anchors.fill: parent
-            anchors.margins: 14
-            spacing: 12
+            anchors.margins: Theme.space4
+            spacing: Theme.space3
 
             // иконка
             Text {

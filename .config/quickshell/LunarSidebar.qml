@@ -108,11 +108,11 @@ PanelWindow {
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 20
-            spacing: 16
+            anchors.margins: Theme.space5
+            spacing: Theme.space4
 
             RowLayout {
-                spacing: 8
+                spacing: Theme.space2
                 Text {
                     text: "LUNAR"
                     color: Theme.text
@@ -157,12 +157,12 @@ PanelWindow {
 
             Item {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 36
+                Layout.preferredHeight: Theme.rowHCompact
 
                 RowLayout {
                     id: leftTabRow
                     anchors.fill: parent
-                    spacing: 4
+                    spacing: Theme.space1
                     Repeater {
                         id: leftTabRep
                         model: ["api-limit", "заметки"]
@@ -170,7 +170,7 @@ PanelWindow {
                             required property int index
                             required property string modelData
                             Layout.fillWidth: true
-                            height: 36
+                            height: Theme.rowHCompact
                             radius: Theme.radius
                             color: tabIndex === index
                                 ? Theme.active
@@ -226,12 +226,10 @@ PanelWindow {
                     Layout.fillHeight: true
                     color: Theme.bgCard
                     radius: Theme.radius
-                    border.color: Theme.border
-                    border.width: 1
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: 16
-                        spacing: 10
+                        anchors.margins: Theme.space4
+                        spacing: Theme.space3
 
                         RowLayout {
                             Layout.fillWidth: true
@@ -418,12 +416,10 @@ PanelWindow {
                     Layout.fillHeight: true
                     color: Theme.bgCard
                     radius: Theme.radius
-                    border.color: Theme.border
-                    border.width: 1
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: 16
-                        spacing: 8
+                        anchors.margins: Theme.space4
+                        spacing: Theme.space2
                         RowLayout {
                             Layout.fillWidth: true
                             spacing: 6
@@ -458,7 +454,7 @@ PanelWindow {
                             TextArea {
                                 id: notesArea
                                 anchors.fill: parent
-                                anchors.margins: 8
+                                anchors.margins: Theme.space2
                                 color: Theme.text
                                 font.family: Theme.fontFamily
                                 font.pixelSize: Theme.fontSize(13)
@@ -476,7 +472,7 @@ PanelWindow {
 
                             Text {
                                 anchors.fill: parent
-                                anchors.margins: 8
+                                anchors.margins: Theme.space2
                                 visible: notesArea.text.length === 0
                                 text: "пиши здесь — сохраняется само"
                                 color: Theme.textFaint

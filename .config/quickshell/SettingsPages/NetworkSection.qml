@@ -48,7 +48,7 @@ Item {
             text: parent.label
             color: zbtn.containsMouse ? Theme.accent : Theme.textDim
             font.family: Theme.fontFamily
-            font.pixelSize: 10
+            font.pixelSize: Theme.fontTiny
             font.letterSpacing: 1
         }
 
@@ -362,7 +362,7 @@ Item {
                 text: "NETWORK"
                 color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: 18
+                font.pixelSize: Theme.fontTitle
                 font.letterSpacing: 3
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
@@ -371,13 +371,13 @@ Item {
             Row {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 8
+                spacing: Theme.space2
 
                 // обновить список сетей (иначе он «замерзал» после первого скана)
                 Rectangle {
                     id: scanBtn
                     width: 76
-                    height: 38
+                    height: Theme.rowHCompact
                     radius: Theme.radius
                     color: scanMouse.containsMouse
                         ? Theme.hoverStrong
@@ -390,7 +390,7 @@ Item {
                         text: "СКАН"
                         color: Theme.textDim
                         font.family: Theme.fontFamily
-                        font.pixelSize: 10
+                        font.pixelSize: Theme.fontTiny
                     }
 
                     MouseArea {
@@ -405,7 +405,7 @@ Item {
                 Rectangle {
                     id: wifiToggle
                     width: 76
-                    height: 38
+                    height: Theme.rowHCompact
                     radius: Theme.radius
                     color: page.wifiEnabled ? Theme.active : Theme.alpha(Theme.textDim, 0.15)
                     border.width: 1
@@ -416,7 +416,7 @@ Item {
                         text: page.wifiEnabled ? "ON" : "OFF"
                         color: page.wifiEnabled ? Theme.accent : Theme.textDim
                         font.family: Theme.fontFamily
-                        font.pixelSize: 10
+                        font.pixelSize: Theme.fontTiny
                         font.bold: true
                     }
 
@@ -455,17 +455,15 @@ Item {
                         width: list.width
                         height: 112
                         radius: Theme.radius
-                        color: Theme.bgCard
-                        border.width: 1
-                        border.color: page.zapActive ? Theme.alpha(Theme.accent, 0.45) : Theme.border
+                        color: Theme.fill
 
                         Column {
                             anchors.left: parent.left
                             anchors.right: parent.right
                             anchors.verticalCenter: parent.verticalCenter
-                            anchors.leftMargin: 14
-                            anchors.rightMargin: 14
-                            spacing: 8
+                            anchors.leftMargin: Theme.space4
+                            anchors.rightMargin: Theme.space4
+                            spacing: Theme.space2
 
                             Row {
                                 spacing: 9
@@ -484,7 +482,7 @@ Item {
                                     text: "обход DPI · Discord / YouTube"
                                     color: Theme.textFaint
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: 10
+                                    font.pixelSize: Theme.fontTiny
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
                             }
@@ -496,12 +494,12 @@ Item {
                                       + (page.zapCommit ? "   ·   " + page.zapCommit : "")
                                 color: page.zapActive ? Theme.text : Theme.textFaint
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 11
+                                font.pixelSize: Theme.fontSmall
                                 elide: Text.ElideRight
                             }
 
                             Row {
-                                spacing: 8
+                                spacing: Theme.space2
 
                                 ZapBtn {
                                     label: page.zapActive ? "ВЫКЛЮЧИТЬ" : "ВКЛЮЧИТЬ"
@@ -526,17 +524,15 @@ Item {
                         width: list.width
                         height: 112
                         radius: Theme.radius
-                        color: Theme.bgCard
-                        border.width: 1
-                        border.color: page.tgActive ? Theme.alpha(Theme.accent, 0.45) : Theme.border
+                        color: Theme.fill
 
                         Column {
                             anchors.left: parent.left
                             anchors.right: parent.right
                             anchors.verticalCenter: parent.verticalCenter
-                            anchors.leftMargin: 14
-                            anchors.rightMargin: 14
-                            spacing: 8
+                            anchors.leftMargin: Theme.space4
+                            anchors.rightMargin: Theme.space4
+                            spacing: Theme.space2
 
                             Row {
                                 spacing: 9
@@ -555,7 +551,7 @@ Item {
                                     text: "прокси Telegram · MTProto WebSocket"
                                     color: Theme.textFaint
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: 10
+                                    font.pixelSize: Theme.fontTiny
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
                             }
@@ -567,12 +563,12 @@ Item {
                                       + (page.tgMsg ? "   ·   " + page.tgMsg : "")
                                 color: page.tgActive ? Theme.text : Theme.textFaint
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 11
+                                font.pixelSize: Theme.fontSmall
                                 elide: Text.ElideRight
                             }
 
                             Row {
-                                spacing: 8
+                                spacing: Theme.space2
 
                                 ZapBtn {
                                     label: page.tgActive ? "ВЫКЛЮЧИТЬ" : "ВКЛЮЧИТЬ"
@@ -593,17 +589,15 @@ Item {
                         width: list.width
                         height: 112
                         radius: Theme.radius
-                        color: Theme.bgCard
-                        border.width: 1
-                        border.color: page.vencState === "patched" ? Theme.alpha(Theme.accent, 0.45) : Theme.border
+                        color: Theme.fill
 
                         Column {
                             anchors.left: parent.left
                             anchors.right: parent.right
                             anchors.verticalCenter: parent.verticalCenter
-                            anchors.leftMargin: 14
-                            anchors.rightMargin: 14
-                            spacing: 8
+                            anchors.leftMargin: Theme.space4
+                            anchors.rightMargin: Theme.space4
+                            spacing: Theme.space2
 
                             Row {
                                 spacing: 9
@@ -622,7 +616,7 @@ Item {
                                     text: "мод Discord · плагины и темы"
                                     color: Theme.textFaint
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: 10
+                                    font.pixelSize: Theme.fontTiny
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
                             }
@@ -634,12 +628,12 @@ Item {
                                       + (page.vencApp !== "—" ? "   ·   " + page.vencApp : "")
                                 color: page.vencState === "patched" ? Theme.text : Theme.textFaint
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 11
+                                font.pixelSize: Theme.fontSmall
                                 elide: Text.ElideRight
                             }
 
                             Row {
-                                spacing: 8
+                                spacing: Theme.space2
 
                                 ZapBtn {
                                     label: "ПЕРЕПАТЧИТЬ"
@@ -682,7 +676,7 @@ Item {
                         text: page.connectMsg
                         color: Theme.danger
                         font.family: Theme.fontFamily
-                        font.pixelSize: 10
+                        font.pixelSize: Theme.fontTiny
                         wrapMode: Text.Wrap
                     }
 
@@ -696,15 +690,13 @@ Item {
 
                             Rectangle {
                                 width: parent.width
-                                height: 46
+                                height: Theme.rowHComfy
                                 radius: Theme.radius
-                                color: modelData.connected ? Theme.active : "#00000000"
-                                border.width: 1
-                                border.color: modelData.connected ? Theme.accent : Theme.border
+                                color: modelData.connected ? Theme.active : Theme.fill
 
                                 Row {
                                     anchors.left: parent.left
-                                    anchors.leftMargin: 14
+                                    anchors.leftMargin: Theme.space4
                                     anchors.verticalCenter: parent.verticalCenter
                                     spacing: 9
 
@@ -720,7 +712,7 @@ Item {
                                         text: ""
                                         color: Theme.textFaint
                                         font.family: Theme.iconFont
-                                        font.pixelSize: 10
+                                        font.pixelSize: Theme.fontTiny
                                     }
 
                                     Text {
@@ -735,12 +727,12 @@ Item {
 
                                 Text {
                                     anchors.right: parent.right
-                                    anchors.rightMargin: 14
+                                    anchors.rightMargin: Theme.space4
                                     anchors.verticalCenter: parent.verticalCenter
                                     text: modelData.connected ? "DISCONNECT" : "CONNECT"
                                     color: modelData.connected ? Theme.danger : Theme.accent
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: 10
+                                    font.pixelSize: Theme.fontTiny
 
                                     MouseArea {
                                         cursorShape: Qt.PointingHandCursor
@@ -761,12 +753,12 @@ Item {
                             Row {
                                 visible: page.pendingSsid === modelData.ssid
                                 width: parent.width
-                                height: 36
+                                height: Theme.rowHCompact
                                 spacing: 10
 
                                 Rectangle {
                                     width: 220
-                                    height: 36
+                                    height: Theme.rowHCompact
                                     color: Theme.bgCard
                                     border.color: Theme.accent
                                     border.width: 1
@@ -775,7 +767,7 @@ Item {
                                     TextInput {
                                         id: pwField
                                         anchors.fill: parent
-                                        anchors.margins: 8
+                                        anchors.margins: Theme.space2
                                         color: Theme.text
                                         font.family: Theme.fontFamily
                                         font.pixelSize: 12
@@ -789,7 +781,7 @@ Item {
                                     text: "CONNECT"
                                     color: Theme.accent2
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: 11
+                                    font.pixelSize: Theme.fontSmall
                                     anchors.verticalCenter: parent.verticalCenter
 
                                     MouseArea {

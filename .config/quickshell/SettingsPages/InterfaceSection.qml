@@ -121,13 +121,13 @@ Item {
                 right: parent.right
                 rightMargin: page.rightMargin
             }
-            spacing: 20
+            spacing: Theme.space5
 
             Text {
                 text: "INTERFACE"
                 color: Theme.text
                 font.family: page.mono
-                font.pixelSize: 18
+                font.pixelSize: Theme.fontTitle
                 font.letterSpacing: 3
             }
 
@@ -142,9 +142,10 @@ Item {
             Rectangle {
                 visible: Theme.uiError !== ""
                 width: parent.width
-                height: errText.implicitHeight + 24
+                height: errText.implicitHeight + Theme.space5
                 radius: Theme.radius
                 color: Theme.alpha(Theme.danger, 0.08)
+                // рамка уведомления об ошибке — часть акцента, оставляю
                 border.width: 1
                 border.color: Theme.danger
 
@@ -153,7 +154,7 @@ Item {
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
-                    anchors.margins: 12
+                    anchors.margins: Theme.space3
                     text: "\uf071  " + Theme.uiError
                     color: Theme.danger
                     font.family: Theme.iconFont
@@ -165,11 +166,11 @@ Item {
             // Прозрачность панели
             Column {
                 width: parent.width
-                spacing: 10
+                spacing: Theme.space3
 
                 Row {
                     width: parent.width
-                    spacing: 16
+                    spacing: Theme.space4
 
                     Text {
                         text: "󰝴"
@@ -180,7 +181,7 @@ Item {
                     }
 
                     Column {
-                        spacing: 4
+                        spacing: Theme.space1
                         anchors.verticalCenter: parent.verticalCenter
 
                         Text {
@@ -210,11 +211,11 @@ Item {
             // Размытие (блюр) — на всю систему через Hyprland
             Column {
                 width: parent.width
-                spacing: 10
+                spacing: Theme.space3
 
                 Row {
                     width: parent.width
-                    spacing: 16
+                    spacing: Theme.space4
 
                     Text {
                         text: "\uf043"
@@ -225,7 +226,7 @@ Item {
                     }
 
                     Column {
-                        spacing: 4
+                        spacing: Theme.space1
                         anchors.verticalCenter: parent.verticalCenter
 
                         Text {
@@ -258,11 +259,11 @@ Item {
             // Размер шрифта
             Column {
                 width: parent.width
-                spacing: 10
+                spacing: Theme.space3
 
                 Row {
                     width: parent.width
-                    spacing: 16
+                    spacing: Theme.space4
 
                     Text {
                         text: "󰬶"
@@ -273,7 +274,7 @@ Item {
                     }
 
                     Column {
-                        spacing: 4
+                        spacing: Theme.space1
                         anchors.verticalCenter: parent.verticalCenter
 
                         Text {
@@ -303,11 +304,11 @@ Item {
             // Значков трея в панели
             Column {
                 width: parent.width
-                spacing: 10
+                spacing: Theme.space3
 
                 Row {
                     width: parent.width
-                    spacing: 16
+                    spacing: Theme.space4
 
                     Text {
                         text: "\uf00a"
@@ -318,7 +319,7 @@ Item {
                     }
 
                     Column {
-                        spacing: 4
+                        spacing: Theme.space1
                         anchors.verticalCenter: parent.verticalCenter
 
                         Text {
@@ -337,7 +338,7 @@ Item {
                 }
 
                 Row {
-                    spacing: 8
+                    spacing: Theme.space2
 
                     Repeater {
                         model: [1, 2, 3, 4, 5, 6, 8, 10]
@@ -381,9 +382,8 @@ Item {
                 width: parent.width
                 height: 80
                 radius: Theme.radiusM
-                color: Theme.bgCard
-                border.color: Theme.border
-                border.width: 1
+                // статичная карточка превью: фон вместо рамки
+                color: Theme.fill
 
                 Text {
                     anchors.centerIn: parent
@@ -405,14 +405,14 @@ Item {
                 text: "ОБОИ · ЖИВАЯ СЦЕНА"
                 color: Theme.text
                 font.family: page.mono
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontTitle
                 font.bold: true
-                font.letterSpacing: 2
+                font.letterSpacing: 3
             }
 
             Column {
                 width: parent.width
-                spacing: 10
+                spacing: Theme.space3
 
                 Text {
                     text: previewPhase > 0
@@ -490,7 +490,7 @@ Item {
             // ── режим обоев (живые QML / лёгкий) ──
             Row {
                 width: parent.width
-                spacing: 12
+                spacing: Theme.space3
 
                 Text {
                     text: "\uf03e"
@@ -501,7 +501,7 @@ Item {
                 }
 
                 Column {
-                    spacing: 4
+                    spacing: Theme.space1
                     anchors.verticalCenter: parent.verticalCenter
 
                     Text {
@@ -524,7 +524,7 @@ Item {
                     id: liveToggle
                     width: 46
                     height: 24
-                    radius: 12
+                    radius: Theme.radiusL
                     anchors.verticalCenter: parent.verticalCenter
                     color: Theme.wallpaperLive ? Theme.accent : Theme.trackBg
                     border.width: 1
@@ -573,7 +573,7 @@ Item {
         readonly property real displayValue:
             sliderDrag.pressed ? slider.dragValue : slider.shown
         height: 24
-        radius: 12
+        radius: Theme.radiusL
         color: Theme.trackBg
         border.color: Theme.border
         border.width: 1
@@ -585,7 +585,7 @@ Item {
             anchors.margins: 2
             width: 2 + (parent.width - 20)
                 * Math.max(0, Math.min(1, slider.displayValue))
-            radius: 10
+            radius: Theme.radiusM
             color: Theme.accent
             // плавное заполнение, как у полос в «Памяти»
             Behavior on width {

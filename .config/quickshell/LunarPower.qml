@@ -15,7 +15,7 @@ FloatingWindow {
     color: Theme.bgPanel
     visible: root.showing
     implicitWidth: 440
-    implicitHeight: col.implicitHeight + 44
+    implicitHeight: col.implicitHeight + Theme.space5 + Theme.space4
     minimumSize: Qt.size(360, 280)
 
     property bool showing: false
@@ -134,7 +134,7 @@ FloatingWindow {
             anchors.right: parent.right
             anchors.top: parent.top
             anchors.margins: 22
-            spacing: 10
+            spacing: Theme.space3
 
             RowLayout {
                 Layout.fillWidth: true
@@ -181,18 +181,17 @@ FloatingWindow {
 
                     visible: !(modelData.key === "2" && !root.canHibernate)
                     Layout.fillWidth: true
-                    height: 48
+                    height: Theme.rowHComfy
                     radius: Theme.radius
-                    color: (rowMouse.containsMouse || root.pendingIndex === index)
-                        ? Theme.hoverStrong : "transparent"
-                    border.width: (rowMouse.containsMouse || root.pendingIndex === index) ? 1 : 0
-                    border.color: root.pendingIndex === index ? Theme.danger : Theme.borderAccent
+                    color: root.pendingIndex === index
+                        ? Theme.alpha(Theme.danger, 0.12)
+                        : (rowMouse.containsMouse ? Theme.hoverStrong : "transparent")
 
                     RowLayout {
                         anchors.fill: parent
-                        anchors.leftMargin: 14
-                        anchors.rightMargin: 14
-                        spacing: 12
+                        anchors.leftMargin: Theme.space4
+                        anchors.rightMargin: Theme.space4
+                        spacing: Theme.space3
 
                         Text {
                             text: modelData.icon

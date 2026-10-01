@@ -16,19 +16,19 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 14
+        spacing: Theme.space4
 
         // ── заголовок + обновление ──────────────────────────────
         RowLayout {
             Layout.fillWidth: true
-            height: 36
-            spacing: 12
+            height: Theme.headerH
+            spacing: Theme.space3
 
             Text {
                 text: "LAUNCH"
                 color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: 18
+                font.pixelSize: Theme.fontTitle
                 font.letterSpacing: 3
                 Layout.alignment: Qt.AlignVCenter
             }
@@ -39,7 +39,7 @@ Item {
                     : "сканирую…"
                 color: Theme.textFaint
                 font.family: Theme.fontFamily
-                font.pixelSize: 9
+                font.pixelSize: Theme.fontTiny
                 Layout.alignment: Qt.AlignVCenter
             }
 
@@ -72,19 +72,17 @@ Item {
             }
         }
 
-        Rectangle {
-            Layout.fillWidth: true
-            height: 1
-            color: Theme.border
-        }
-
         // ── сетка приложений ────────────────────────────────────
         GridView {
             id: grid
             Layout.fillWidth: true
             Layout.fillHeight: true
-            cellWidth: 116
-            cellHeight: 124
+            // колонок тем больше, чем шире окно; ячейка едет за шириной,
+            // поэтому сетка не ломается при ресайзе Hub (минимум 820)
+            readonly property int cols: Math.max(4, Math.min(8, Math.floor((width - 12) / 150)))
+            readonly property real cw: Math.floor((width - 12) / cols)
+            cellWidth: cw
+            cellHeight: cw + 10
             clip: true
             model: AppModel.apps
             currentIndex: 0
@@ -96,14 +94,12 @@ Item {
                 required property var modelData
                 required property int index
 
-                width: 108
-                height: 116
+                width: grid.cellWidth - 10
+                height: grid.cellHeight - 10
                 radius: Theme.radiusM
                 color: index === grid.currentIndex
                     ? Theme.active
                     : (hover.containsMouse ? Theme.hover : "transparent")
-                border.width: index === grid.currentIndex ? 1 : 0
-                border.color: Theme.accent
                 scale: hover.containsMouse ? 1.02 : 1
                 Behavior on scale { NumberAnimation { duration: Theme.animFast } }
                 Behavior on color { ColorAnimation { duration: Theme.animFast } }
@@ -169,8 +165,8 @@ Item {
                         text: modelData.name
                         color: Theme.text
                         font.family: Theme.fontFamily
-                        font.pixelSize: 11
-                        width: 96
+                        font.pixelSize: Theme.fontSmall
+                        width: Math.max(80, grid.cellWidth - 24)
                         horizontalAlignment: Text.AlignHCenter
                         wrapMode: Text.WordWrap
                         maximumLineCount: 2

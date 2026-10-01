@@ -18,16 +18,16 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 14
+        spacing: Theme.space4
 
         Row {
             Layout.fillWidth: true
-            height: 36
+            height: Theme.headerH
             Text {
                 text: "GAMES"
                 color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: 18
+                font.pixelSize: Theme.fontTitle
                 font.letterSpacing: 3
                 anchors.verticalCenter: parent.verticalCenter
             }
@@ -41,8 +41,9 @@ Item {
 
         Rectangle {
             Layout.fillWidth: true
-            height: 42
+            height: Theme.rowH
             radius: Theme.radius
+            // поле ввода: рамка — часть аффорданса, оставляю
             color: Theme.bgCard
             border.color: search.activeFocus ? Theme.borderAccent : Theme.border
             border.width: 1
@@ -50,7 +51,7 @@ Item {
             TextInput {
                 id: search
                 anchors.fill: parent
-                anchors.margins: 10
+                anchors.margins: Theme.space3
                 color: Theme.text
                 font.family: Theme.fontFamily
                 font.pixelSize: 12
@@ -83,19 +84,18 @@ Item {
                 required property int index
 
                 width: gameList.width
-                height: 52
+                height: Theme.rowHComfy
                 radius: Theme.radius
+                // статичная строка: фон вместо рамки (этап «воздух»)
                 color: rowMouse.containsMouse
                     ? Theme.hoverStrong
                     : Theme.fill
-                border.width: 1
-                border.color: rowMouse.containsMouse ? Theme.borderAccent : Theme.border
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 12
-                    anchors.rightMargin: 14
-                    spacing: 12
+                    anchors.leftMargin: Theme.space3
+                    anchors.rightMargin: Theme.space4
+                    spacing: Theme.space3
 
                     Image {
                         id: gIcon

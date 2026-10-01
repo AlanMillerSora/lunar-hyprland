@@ -29,13 +29,14 @@ Item {
         signal triggered(string act, string path)
 
         width: 64
-        height: 32
+        height: Theme.rowHCompact
         radius: Theme.radius
 
         color: btnMouse.containsMouse
             ? Theme.active
             : "transparent"
 
+        // кнопка строки: рамка — часть аффорданса, оставляю
         border.width: 1
         border.color: btnMouse.containsMouse
             ? Theme.accent
@@ -158,19 +159,19 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 14
+        spacing: Theme.space4
 
         // ── шапка ──────────────────────────────────────────────
         Row {
             Layout.fillWidth: true
-            height: 36
-            spacing: 12
+            height: Theme.headerH
+            spacing: Theme.space3
 
             Text {
                 text: "DEVELOPMENT"
                 color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: 18
+                font.pixelSize: Theme.fontTitle
                 font.letterSpacing: 3
                 anchors.verticalCenter: parent.verticalCenter
             }
@@ -195,8 +196,8 @@ Item {
         // ── быстрые действия ───────────────────────────────────
         Row {
             Layout.fillWidth: true
-            height: 38
-            spacing: 8
+            height: Theme.rowH
+            spacing: Theme.space2
 
             Repeater {
                 model: [
@@ -209,13 +210,14 @@ Item {
                     required property var modelData
 
                     width: 122
-                    height: 38
+                    height: Theme.rowH
                     radius: Theme.radius
 
                     color: quickMouse.containsMouse
                         ? Theme.hoverStrong
                         : Theme.fill
 
+                    // кнопка быстрого действия: рамка — аффорданс, оставляю
                     border.width: 1
                     border.color: quickMouse.containsMouse
                         ? Theme.borderAccent
@@ -264,17 +266,13 @@ Item {
                 required property var modelData
 
                 width: projectList.width
-                height: 58
+                height: Theme.rowHComfy
                 radius: Theme.radius
 
+                // статичная строка: фон вместо рамки (этап «воздух»)
                 color: rowMouse.containsMouse
                     ? Theme.hoverStrong
                     : Theme.fill
-
-                border.width: 1
-                border.color: rowMouse.containsMouse
-                    ? Theme.borderAccent
-                    : Theme.border
 
                 // клик по пустому месту строки — открыть проект в VS Code
                 MouseArea {
@@ -287,17 +285,16 @@ Item {
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 12
-                    anchors.rightMargin: 12
-                    spacing: 12
+                    anchors.leftMargin: Theme.space3
+                    anchors.rightMargin: Theme.space3
+                    spacing: Theme.space3
 
                     Rectangle {
                         Layout.preferredWidth: 30
                         Layout.preferredHeight: 30
                         radius: Theme.radius
+                        // статичный бейдж инициалов: фон вместо рамки
                         color: Theme.hoverStrong
-                        border.width: 1
-                        border.color: Theme.border
 
                         Text {
                             anchors.centerIn: parent
@@ -323,7 +320,7 @@ Item {
                         }
 
                         Row {
-                            spacing: 8
+                            spacing: Theme.space2
 
                             Text {
                                 text: "\uf126 " + (modelData.branch || "—")
@@ -399,6 +396,7 @@ Item {
         z: 10
         radius: Theme.radius
         color: Theme.bgPanel
+        // акцентная рамка — граница панели над списком, оставляю
         border.width: 1
         border.color: Theme.accent
 
@@ -407,13 +405,13 @@ Item {
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 16
-            spacing: 12
+            anchors.margins: Theme.space4
+            spacing: Theme.space3
 
             // заголовок
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 10
+                spacing: Theme.space3
 
                 Text {
                     text: page.gitProject ? page.gitProject.name : ""
@@ -476,9 +474,9 @@ Item {
                 text: "ВЕТКИ"
                 color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontTitle
                 font.bold: true
-                font.letterSpacing: 2
+                font.letterSpacing: 3
             }
 
             Flow {
@@ -494,7 +492,7 @@ Item {
                         required property var modelData
 
                         width: branchLabel.implicitWidth + 20
-                        height: 30
+                        height: Theme.rowHCompact
                         radius: Theme.radius
 
                         color: modelData.current
@@ -529,12 +527,13 @@ Item {
             // коммит
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 8
+                spacing: Theme.space2
 
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 36
+                    Layout.preferredHeight: Theme.rowH
                     radius: Theme.radius
+                    // поле ввода коммита: рамка — аффорданс, оставляю
                     color: Theme.bgCard
                     border.width: 1
                     border.color: msgInput.activeFocus ? Theme.borderAccent : Theme.border
@@ -543,8 +542,8 @@ Item {
                     // значит ниже по z и не перехватывает клики/фокус)
                     Text {
                         anchors.fill: parent
-                        anchors.leftMargin: 10
-                        anchors.rightMargin: 10
+                        anchors.leftMargin: Theme.space3
+                        anchors.rightMargin: Theme.space3
                         verticalAlignment: Text.AlignVCenter
                         text: "сообщение коммита…"
                         color: Theme.textFaint
@@ -556,8 +555,8 @@ Item {
                     TextInput {
                         id: msgInput
                         anchors.fill: parent
-                        anchors.leftMargin: 10
-                        anchors.rightMargin: 10
+                        anchors.leftMargin: Theme.space3
+                        anchors.rightMargin: Theme.space3
                         verticalAlignment: TextInput.AlignVCenter
                         color: Theme.text
                         font.family: Theme.fontFamily
@@ -572,7 +571,7 @@ Item {
 
                 Rectangle {
                     Layout.preferredWidth: 100
-                    Layout.preferredHeight: 36
+                    Layout.preferredHeight: Theme.rowH
                     radius: Theme.radius
                     color: commitMouse.containsMouse
                         ? Theme.active
@@ -604,7 +603,7 @@ Item {
             // действия
             Row {
                 Layout.fillWidth: true
-                spacing: 8
+                spacing: Theme.space2
 
                 Repeater {
                     model: [
@@ -618,7 +617,7 @@ Item {
                         required property var modelData
 
                         width: 100
-                        height: 34
+                        height: Theme.rowHCompact
                         radius: Theme.radius
 
                         color: actMouse.containsMouse
@@ -665,9 +664,9 @@ Item {
                 text: "ВЫВОД"
                 color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontTitle
                 font.bold: true
-                font.letterSpacing: 2
+                font.letterSpacing: 3
             }
 
             Flickable {

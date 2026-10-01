@@ -495,7 +495,7 @@ Item {
         Column {
             id: pageCol
             width: parent.width
-            spacing: 13
+            spacing: Theme.space4
 
             Row {
                 width: parent.width
@@ -504,7 +504,7 @@ Item {
                     text: "MONITORS"
                     color: Theme.text
                     font.family: Theme.fontFamily
-                    font.pixelSize: 18
+                    font.pixelSize: Theme.fontTitle
                     font.letterSpacing: 3
                 }
 
@@ -540,7 +540,7 @@ Item {
                 text: "hyprctl: " + page.lastError
                 color: Theme.danger
                 font.family: Theme.fontFamily
-                font.pixelSize: 10
+                font.pixelSize: Theme.fontTiny
                 wrapMode: Text.Wrap
             }
 
@@ -564,17 +564,15 @@ Item {
                            + (modelData.y - page.monitorBounds.y) * s
                         width: Math.max(2, modelData.width * s)
                         height: Math.max(2, modelData.height * s)
-                        radius: 4
+                        radius: Theme.radius
                         color: Theme.hover
-                        border.width: 1
-                        border.color: Theme.borderAccent
 
                         Text {
                             anchors.centerIn: parent
                             text: modelData.name + "\n" + modelData.width + "×" + modelData.height
                             color: Theme.textDim
                             font.family: Theme.fontFamily
-                            font.pixelSize: 11
+                            font.pixelSize: Theme.fontSmall
                             horizontalAlignment: Text.AlignHCenter
                         }
                     }
@@ -616,7 +614,7 @@ Item {
                             required property var modelData
 
                             width: (parent.width - parent.spacing * 3) / 4
-                            height: 42
+                            height: Theme.rowH
                             radius: Theme.radius
                             color: "#00000000"
                             border.width: 1
@@ -627,7 +625,7 @@ Item {
                                 text: modelData.name
                                 color: Theme.text
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 10
+                                font.pixelSize: Theme.fontTiny
                                 font.bold: true
                                 font.letterSpacing: 1
                             }
@@ -682,7 +680,7 @@ Item {
 
                     Rectangle {
                         width: 74
-                        height: 38
+                        height: Theme.rowHCompact
                         radius: Theme.radius
                         anchors.verticalCenter: parent.verticalCenter
 
@@ -702,7 +700,7 @@ Item {
                                 ? Theme.accent
                                 : Theme.textDim
                             font.family: Theme.fontFamily
-                            font.pixelSize: 11
+                            font.pixelSize: Theme.fontSmall
                             font.bold: true
                         }
 
@@ -720,7 +718,7 @@ Item {
 
             Column {
                 width: parent.width
-                spacing: 16
+                spacing: Theme.space4
 
                 Repeater {
                     model: page.monitors
@@ -732,15 +730,13 @@ Item {
                         width: parent.width
                         height: 176
                         radius: Theme.radius
-                        color: "#00000000"
-                        border.width: 1
-                        border.color: modelData.focused
-                            ? Theme.borderAccent
-                            : Theme.border
+                        color: modelData.focused
+                            ? Theme.active
+                            : Theme.fill
 
                         Column {
                             anchors.fill: parent
-                            anchors.margins: 14
+                            anchors.margins: Theme.space4
                             spacing: 10
 
                             Row {
@@ -774,7 +770,7 @@ Item {
                                     text: "ACTIVE"
                                     color: Theme.accent2
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: 10
+                                    font.pixelSize: Theme.fontTiny
                                 }
                             }
 
@@ -786,7 +782,7 @@ Item {
                                     text: "ЧАСТОТА"
                                     color: Theme.textDim
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: 10
+                                    font.pixelSize: Theme.fontTiny
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
 
@@ -811,7 +807,7 @@ Item {
                                             text: Math.round(parseFloat(modelData)) + " Hz"
                                             color: active ? Theme.accent : Theme.textDim
                                             font.family: Theme.fontFamily
-                                            font.pixelSize: 10
+                                            font.pixelSize: Theme.fontTiny
                                         }
                                         MouseArea {
                                             id: rateMouse
@@ -832,7 +828,7 @@ Item {
                                     text: "VRR"
                                     color: Theme.textDim
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: 10
+                                    font.pixelSize: Theme.fontTiny
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
 
@@ -850,7 +846,7 @@ Item {
                                         text: monCard.modelData.vrr ? "ON" : "OFF"
                                         color: monCard.modelData.vrr ? Theme.accent : Theme.textDim
                                         font.family: Theme.fontFamily
-                                        font.pixelSize: 10
+                                        font.pixelSize: Theme.fontTiny
                                         font.bold: true
                                     }
                                     MouseArea {
@@ -864,7 +860,7 @@ Item {
                                     text: "FreeSync / GSync"
                                     color: Theme.textFaint
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: 10
+                                    font.pixelSize: Theme.fontTiny
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
                             }
@@ -877,7 +873,7 @@ Item {
                                     text: "МАСШТАБ"
                                     color: Theme.textDim
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: 10
+                                    font.pixelSize: Theme.fontTiny
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
 
@@ -902,7 +898,7 @@ Item {
                                             text: modelData.toFixed(2)
                                             color: active ? Theme.accent : Theme.textDim
                                             font.family: Theme.fontFamily
-                                            font.pixelSize: 10
+                                            font.pixelSize: Theme.fontTiny
                                         }
                                         MouseArea {
                                             id: scaleMouse
@@ -921,15 +917,13 @@ Item {
                 // tearing — глобально (меньше задержка, возможны разрывы)
                 Rectangle {
                     width: parent.width
-                    height: 46
+                    height: Theme.rowHComfy
                     radius: Theme.radius
-                    color: "#00000000"
-                    border.width: 1
-                    border.color: Theme.border
+                    color: Theme.fill
 
                     Row {
                         anchors.left: parent.left
-                        anchors.leftMargin: 14
+                        anchors.leftMargin: Theme.space4
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 10
 
@@ -955,7 +949,7 @@ Item {
                                 text: page.tearing ? "ON" : "OFF"
                                 color: page.tearing ? Theme.accent : Theme.textDim
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 10
+                                font.pixelSize: Theme.fontTiny
                                 font.bold: true
                             }
                             MouseArea {
@@ -969,7 +963,7 @@ Item {
                             text: "меньше задержка (для игр)"
                             color: Theme.textFaint
                             font.family: Theme.fontFamily
-                            font.pixelSize: 10
+                            font.pixelSize: Theme.fontTiny
                             anchors.verticalCenter: parent.verticalCenter
                         }
                     }
@@ -1004,7 +998,7 @@ Item {
                     text: "SUPER + SHIFT + R"
                     color: Theme.textFaint
                     font.family: Theme.fontFamily
-                    font.pixelSize: 10
+                    font.pixelSize: Theme.fontTiny
                 }
             }
 
@@ -1021,7 +1015,7 @@ Item {
                         text: "КАЧЕСТВО"
                         color: Theme.textDim
                         font.family: Theme.fontFamily
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontSmall
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
@@ -1052,7 +1046,7 @@ Item {
                                     text: modelData.t
                                     color: active ? Theme.accent : Theme.textDim
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: 10
+                                    font.pixelSize: Theme.fontTiny
                                     font.bold: true
                                 }
 
@@ -1102,7 +1096,7 @@ Item {
                         text: "ГЕРЦОВКА"
                         color: Theme.textDim
                         font.family: Theme.fontFamily
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontSmall
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
@@ -1133,7 +1127,7 @@ Item {
                                     text: modelData.t
                                     color: active ? Theme.accent : Theme.textDim
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: 10
+                                    font.pixelSize: Theme.fontTiny
                                     font.bold: true
                                 }
 
@@ -1151,7 +1145,7 @@ Item {
                     text: "качество — QP (постоянное); битрейт — потолок; применяется со следующей записи"
                     color: Theme.textFaint
                     font.family: Theme.fontFamily
-                    font.pixelSize: 10
+                    font.pixelSize: Theme.fontTiny
                 }
 
                 // M49: видимая ошибка чтения/записи record.json
@@ -1160,7 +1154,7 @@ Item {
                     text: page.recError
                     color: Theme.danger
                     font.family: Theme.fontFamily
-                    font.pixelSize: 10
+                    font.pixelSize: Theme.fontTiny
                 }
             }
         }

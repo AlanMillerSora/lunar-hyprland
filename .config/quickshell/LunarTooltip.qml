@@ -46,7 +46,7 @@ PanelWindow {
         height: 24
         x: Math.max(6, Math.min(root.width - width - 6, Theme.tooltipX - width / 2))
         y: 46
-        radius: Theme.radius
+        radius: Theme.radiusM
         color: Theme.bgPanel
         border.color: Theme.borderAccent
         border.width: 1

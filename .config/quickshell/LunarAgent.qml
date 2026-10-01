@@ -79,7 +79,7 @@ FloatingWindow {
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 18
-            spacing: 12
+            spacing: Theme.space3
 
             RowLayout {
                 Layout.fillWidth: true
@@ -143,12 +143,10 @@ FloatingWindow {
                 delegate: Rectangle {
                     required property var modelData
                     width: agentList.width
-                    height: msgText.implicitHeight + 16
+                    height: msgText.implicitHeight + Theme.space4
                     radius: Theme.radius
                     color: modelData.role === "user" ? Theme.active
                          : (modelData.role === "system" ? "transparent" : Theme.fill)
-                    border.width: modelData.role === "system" ? 0 : 1
-                    border.color: Theme.border
 
                     Text {
                         id: msgText
@@ -179,7 +177,7 @@ FloatingWindow {
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.margins: 10
+                    anchors.margins: Theme.space3
                     spacing: 8
 
                     Text {
@@ -261,8 +259,8 @@ FloatingWindow {
                 TextInput {
                     id: agentInput
                     anchors.fill: parent
-                    anchors.leftMargin: 12
-                    anchors.rightMargin: 12
+                    anchors.leftMargin: Theme.space3
+                    anchors.rightMargin: Theme.space3
                     verticalAlignment: TextInput.AlignVCenter
                     color: Theme.text
                     font.family: Theme.fontFamily

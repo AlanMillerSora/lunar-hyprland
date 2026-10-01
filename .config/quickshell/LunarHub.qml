@@ -302,32 +302,28 @@ FloatingWindow {
 
         Row {
                 anchors.fill: parent
-                anchors.margins: 32
-                spacing: 32
+                anchors.margins: Theme.space6
+                spacing: Theme.space6
 
                 // ---------------- Sidebar ----------------
                 Item {
-                    width: 158
+                    // ширина сайдбара едет за окном: на минимуме (820) — 180,
+                    // на широком — до 240, но не больше 16% ширины
+                    width: Theme.clamp(root.width * 0.16, 180, 240)
                     height: parent.height
                     Column {
                         id: sidebar
-                        width: 158
+                        width: parent.width
                         height: parent.height
-                        spacing: 24
+                        spacing: Theme.space5
 
                         Text {
                             text: "SETTINGS"
                             color: Theme.text
                             font.family: Theme.fontFamily
-                            font.pixelSize: 20
+                            font.pixelSize: Theme.fontTitle
                             font.bold: true
                             font.letterSpacing: 4
-                        }
-
-                        Rectangle {
-                            width: parent.width
-                            height: 1
-                            color: Theme.border
                         }
 
                         // ---------------- Nav buttons ----------------
@@ -366,15 +362,12 @@ FloatingWindow {
                                     required property int index
 
                                     width: sidebar.width
-                                    height: 42
-                                    radius: Theme.radius
+                                    height: Theme.rowH
+                                    radius: Theme.radiusM
 
                                     color: root.selectedIndex === index
                                         ? Theme.active
                                         : (navMouse.containsMouse ? Theme.hover : "transparent")
-
-                                    border.width: root.selectedIndex === index ? 1 : 0
-                                    border.color: Theme.accent
 
                                     Rectangle {
                                         visible: root.selectedIndex === index
@@ -427,8 +420,8 @@ FloatingWindow {
                         id: hubSearchBox
                         anchors.bottom: parent.bottom
                         width: parent.width
-                        height: 38
-                        radius: Theme.radius
+                        height: Theme.rowH
+                        radius: Theme.radiusM
                         color: Theme.bgCard
                         border.width: 1
                         border.color: hubSearch.activeFocus ? Theme.borderAccent : Theme.border
@@ -484,15 +477,9 @@ FloatingWindow {
                     }
                 }
 
-                Rectangle {
-                    width: 1
-                    height: parent.height
-                    color: Theme.border
-                }
-
                 // ---------------- Page content ----------------
                 Item {
-                    width: parent.width - sidebar.width - 57
+                    width: parent.width - sidebar.width - Theme.space6
                     height: parent.height
                     clip: true
 

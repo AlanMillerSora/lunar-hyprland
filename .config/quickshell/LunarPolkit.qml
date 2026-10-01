@@ -78,7 +78,7 @@ PanelWindow {
         visible: root.showing
         anchors.centerIn: parent
         width: 460
-        height: col.implicitHeight + 32
+        height: col.implicitHeight + Theme.space6
         radius: Theme.radius
         color: Theme.bgPanel
         border.color: Theme.accent
@@ -94,8 +94,8 @@ PanelWindow {
         ColumnLayout {
             id: col
             anchors.fill: parent
-            anchors.margins: 16
-            spacing: 10
+            anchors.margins: Theme.space4
+            spacing: Theme.space3
 
             Text {
                 text: "АУТЕНТИФИКАЦИЯ"
@@ -129,8 +129,8 @@ PanelWindow {
                 TextInput {
                     id: pw
                     anchors.fill: parent
-                    anchors.leftMargin: 10
-                    anchors.rightMargin: 10
+                    anchors.leftMargin: Theme.space3
+                    anchors.rightMargin: Theme.space3
                     verticalAlignment: TextInput.AlignVCenter
                     color: Theme.text
                     font.family: Theme.fontFamily
@@ -142,7 +142,7 @@ PanelWindow {
                 }
                 Text {
                     anchors.left: parent.left
-                    anchors.leftMargin: 10
+                    anchors.leftMargin: Theme.space3
                     anchors.verticalCenter: parent.verticalCenter
                     visible: pw.text === ""
                     text: root.flow ? (root.flow.inputPrompt || "пароль…") : "пароль…"

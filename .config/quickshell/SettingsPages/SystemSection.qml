@@ -168,7 +168,7 @@ Item {
         signal clicked()
 
         width: 142
-        height: 36
+        height: Theme.rowHCompact
         radius: Theme.radius
 
         color: btnArea.containsMouse
@@ -183,7 +183,7 @@ Item {
             text: label
             color: btnArea.containsMouse ? Theme.accent : Theme.textDim
             font.family: Theme.fontFamily
-            font.pixelSize: 11
+            font.pixelSize: Theme.fontSmall
             font.letterSpacing: 1
         }
 
@@ -524,13 +524,13 @@ Item {
                 rightMargin: page.rightMargin
             }
 
-            spacing: 20
+            spacing: Theme.space5
 
             Text {
                 text: "SYSTEM"
                 color: Theme.text
                 font.family: page.mono
-                font.pixelSize: 18
+                font.pixelSize: Theme.fontTitle
                 font.letterSpacing: 3
             }
 
@@ -543,7 +543,7 @@ Item {
             Row {
                 width: parent.width
                 height: 150
-                spacing: 24
+                spacing: Theme.space5
 
                 Item {
                     width: 150
@@ -567,7 +567,7 @@ Item {
 
                 Column {
                     anchors.verticalCenter: parent.verticalCenter
-                    spacing: 14
+                    spacing: Theme.space4
 
                     Column {
                         spacing: 3
@@ -576,7 +576,7 @@ Item {
                             text: "󰒋  HOSTNAME"
                             color: Theme.accent
                             font.family: page.mono
-                            font.pixelSize: 10
+                            font.pixelSize: Theme.fontTiny
                             font.letterSpacing: 2
                         }
 
@@ -584,7 +584,7 @@ Item {
                             text: page.hostname
                             color: Theme.text
                             font.family: Theme.fontFamily
-                            font.pixelSize: 13
+                            font.pixelSize: Theme.fontBody
                         }
                     }
 
@@ -595,7 +595,7 @@ Item {
                             text: "󰣇  OS"
                             color: Theme.accent
                             font.family: page.mono
-                            font.pixelSize: 10
+                            font.pixelSize: Theme.fontTiny
                             font.letterSpacing: 2
                         }
 
@@ -603,7 +603,7 @@ Item {
                             text: page.os
                             color: Theme.text
                             font.family: Theme.fontFamily
-                            font.pixelSize: 13
+                            font.pixelSize: Theme.fontBody
                             elide: Text.ElideRight
                             width: 500
                         }
@@ -616,7 +616,7 @@ Item {
                             text: "󰔛  UPTIME"
                             color: Theme.accent
                             font.family: page.mono
-                            font.pixelSize: 10
+                            font.pixelSize: Theme.fontTiny
                             font.letterSpacing: 2
                         }
 
@@ -624,7 +624,7 @@ Item {
                             text: page.uptime
                             color: Theme.text
                             font.family: Theme.fontFamily
-                            font.pixelSize: 13
+                            font.pixelSize: Theme.fontBody
                         }
                     }
                 }
@@ -632,12 +632,12 @@ Item {
 
             Column {
                 width: parent.width
-                spacing: 10
+                spacing: Theme.space3
 
                 Row {
                     width: parent.width
                     height: 24
-                    spacing: 20
+                    spacing: Theme.space5
 
                     Text {
                         id: cpuHeader
@@ -667,7 +667,7 @@ Item {
                         text: "USAGE  " + Math.round(page.cpuUsage) + "%"
                         color: Theme.text
                         font.family: page.mono
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontSmall
 
                         anchors.verticalCenter: parent.verticalCenter
                     }
@@ -676,7 +676,7 @@ Item {
                         text: "TEMP  " + page.cpuTemp
                         color: Theme.text
                         font.family: page.mono
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontSmall
 
                         anchors.verticalCenter: parent.verticalCenter
                     }
@@ -688,8 +688,7 @@ Item {
 
                     Rectangle {
                         anchors.fill: parent
-                        color: "transparent"
-                        border.color: Theme.border
+                        color: Theme.fill
                     }
 
                     Repeater {
@@ -745,12 +744,12 @@ Item {
 
             Column {
                 width: parent.width
-                spacing: 10
+                spacing: Theme.space3
 
                 Row {
                     width: parent.width
                     height: 24
-                    spacing: 20
+                    spacing: Theme.space5
 
                     Text {
                         id: gpuHeader
@@ -780,7 +779,7 @@ Item {
                         text: "USAGE  " + Math.round(page.gpuUsage) + "%"
                         color: Theme.text
                         font.family: page.mono
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontSmall
 
                         anchors.verticalCenter: parent.verticalCenter
                     }
@@ -792,8 +791,7 @@ Item {
 
                     Rectangle {
                         anchors.fill: parent
-                        color: "transparent"
-                        border.color: Theme.border
+                        color: Theme.fill
                     }
 
                     Repeater {
@@ -848,12 +846,12 @@ Item {
 
             Column {
                 width: parent.width
-                spacing: 10
+                spacing: Theme.space3
 
                 Row {
                     width: parent.width
                     height: 24
-                    spacing: 20
+                    spacing: Theme.space5
 
                     Text {
                         id: memoryHeader
@@ -871,7 +869,7 @@ Item {
                         text: "SPEED  " + page.ramSpeed
                         color: Theme.text
                         font.family: page.mono
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontSmall
 
                         anchors.verticalCenter: parent.verticalCenter
                     }
@@ -892,7 +890,7 @@ Item {
                         text: "USAGE  " + Math.round(page.memoryUsage) + "%"
                         color: Theme.text
                         font.family: page.mono
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontSmall
 
                         anchors.verticalCenter: parent.verticalCenter
                     }
@@ -904,8 +902,7 @@ Item {
 
                     Rectangle {
                         anchors.fill: parent
-                        color: "transparent"
-                        border.color: Theme.border
+                        color: Theme.fill
                     }
 
                     Repeater {
@@ -961,12 +958,12 @@ Item {
             // ── обновления системы ─────────────────────────────
             Column {
                 width: parent.width
-                spacing: 10
+                spacing: Theme.space3
 
                 Row {
                     width: parent.width
                     height: 24
-                    spacing: 20
+                    spacing: Theme.space5
 
                     Text {
                         text: "󰚰  ОБНОВЛЕНИЯ"
@@ -987,7 +984,7 @@ Item {
                                     : page.updateCount + " пакетов"))
                         color: Theme.text
                         font.family: page.mono
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontSmall
                         anchors.verticalCenter: parent.verticalCenter
                     }
                 }
@@ -998,12 +995,12 @@ Item {
                     text: page.updateList
                     color: Theme.textDim
                     font.family: page.mono
-                    font.pixelSize: 10
+                    font.pixelSize: Theme.fontTiny
                     lineHeight: 1.3
                 }
 
                 Row {
-                    spacing: 8
+                    spacing: Theme.space2
 
                     ActionButton {
                         label: "ПРОВЕРИТЬ"
@@ -1016,7 +1013,7 @@ Item {
                     text: "обновление и чтение новостей — в разделе «Обновление»"
                     color: Theme.textFaint
                     font.family: page.mono
-                    font.pixelSize: 10
+                    font.pixelSize: Theme.fontTiny
                 }
             }
         }

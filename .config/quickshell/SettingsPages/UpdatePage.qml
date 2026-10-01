@@ -34,11 +34,12 @@ Item {
         signal clicked()
 
         width: Math.max(120, btnText.implicitWidth + 34)
-        height: 36
+        height: Theme.rowH
         radius: Theme.radius
         color: !enabledBtn ? Theme.fill
              : btnArea.containsMouse ? Theme.active
              : "transparent"
+        // кнопка действия: рамка — часть аффорданса, оставляю
         border.width: 1
         border.color: !enabledBtn ? Theme.border
                     : (btnArea.containsMouse || accent) ? Theme.accent : Theme.border
@@ -253,13 +254,13 @@ Item {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.rightMargin: page.rightMargin
-            spacing: 18
+            spacing: Theme.space5
 
             Text {
                 text: "ОБНОВЛЕНИЕ"
                 color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: 18
+                font.pixelSize: Theme.fontTitle
                 font.letterSpacing: 3
             }
 
@@ -268,10 +269,10 @@ Item {
             // ── состояние ──
             Column {
                 width: parent.width
-                spacing: 10
+                spacing: Theme.space3
 
                 Row {
-                    spacing: 24
+                    spacing: Theme.space5
                     Text {
                         text: "свежие новости: " + page.newestAge
                         color: Theme.textDim
@@ -293,7 +294,7 @@ Item {
                 }
 
                 Row {
-                    spacing: 8
+                    spacing: Theme.space2
 
                     ActionButton {
                         label: page.busy ? "РАБОТАЮ…" : "ОБНОВИТЬ"
@@ -346,18 +347,19 @@ Item {
                 text: "НОВОСТИ ARCH (ПЕРЕВОД)"
                 color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontTitle
                 font.bold: true
-                font.letterSpacing: 2
+                font.letterSpacing: 3
             }
 
             // ── разбор новостей агентом: перевод и на что обратить внимание ──
             Rectangle {
                 width: col.width
                 visible: page.agentBusy || page.agentText !== ""
-                height: agentCol.implicitHeight + 24
+                height: agentCol.implicitHeight + Theme.space5
                 radius: Theme.radius
                 color: Theme.bgCard
+                // акцентная рамка — выделение разбора агента, оставляю
                 border.width: 1
                 border.color: Theme.accent
 
@@ -366,7 +368,7 @@ Item {
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.top: parent.top
-                    anchors.margins: 12
+                    anchors.margins: Theme.space3
                     spacing: 6
 
                     Text {
@@ -395,18 +397,17 @@ Item {
                 delegate: Rectangle {
                     required property var modelData
                     width: col.width
-                    height: newsCol.implicitHeight + 24
+                    height: newsCol.implicitHeight + Theme.space5
                     radius: Theme.radius
+                    // статичная карточка новости: фон вместо рамки
                     color: Theme.fill
-                    border.width: 1
-                    border.color: Theme.border
 
                     Column {
                         id: newsCol
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.top: parent.top
-                        anchors.margins: 12
+                        anchors.margins: Theme.space3
                         spacing: 6
 
                         Text {

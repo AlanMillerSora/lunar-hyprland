@@ -75,13 +75,13 @@ Item {
             bottomMargin: page.marginBottom
         }
 
-        spacing: 20
+        spacing: Theme.space5
 
         Text {
             text: "SOUND"
             color: Theme.text
             font.family: "JetBrainsMono Nerd Font"
-            font.pixelSize: 18
+            font.pixelSize: Theme.fontTitle
             font.letterSpacing: 3
         }
 
@@ -182,9 +182,9 @@ Item {
                 text: "OUTPUT"
                 color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontTitle
                 font.bold: true
-                font.letterSpacing: 2
+                font.letterSpacing: 3
                 anchors.verticalCenter: parent.verticalCenter
             }
         }
@@ -200,7 +200,7 @@ Item {
                     required property var modelData
 
                     width: parent.width
-                    height: 40
+                    height: Theme.rowH
                     radius: Theme.radius
 
                     property var output: modelData
@@ -210,20 +210,16 @@ Item {
                         output &&
                         page.sink.id === output.id
 
+                    // статичная строка: фон вместо рамки (этап «воздух»)
                     color: active
                         ? Theme.active
-                        : "transparent"
-
-                    border.width: 1
-                    border.color: active
-                        ? Theme.accent
-                        : Theme.border
+                        : Theme.fill
 
                     Row {
                         anchors.fill: parent
-                        anchors.leftMargin: 10
-                        anchors.rightMargin: 10
-                        spacing: 8
+                        anchors.leftMargin: Theme.space3
+                        anchors.rightMargin: Theme.space3
+                        spacing: Theme.space2
 
                         Text {
                             width: 20
@@ -286,7 +282,7 @@ Item {
                 font.pixelSize: 10
                 font.letterSpacing: 1.5
 
-                leftPadding: 4
+                leftPadding: Theme.space1
             }
         }
 
@@ -298,16 +294,16 @@ Item {
 
         Row {
             width: parent.width
-            spacing: 10
+            spacing: Theme.space3
 
             Text {
                 text: "PLAYING APPS"
 
                 color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontTitle
                 font.bold: true
-                font.letterSpacing: 2
+                font.letterSpacing: 3
 
                 anchors.verticalCenter: parent.verticalCenter
             }
@@ -334,7 +330,7 @@ Item {
                     required property var modelData
 
                     width: parent.width
-                    height: 48
+                    height: Theme.rowHComfy
                     radius: Theme.radius
 
                     property var stream: modelData
@@ -349,19 +345,15 @@ Item {
                             ? stream.audio.volume
                             : 0
 
+                    // статичная строка: фон вместо рамки (этап «воздух»)
                     color: streamMuted
                         ? Theme.alpha(Theme.danger, 0.06)
-                        : "transparent"
-
-                    border.width: 1
-                    border.color: streamMuted
-                        ? Theme.alpha(Theme.danger, 0.5)
-                        : Theme.border
+                        : Theme.fill
 
                     Row {
                         anchors.fill: parent
-                        anchors.leftMargin: 10
-                        anchors.rightMargin: 14
+                        anchors.leftMargin: Theme.space3
+                        anchors.rightMargin: Theme.space4
                         spacing: 6
 
                         Rectangle {
@@ -459,7 +451,7 @@ Item {
                 font.pixelSize: 10
                 font.letterSpacing: 1.5
 
-                leftPadding: 4
+                leftPadding: Theme.space1
             }
         }
     }
