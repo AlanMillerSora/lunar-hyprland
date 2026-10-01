@@ -10,22 +10,27 @@ Item {
     property string mono: "JetBrainsMono Nerd Font"
     property int rightMargin: 36
 
-    // ── обои-картинки: полка из ~/Pictures и ~/Wallpapers ──
-    property var walls: []
-
-    // страницу видно — перечитываю полку (картинки могли добавить)
-    onVisibleChanged: if (visible) wallScan.running = true
-
+    // ── цвет от обоев: генератор считает доминирующий цвет картинки ──
     Process {
-        id: wallScan
-        running: true
-        command: ["bash", "-c",
-            "find \"$HOME/Pictures\" \"$HOME/Wallpapers\" \"$HOME/Pictures/Wallpapers\" " +
-            "-maxdepth 2 -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \\) " +
-            "2>/dev/null | sort | head -24"]
-        stdout: StdioCollector {
-            onStreamFinished: page.walls = text.trim().split("\n").filter(function(x) { return x.length > 0 })
-        }
+        id: photoProc
+        running: false
+    }
+
+    // открыть окно подбора обоев (SUPER + B)
+    Process {
+        id: openPickerProc
+        running: false
+        command: ["qs", "ipc", "call", "wallpapers", "open"]
+    }
+
+    function applyPhotoColor() {
+        if (Theme.wallpaperPath === "" || photoProc.running)
+            return
+        var q = "'" + Theme.wallpaperPath.replace(/'/g, "'\\''") + "'"
+        photoProc.command = ["bash", "-c",
+            "$HOME/.config/hypr/scripts/eclipse-palette.py --from-image " + q + " --apply >/dev/null && "
+            + "(pidof kitty >/dev/null && kill -USR1 $(pidof kitty); makoctl reload 2>/dev/null); true"]
+        photoProc.running = true
     }
 
     Process {
@@ -478,7 +483,8 @@ Item {
                         model: [
                             { id: "lunar", name: "LUNAR" },
                             { id: "graphite", name: "GRAPHITE" },
-                            { id: "steel", name: "STEEL" }
+                            { id: "steel", name: "STEEL" },
+                            { id: "photo", name: "ФОТО" }
                         ]
 
                         delegate: Rectangle {
@@ -508,7 +514,12 @@ Item {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: page.applyPalette(modelData.id)
+                                onClicked: {
+                                    if (modelData.id === "photo")
+                                        page.applyPhotoColor()
+                                    else
+                                        page.applyPalette(modelData.id)
+                                }
                             }
                         }
                     }
@@ -516,10 +527,12 @@ Item {
 
                 Text {
                     width: parent.width
-                    text: Theme.palette.preset
-                        ? "текущая: " + Theme.palette.preset
-                          + " · цвета идут в шелл, kitty, GTK, qt6ct, mako, btop, yazi"
-                        : "пресет не выбран — работает палитра по умолчанию"
+                    text: Theme.palette.preset === "photo"
+                        ? "цвет взят с обоев · выбери LUNAR/GRAPHITE/STEEL, чтобы вернуть готовую палитру"
+                        : (Theme.palette.preset
+                            ? "текущая: " + Theme.palette.preset
+                              + " · цвета идут в шелл, kitty, GTK, qt6ct, mako, btop, yazi"
+                            : "пресет не выбран — работает палитра по умолчанию")
                     color: Theme.textFaint
                     font.family: page.mono
                     font.pixelSize: 10
@@ -736,56 +749,71 @@ Item {
                         }
                     }
 
+                    Rectangle {
+                        width: pickLabel.implicitWidth + 28
+                        height: Theme.rowHCompact
+                        radius: Theme.radiusM
+                        color: pickMouse.containsMouse ? Theme.active : Theme.fill
+                        border.width: 1
+                        border.color: pickMouse.containsMouse ? Theme.accent : Theme.border
+
+                        Text {
+                            id: pickLabel
+                            anchors.centerIn: parent
+                            text: "ПОДБОР ОБОЕВ…"
+                            color: Theme.text
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSmall
+                            font.letterSpacing: 1
+                        }
+
+                        MouseArea {
+                            id: pickMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: openPickerProc.running = true
+                        }
+                    }
+
+                    Rectangle {
+                        visible: Theme.wallpaperPath !== ""
+                        width: photoLabel.implicitWidth + 28
+                        height: Theme.rowHCompact
+                        radius: Theme.radiusM
+                        color: photoMouse.containsMouse ? Theme.active : Theme.fill
+                        border.width: 1
+                        border.color: photoMouse.containsMouse ? Theme.accent : Theme.border
+
+                        Text {
+                            id: photoLabel
+                            anchors.centerIn: parent
+                            text: "ЦВЕТ ОТ ОБОЕВ"
+                            color: Theme.text
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSmall
+                            font.letterSpacing: 1
+                        }
+
+                        MouseArea {
+                            id: photoMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: page.applyPhotoColor()
+                        }
+                    }
+
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
-                        width: Math.max(0, parent.width - 220)
+                        width: Math.max(0, parent.width - 330)
                         text: Theme.wallpaperPath !== ""
                             ? Theme.wallpaperPath
-                            : "полка: " + page.walls.length + " картинок в ~/Pictures и ~/Wallpapers"
+                            : "картинка не выбрана — открой подбор (SUPER + B)"
                         color: Theme.textDim
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSmall
                         elide: Text.ElideMiddle
-                    }
-                }
-
-                Grid {
-                    width: parent.width
-                    columns: 6
-                    spacing: Theme.space2
-
-                    Repeater {
-                        model: page.walls
-
-                        delegate: Rectangle {
-                            required property string modelData
-                            readonly property bool cur: Theme.wallpaperPath === modelData
-                            width: 84
-                            height: 48
-                            radius: Theme.radius
-                            color: Theme.fill
-                            border.width: cur ? 1 : 0
-                            border.color: Theme.accent
-
-                            Image {
-                                anchors.fill: parent
-                                source: "file://" + modelData
-                                fillMode: Image.PreserveAspectCrop
-                                asynchronous: true
-                                cache: false
-                                sourceSize: Qt.size(168, 96)
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    Theme.wallpaperPath = modelData
-                                    Theme.wallpaperMode = "image"
-                                }
-                            }
-                        }
                     }
                 }
             }

@@ -23,6 +23,8 @@
 # ════════════════════════════════════════════════════════════════
 import argparse
 import json
+import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -44,6 +46,8 @@ DEFAULT_TEMPLATES = CONFIG_ROOT / "lunar" / "templates"
 APPLY_CONFIG_ROOT = HOME / ".config"
 APPLY_CACHE_JSON = HOME / ".cache" / "lunar" / "palette.json"
 APPLY_STATE_PRESET = HOME / ".cache" / "lunar" / "preset"
+# путь картинки, из которой построена «фотопалитра» (--from-image)
+APPLY_PHOTO_PATH = HOME / ".cache" / "lunar" / "photo"
 
 
 # ── цвета ───────────────────────────────────────────────────────
@@ -92,6 +96,88 @@ def render(text: str, ctx: dict) -> str:
     for key, val in ctx.items():
         out = out.replace("{{" + key + "}}", str(val))
     return out
+
+
+def dominant_color(path: Path):
+    """Доминирующий цвет картинки. Считаю гистограмму ImageMagick и беру
+    самый частый СРЕДИ насыщенных: почти чёрное и почти белое отбрасываю —
+    иначе любой фон сведётся к серому."""
+    try:
+        out = subprocess.run(
+            ["magick", str(path), "-resize", "160x160", "-colors", "6",
+             "-depth", "8", "-format", "%c", "histogram:info:"],
+            capture_output=True, text=True, timeout=25).stdout
+    except Exception:
+        return (8, 9, 13)
+    best, best_score = None, -1.0
+    for line in out.splitlines():
+        m = re.match(r"\s*(\d+):\s*\((\d+),(\d+),(\d+)", line)
+        if not m:
+            continue
+        cnt = int(m.group(1))
+        r, g, b = int(m.group(2)), int(m.group(3)), int(m.group(4))
+        mx, mn = max(r, g, b), min(r, g, b)
+        if mx < 14 or mn > 242:
+            continue
+        sat = (mx - mn) / max(1, mx)
+        score = cnt * (0.35 + sat)
+        if score > best_score:
+            best_score, best = score, (r, g, b)
+    return best or (8, 9, 13)
+
+
+def rgb_to_hsl(r, g, b):
+    r, g, b = r / 255, g / 255, b / 255
+    mx, mn = max(r, g, b), min(r, g, b)
+    l = (mx + mn) / 2
+    if mx == mn:
+        return 0.0, 0.0, l
+    d = mx - mn
+    s = d / (2 - mx - mn) if l > 0.5 else d / (mx + mn)
+    if mx == r:
+        h = ((g - b) / d + (6 if g < b else 0)) / 6
+    elif mx == g:
+        h = ((b - r) / d + 2) / 6
+    else:
+        h = ((r - g) / d + 4) / 6
+    return h, s, l
+
+
+def hsl_to_hex(h, s, l):
+    def f(n):
+        k = (n + h * 12) % 12
+        a = s * min(l, 1 - l)
+        return l - a * max(-1, min(k - 3, 9 - k, 1))
+    return "#%02x%02x%02x" % (round(255 * f(0)), round(255 * f(8)), round(255 * f(4)))
+
+
+def palette_from_image(path: Path) -> dict:
+    """Пресет из картинки: фон — тот же тон, сильно приглушённый; акцент —
+    сам доминирующий цвет, чуть поднятый по свету. Так система едет за обоями."""
+    r, g, b = dominant_color(path)
+    h, s, _ = rgb_to_hsl(r, g, b)
+    def bg(mul_s, mul_l):
+        return hsl_to_hex(h, min(0.45, s * mul_s), mul_l)
+    return {
+        "bg":           bg(0.90, 0.035),
+        "bgPanel":      bg(0.85, 0.055),
+        "bgCard":       bg(0.80, 0.085),
+        "bgTrack":      bg(0.70, 0.125),
+        "text":         hsl_to_hex(h, 0.08, 0.93),
+        "textDim":      hsl_to_hex(h, 0.12, 0.64),
+        "textFaint":    hsl_to_hex(h, 0.14, 0.40),
+        "accent":       hsl_to_hex(h, max(0.35, min(0.62, s * 1.15)), 0.66),
+        "accent2":      hsl_to_hex(h, max(0.28, min(0.50, s * 0.90)), 0.80),
+        "danger":       "#ff003c",
+        "ok":           "#00ff9c",
+        "border":       "#ffffff12",
+        "borderAccent": hsl_to_hex(h, 0.50, 0.60) + "33",
+        "barText":      hsl_to_hex(h, 0.07, 0.88),
+        "barDim":       hsl_to_hex(h, 0.12, 0.64),
+        "barFaint":     hsl_to_hex(h, 0.14, 0.40),
+        "barPill":      bg(0.85, 0.055),
+        "cursor":       hsl_to_hex(h, 0.08, 0.93),
+    }
 
 
 def load_template(templates_dir: Path, name: str) -> str:
@@ -188,6 +274,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(
         description="Раскладка единой палитры Lunar Eclipse по приложениям.")
     ap.add_argument("--preset", help="имя пресета из palette.toml (по умолчанию active)")
+    ap.add_argument("--from-image", metavar="ФАЙЛ",
+                    help="построить палитру из картинки (обои) и применить")
     ap.add_argument("--out", metavar="DIR",
                     help="записать всё в DIR (тест), не трогая живые конфиги")
     ap.add_argument("--apply", action="store_true",
@@ -212,12 +300,24 @@ def main() -> int:
     # выбранный в Hub пресет помню в ~/.cache/lunar/preset: palette.toml
     # остаётся «заводским» (репо == живое), а выбор переживает install.sh
     saved = APPLY_STATE_PRESET.read_text(encoding="utf-8").strip() if APPLY_STATE_PRESET.exists() else ""
-    name = args.preset or (saved if saved in presets else data.get("active"))
-    if name not in presets:
-        print(f"нет пресета {name!r} в {palette_path}", file=sys.stderr)
-        print("доступно: " + ", ".join(presets), file=sys.stderr)
-        return 2
-    preset = presets[name]
+
+    photo = Path(args.from_image) if args.from_image else None
+    if photo is None and saved == "photo" and APPLY_PHOTO_PATH.exists():
+        photo = Path(APPLY_PHOTO_PATH.read_text(encoding="utf-8").strip())
+
+    if photo is not None:
+        if not photo.is_file():
+            print(f"нет картинки {photo}", file=sys.stderr)
+            return 1
+        preset = palette_from_image(photo)
+        name = "photo"
+    else:
+        name = args.preset or (saved if saved in presets else data.get("active"))
+        if name not in presets:
+            print(f"нет пресета {name!r} в {palette_path}", file=sys.stderr)
+            print("доступно: " + ", ".join(presets), file=sys.stderr)
+            return 2
+        preset = presets[name]
 
     artifacts, palette_json = build_artifacts(preset, name, templates_dir)
 
@@ -261,6 +361,8 @@ def main() -> int:
     APPLY_CACHE_JSON.parent.mkdir(parents=True, exist_ok=True)
     APPLY_CACHE_JSON.write_text(palette_json, encoding="utf-8")
     APPLY_STATE_PRESET.write_text(name + "\n", encoding="utf-8")
+    if name == "photo" and photo is not None:
+        APPLY_PHOTO_PATH.write_text(str(photo) + "\n", encoding="utf-8")
     print(f"[пресет] {name}")
     print(f"[режим]  apply — записано в ~/.config и {APPLY_CACHE_JSON}")
     for rel, _ in artifacts:

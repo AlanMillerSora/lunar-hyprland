@@ -268,6 +268,7 @@ hl.window_rule({ match = { title = "^(Lunar Player)$" }, float = true, center = 
 -- тянуть и ресайзить, блюр им даёт прозрачность окна. Заголовки ставлю в QML.
 -- Радиус 14 (чуть больше системного): без обводки форму читает именно угол.
 hl.window_rule({ match = { title = "^(Lunar Hub)$" },       float = true, center = true, rounding = 8, opacity = "0.97 override 0.97 override" })
+hl.window_rule({ match = { title = "^(Lunar Wallpapers)$" }, float = true, center = true, rounding = 8, opacity = "0.97 override 0.97 override" })
 hl.window_rule({ match = { title = "^(Lunar Clipboard)$" }, float = true, center = true, rounding = 8, opacity = "0.97 override 0.97 override" })
 hl.window_rule({ match = { title = "^(Lunar Power)$" },     float = true, center = true, rounding = 8, opacity = "0.97 override 0.97 override" })
 hl.window_rule({ match = { title = "^(Lunar Agent)$" },     float = true, center = true, rounding = 8, opacity = "0.97 override 0.97 override" })
@@ -310,6 +311,7 @@ local M = "SUPER"
 
 hl.bind(M .. " + RETURN",  dsp.exec_cmd("kitty"))
 hl.bind(M .. " + G",       dsp.exec_cmd("qs ipc call hub toggle"))      -- Lunar Hub: launch + settings (Quickshell)
+hl.bind(M .. " + B",       dsp.exec_cmd("qs ipc call wallpapers toggle"))  -- подбор обоев (B — фон)
 hl.bind(M .. " + E",       dsp.exec_cmd("thunar"))
 hl.bind(M .. " + V",       dsp.exec_cmd("qs ipc call clipboard toggle"))   -- буфер обмена (cliphist, Quickshell)
 hl.bind(M .. " + SHIFT + E", dsp.exec_cmd("qs ipc call sidebar toggle"))   -- боковая панель слева (Quickshell)

@@ -67,14 +67,72 @@ PanelWindow {
         color: Theme.bg
     }
 
-    Image {
+    // Смена картинки — кроссфейдом: новый слой проявляется поверх старого,
+    // потом старый подменяется. Так перелистывание обоев не мигает.
+    Item {
+        id: wpHost
         anchors.fill: parent
-        visible: Theme.wallpaperMode === "image" && Theme.wallpaperPath !== ""
-        source: Theme.wallpaperPath !== "" ? "file://" + Theme.wallpaperPath : ""
-        fillMode: Image.PreserveAspectCrop
-        asynchronous: true
-        cache: false
-        smooth: true
+        visible: Theme.wallpaperMode === "image"
+
+        property string basePath: ""
+        property string topPath: ""
+        property real topOpacity: 0
+
+        Image {
+            id: wpBase
+            anchors.fill: parent
+            source: wpHost.basePath !== "" ? "file://" + wpHost.basePath : ""
+            fillMode: Image.PreserveAspectCrop
+            asynchronous: true
+            cache: false
+            smooth: true
+        }
+
+        Image {
+            id: wpTop
+            anchors.fill: parent
+            source: wpHost.topPath !== "" ? "file://" + wpHost.topPath : ""
+            fillMode: Image.PreserveAspectCrop
+            asynchronous: true
+            cache: false
+            smooth: true
+            opacity: wpHost.topOpacity
+        }
+
+        NumberAnimation {
+            id: wpFade
+            target: wpHost
+            property: "topOpacity"
+            from: 0
+            to: 1
+            duration: Theme.animMed
+            easing.type: Easing.OutCubic
+            onFinished: {
+                wpHost.basePath = wpHost.topPath
+                wpHost.topPath = ""
+                wpHost.topOpacity = 0
+            }
+        }
+
+        Connections {
+            target: Theme
+            function onWallpaperPathChanged() {
+                if (Theme.wallpaperPath === wpHost.basePath)
+                    return
+                wpHost.topPath = Theme.wallpaperPath
+                wpHost.topOpacity = 0
+                wpFade.restart()
+            }
+            function onWallpaperModeChanged() {
+                if (Theme.wallpaperMode === "image" && Theme.wallpaperPath !== "") {
+                    wpHost.basePath = Theme.wallpaperPath
+                    wpHost.topPath = ""
+                    wpHost.topOpacity = 0
+                }
+            }
+        }
+
+        Component.onCompleted: wpHost.basePath = Theme.wallpaperPath
     }
 
     // ── живая сцена затмения: спит, когда показываем картинку ──
