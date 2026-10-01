@@ -1330,70 +1330,79 @@ PanelWindow {
             spacing: Theme.space3
 
             // ── медиа: только когда играет ──
-            Row {
+            // Item-обёртка: MouseArea нельзя класть прямо в Row
+            // (anchors.fill внутри Row — ошибка верстки)
+            Item {
                 id: centerMedia
                 visible: root.mediaActive
                 anchors.verticalCenter: parent.verticalCenter
-                height: 26
-                spacing: Theme.space2
+                implicitWidth: centerMediaRow.implicitWidth
+                implicitHeight: 26
 
-                // столбики cava — фиксированные, чтобы не плясали
                 Row {
+                    id: centerMediaRow
                     anchors.verticalCenter: parent.verticalCenter
                     height: 26
-                    spacing: 2
+                    spacing: Theme.space2
 
-                    Repeater {
-                        model: root.barCount
+                    // столбики cava — фиксированные, чтобы не плясали
+                    Row {
+                        anchors.verticalCenter: parent.verticalCenter
+                        height: 26
+                        spacing: 2
 
-                        delegate: Item {
-                            required property int index
-                            width: 3
-                            height: 26
+                        Repeater {
+                            model: root.barCount
 
-                            Rectangle {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 3
-                                width: parent.width
-                                height: 2 + (root.barValues[index] || 0) * 18
-                                radius: 1
-                                color: Theme.alpha(Theme.accent, 0.5 + 0.5 * (root.barValues[index] || 0))
+                            delegate: Item {
+                                required property int index
+                                width: 3
+                                height: 26
+
+                                Rectangle {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    anchors.bottom: parent.bottom
+                                    anchors.bottomMargin: 3
+                                    width: parent.width
+                                    height: 2 + (root.barValues[index] || 0) * 18
+                                    radius: 1
+                                    color: Theme.alpha(Theme.accent, 0.5 + 0.5 * (root.barValues[index] || 0))
+                                }
                             }
                         }
                     }
-                }
 
-                Text {
-                    id: centerNote
-                    width: 18
-                    height: 26
-                    verticalAlignment: Text.AlignVCenter
-                    horizontalAlignment: Text.AlignHCenter
-                    text: root.playing ? "\uf04c" : "\uf04b"
-                    color: root.playing ? Theme.accent : Theme.barFaint
-                    font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSize(13)
-                }
+                    Text {
+                        id: centerNote
+                        width: 18
+                        height: 26
+                        verticalAlignment: Text.AlignVCenter
+                        horizontalAlignment: Text.AlignHCenter
+                        text: root.playing ? "\uf04c" : "\uf04b"
+                        color: root.playing ? Theme.accent : Theme.barFaint
+                        font.family: Theme.iconFont
+                        font.pixelSize: Theme.fontSize(13)
+                    }
 
-                Text {
-                    id: centerTrack
-                    width: 170
-                    height: 26
-                    verticalAlignment: Text.AlignVCenter
-                    clip: true
-                    text: root.marqueeText(Math.max(4,
-                        Math.floor(width / (fm12.advanceWidth("0") > 0 ? fm12.advanceWidth("0") : 8))))
-                    color: Theme.barText
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(12)
-                }
+                    Text {
+                        id: centerTrack
+                        width: 170
+                        height: 26
+                        verticalAlignment: Text.AlignVCenter
+                        clip: true
+                        text: root.marqueeText(Math.max(4,
+                            Math.floor(width / (fm12.advanceWidth("0") > 0 ? fm12.advanceWidth("0") : 8))))
+                        color: Theme.barText
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(12)
+                    }
 
-                Rectangle {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 1
-                    height: 14
-                    color: Theme.border
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 1
+                        height: 14
+                        color: Theme.border
+                    }
                 }
 
                 MouseArea {

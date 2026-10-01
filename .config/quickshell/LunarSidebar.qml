@@ -137,7 +137,7 @@ PanelWindow {
                         text: "✕"
                         color: Theme.textDim
                         font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize(14)
+                        font.pixelSize: Theme.fontSize(15)
                     }
                     MouseArea {
                         id: closeMouse
@@ -186,7 +186,7 @@ PanelWindow {
                                     ? Theme.accent
                                     : (tabMouse.containsMouse ? Theme.text : Theme.textDim)
                                 font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSize(13)
+                                font.pixelSize: Theme.fontSize(14)
                                 Behavior on color { ColorAnimation { duration: Theme.animFast } }
                             }
                             MouseArea {
@@ -238,7 +238,7 @@ PanelWindow {
                                 text: "API-LIMIT"
                                 color: Theme.text
                                 font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSize(14)
+                                font.pixelSize: Theme.fontSize(15)
                                 font.bold: true
                                 font.letterSpacing: 2
                             }
@@ -247,7 +247,7 @@ PanelWindow {
                                 text: api.ok ? (api.lead !== "" ? api.lead : "нет данных") : api.status
                                 color: Theme.textFaint
                                 font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSize(11)
+                                font.pixelSize: Theme.fontSize(12)
                                 elide: Text.ElideRight
                                 Layout.maximumWidth: 320
                             }
@@ -272,7 +272,7 @@ PanelWindow {
                                         text: modelData.label
                                         color: Theme.textDim
                                         font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSize(12)
+                                        font.pixelSize: Theme.fontSize(13)
                                         font.letterSpacing: 1
                                     }
                                     Item { Layout.fillWidth: true }
@@ -281,7 +281,7 @@ PanelWindow {
                                             + (modelData.limit > 0 ? api.money(modelData.limit) : "∞")
                                         color: Theme.text
                                         font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSize(12)
+                                        font.pixelSize: Theme.fontSize(13)
                                     }
                                     Text {
                                         text: modelData.limit > 0
@@ -291,7 +291,7 @@ PanelWindow {
                                             ? Theme.danger
                                             : Theme.textDim
                                         font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSize(12)
+                                        font.pixelSize: Theme.fontSize(13)
                                     }
                                 }
 
@@ -331,7 +331,7 @@ PanelWindow {
                             text: "МОДЕЛИ · локально"
                             color: Theme.text
                             font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(12)
+                            font.pixelSize: Theme.fontSize(13)
                             font.bold: true
                             font.letterSpacing: 2
                         }
@@ -351,7 +351,7 @@ PanelWindow {
                                         text: modelData.id
                                         color: Theme.textDim
                                         font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSize(11)
+                                        font.pixelSize: Theme.fontSize(12)
                                         elide: Text.ElideRight
                                         Layout.fillWidth: true
                                     }
@@ -359,7 +359,7 @@ PanelWindow {
                                         text: api.money(modelData.usd)
                                         color: Theme.text
                                         font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSize(11)
+                                        font.pixelSize: Theme.fontSize(12)
                                     }
                                 }
                                 RowLayout {
@@ -391,7 +391,7 @@ PanelWindow {
                                             + "  cache " + api.fmtTokens(modelData.cache)
                                         color: Theme.textFaint
                                         font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSize(10)
+                                        font.pixelSize: Theme.fontSize(11)
                                     }
                                 }
                             }
@@ -402,7 +402,7 @@ PanelWindow {
                             text: api.status
                             color: Theme.textFaint
                             font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(10)
+                            font.pixelSize: Theme.fontSize(11)
                             elide: Text.ElideRight
                         }
 
@@ -427,14 +427,14 @@ PanelWindow {
                                 text: "заметки"
                                 color: Theme.textDim
                                 font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSize(13)
+                                font.pixelSize: Theme.fontSize(14)
                             }
                             Item { Layout.fillWidth: true }
                             Text {
                                 text: "сохранить"
                                 color: saveMouse.containsMouse ? Theme.accent : Theme.textFaint
                                 font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSize(12)
+                                font.pixelSize: Theme.fontSize(13)
                                 MouseArea {
                                     id: saveMouse
                                     anchors.fill: parent
@@ -457,7 +457,7 @@ PanelWindow {
                                 anchors.margins: Theme.space2
                                 color: Theme.text
                                 font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSize(13)
+                                font.pixelSize: Theme.fontSize(14)
                                 wrapMode: TextArea.WordWrap
                                 clip: true
                                 selectByMouse: true
@@ -477,7 +477,7 @@ PanelWindow {
                                 text: "пиши здесь — сохраняется само"
                                 color: Theme.textFaint
                                 font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSize(13)
+                                font.pixelSize: Theme.fontSize(14)
                             }
                         }
                     }
@@ -494,7 +494,7 @@ PanelWindow {
                 text: sysStats.text
                 color: Theme.textDim
                 font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize(12)
+                font.pixelSize: Theme.fontSize(13)
             }
         }
     }

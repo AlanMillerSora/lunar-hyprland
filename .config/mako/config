@@ -29,11 +29,10 @@ progress-color=over #e8edf4FF
 # include обязан идти до первой секции — после [urgency=…] mako конфиг не парсит.
 include=~/.config/mako/colors.conf
 
+# Цвета urgency-секций приходят из include выше (colors.conf, генератор).
+# Здесь оставляю только поведение: иначе хардкод перебивал бы палитру.
 [urgency=low]
-background-color=#0c0e1399
-border-color=#98a1acFF
 default-timeout=3000
 
 [urgency=critical]
-border-color=#FF003CFF
 default-timeout=0

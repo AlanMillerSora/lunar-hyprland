@@ -50,7 +50,3 @@ prepend_rules = [
 prepend_previewers = [
 	{ url = "*.{ttf,otf,ttc,woff,woff2}", run = "font" },
 ]
-
-# цвета — из единой палитры (eclipse-palette.py)
-[flavor]
-dark = "lunar"

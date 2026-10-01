@@ -13,6 +13,7 @@
 @define-color theme_selected_bg_color {{bgTrack}};
 @define-color theme_selected_fg_color {{text}};
 @define-color borders {{borderSolid}};
+@define-color unfocused_borders {{borderSolid}};
 @define-color warning_color {{danger}};
 @define-color error_color {{danger}};
 @define-color success_color {{ok}};

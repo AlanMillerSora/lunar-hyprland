@@ -178,7 +178,7 @@ PanelWindow {
                         text: "\uf11c"
                         color: helpMouse.containsMouse ? Theme.accent : Theme.textDim
                         font.family: Theme.iconFont
-                        font.pixelSize: Theme.fontSize(12)
+                        font.pixelSize: Theme.fontSize(13)
                     }
                     MouseArea {
                         id: helpMouse
@@ -201,7 +201,7 @@ PanelWindow {
                         text: "✕"
                         color: Theme.textDim
                         font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize(14)
+                        font.pixelSize: Theme.fontSize(15)
                     }
                     MouseArea {
                         id: closeMouse
@@ -250,7 +250,7 @@ PanelWindow {
                                     ? Theme.accent
                                     : (tabMouse.containsMouse ? Theme.text : Theme.textDim)
                                 font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSize(13)
+                                font.pixelSize: Theme.fontSize(14)
                                 Behavior on color { ColorAnimation { duration: Theme.animFast } }
                             }
                             MouseArea {
@@ -305,13 +305,13 @@ PanelWindow {
                                 text: "уведомления"
                                 color: Theme.textDim
                                 font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSize(13)
+                                font.pixelSize: Theme.fontSize(14)
                             }
                             Text {
                                 text: notif.items.length
                                 color: Theme.textFaint
                                 font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSize(13)
+                                font.pixelSize: Theme.fontSize(14)
                             }
                             Item { Layout.fillWidth: true }
 
@@ -328,7 +328,7 @@ PanelWindow {
                                     text: notif.dnd ? "\uf1f6" : "\uf0f3"
                                     color: notif.dnd ? Theme.danger : Theme.textDim
                                     font.family: Theme.iconFont
-                                    font.pixelSize: Theme.fontSize(14)
+                                    font.pixelSize: Theme.fontSize(15)
                                 }
                                 MouseArea {
                                     anchors.fill: parent
@@ -350,7 +350,7 @@ PanelWindow {
                                     text: "очистить"
                                     color: clearMouse.containsMouse ? Theme.danger : Theme.textFaint
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSize(12)
+                                    font.pixelSize: Theme.fontSize(13)
                                 }
                                 MouseArea {
                                     id: clearMouse
@@ -405,7 +405,7 @@ PanelWindow {
                                         text: modelData.app
                                         color: Theme.textFaint
                                         font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSize(12)
+                                        font.pixelSize: Theme.fontSize(13)
                                         elide: Text.ElideRight
                                     }
                                     Text {
@@ -413,7 +413,7 @@ PanelWindow {
                                         text: modelData.summary
                                         color: Theme.text
                                         font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSize(14)
+                                        font.pixelSize: Theme.fontSize(15)
                                         wrapMode: notifItem.expanded ? Text.Wrap : Text.NoWrap
                                         elide: notifItem.expanded ? Text.ElideNone : Text.ElideRight
                                         maximumLineCount: notifItem.expanded ? 6 : 1
@@ -424,7 +424,7 @@ PanelWindow {
                                         text: modelData.body
                                         color: Theme.textDim
                                         font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSize(13)
+                                        font.pixelSize: Theme.fontSize(14)
                                         wrapMode: notifItem.expanded ? Text.Wrap : Text.NoWrap
                                         elide: notifItem.expanded ? Text.ElideNone : Text.ElideRight
                                         maximumLineCount: notifItem.expanded ? 100 : 1
@@ -441,7 +441,7 @@ PanelWindow {
                                     text: "\uf00d"
                                     color: dismissMouse.containsMouse ? Theme.danger : Theme.textFaint
                                     font.family: Theme.iconFont
-                                    font.pixelSize: Theme.fontSize(12)
+                                    font.pixelSize: Theme.fontSize(13)
                                     z: 1
                                     MouseArea {
                                         id: dismissMouse
@@ -461,7 +461,7 @@ PanelWindow {
                             text: notif.dnd ? "режим «не беспокоить»" : "уведомлений нет"
                             color: Theme.textFaint
                             font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(14)
+                            font.pixelSize: Theme.fontSize(15)
                             horizontalAlignment: Text.AlignHCenter
                         }
                     }
@@ -481,7 +481,7 @@ PanelWindow {
                             text: "сейчас играет"
                             color: Theme.textDim
                             font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(13)
+                            font.pixelSize: Theme.fontSize(14)
                         }
 
                         Item { Layout.fillHeight: true }
@@ -551,7 +551,7 @@ PanelWindow {
                             text: root.player ? (root.player.trackArtist || "") : ""
                             color: Theme.textDim
                             font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(14)
+                            font.pixelSize: Theme.fontSize(15)
                             horizontalAlignment: Text.AlignHCenter
                             elide: Text.ElideRight
                         }
@@ -649,7 +649,7 @@ PanelWindow {
                             text: root.todayText
                             color: Theme.textDim
                             font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(14)
+                            font.pixelSize: Theme.fontSize(15)
                         }
 
 
@@ -709,7 +709,7 @@ PanelWindow {
                                                     text: modelData
                                                     color: Theme.textFaint
                                                     font.family: Theme.fontFamily
-                                                    font.pixelSize: Theme.fontSize(13)
+                                                    font.pixelSize: Theme.fontSize(14)
                                                     horizontalAlignment: Text.AlignHCenter
                                                 }
                                             }
@@ -749,7 +749,7 @@ PanelWindow {
                                                             ? "transparent"
                                                             : ((isToday || isSel) ? Theme.accent : Theme.text)
                                                         font.family: Theme.fontFamily
-                                                        font.pixelSize: Theme.fontSize(15)
+                                                        font.pixelSize: Theme.fontSize(16)
                                                         font.bold: isToday || isSel
                                                         Behavior on color { ColorAnimation { duration: Theme.animFast } }
                                                     }
@@ -814,14 +814,14 @@ PanelWindow {
                                     text: cal.selected
                                     color: Theme.text
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSize(14)
+                                    font.pixelSize: Theme.fontSize(15)
                                     font.bold: true
                                 }
                                 Text {
                                     text: "\uf00d"
                                     color: Theme.textDim
                                     font.family: Theme.iconFont
-                                    font.pixelSize: Theme.fontSize(14)
+                                    font.pixelSize: Theme.fontSize(15)
                                     MouseArea {
                                         anchors.fill: parent
                                         cursorShape: Qt.PointingHandCursor
@@ -840,21 +840,21 @@ PanelWindow {
                                         text: (modelData.time && modelData.time.length > 0) ? modelData.time : "весь"
                                         color: Theme.textDim
                                         font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSize(13)
+                                        font.pixelSize: Theme.fontSize(14)
                                     }
                                     Text {
                                         Layout.fillWidth: true
                                         text: modelData.title
                                         color: Theme.text
                                         font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSize(13)
+                                        font.pixelSize: Theme.fontSize(14)
                                         elide: Text.ElideRight
                                     }
                                     Text {
                                         text: "\uf1f8"
                                         color: Theme.textFaint
                                         font.family: Theme.iconFont
-                                        font.pixelSize: Theme.fontSize(13)
+                                        font.pixelSize: Theme.fontSize(14)
                                         MouseArea {
                                             anchors.fill: parent
                                             cursorShape: Qt.PointingHandCursor
@@ -884,7 +884,7 @@ PanelWindow {
                                         verticalAlignment: TextInput.AlignVCenter
                                         color: Theme.text
                                         font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSize(13)
+                                        font.pixelSize: Theme.fontSize(14)
                                         clip: true
                                         Text {
                                             anchors.verticalCenter: parent.verticalCenter
@@ -909,7 +909,7 @@ PanelWindow {
                                         verticalAlignment: TextInput.AlignVCenter
                                         color: Theme.text
                                         font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSize(13)
+                                        font.pixelSize: Theme.fontSize(14)
                                         Text {
                                             anchors.centerIn: parent
                                             visible: parent.text.length === 0
@@ -933,7 +933,7 @@ PanelWindow {
                                         verticalAlignment: TextInput.AlignVCenter
                                         color: Theme.text
                                         font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSize(13)
+                                        font.pixelSize: Theme.fontSize(14)
                                         validator: IntValidator { bottom: 0; top: 600 }
                                         Text {
                                             anchors.centerIn: parent
@@ -978,7 +978,7 @@ PanelWindow {
                                 text: "запись экрана"
                                 color: Theme.textDim
                                 font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSize(13)
+                                font.pixelSize: Theme.fontSize(14)
                             }
                             Item { Layout.fillWidth: true }
 
@@ -997,7 +997,7 @@ PanelWindow {
                                     text: root.recording ? "■ СТОП" : "● ЗАПИСЬ"
                                     color: root.recording ? Theme.danger : Theme.text
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSize(11)
+                                    font.pixelSize: Theme.fontSize(12)
                                     font.bold: true
                                 }
                                 MouseArea {
@@ -1019,7 +1019,7 @@ PanelWindow {
                                     text: "↻"
                                     color: Theme.textDim
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSize(14)
+                                    font.pixelSize: Theme.fontSize(15)
                                 }
                                 MouseArea {
                                     id: recRefreshMouse
@@ -1037,7 +1037,7 @@ PanelWindow {
                             text: "● идёт запись…"
                             color: Theme.danger
                             font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(12)
+                            font.pixelSize: Theme.fontSize(13)
                         }
 
                         ListView {
@@ -1073,7 +1073,7 @@ PanelWindow {
                                         text: "\uf03d"
                                         color: Theme.accent
                                         font.family: Theme.iconFont
-                                        font.pixelSize: Theme.fontSize(16)
+                                        font.pixelSize: Theme.fontSize(17)
                                     }
 
                                     ColumnLayout {
@@ -1084,7 +1084,7 @@ PanelWindow {
                                             text: modelData.name
                                             color: Theme.text
                                             font.family: Theme.fontFamily
-                                            font.pixelSize: Theme.fontSize(12)
+                                            font.pixelSize: Theme.fontSize(13)
                                             elide: Text.ElideMiddle
                                         }
                                         Text {
@@ -1092,7 +1092,7 @@ PanelWindow {
                                             text: root.fmtSize(modelData.size) + "  ·  " + root.fmtDate(modelData.mtime)
                                             color: Theme.textFaint
                                             font.family: Theme.fontFamily
-                                            font.pixelSize: Theme.fontSize(10)
+                                            font.pixelSize: Theme.fontSize(11)
                                         }
                                     }
 
@@ -1100,7 +1100,7 @@ PanelWindow {
                                         text: "\uf04b"
                                         color: playMouse.containsMouse ? Theme.accent : Theme.textDim
                                         font.family: Theme.iconFont
-                                        font.pixelSize: Theme.fontSize(13)
+                                        font.pixelSize: Theme.fontSize(14)
                                         MouseArea {
                                             id: playMouse
                                             anchors.fill: parent
@@ -1113,7 +1113,7 @@ PanelWindow {
                                         text: "\uf1f8"
                                         color: delMouse.containsMouse ? Theme.danger : Theme.textFaint
                                         font.family: Theme.iconFont
-                                        font.pixelSize: Theme.fontSize(12)
+                                        font.pixelSize: Theme.fontSize(13)
                                         MouseArea {
                                             id: delMouse
                                             anchors.fill: parent
@@ -1132,7 +1132,7 @@ PanelWindow {
                             text: "записей нет"
                             color: Theme.textFaint
                             font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(12)
+                            font.pixelSize: Theme.fontSize(13)
                             horizontalAlignment: Text.AlignHCenter
                         }
 
@@ -1141,7 +1141,7 @@ PanelWindow {
                             text: "открыть папку записей"
                             color: folderMouse.containsMouse ? Theme.accent : Theme.textFaint
                             font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(11)
+                            font.pixelSize: Theme.fontSize(12)
                             horizontalAlignment: Text.AlignHCenter
                             MouseArea {
                                 id: folderMouse
@@ -1165,7 +1165,7 @@ PanelWindow {
                 text: sysStats.text
                 color: Theme.textDim
                 font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize(12)
+                font.pixelSize: Theme.fontSize(13)
             }
         }
     }

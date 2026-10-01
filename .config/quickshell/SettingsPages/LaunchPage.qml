@@ -39,7 +39,7 @@ Item {
                     : "сканирую…"
                 color: Theme.textFaint
                 font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontTiny
+                font.pixelSize: Theme.fontSmall
                 Layout.alignment: Qt.AlignVCenter
             }
 
@@ -59,7 +59,7 @@ Item {
                     text: "\uf021"
                     color: refreshMouse.containsMouse ? Theme.accent : Theme.textDim
                     font.family: Theme.iconFont
-                    font.pixelSize: 13
+                    font.pixelSize: 14
                 }
 
                 MouseArea {
@@ -120,15 +120,25 @@ Item {
                     spacing: 6
 
                     Item {
-                        width: 56
-                        height: 56
+                        width: 54
+                        height: 54
                         anchors.horizontalCenter: parent.horizontalCenter
+
+                        // подложка: даёт иконкам одинаковый вес и «плитку»,
+                        // иначе тёмные глифы на тёмной плитке сливаются
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: Theme.radiusM
+                            color: Theme.fill
+                            border.width: hover.containsMouse ? 1 : 0
+                            border.color: Theme.borderAccent
+                        }
 
                         Image {
                             id: appIcon
                             anchors.centerIn: parent
-                            width: 44
-                            height: 44
+                            width: 40
+                            height: 40
                             sourceSize: Qt.size(128, 128)
                             fillMode: Image.PreserveAspectFit
                             smooth: true
@@ -139,24 +149,26 @@ Item {
                             visible: false
                         }
 
-                        // принудительный монохром: тема Tela-lunar уже серая,
-                        // но иконки-файлы (yazi, brave) приходят цветными —
-                        // гашу насыщенность и чуть поднимаю яркость
+                        // принудительный монохром: тема Tela-lunar уже серая, но
+                        // иконки-файлы (yazi, brave) приходят цветными — гашу
+                        // насыщенность, поднимаю яркость и чуть контраст, чтобы
+                        // после перевода в серое не терялись детали
                         MultiEffect {
                             anchors.fill: appIcon
                             source: appIcon
                             visible: appIcon.status === Image.Ready
                             saturation: -1.0
-                            brightness: 0.15
+                            brightness: 0.22
+                            contrast: 0.12
                         }
 
                         Text {
                             anchors.centerIn: parent
                             visible: appIcon.status !== Image.Ready
                             text: AppModel.initials(modelData.name)
-                            color: Theme.text
+                            color: Theme.textDim
                             font.family: Theme.fontFamily
-                            font.pixelSize: 16
+                            font.pixelSize: 18
                             font.bold: true
                         }
                     }
@@ -165,7 +177,7 @@ Item {
                         text: modelData.name
                         color: Theme.text
                         font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSmall
+                        font.pixelSize: Theme.fontBody
                         width: Math.max(80, grid.cellWidth - 24)
                         horizontalAlignment: Text.AlignHCenter
                         wrapMode: Text.WordWrap
@@ -199,7 +211,7 @@ Item {
                 text: AppModel.allApps.length === 0 ? "ищу приложения…" : "ничего не найдено"
                 color: Theme.textFaint
                 font.family: Theme.fontFamily
-                font.pixelSize: 11
+                font.pixelSize: 13
             }
         }
     }

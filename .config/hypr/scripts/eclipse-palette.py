@@ -8,9 +8,9 @@
 #  Что делает:
 #    · пишет ~/.cache/lunar/palette.json (его читает Theme.qml);
 #    · раскладывает цвета по приложениям — kitty, GTK3/4, qt6ct,
-#      mako, btop, yazi (flavor) и шаблон fastfetch.
+#      mako, btop, yazi и шаблон fastfetch.
 #  Основные конфиги НЕ перезаписываю: генерирую отдельные файлы,
-#  которые подключаются через include/@import/flavor.
+#  которые подключаются через include/@import.
 #
 #  Запуск:
 #    eclipse-palette.py                      # dry-run: показать план
@@ -176,8 +176,8 @@ def build_artifacts(preset: dict, name: str, templates_dir: Path):
          render(load_template(templates_dir, "mako-colors.conf.in"), ctx)),
         ("btop/themes/lunar.theme",
          render(load_template(templates_dir, "btop-theme.in"), ctx)),
-        ("yazi/flavors/lunar.yazi/flavor.toml",
-         render(load_template(templates_dir, "yazi-flavor.toml.in"), ctx)),
+        ("yazi/theme.toml",
+         render(load_template(templates_dir, "yazi-theme.toml.in"), ctx)),
         ("lunar/templates/fastfetch-colors.jsonc",
          render(load_template(templates_dir, "fastfetch-colors.jsonc.in"), ctx)),
     ], render(load_template(templates_dir, "palette.json.in"), ctx)
@@ -201,6 +201,11 @@ def main() -> int:
     palette_path = Path(args.palette)
     templates_dir = Path(args.templates)
 
+    if not palette_path.is_file():
+        print(f"нет файла палитры {palette_path}", file=sys.stderr)
+        print("он лежит в репозитории — скопируй конфиги (install.sh) или укажи --palette",
+              file=sys.stderr)
+        return 1
     with palette_path.open("rb") as fh:
         data = tomllib.load(fh)
     presets = data.get("presets", {})

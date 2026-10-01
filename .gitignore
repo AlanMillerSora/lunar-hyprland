@@ -3,3 +3,11 @@ __pycache__/
 
 # Личная передача контекста агенту — содержит токен, в публичный репо нельзя.
 HANDOFF.md
+
+# Производные файлы палитры — их пишет eclipse-palette.py при установке.
+.config/kitty/lunar-theme.conf
+.config/gtk-3.0/lunar-colors.css
+.config/gtk-4.0/lunar-colors.css
+.config/mako/colors.conf
+.config/yazi/flavors/
+.config/lunar/templates/fastfetch-colors.jsonc

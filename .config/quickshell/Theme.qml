@@ -134,11 +134,11 @@ QtObject {
     property int rowHComfy: 48
     property int headerH: 44
 
-    property int fontTiny: 10
-    property int fontSmall: 11
-    property int fontBody: 13
-    property int fontTitle: 20
-    property int fontClock: 15
+    property int fontTiny: 11
+    property int fontSmall: 12
+    property int fontBody: 14
+    property int fontTitle: 22
+    property int fontClock: 16
 
     // панель-острова (этап 1): высота плашки, зазоры, поля, отступ внутри
     property int barH: 36

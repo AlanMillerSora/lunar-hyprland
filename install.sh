@@ -526,6 +526,14 @@ done < <(find "$HOME/.config" -type f \
            -not -path "*/.config/Code/logs*" \
            -not -path "*/.config/Code/CachedData*" \
            -not -path "*.bak*" \
+           -not -path "*/.config/kitty/lunar-theme.conf" \
+           -not -path "*/.config/gtk-3.0/lunar-colors.css" \
+           -not -path "*/.config/gtk-4.0/lunar-colors.css" \
+           -not -path "*/.config/mako/colors.conf" \
+           -not -path "*/.config/btop/themes/lunar.theme" \
+           -not -path "*/.config/qt6ct/colors/lunar.conf" \
+           -not -path "*/.config/yazi/flavors/*" \
+           -not -path "*/.config/lunar/templates/fastfetch-colors.jsonc" \
            -size -2M 2>/dev/null)
 
 if [ -n "$LOCAL_DIFF" ]; then
