@@ -80,11 +80,10 @@ QtObject {
         }
     }
 
-    // Раньше стояло "JetBrains Mono" — такого семейства в системе нет
-    // (ставится только JetBrainsMono Nerd Font), и Qt молча подставлял
-    // Noto Sans Mono. Беру Iosevka NFM: узкая, тонкая, кириллица полная,
-    // есть все веса. Иконки остаются на JetBrainsMono NF.
-    property string fontFamily: "Iosevka Nerd Font Mono"
+    // Roboto Mono: ровный машинописный моно, кириллица полная, все веса.
+    // Семейство ставлю без «Nerd», иконки отдельно — JetBrainsMono NF,
+    // так у 43PR и так надёжнее: Qt не подставляет чужой шрифт.
+    property string fontFamily: "Roboto Mono"
     property string iconFont: "JetBrainsMono Nerd Font"
 
     property real interfaceOpacity: 1.0

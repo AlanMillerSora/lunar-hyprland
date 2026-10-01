@@ -84,7 +84,7 @@ if sudo pacman -S --needed --noconfirm \
   python python-psutil python-gobject \
   pciutils dmidecode pacman-contrib \
   librsvg curl \
-  ttf-jetbrains-mono-nerd ttf-iosevka-nerd
+  ttf-roboto-mono ttf-jetbrains-mono-nerd ttf-iosevka-nerd
 then
   ok "базовые пакеты"
 else

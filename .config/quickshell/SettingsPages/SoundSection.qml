@@ -80,7 +80,7 @@ Item {
         Text {
             text: "SOUND"
             color: Theme.text
-            font.family: "JetBrainsMono Nerd Font"
+            font.family: Theme.fontFamily
             font.pixelSize: Theme.fontTitle
             font.letterSpacing: 3
         }

@@ -7,7 +7,7 @@ import "../"
 Item {
     id: page
 
-    property string mono: "JetBrainsMono Nerd Font"
+    property string mono: Theme.fontFamily
     property int rightMargin: 36
 
     // ── цвет от обоев: генератор считает доминирующий цвет картинки ──

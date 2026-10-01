@@ -1,5 +1,5 @@
 // Lunar Eclipse — экран входа SDDM.
-// Монохром, JetBrains Mono, палитра риса.
+// Монохром, Roboto Mono, палитра риса.
 // Компоновка: аватар сверху, под ним WELCOME, ниже — строка пароля,
 // «выходящая» из круга аватара (круг врезается в верх карточки).
 
@@ -29,8 +29,8 @@ Rectangle {
     readonly property int cardH:  Math.round(134 * k)
     readonly property int notch:  Math.round(34 * k)   // насколько круг врезается в карточку
 
-    FontLoader { id: fReg;  source: "fonts/IosevkaNerdFontMono-Regular.ttf" }
-    FontLoader { id: fBold; source: "fonts/IosevkaNerdFontMono-Bold.ttf" }
+    FontLoader { id: fReg;  source: "fonts/RobotoMono-Regular.ttf" }
+    FontLoader { id: fBold; source: "fonts/RobotoMono-Bold.ttf" }
 
     // ── часы ──
     property date now: new Date()

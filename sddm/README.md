@@ -3,7 +3,7 @@
 Монохромная тема входа **Lunar Eclipse** — продолжение заставки Plymouth:
 то же затмение и надпись `LUNAR ECLIPSE`, часы и дата, круглый аватар, поля
 логина/пароля, кнопка `ВОЙТИ`, селектор сессии, кнопки питания и имя хоста.
-JetBrains Mono, палитра риса, фон `#050505`.
+Roboto Mono, палитра риса, фон `#08090d`.
 
 ```
 sddm/
@@ -12,7 +12,7 @@ sddm/
     ├── theme.conf         конфиг темы (заглушка)
     ├── metadata.desktop   описание темы
     ├── assets/            logo.png, wordmark.png, chevron.png, avatar.png
-    └── fonts/             JetBrains Mono (Regular, Bold)
+    └── fonts/             Roboto Mono (Regular, Bold)
 ```
 
 Установка и управление — общий `install.sh` (флаг `--sddm`).

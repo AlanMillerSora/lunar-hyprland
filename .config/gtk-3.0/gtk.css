@@ -1,7 +1,7 @@
 /* ════════════════════════════════════════════════════════════════
  *  Lunar Eclipse — монохромный GTK-3 стиль (HUD)
  *  Палитра: фон #08090d · текст #e8ecf2 · dim #98a1ac · faint #5b636d
- *  Рамка 1px · радиус 6 · JetBrains Mono
+ *  Рамка 1px · радиус 6 · Roboto Mono
  * ════════════════════════════════════════════════════════════════ */
 
 /* Цвета — из единой палитры: файл lunar-colors.css пишет
@@ -14,7 +14,7 @@
 window, .background, dialog {
   background-color: @theme_bg_color;
   color: @theme_fg_color;
-  font-family: "JetBrains Mono", monospace;
+  font-family: "Roboto Mono", monospace;
 }
 
 /* ── заголовок окна / тулбар ─────────────────────────────────── */

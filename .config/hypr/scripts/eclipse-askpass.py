@@ -33,7 +33,7 @@ label.prompt {
     padding: 16px 18px 4px 18px;
 }
 entry {
-    font-family: "JetBrains Mono", monospace;
+    font-family: "Roboto Mono", monospace;
     font-size: 13px;
     color: #e8ecf2;
     background: rgba(255, 255, 255, 0.06);

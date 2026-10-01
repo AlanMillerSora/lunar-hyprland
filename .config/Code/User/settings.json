@@ -236,20 +236,20 @@
   "workbench.welcomePage.walkthroughs.openOnInstall": false,
 
   // ── шрифт и курсор (как в терминале) ──────────────────────────
-  "editor.fontFamily": "'JetBrainsMono Nerd Font', 'JetBrains Mono', monospace",
-  "editor.fontLigatures": true,
+  "editor.fontFamily": "'Roboto Mono', monospace",
+  "editor.fontLigatures": false,
   "editor.fontSize": 13,
   "editor.lineHeight": 1.5,
   "editor.cursorStyle": "block",
   "editor.cursorBlinking": "solid",
   "editor.cursorSmoothCaretAnimation": "off",
-  "terminal.integrated.fontFamily": "'JetBrainsMono Nerd Font', monospace",
+  "terminal.integrated.fontFamily": "'Roboto Mono', monospace",
   "terminal.integrated.fontSize": 13,
   "terminal.integrated.lineHeight": 1.15,
   "terminal.integrated.cursorStyle": "block",
   "terminal.integrated.cursorBlinking": true,
   "terminal.integrated.smoothScrolling": false,
-  "debug.console.fontFamily": "'JetBrainsMono Nerd Font', monospace",
+  "debug.console.fontFamily": "'Roboto Mono', monospace",
 
   // ── поведение ─────────────────────────────────────────────────
   "files.autoSave": "onFocusChange",

@@ -32,7 +32,7 @@ Item {
 
     property int hardwareLabelSize: 13
     property int hardwareTextSize: 13
-    property string mono: "JetBrainsMono Nerd Font"
+    property string mono: Theme.fontFamily
     property int rightMargin: 36
 
     property string currentTime: ""

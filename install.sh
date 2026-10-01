@@ -883,8 +883,8 @@ step "GTK: тёмная тема, иконки, шрифт"
 if command -v gsettings >/dev/null 2>&1; then
   gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null || true
   gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita-dark' 2>/dev/null || true
-  gsettings set org.gnome.desktop.interface font-name 'JetBrains Mono 11' 2>/dev/null || true
-  gsettings set org.gnome.desktop.interface monospace-font-name 'JetBrains Mono 11' 2>/dev/null || true
+  gsettings set org.gnome.desktop.interface font-name 'Roboto Mono 11' 2>/dev/null || true
+  gsettings set org.gnome.desktop.interface monospace-font-name 'Roboto Mono 11' 2>/dev/null || true
   gsettings set org.gnome.desktop.interface cursor-theme 'Bibata-Modern-Ice' 2>/dev/null || true
   gsettings set org.gnome.desktop.interface cursor-size 24 2>/dev/null || true
   ok "gsettings: prefer-dark, шрифт, курсор"

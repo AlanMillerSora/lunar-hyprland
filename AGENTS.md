@@ -204,8 +204,9 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 - Флэт, без глянца: плашки панели плотные (`barPill` альфа 1.0), радиус плашек и окон 8,
   зазоры окон 5/10, тень короткая (`range 8`, `render_power 3`), зерно тихое (0.07).
   Градиент-блик сверху («стекло») не добавлять — это читается глянцем из нулевых.
-- Шрифт интерфейса — `Iosevka NFM` (семейство `Iosevka Nerd Font Mono`), иконки —
-  `JetBrainsMono Nerd Font`. `"JetBrains Mono"` в системе НЕТ — Qt молча рисовал Noto.
+- Шрифт интерфейса — `Roboto Mono` (моно, полная кириллица, все веса), иконки —
+  `JetBrainsMono Nerd Font`. Не писать имена семейств, которых нет в системе
+  (`"JetBrains Mono"`, `Iosevka NFM` без установки) — Qt молча подставит Noto.
 - Токены `Theme.qml`: отступы `space1..6` 4/8/12/16/24/32; строки `rowHCompact/rowH/rowHComfy`
   34/42/48, `headerH` 44; радиусы `radius/radiusM/radiusL/radiusXL` 8/10/12/16; текст
   `fontTiny..fontClock` 11/12/14/22/16; панель `barH/barMargin/barPad/barRadius` 36/8/12/8;

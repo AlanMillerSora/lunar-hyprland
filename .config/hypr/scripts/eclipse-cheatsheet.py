@@ -2,7 +2,7 @@
 # ════════════════════════════════════════════════════════════
 #  eclipse-cheatsheet.py — оверлей горячих клавиш в стиле райса.
 #  Открывается по SUPER + /, из правого сайдбара, Esc или клик — закрыть.
-#  Оформление — как у карточки Hub: монохром, JetBrains Mono,
+#  Оформление — как у карточки Hub: монохром, Roboto Mono,
 #  рамка 1px, радиус 6, HUD-скобки по углам.
 # ════════════════════════════════════════════════════════════
 import sys
@@ -77,27 +77,27 @@ window.background {
     border-radius: 6px;
 }
 .title {
-    font-family: "JetBrains Mono", monospace;
+    font-family: "Roboto Mono", monospace;
     font-size: 20px;
     font-weight: bold;
     color: #e8ecf2;
     letter-spacing: 4px;
 }
 .subtitle {
-    font-family: "JetBrains Mono", monospace;
+    font-family: "Roboto Mono", monospace;
     font-size: 10px;
     color: #5b636d;
     letter-spacing: 2px;
 }
 .sec {
-    font-family: "JetBrains Mono", monospace;
+    font-family: "Roboto Mono", monospace;
     font-size: 13px;
     font-weight: bold;
     color: #e8ecf2;
     letter-spacing: 2px;
 }
 .key {
-    font-family: "JetBrains Mono", monospace;
+    font-family: "Roboto Mono", monospace;
     font-size: 12px;
     color: #e8ecf2;
     background: rgba(255, 255, 255, 0.06);
@@ -106,12 +106,12 @@ window.background {
     padding: 4px 9px;
 }
 .desc {
-    font-family: "JetBrains Mono", monospace;
+    font-family: "Roboto Mono", monospace;
     font-size: 12px;
     color: #98a1ac;
 }
 .hint {
-    font-family: "JetBrains Mono", monospace;
+    font-family: "Roboto Mono", monospace;
     font-size: 10px;
     color: #5b636d;
     letter-spacing: 1px;

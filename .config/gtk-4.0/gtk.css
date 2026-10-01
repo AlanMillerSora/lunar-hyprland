@@ -9,7 +9,7 @@
 @import url("lunar-colors.css");
 
 window {
-  font-family: "JetBrains Mono", monospace;
+  font-family: "Roboto Mono", monospace;
   background-color: @window_bg_color;
   color: @window_fg_color;
 }

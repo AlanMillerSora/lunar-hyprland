@@ -17,7 +17,7 @@ permission:
 - Arch Linux, Hyprland 0.56 в режиме Lua (`~/.config/hypr/hyprland.lua`),
   Quickshell 0.3.1 — панели, Hub и оверлеи на QML (`~/.config/quickshell`).
 - Оформление монохромное: фон #050505/#0d0d0d, текст #ffffff, dim #888888,
-  акцент #ff003c, шрифт JetBrains Mono. Язык интерфейса — русский.
+  акцент #ff003c, шрифт Roboto Mono. Язык интерфейса — русский.
 
 Как отвечать:
 - Кратко и по делу, по-русски, без воды и лишних извинений.
