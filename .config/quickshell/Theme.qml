@@ -96,6 +96,83 @@ QtObject {
     property string wallpaperMode: "scene"
     property string wallpaperPath: ""
 
+    // авто-палитра из картинки обоев (наш «matugen»): считаю при смене обоев,
+    // на «сцене» возвращаю пресет, который стоял до фотопалитры
+    property bool wallpaperAuto: true
+
+    // Считаю не на каждый кадр листания — вызов дорогой (ImageMagick), — а
+    // когда выбор замер: дебаунс живёт в окне подбора обоев. Два прогона
+    // разом не пускаю: пока считает — держу следующий интерес в очереди.
+    property bool paletteBusy: false
+    property string palettePending: ""
+
+    property Process paletteProc: Process {
+        id: paletteProc
+        running: false
+        onExited: (exitCode) => {
+            theme.paletteBusy = false
+            // приложения читают палитру сами: kitty — по USR1, mako — reload
+            Quickshell.execDetached(["bash", "-c",
+                "pidof kitty >/dev/null && kill -USR1 $(pidof kitty); makoctl reload 2>/dev/null; true"])
+            if (theme.palettePending !== "") {
+                var next = theme.palettePending
+                theme.palettePending = ""
+                theme.runPalette(next)
+            }
+        }
+    }
+
+    // kind: "photo:<путь>" — палитра из картинки; иначе — пресет до фотопалитры
+    function runPalette(kind) {
+        if (kind === "")
+            return
+        if (paletteBusy) {
+            palettePending = kind
+            return
+        }
+        var cmd
+        if (kind.indexOf("photo:") === 0) {
+            var p = kind.substring(6)
+            var q = "'" + p.replace(/'/g, "'\\''") + "'"
+            cmd = ["bash", "-c",
+                "$HOME/.config/hypr/scripts/eclipse-palette.py --from-image " + q + " --apply >/dev/null"]
+        } else if (kind.indexOf("preset:") === 0) {
+            // ручной пресет из Hub: имя — только из букв/цифр/дефиса
+            var pn = kind.substring(7)
+            if (!/^[a-zA-Z0-9_-]+$/.test(pn))
+                return
+            cmd = ["bash", "-c",
+                "$HOME/.config/hypr/scripts/eclipse-palette.py --preset " + pn + " --apply >/dev/null"]
+        } else {
+            cmd = ["bash", "-c",
+                "$HOME/.config/hypr/scripts/eclipse-palette.py --restore-preset --apply >/dev/null"]
+        }
+        paletteBusy = true
+        paletteProc.command = cmd
+        paletteProc.running = true
+    }
+
+    // из обоев — только если авто включено и режим действительно «картинка»
+    // (иначе отложенный дебаунс вернёт фото уже на «сцене»)
+    function applyPhotoPalette(path) {
+        if (wallpaperAuto && wallpaperMode === "image" && path !== "")
+            runPalette("photo:" + path)
+    }
+
+    // снимаю фотопалитру только если она реально стоит; иначе не трогаю
+    // ручной пресет (lunar/graphite/steel), выбранный в Hub
+    function restoreScenePalette() {
+        if (wallpaperAuto && palette.preset === "photo")
+            runPalette("restore")
+    }
+
+    // ручной пресет из Hub (lunar/graphite/steel/…) — через ту же очередь,
+    // что и фото, чтобы прогоны не писали палитру одновременно
+    function setPreset(name) {
+        if (name !== "")
+            runPalette("preset:" + name)
+    }
+
     // Производительность: единственный облегчённый режим (см. eclipse-perf.sh
     // и LunarWallpaper). Пресеты NORMAL/OPTIMIZE убраны.
 
@@ -252,6 +329,7 @@ QtObject {
             property bool wallpaperLive: true
             property string wallpaperMode: "scene"
             property string wallpaperPath: ""
+            property bool wallpaperAuto: true
             property int blurSize: -1
             property int blurPasses: 3
 
@@ -262,6 +340,7 @@ QtObject {
             onWallpaperLiveChanged: { theme.uiInternal = true; theme.wallpaperLive = wallpaperLive; theme.uiInternal = false }
             onWallpaperModeChanged: { theme.uiInternal = true; theme.wallpaperMode = wallpaperMode; theme.uiInternal = false }
             onWallpaperPathChanged: { theme.uiInternal = true; theme.wallpaperPath = wallpaperPath; theme.uiInternal = false }
+            onWallpaperAutoChanged: { theme.uiInternal = true; theme.wallpaperAuto = wallpaperAuto; theme.uiInternal = false }
             onBlurSizeChanged: { theme.uiInternal = true; theme.blurSize = blurSize; theme.uiInternal = false }
             onBlurPassesChanged: { theme.uiInternal = true; theme.blurPasses = blurPasses; theme.uiInternal = false }
         }
@@ -273,8 +352,14 @@ QtObject {
     onFontScaleChanged: if (!uiInternal) { markUI(); uiAdapter.fontScale = fontScale }
     onTrayVisibleChanged: if (!uiInternal) { markUI(); uiAdapter.trayVisible = trayVisible }
     onWallpaperLiveChanged: if (!uiInternal) { markUI(); uiAdapter.wallpaperLive = wallpaperLive }
-    onWallpaperModeChanged: if (!uiInternal) { markUI(); uiAdapter.wallpaperMode = wallpaperMode }
+    onWallpaperModeChanged: {
+        if (!uiInternal) { markUI(); uiAdapter.wallpaperMode = wallpaperMode }
+        // вернулся на сцену — снимаю фотопалитру и возвращаю прежний пресет
+        if (!uiInternal && wallpaperMode === "scene")
+            restoreScenePalette()
+    }
     onWallpaperPathChanged: if (!uiInternal) { markUI(); uiAdapter.wallpaperPath = wallpaperPath }
+    onWallpaperAutoChanged: if (!uiInternal) { markUI(); uiAdapter.wallpaperAuto = wallpaperAuto }
     onBlurSizeChanged: {
         if (!uiInternal) { markUI(); uiAdapter.blurSize = blurSize }
         blurApply.restart()

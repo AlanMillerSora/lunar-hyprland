@@ -10,11 +10,8 @@ Item {
     property string mono: Theme.fontFamily
     property int rightMargin: 36
 
-    // ── цвет от обоев: генератор считает доминирующий цвет картинки ──
-    Process {
-        id: photoProc
-        running: false
-    }
+    // ── цвет от обоев: считает генератор (Theme), тут только запуск ──
+    // (авто-режим и лента подбора — в окне LunarWallpapers)
 
     // открыть окно подбора обоев (SUPER + B)
     Process {
@@ -24,13 +21,8 @@ Item {
     }
 
     function applyPhotoColor() {
-        if (Theme.wallpaperPath === "" || photoProc.running)
-            return
-        var q = "'" + Theme.wallpaperPath.replace(/'/g, "'\\''") + "'"
-        photoProc.command = ["bash", "-c",
-            "$HOME/.config/hypr/scripts/eclipse-palette.py --from-image " + q + " --apply >/dev/null && "
-            + "(pidof kitty >/dev/null && kill -USR1 $(pidof kitty); makoctl reload 2>/dev/null); true"]
-        photoProc.running = true
+        if (Theme.wallpaperPath !== "")
+            Theme.runPalette("photo:" + Theme.wallpaperPath)
     }
 
     // ── обои (перенесено со страницы WALLPAPERS) ───────────────
@@ -70,25 +62,11 @@ Item {
     }
 
     // ── палитра: пресеты цвета (генератор eclipse-palette.py) ──
-    // Меняю цвета всего риса разом: генератор пишет palette.json (его читает
-    // Theme.qml) и файлы для kitty/GTK/qt6ct/mako/btop/yazi. Kitty и mako
-    // перечитывают конфиг сразу, остальные — при следующем запуске.
-    property bool paletteBusy: false
-
-    Process {
-        id: paletteProc
-        running: false
-        onExited: (exitCode) => page.paletteBusy = false
-    }
-
+    // Меняю цвета всего риса разом. Прогон держу в Theme (общая очередь с
+    // фотопалитрой), отсюда только прошу пресет — чтобы два генератора не
+    // писали palette.json одновременно.
     function applyPalette(name) {
-        if (paletteBusy)
-            return
-        paletteBusy = true
-        paletteProc.command = ["bash", "-c",
-            "$HOME/.config/hypr/scripts/eclipse-palette.py --preset " + name + " --apply >/dev/null && "
-            + "(pidof kitty >/dev/null && kill -USR1 $(pidof kitty); makoctl reload 2>/dev/null); true"]
-        paletteProc.running = true
+        Theme.setPreset(name)
     }
 
     // M47: uiState может загрузиться позже blurGet — тогда ползунок блюра
@@ -761,9 +739,36 @@ Item {
                         }
                     }
 
+                    // авто-палитра: считать цвета при каждой смене обоев
+                    Rectangle {
+                        width: autoLabel.implicitWidth + 28
+                        height: Theme.rowHCompact
+                        radius: Theme.radiusM
+                        color: Theme.wallpaperAuto ? Theme.active : Theme.fill
+                        border.width: 1
+                        border.color: Theme.wallpaperAuto ? Theme.accent : Theme.border
+
+                        Text {
+                            id: autoLabel
+                            anchors.centerIn: parent
+                            text: Theme.wallpaperAuto ? "АВТО · ВКЛ" : "АВТО · ВЫКЛ"
+                            color: Theme.wallpaperAuto ? Theme.accent : Theme.text
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSmall
+                            font.letterSpacing: 1
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: Theme.wallpaperAuto = !Theme.wallpaperAuto
+                        }
+                    }
+
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
-                        width: Math.max(0, parent.width - 330)
+                        width: Math.max(0, parent.width - 470)
                         text: Theme.wallpaperPath !== ""
                             ? Theme.wallpaperPath
                             : "картинка не выбрана — открой подбор (SUPER + B)"

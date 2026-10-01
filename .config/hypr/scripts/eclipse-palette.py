@@ -48,6 +48,8 @@ APPLY_CACHE_JSON = HOME / ".cache" / "lunar" / "palette.json"
 APPLY_STATE_PRESET = HOME / ".cache" / "lunar" / "preset"
 # путь картинки, из которой построена «фотопалитра» (--from-image)
 APPLY_PHOTO_PATH = HOME / ".cache" / "lunar" / "photo"
+# пресет, который стоял ДО фотопалитры: возвращаю его на «сцену»
+APPLY_PREV_PRESET = HOME / ".cache" / "lunar" / "preset-prev"
 
 
 # ── цвета ───────────────────────────────────────────────────────
@@ -276,6 +278,8 @@ def main() -> int:
     ap.add_argument("--preset", help="имя пресета из palette.toml (по умолчанию active)")
     ap.add_argument("--from-image", metavar="ФАЙЛ",
                     help="построить палитру из картинки (обои) и применить")
+    ap.add_argument("--restore-preset", action="store_true",
+                    help="вернуть пресет, который стоял до фотопалитры (--from-image)")
     ap.add_argument("--out", metavar="DIR",
                     help="записать всё в DIR (тест), не трогая живые конфиги")
     ap.add_argument("--apply", action="store_true",
@@ -300,6 +304,24 @@ def main() -> int:
     # выбранный в Hub пресет помню в ~/.cache/lunar/preset: palette.toml
     # остаётся «заводским» (репо == живое), а выбор переживает install.sh
     saved = APPLY_STATE_PRESET.read_text(encoding="utf-8").strip() if APPLY_STATE_PRESET.exists() else ""
+
+    # --restore-preset: возвращаю пресет, который стоял до фотопалитры
+    # (фото запоминаю в APPLY_PREV_PRESET, когда применяю палитру из картинки).
+    # Трогаю только если сейчас реально стоит фотопалитра — иначе не сбиваю
+    # ручной пресет (lunar/graphite/steel), выбранный в Hub.
+    if args.restore_preset:
+        if saved != "photo":
+            print("[пресет] сейчас не фотопалитра — возврат не нужен")
+            return 0
+        prev = APPLY_PREV_PRESET.read_text(encoding="utf-8").strip() \
+            if APPLY_PREV_PRESET.exists() else ""
+        active = data.get("active")
+        if prev in presets:
+            args.preset = prev
+        elif active in presets:
+            args.preset = active
+        else:
+            args.preset = next(iter(presets), None)
 
     photo = Path(args.from_image) if args.from_image else None
     # сохранённую фотопалитру беру только если пресет не задан явно
@@ -370,6 +392,10 @@ def main() -> int:
         dst.write_text(content, encoding="utf-8")
     APPLY_CACHE_JSON.parent.mkdir(parents=True, exist_ok=True)
     APPLY_CACHE_JSON.write_text(palette_json, encoding="utf-8")
+    # перед уходом в фотопалитру помню прежний пресет — чтобы «сцена» вернула его
+    if name == "photo":
+        if saved and saved != "photo" and saved in presets:
+            APPLY_PREV_PRESET.write_text(saved + "\n", encoding="utf-8")
     APPLY_STATE_PRESET.write_text(name + "\n", encoding="utf-8")
     if name == "photo" and photo is not None:
         APPLY_PHOTO_PATH.write_text(str(photo) + "\n", encoding="utf-8")

@@ -1,46 +1,60 @@
 import Quickshell
 import Quickshell.Io
-import Quickshell.Hyprland
+import Quickshell.Wayland
 import QtQuick
-import QtQuick.Layouts
+import QtQuick.Effects
 
 // ════════════════════════════════════════════════════════════════
-//  LunarWallpapers — подбор обоев.
+//  LunarWallpapers — переключатель обоев «как у 43PR».
 //
-//  Два режима: «СЦЕНА · ФАЗЫ» (живая сцена затмения, фаза по столу)
-//  и «КАРТИНКИ» (полка картинок с диска, клик — поставить).
+//  Полноэкранный прозрачный оверлей (слой Overlay), во всю ширину идёт
+//  веер обоев: центр крупный, края мельче и разъезжаются в стороны.
+//  Колесо/драг листают ленту, наведение ставит выбор, клик или Space —
+//  поставить обои и выйти, Esc/клик мимо — просто выйти. Цвета с картинки
+//  считает генератор (Theme.applyPhotoPalette), если включён авто-режим.
+//
 //  Открывается по SUPER + B или `qs ipc call wallpapers toggle`.
-//  Цвета можно взять прямо с картинки — генератор посчитает палитру
-//  (кнопка «ЦВЕТ ОТ ОБОЕВ», eclipse-palette.py --from-image).
 // ════════════════════════════════════════════════════════════════
-FloatingWindow {
+PanelWindow {
     id: root
 
-    title: "Lunar Wallpapers"
-    color: Theme.bgPanel
-    visible: root.showing
-    implicitWidth: 1180
-    implicitHeight: 720
-    minimumSize: Qt.size(760, 460)
-
+    // окно видно только когда просили
     property bool showing: false
-    property var walls: []
 
-    // фаза для превью — как на рабочем столе (по активному столу)
-    readonly property var ws: Hyprland.activeWorkspace || Hyprland.focusedWorkspace
-    readonly property int wsId: (ws && ws.id > 0) ? ws.id : 5
+    // ── лента ──
+    property var walls: []
+    // сколько плиток видно по ширине (у 43PR — 10; на 21:9 беру 9)
+    property int visibleCount: 9
+    // веер: центр — zoomScale, края — edgeScale, края разъезжаются на edgeSpacing
+    property real zoomScale: 0.8
+    property real edgeScale: 0.3
+    property real edgeSpacing: 80
+    property bool shadowEnabled: true
+    property int tileHeight: 520
+
+    visible: root.showing
+    color: "transparent"
+    anchors { top: true; left: true; right: true; bottom: true }
+    exclusionMode: ExclusionMode.Ignore
+    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+    // отдельное имя: иначе layer_rule Hyprland может навесить блюр на весь слой
+    WlrLayershell.namespace: "lunar-wallpapers"
 
     IpcHandler {
         target: "wallpapers"
         function toggle(): void { root.showing = !root.showing }
         function open(): void { root.showing = true }
         function close(): void { root.showing = false }
+        function next(): void { root.moveSel(1) }
+        function prev(): void { root.moveSel(-1) }
+        function apply(): void { root.commit(list.selectedIndex) }
     }
 
     // при открытии перечитываю полку — картинки могли добавить
     onShowingChanged: if (showing) {
         wallScan.running = true
-        content.focus = true
+        list.forceActiveFocus()
     }
 
     // ── полка: картинки из ~/Pictures, ~/Wallpapers, ~/Pictures/Wallpapers ──
@@ -52,318 +66,264 @@ FloatingWindow {
             "-maxdepth 2 -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \\) " +
             "2>/dev/null | sort | head -60"]
         stdout: StdioCollector {
-            onStreamFinished: root.walls = text.trim().split("\n").filter(function(x) { return x.length > 0 })
-        }
-    }
-
-    // ── выбрать любой файл ──
-    Process {
-        id: pickProc
-        running: false
-        command: ["bash", "-c",
-            "zenity --file-selection --title='Обои' " +
-            "--file-filter='Изображения | *.jpg *.jpeg *.png *.webp' 2>/dev/null"]
-        stdout: StdioCollector {
             onStreamFinished: {
-                var f = text.trim()
-                if (f !== "") {
-                    Theme.wallpaperPath = f
-                    Theme.wallpaperMode = "image"
-                }
+                root.walls = text.trim().split("\n").filter(function(x) { return x.length > 0 })
+                // лента пересобирается по новой модели — центрирую выбранное
+                Qt.callLater(list.centerOnStart)
             }
         }
     }
 
-    // ── цвет от обоев ──
-    Process {
-        id: photoProc
-        running: false
-    }
-
-    function applyPhotoColor() {
-        if (Theme.wallpaperPath === "" || photoProc.running)
+    // ── поставить и выйти ──
+    function commit(i) {
+        if (i < 0 || i >= root.walls.length)
             return
-        var q = "'" + Theme.wallpaperPath.replace(/'/g, "'\\''") + "'"
-        photoProc.command = ["bash", "-c",
-            "$HOME/.config/hypr/scripts/eclipse-palette.py --from-image " + q + " --apply >/dev/null && "
-            + "(pidof kitty >/dev/null && kill -USR1 $(pidof kitty); makoctl reload 2>/dev/null); true"]
-        photoProc.running = true
+        var path = root.walls[i]
+        Theme.wallpaperPath = path
+        Theme.wallpaperMode = "image"
+        Theme.applyPhotoPalette(path)
+        root.showing = false
     }
 
-    // ── кнопка-чип ──
-    component Chip: Rectangle {
-        id: chip
-        property string label: ""
-        property bool on: false
-        signal clicked()
+    // сдвиг выбора и доводка ленты (клавиши/IPC)
+    function moveSel(delta) {
+        if (list.count <= 0)
+            return
+        list.selectedIndex = Math.max(0, Math.min(list.selectedIndex + delta, list.count - 1))
+        list.contentX = list.selectedIndex * list.step
+    }
 
-        width: chipLabel.implicitWidth + 28
-        height: Theme.rowHCompact
-        radius: Theme.radiusM
-        color: chip.on ? Theme.active : (chipMouse.containsMouse ? Theme.hoverStrong : Theme.fill)
-        border.width: chip.on ? 1 : 0
-        border.color: Theme.accent
+    // клик мимо ленты просто закрывает
+    MouseArea {
+        anchors.fill: parent
+        z: 0
+        onClicked: root.showing = false
+    }
+
+    // ── пустая полка ──
+    Column {
+        anchors.centerIn: parent
+        spacing: 10
+        z: 2
+        visible: root.walls.length === 0
 
         Text {
-            id: chipLabel
-            anchors.centerIn: parent
-            text: chip.label
-            color: chip.on ? Theme.accent : Theme.textDim
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: "обоев нет"
+            color: Theme.text
             font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSmall
-            font.bold: chip.on
-            font.letterSpacing: 2
+            font.pixelSize: 22
+            font.bold: true
         }
 
-        MouseArea {
-            id: chipMouse
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: chip.clicked()
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: "положи картинки в ~/Pictures или ~/Wallpapers\nи открой заново (SUPER + B)"
+            color: Theme.textDim
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSmall
+            horizontalAlignment: Text.AlignHCenter
         }
     }
 
-    Item {
-        id: content
-        anchors.fill: parent
-        anchors.margins: Theme.space6
+    // ── веер обоев ──
+    ListView {
+        id: list
+
+        width: parent.width
+        height: root.tileHeight
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: parent.verticalCenter
+        z: 1
         focus: true
+        visible: root.walls.length > 0
 
-        // Esc закрывает подбор
-        Keys.onEscapePressed: root.showing = false
+        model: root.walls
+        orientation: ListView.Horizontal
+        spacing: 0
+        clip: true
+        cacheBuffer: 800
+        boundsBehavior: Flickable.StopAtBounds
 
-        ColumnLayout {
-            anchors.fill: parent
-            spacing: Theme.space4
+        property int selectedIndex: 0
+        property bool ready: false
+        property bool userMoved: false
+        readonly property real tileWidth: width / root.visibleCount - 10
+        readonly property real viewportCenterX: width / 2
+        readonly property real step: tileWidth
+        readonly property real sideMargin: Math.max(0, viewportCenterX - tileWidth / 2)
 
-            // ── шапка ──
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Theme.space3
+        leftMargin: sideMargin
+        rightMargin: sideMargin
 
-                Text {
-                    text: "ОБОИ"
-                    color: Theme.text
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontTitle
-                    font.bold: true
-                    font.letterSpacing: 3
-                    Layout.alignment: Qt.AlignVCenter
-                }
+        // выбранное — по центру; запускаю после пересборки модели/ширины
+        function centerOnStart() {
+            if (count <= 0 || width <= 0)
+                return
+            selectedIndex = Math.max(0, Math.min(selectedIndex, count - 1))
+            contentX = selectedIndex * step
+            ready = true
+        }
 
-                Chip {
-                    label: "СЦЕНА · ФАЗЫ"
-                    on: Theme.wallpaperMode !== "image"
-                    onClicked: Theme.wallpaperMode = "scene"
-                    Layout.alignment: Qt.AlignVCenter
-                }
+        onCountChanged: centerOnStart()
+        onWidthChanged: centerOnStart()
 
-                Chip {
-                    label: "КАРТИНКИ"
-                    on: Theme.wallpaperMode === "image"
-                    onClicked: Theme.wallpaperMode = "image"
-                    Layout.alignment: Qt.AlignVCenter
-                }
+        Behavior on contentX {
+            enabled: list.ready
+            SmoothedAnimation { duration: 500 }
+        }
 
-                Item { Layout.fillWidth: true }
+        // ── клавиши: как у 43PR ──
+        Keys.onPressed: (event) => {
+            if (event.key === Qt.Key_J || event.key === Qt.Key_L
+                    || event.key === Qt.Key_Down || event.key === Qt.Key_Right) {
+                root.moveSel(1)
+            } else if (event.key === Qt.Key_K || event.key === Qt.Key_H
+                    || event.key === Qt.Key_Up || event.key === Qt.Key_Left) {
+                root.moveSel(-1)
+            } else if (event.key === Qt.Key_Tab) {
+                list.selectedIndex = list.count > 0 ? (list.selectedIndex + 1) % list.count : 0
+                list.contentX = list.selectedIndex * list.step
+            } else if (event.key === Qt.Key_Backtab) {
+                list.selectedIndex = list.count > 0
+                    ? ((list.selectedIndex - 1) % list.count + list.count) % list.count : 0
+                list.contentX = list.selectedIndex * list.step
+            } else if (event.key === Qt.Key_D) {
+                root.moveSel(root.visibleCount)
+            } else if (event.key === Qt.Key_U) {
+                root.moveSel(-root.visibleCount)
+            } else if (event.key === Qt.Key_Space || event.key === Qt.Key_Return
+                    || event.key === Qt.Key_Enter) {
+                root.commit(list.selectedIndex)
+            } else if (event.key === Qt.Key_Escape || event.key === Qt.Key_W) {
+                root.showing = false
+            } else {
+                return
+            }
+            event.accepted = true
+        }
 
-                Chip {
-                    visible: Theme.wallpaperMode === "image"
-                    label: "ВЫБРАТЬ ФАЙЛ…"
-                    onClicked: pickProc.running = true
-                    Layout.alignment: Qt.AlignVCenter
-                }
+        delegate: Item {
+            id: delegateItem
+            width: list.tileWidth
+            height: list.height
 
-                Chip {
-                    visible: Theme.wallpaperMode === "image" && Theme.wallpaperPath !== ""
-                    label: "ЦВЕТ ОТ ОБОЕВ"
-                    onClicked: root.applyPhotoColor()
-                    Layout.alignment: Qt.AlignVCenter
-                }
-
-                Chip {
-                    label: "ГОТОВО"
-                    onClicked: root.showing = false
-                    Layout.alignment: Qt.AlignVCenter
-                }
+            property bool active: index === list.selectedIndex
+            // доля удаления от центра экрана: у центра 0, у края 1
+            readonly property real baseCenterX: x - list.contentX + width / 2
+            readonly property real distance: Math.abs(baseCenterX - list.viewportCenterX)
+            readonly property real fraction: Math.min(1, distance / list.viewportCenterX)
+            readonly property real compression: {
+                const t = fraction
+                return t * t * t * t
+            }
+            // края «разъезжаются» в стороны — веер становится шире
+            readonly property real edgeOffset: {
+                const amount = root.edgeSpacing * compression
+                return baseCenterX < list.viewportCenterX ? amount : -amount
+            }
+            // плавный зум: у центра zoomScale, у края edgeScale
+            readonly property real scaleFactor: {
+                const t = 1 - fraction * fraction * (3 - 2 * fraction)
+                return root.edgeScale + (root.zoomScale - root.edgeScale) * t
             }
 
-            // ── тело: сцена ──
-            ColumnLayout {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                spacing: Theme.space4
-                visible: Theme.wallpaperMode !== "image"
-
-                Item {
-                    Layout.preferredWidth: Math.min(parent.width, 640)
-                    Layout.preferredHeight: Layout.preferredWidth * 9 / 16
-                    clip: true
-
-                    LunarWallpaperScene {
-                        anchors.fill: parent
-                        phase: Math.max(1, Math.min(9, root.wsId))
-                        live: root.showing
-                        optimize: true
-                        tickMs: 40
-                    }
-
-                    Rectangle {
-                        anchors.fill: parent
-                        color: "transparent"
-                        radius: Theme.radius
-                        border.color: Theme.border
-                        border.width: 1
-                    }
-                }
-
-                Row {
-                    spacing: Theme.space3
-
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: "фаза = номер рабочего стола — превью показывает текущий стол"
-                        color: Theme.textFaint
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSmall
-                    }
-
-                    Chip {
-                        label: Theme.wallpaperLive ? "ЖИВЫЕ ОБОИ" : "ЛЁГКИЙ РЕЖИМ"
-                        on: Theme.wallpaperLive
-                        onClicked: Theme.wallpaperLive = !Theme.wallpaperLive
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                }
-
-                Item { Layout.fillHeight: true }
-            }
-
-            // ── тело: картинки ──
             Item {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                visible: Theme.wallpaperMode === "image"
+                id: content
+                anchors.verticalCenter: parent.verticalCenter
+                width: delegateItem.width * delegateItem.scaleFactor
+                height: delegateItem.height * Math.min(1, delegateItem.scaleFactor)
+                x: (delegateItem.width - width) / 2 + delegateItem.edgeOffset
 
-                Text {
-                    id: shelfHint
-                    text: root.walls.length > 0
-                        ? "полка · " + root.walls.length + " картинок · клик — поставить"
-                        : "картинок в ~/Pictures и ~/Wallpapers нет — добавь их туда или нажми «ВЫБРАТЬ ФАЙЛ…»"
-                    color: Theme.textFaint
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSmall
+                // тень — как у 43PR: смещённая копия картинки, затемнённая и размытая
+                Image {
+                    id: shadowImage
+                    x: 6
+                    y: 6
+                    width: parent.width
+                    height: parent.height
+                    source: img.source
+                    sourceSize.width: img.sourceSize.width
+                    sourceSize.height: img.sourceSize.height
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    cache: false
+                    smooth: true
+                    visible: root.shadowEnabled
+                    opacity: 0.4
+                    layer.enabled: true
+                    layer.effect: MultiEffect { brightness: -1; blurEnabled: true; blur: 0.45 }
                 }
 
-                Flickable {
-                    id: shelfFlick
-                    anchors.top: shelfHint.bottom
-                    anchors.topMargin: Theme.space3
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.bottom: parent.bottom
-                    clip: true
-                    contentWidth: width
-                    contentHeight: shelf.height
-                    boundsBehavior: Flickable.StopAtBounds
-
-                    WheelHandler {
-                        onWheel: function(event) {
-                            if (event.angleDelta.y === 0) return
-                            shelfFlick.contentY = Math.max(0, Math.min(
-                                shelfFlick.contentHeight - shelfFlick.height,
-                                shelfFlick.contentY - event.angleDelta.y))
-                            event.accepted = true
-                        }
-                    }
-
-                    Flow {
-                        id: shelf
-                        width: parent.width
-                        spacing: Theme.space3
-
-                        Repeater {
-                            model: root.walls
-
-                            delegate: Rectangle {
-                                required property string modelData
-                                readonly property bool cur: Theme.wallpaperMode === "image" && Theme.wallpaperPath === modelData
-
-                                width: 208
-                                height: 117
-                                radius: Theme.radiusM
-                                color: Theme.fill
-                                border.width: cur ? 1 : 0
-                                border.color: Theme.accent
-                                clip: true
-
-                                Image {
-                                    anchors.fill: parent
-                                    source: "file://" + modelData
-                                    fillMode: Image.PreserveAspectCrop
-                                    asynchronous: true
-                                    cache: false
-                                    sourceSize: Qt.size(416, 234)
-                                }
-
-                                // затемнение + подпись внизу
-                                Rectangle {
-                                    anchors.left: parent.left
-                                    anchors.right: parent.right
-                                    anchors.bottom: parent.bottom
-                                    height: 22
-                                    color: Qt.rgba(0, 0, 0, cellMouse.containsMouse ? 0.72 : 0.5)
-
-                                    Text {
-                                        anchors.fill: parent
-                                        anchors.leftMargin: 8
-                                        anchors.rightMargin: 8
-                                        verticalAlignment: Text.AlignVCenter
-                                        elide: Text.ElideMiddle
-                                        text: modelData.substring(modelData.lastIndexOf("/") + 1)
-                                        color: cur ? Theme.accent : Theme.barText
-                                        font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontTiny
-                                    }
-                                }
-
-                                Rectangle {
-                                    visible: cur
-                                    anchors.top: parent.top
-                                    anchors.right: parent.right
-                                    anchors.margins: 6
-                                    width: markText.implicitWidth + 12
-                                    height: 18
-                                    radius: Theme.radius
-                                    color: Theme.accent
-
-                                    Text {
-                                        id: markText
-                                        anchors.centerIn: parent
-                                        text: "СЕЙЧАС"
-                                        color: Theme.bgPanel
-                                        font.family: Theme.fontFamily
-                                        font.pixelSize: 9
-                                        font.bold: true
-                                        font.letterSpacing: 1
-                                    }
-                                }
-
-                                MouseArea {
-                                    id: cellMouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        Theme.wallpaperPath = modelData
-                                        Theme.wallpaperMode = "image"
-                                    }
-                                }
-                            }
-                        }
-                    }
+                Image {
+                    id: img
+                    anchors.fill: parent
+                    opacity: 0.95
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    cache: false
+                    smooth: true
+                    source: "file://" + modelData
+                    sourceSize.width: delegateItem.width * root.zoomScale
+                    sourceSize.height: delegateItem.height
                 }
+
+                Rectangle {
+                    z: 10
+                    anchors.fill: parent
+                    visible: delegateItem.active
+                    color: "transparent"
+                    radius: Theme.radiusM
+                    border.width: 2
+                    border.color: Theme.accent
+                }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                hoverEnabled: list.ready
+                onEntered: {
+                    list.userMoved = true
+                    list.selectedIndex = index
+                }
+                onClicked: root.commit(index)
+                onWheel: function(wheel) {
+                    list.flick(-wheel.angleDelta.y * 8, 0)
+                    wheel.accepted = true
+                }
+            }
+        }
+    }
+
+    // ── подсказка и возврат на «сцену» ──
+    Text {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: Theme.space5
+        z: 2
+        text: "колесо — листать · наведение — выбор · клик / Space — поставить · Esc — выйти"
+        color: Theme.textFaint
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSmall
+    }
+
+    Text {
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        anchors.margins: Theme.space5
+        z: 2
+        text: "СЦЕНА"
+        color: Theme.textDim
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSmall
+        font.letterSpacing: 2
+        MouseArea {
+            anchors.fill: parent
+            anchors.margins: -Theme.space2
+            cursorShape: Qt.PointingHandCursor
+            onClicked: {
+                Theme.wallpaperMode = "scene"
+                root.showing = false
             }
         }
     }
