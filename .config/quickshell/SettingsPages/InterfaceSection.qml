@@ -21,8 +21,11 @@ Item {
     }
 
     function applyPhotoColor() {
-        if (Theme.wallpaperPath !== "")
-            Theme.runPalette("photo:" + Theme.wallpaperPath)
+        if (Theme.wallpaperPath === "")
+            return
+        // фото-палитра = цвета обоев, значит и обои должны быть картинкой
+        Theme.wallpaperMode = "image"
+        Theme.runPalette("photo:" + Theme.wallpaperPath)
     }
 
     // ── обои (перенесено со страницы WALLPAPERS) ───────────────
@@ -768,7 +771,7 @@ Item {
 
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
-                        width: Math.max(0, parent.width - 470)
+                        width: Math.max(0, page.width - 520)
                         text: Theme.wallpaperPath !== ""
                             ? Theme.wallpaperPath
                             : "картинка не выбрана — открой подбор (SUPER + B)"

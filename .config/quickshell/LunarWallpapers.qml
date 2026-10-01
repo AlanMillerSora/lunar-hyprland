@@ -2,34 +2,35 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import QtQuick
-import QtQuick.Effects
 
 // ════════════════════════════════════════════════════════════════
 //  LunarWallpapers — переключатель обоев «как у 43PR».
 //
-//  Полноэкранный прозрачный оверлей (слой Overlay), по центру идёт веер
-//  обоев: центр крупный, края мельче и разъезжаются в стороны. Колесо/драг
-//  листают ленту, наведение ставит выбор, клик или Space — поставить обои
-//  и выйти, Esc/W или клик мимо — просто выйти. Цвета с картинки считает
-//  генератор (Theme.applyPhotoPalette), если включён авто-режим.
+//  Полноэкранный прозрачный оверлей (слой Overlay), по центру веер обоев:
+//  центр крупный, края мельче и разъезжаются. Колесо/драг листают, наведение
+//  ставит выбор, клик/Space — поставить и выйти, Esc/W/клик мимо — выйти.
+//
+//  Производительность: полку сканирую один раз, картинки декодирую не
+//  полноразмерно, а из кэша миниатюр (~/.cache/lunar/wall-thumbs), и гружу
+//  только близкие к экрану; при закрытии источники освобождаю.
 //
 //  Открывается по SUPER + B или `qs ipc call wallpapers toggle`.
 // ════════════════════════════════════════════════════════════════
 PanelWindow {
     id: root
 
-    // окно видно только когда просили
     property bool showing: false
-
-    // ── лента ──
     property var walls: []
-    // сколько плиток видно по ширине (у 43PR — 10)
+    property bool scanned: false
+    // имя файла -> 1 (какие миниатюры уже готовы)
+    property var thumbSet: ({})
+    property string thumbDir: Quickshell.env("HOME") + "/.cache/lunar/wall-thumbs"
+
+    // ── веер ──
     property int visibleCount: 10
-    // веер: центр — zoomScale, края — edgeScale, края разъезжаются на edgeSpacing
     property real zoomScale: 0.8
     property real edgeScale: 0.3
     property real edgeSpacing: 80
-    property bool shadowEnabled: true
     property int tileHeight: 900
 
     visible: root.showing
@@ -38,7 +39,6 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
-    // отдельное имя: иначе layer_rule Hyprland может навесить блюр на весь слой
     WlrLayershell.namespace: "lunar-wallpapers"
 
     IpcHandler {
@@ -49,12 +49,15 @@ PanelWindow {
         function next(): void { root.moveSel(1) }
         function prev(): void { root.moveSel(-1) }
         function apply(): void { root.commit(carousel.selectedIndex) }
+        function rescan(): void { root.scanned = false; wallScan.running = true }
     }
 
-    // при открытии перечитываю полку — картинки могли добавить
+    // при открытии: фокус на ловца клавиш; сканирую только если ещё не сканировал
     onShowingChanged: if (showing) {
-        wallScan.running = true
-        carousel.forceActiveFocus()
+        if (!root.scanned)
+            wallScan.running = true
+        keyCatcher.forceActiveFocus()
+        Qt.callLater(carousel.centerOnStart)
     }
 
     // ── полка: картинки из ~/Pictures, ~/Wallpapers, ~/Pictures/Wallpapers ──
@@ -64,12 +67,67 @@ PanelWindow {
         command: ["bash", "-c",
             "find \"$HOME/Pictures\" \"$HOME/Wallpapers\" \"$HOME/Pictures/Wallpapers\" " +
             "-maxdepth 2 -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \\) " +
-            "2>/dev/null | sort -u | head -60"]
+            "2>/dev/null | sort -u | head -80"]
         stdout: StdioCollector {
             onStreamFinished: {
                 root.walls = text.trim().split("\n").filter(function(x) { return x.length > 0 })
-                // лента пересобирается по новой модели — центрирую выбранное
+                root.scanned = true
+                // готовлю/обновляю миниатюры — фоном, один раз
+                thumbGen.running = true
                 Qt.callLater(carousel.centerOnStart)
+            }
+        }
+    }
+
+    // ── миниатюры: тяжёлый декод гигантов делаю один раз, в кэш ──
+    Process {
+        id: thumbGen
+        running: false
+        command: ["bash", "-c",
+            "C=\"$HOME/.cache/lunar/wall-thumbs\"; mkdir -p \"$C\"; " +
+            "find \"$HOME/Pictures\" \"$HOME/Wallpapers\" \"$HOME/Pictures/Wallpapers\" " +
+            "-maxdepth 2 -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \\) " +
+            "2>/dev/null | while IFS= read -r p; do " +
+            "b=$(basename \"$p\"); t=\"$C/$b.jpg\"; " +
+            "if [ -s \"$t\" ] && [ \"$t\" -nt \"$p\" ]; then continue; fi; " +
+            "magick \"$p\" -thumbnail x1000 -strip -quality 82 \"$t\" 2>/dev/null || true; " +
+            "done; true"]
+        onExited: (exitCode) => { thumbList.running = true }
+    }
+
+    Process {
+        id: thumbList
+        running: false
+        command: ["bash", "-c", "ls -1 \"$HOME/.cache/lunar/wall-thumbs\"/*.jpg 2>/dev/null"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var s = ({})
+                text.trim().split("\n").forEach(function(x) {
+                    if (!x) return
+                    var b = x.substring(x.lastIndexOf("/") + 1).replace(/\.jpg$/, "")
+                    s[b] = 1
+                })
+                root.thumbSet = s
+            }
+        }
+    }
+
+    // ── выбрать файл (вне полки) ──
+    Process {
+        id: pickProc
+        running: false
+        command: ["bash", "-c",
+            "zenity --file-selection --title='Обои' " +
+            "--file-filter='Изображения | *.jpg *.jpeg *.png *.webp' 2>/dev/null"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var f = text.trim()
+                if (f !== "") {
+                    Theme.wallpaperPath = f
+                    Theme.wallpaperMode = "image"
+                    Theme.applyPhotoPalette(f)
+                    root.showing = false
+                }
             }
         }
     }
@@ -78,14 +136,13 @@ PanelWindow {
     function commit(i) {
         if (i < 0 || i >= root.walls.length)
             return
-        var path = root.walls[i]
-        Theme.wallpaperPath = path
+        var p = root.walls[i]
+        Theme.wallpaperPath = p
         Theme.wallpaperMode = "image"
-        Theme.applyPhotoPalette(path)
+        Theme.applyPhotoPalette(p)
         root.showing = false
     }
 
-    // сдвиг выбора и доводка ленты (клавиши/IPC)
     function moveSel(delta) {
         if (root.walls.length <= 0)
             return
@@ -94,189 +151,11 @@ PanelWindow {
         carousel.contentX = carousel.selectedIndex * carousel.step
     }
 
-    // клик мимо ленты просто закрывает
-    MouseArea {
+    // клавиши ловлю на отдельном Item — он в фокусе всегда, даже на пустой полке
+    Item {
+        id: keyCatcher
         anchors.fill: parent
-        z: 0
-        onClicked: root.showing = false
-    }
-
-    // ── пустая полка ──
-    Column {
-        anchors.centerIn: parent
-        spacing: 10
-        z: 2
-        visible: root.walls.length === 0
-
-        Text {
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: "обоев нет"
-            color: Theme.text
-            font.family: Theme.fontFamily
-            font.pixelSize: 22
-            font.bold: true
-        }
-
-        Text {
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: "положи картинки в ~/Pictures или ~/Wallpapers\nи открой заново (SUPER + B)"
-            color: Theme.textDim
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSmall
-            horizontalAlignment: Text.AlignHCenter
-        }
-    }
-
-    // ── веер обоев: Flickable + Row, чтобы ни одна карточка не пропадала ──
-    Flickable {
-        id: carousel
-
-        width: parent.width
-        height: root.tileHeight
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.verticalCenter: parent.verticalCenter
-        z: 1
         focus: true
-        visible: root.walls.length > 0
-        clip: true
-        contentHeight: height
-        boundsBehavior: Flickable.StopAtBounds
-
-        property int selectedIndex: 0
-        property bool ready: false
-        readonly property real tileWidth: width / root.visibleCount - 10
-        readonly property real step: tileWidth
-        readonly property real viewportCenterX: width / 2
-        readonly property real sideMargin: Math.max(0, viewportCenterX - tileWidth / 2)
-        // отступы по краям, чтобы первую и последнюю тоже можно было поставить в центр
-        contentWidth: strip.width + 2 * sideMargin
-
-        // текущие обои в центр; если их нет — середина полки (веер по обе стороны)
-        function currentIndex() {
-            var i = root.walls.indexOf(Theme.wallpaperPath)
-            return i >= 0 ? i : Math.floor(root.walls.length / 2)
-        }
-
-        function centerOnStart() {
-            if (root.walls.length <= 0 || width <= 0)
-                return
-            selectedIndex = Math.max(0, Math.min(currentIndex(), root.walls.length - 1))
-            contentX = selectedIndex * step
-            ready = true
-        }
-
-        onWidthChanged: centerOnStart()
-
-        Behavior on contentX {
-            enabled: carousel.ready
-            SmoothedAnimation { duration: 1000 }
-        }
-
-        Row {
-            id: strip
-            x: carousel.sideMargin
-            spacing: 0
-            anchors.verticalCenter: parent.verticalCenter
-
-            Repeater {
-                model: root.walls
-
-                delegate: Item {
-                    id: delegateItem
-                    required property string modelData
-                    required property int index
-
-                    width: carousel.tileWidth
-                    height: carousel.height
-                    property bool active: index === carousel.selectedIndex
-
-                    // доля удаления от центра экрана: у центра 0, у края 1
-                    // (+ sideMargin: x делегата считается от Row, а Row сдвинут)
-                    readonly property real baseCenterX: carousel.sideMargin + x - carousel.contentX + width / 2
-                    readonly property real distance: Math.abs(baseCenterX - carousel.viewportCenterX)
-                    readonly property real fraction: Math.min(1, distance / carousel.viewportCenterX)
-                    readonly property real compression: {
-                        const t = fraction
-                        return t * t * t * t
-                    }
-                    // края «разъезжаются» в стороны — веер становится шире
-                    readonly property real edgeOffset: {
-                        const amount = root.edgeSpacing * compression
-                        return baseCenterX < carousel.viewportCenterX ? amount : -amount
-                    }
-                    // плавный зум: у центра zoomScale, у края edgeScale
-                    readonly property real scaleFactor: {
-                        const t = 1 - fraction * fraction * (3 - 2 * fraction)
-                        return root.edgeScale + (root.zoomScale - root.edgeScale) * t
-                    }
-
-                    Item {
-                        id: content
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: delegateItem.width * delegateItem.scaleFactor
-                        height: delegateItem.height * Math.min(1, delegateItem.scaleFactor)
-                        x: (delegateItem.width - width) / 2 + delegateItem.edgeOffset
-
-                        // тень — как у 43PR: смещённая копия картинки, затемнённая и размытая
-                        Image {
-                            id: shadowImage
-                            x: 6
-                            y: 6
-                            width: parent.width
-                            height: parent.height
-                            source: img.source
-                            sourceSize.width: img.sourceSize.width
-                            sourceSize.height: img.sourceSize.height
-                            fillMode: Image.PreserveAspectCrop
-                            asynchronous: true
-                            cache: false
-                            smooth: true
-                            visible: root.shadowEnabled
-                            opacity: 0.4
-                            layer.enabled: true
-                            layer.effect: MultiEffect { brightness: -1; blurEnabled: true; blur: 0.45 }
-                        }
-
-                        Image {
-                            id: img
-                            anchors.fill: parent
-                            opacity: 0.95
-                            fillMode: Image.PreserveAspectCrop
-                            asynchronous: true
-                            cache: false
-                            smooth: true
-                            source: "file://" + modelData
-                            sourceSize.width: delegateItem.width * root.zoomScale
-                            sourceSize.height: delegateItem.height
-                        }
-
-                        Rectangle {
-                            z: 10
-                            anchors.fill: parent
-                            visible: delegateItem.active
-                            color: "transparent"
-                            border.width: 2
-                            // у 43PR border_color = "transparent" — выбор виден зумом,
-                            // не рамкой; оставил структуру, чтобы легко было включить
-                            border.color: "transparent"
-                        }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: carousel.ready
-                        onEntered: carousel.selectedIndex = index
-                        onClicked: root.commit(index)
-                        onWheel: function(wheel) {
-                            carousel.flick(-wheel.angleDelta.y * 8, 0)
-                            wheel.accepted = true
-                        }
-                    }
-                }
-            }
-        }
-
-        // ── клавиши: как у 43PR ──
         Keys.onPressed: (event) => {
             if (event.key === Qt.Key_J || event.key === Qt.Key_L
                     || event.key === Qt.Key_Down || event.key === Qt.Key_Right) {
@@ -308,12 +187,191 @@ PanelWindow {
         }
     }
 
-    // ── подсказка и возврат на «сцену» ──
+    // клик мимо ленты закрывает
+    MouseArea {
+        anchors.fill: parent
+        onClicked: root.showing = false
+    }
+
+    // ── пустая полка ──
+    Column {
+        anchors.centerIn: parent
+        spacing: 10
+        visible: root.walls.length === 0
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: "обоев нет"
+            color: Theme.text
+            font.family: Theme.fontFamily
+            font.pixelSize: 22
+            font.bold: true
+        }
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: "положи картинки в ~/Pictures или ~/Wallpapers\nи открой заново (SUPER + B)"
+            color: Theme.textDim
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSmall
+            horizontalAlignment: Text.AlignHCenter
+        }
+    }
+
+    // ── веер обоев ──
+    Flickable {
+        id: carousel
+
+        width: parent.width
+        height: root.tileHeight
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: parent.verticalCenter
+        visible: root.walls.length > 0
+        clip: true
+        contentHeight: height
+        boundsBehavior: Flickable.StopAtBounds
+
+        property int selectedIndex: 0
+        property bool ready: false
+        readonly property real tileWidth: Math.max(80, width / root.visibleCount - 10)
+        readonly property real step: tileWidth
+        readonly property real viewportCenterX: width / 2
+        readonly property real sideMargin: Math.max(0, viewportCenterX - tileWidth / 2)
+        contentWidth: strip.width + 2 * sideMargin
+
+        function currentIndex() {
+            var i = root.walls.indexOf(Theme.wallpaperPath)
+            return i >= 0 ? i : Math.floor(root.walls.length / 2)
+        }
+
+        function centerOnStart() {
+            if (root.walls.length <= 0 || width <= 0)
+                return
+            selectedIndex = Math.max(0, Math.min(currentIndex(), root.walls.length - 1))
+            contentX = selectedIndex * step
+            ready = true
+        }
+
+        onWidthChanged: centerOnStart()
+        // после свободного флика прилипаю выбором к ближайшей к центру карточке
+        onMovementEnded: {
+            if (root.walls.length <= 0)
+                return
+            selectedIndex = Math.max(0, Math.min(Math.round(contentX / step), root.walls.length - 1))
+        }
+
+        Behavior on contentX {
+            enabled: carousel.ready
+            SmoothedAnimation { duration: 700 }
+        }
+
+        Row {
+            id: strip
+            x: carousel.sideMargin
+            spacing: 0
+            anchors.verticalCenter: parent.verticalCenter
+
+            Repeater {
+                model: root.walls
+
+                delegate: Item {
+                    id: delegateItem
+                    required property string modelData
+                    required property int index
+
+                    width: carousel.tileWidth
+                    height: carousel.height
+                    property bool active: index === carousel.selectedIndex
+
+                    readonly property real baseCenterX: carousel.sideMargin + x - carousel.contentX + width / 2
+                    readonly property real distance: Math.abs(baseCenterX - carousel.viewportCenterX)
+                    readonly property real fraction: Math.min(1, distance / carousel.viewportCenterX)
+                    readonly property real compression: {
+                        const t = fraction
+                        return t * t * t * t
+                    }
+                    readonly property real edgeOffset: {
+                        const amount = root.edgeSpacing * compression
+                        return baseCenterX < carousel.viewportCenterX ? amount : -amount
+                    }
+                    readonly property real scaleFactor: {
+                        const t = 1 - fraction * fraction * (3 - 2 * fraction)
+                        return root.edgeScale + (root.zoomScale - root.edgeScale) * t
+                    }
+                    // гружу только близкие к экрану и только пока оверлей открыт
+                    readonly property bool near: root.showing
+                        && baseCenterX > -600 && baseCenterX < carousel.width + 600
+                    readonly property string base: modelData.substring(modelData.lastIndexOf("/") + 1)
+                    readonly property string thumbUrl: root.thumbSet[base]
+                        ? "file://" + root.thumbDir + "/" + base + ".jpg" : ""
+
+                    Item {
+                        id: content
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: delegateItem.width
+                        height: delegateItem.height
+                        x: delegateItem.edgeOffset
+                        scale: delegateItem.scaleFactor
+                        transformOrigin: Item.Center
+
+                        // тень — запечённый PNG, 9-слайс: один квад, без MultiEffect
+                        BorderImage {
+                            source: Qt.resolvedUrl("assets/wall-shadow.png")
+                            x: 8
+                            y: 10
+                            width: parent.width
+                            height: parent.height
+                            border { left: 44; top: 44; right: 44; bottom: 44 }
+                            horizontalTileMode: BorderImage.Stretch
+                            verticalTileMode: BorderImage.Stretch
+                            visible: delegateItem.near
+                            opacity: 0.55
+                            smooth: true
+                        }
+
+                        Image {
+                            id: img
+                            anchors.fill: parent
+                            opacity: 0.95
+                            fillMode: Image.PreserveAspectCrop
+                            asynchronous: true
+                            cache: false
+                            smooth: true
+                            source: delegateItem.near
+                                ? (delegateItem.thumbUrl !== "" ? delegateItem.thumbUrl : "file://" + modelData)
+                                : ""
+                            sourceSize.width: Math.round(delegateItem.width * root.zoomScale)
+                            sourceSize.height: Math.round(delegateItem.height * root.zoomScale)
+                        }
+
+                        Rectangle {
+                            z: 10
+                            anchors.fill: parent
+                            visible: delegateItem.active
+                            color: "transparent"
+                            border.width: 2
+                            border.color: Theme.alpha(Theme.accent, 0.6)
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onEntered: carousel.selectedIndex = index
+                        onClicked: root.commit(index)
+                        onWheel: function(wheel) {
+                            carousel.flick(-wheel.angleDelta.y * 8, 0)
+                            wheel.accepted = true
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ── подсказка, «файл» и возврат на «сцену» ──
     Text {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: Theme.space5
-        z: 2
         text: "колесо — листать · наведение — выбор · клик / Space — поставить · Esc — выйти"
         color: Theme.textFaint
         font.family: Theme.fontFamily
@@ -324,7 +382,6 @@ PanelWindow {
         anchors.left: parent.left
         anchors.bottom: parent.bottom
         anchors.margins: Theme.space5
-        z: 2
         text: "СЦЕНА"
         color: Theme.textDim
         font.family: Theme.fontFamily
@@ -338,6 +395,23 @@ PanelWindow {
                 Theme.wallpaperMode = "scene"
                 root.showing = false
             }
+        }
+    }
+
+    Text {
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.margins: Theme.space5
+        text: "ФАЙЛ…"
+        color: Theme.textDim
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSmall
+        font.letterSpacing: 2
+        MouseArea {
+            anchors.fill: parent
+            anchors.margins: -Theme.space2
+            cursorShape: Qt.PointingHandCursor
+            onClicked: pickProc.running = true
         }
     }
 }

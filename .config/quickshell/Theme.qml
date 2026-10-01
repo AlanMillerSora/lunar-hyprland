@@ -73,6 +73,8 @@ QtObject {
             try {
                 var t = text()
                 theme.palette = (t && t.trim() !== "") ? JSON.parse(t) : ({})
+                // синхронизирую «стоит фото» с фактическим файлом
+                theme.photoActive = (theme.palette.preset === "photo")
             } catch (e) {
                 console.warn("[Theme] палитра не прочитана: " + e)
                 theme.palette = ({})
@@ -99,6 +101,9 @@ QtObject {
     // авто-палитра из картинки обоев (наш «matugen»): считаю при смене обоев,
     // на «сцене» возвращаю пресет, который стоял до фотопалитры
     property bool wallpaperAuto: true
+    // стоит ли сейчас именно фотопалитра. Держу синхронно: файл palette.json
+    // читается асинхронно, и по нему можно не успеть вернуть пресет
+    property bool photoActive: false
 
     // Считаю не на каждый кадр листания — вызов дорогой (ImageMagick), — а
     // когда выбор замер: дебаунс живёт в окне подбора обоев. Два прогона
@@ -136,6 +141,7 @@ QtObject {
             var q = "'" + p.replace(/'/g, "'\\''") + "'"
             cmd = ["bash", "-c",
                 "$HOME/.config/hypr/scripts/eclipse-palette.py --from-image " + q + " --apply >/dev/null"]
+            photoActive = true
         } else if (kind.indexOf("preset:") === 0) {
             // ручной пресет из Hub: имя — только из букв/цифр/дефиса
             var pn = kind.substring(7)
@@ -143,9 +149,13 @@ QtObject {
                 return
             cmd = ["bash", "-c",
                 "$HOME/.config/hypr/scripts/eclipse-palette.py --preset " + pn + " --apply >/dev/null"]
-        } else {
+            photoActive = false
+        } else if (kind === "restore") {
             cmd = ["bash", "-c",
                 "$HOME/.config/hypr/scripts/eclipse-palette.py --restore-preset --apply >/dev/null"]
+            photoActive = false
+        } else {
+            return
         }
         paletteBusy = true
         paletteProc.command = cmd
@@ -159,10 +169,11 @@ QtObject {
             runPalette("photo:" + path)
     }
 
-    // снимаю фотопалитру только если она реально стоит; иначе не трогаю
-    // ручной пресет (lunar/graphite/steel), выбранный в Hub
+    // снимаю фотопалитру, если она стоит; иначе не трогаю ручной пресет.
+    // Гейт по photoActive (а не по palette.json) — файл читается асинхронно,
+    // и на этом была гонка; АВТО·ВЫКЛ тоже не мешает вернуть пресет
     function restoreScenePalette() {
-        if (wallpaperAuto && palette.preset === "photo")
+        if (photoActive)
             runPalette("restore")
     }
 

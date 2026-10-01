@@ -86,6 +86,9 @@ PanelWindow {
             asynchronous: true
             cache: false
             smooth: true
+            // декодирую под экран, а не в полный размер файла (мог быть 10000px)
+            sourceSize.width: root.width
+            sourceSize.height: root.height
         }
 
         Image {
@@ -97,6 +100,8 @@ PanelWindow {
             cache: false
             smooth: true
             opacity: wpHost.topOpacity
+            sourceSize.width: root.width
+            sourceSize.height: root.height
         }
 
         NumberAnimation {
