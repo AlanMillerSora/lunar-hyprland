@@ -6,6 +6,7 @@ import Quickshell.Services.Pipewire
 import Quickshell.Services.Mpris
 import Quickshell.Services.SystemTray
 import QtQuick
+import QtQuick.Effects
 import QtQuick.Layouts
 
 // ────────────────────────────────────────────────────────────────
@@ -441,14 +442,41 @@ PanelWindow {
         clip: true
         width: leftLayout.implicitWidth + 2 * Theme.barPad
 
-        // зерно на стекле: лежит под содержимым, чтобы буквы оставались чёткими
+        // зерно на стекле: маска по скруглению — углы плашки остаются чистыми
         Image {
+            id: nzL
             anchors.fill: parent
             source: Qt.resolvedUrl("assets/noise.png")
             fillMode: Image.Tile
             smooth: false
             cache: true
+            visible: false
+            layer.enabled: true
+        }
+        MultiEffect {
+            anchors.fill: parent
+            source: nzL
+            maskEnabled: true
+            maskSource: nmL
             opacity: 0.10
+        }
+        Rectangle {
+            id: nmL
+            anchors.fill: parent
+            radius: Theme.barRadius
+            color: "white"
+            visible: false
+            layer.enabled: true
+        }
+
+        // стеклянный блик сверху — плашка читается как стекло
+        Rectangle {
+            anchors.fill: parent
+            radius: Theme.barRadius
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.05) }
+                GradientStop { position: 0.5; color: "transparent" }
+            }
         }
 
         RowLayout {
@@ -634,14 +662,41 @@ PanelWindow {
         clip: true
         width: rightLayout.implicitWidth + 2 * Theme.barPad
 
-        // зерно на стекле: лежит под содержимым, чтобы буквы оставались чёткими
+        // зерно на стекле: маска по скруглению — углы плашки остаются чистыми
         Image {
+            id: nzC
             anchors.fill: parent
             source: Qt.resolvedUrl("assets/noise.png")
             fillMode: Image.Tile
             smooth: false
             cache: true
+            visible: false
+            layer.enabled: true
+        }
+        MultiEffect {
+            anchors.fill: parent
+            source: nzC
+            maskEnabled: true
+            maskSource: nmC
             opacity: 0.10
+        }
+        Rectangle {
+            id: nmC
+            anchors.fill: parent
+            radius: Theme.barRadius
+            color: "white"
+            visible: false
+            layer.enabled: true
+        }
+
+        // стеклянный блик сверху — плашка читается как стекло
+        Rectangle {
+            anchors.fill: parent
+            radius: Theme.barRadius
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.05) }
+                GradientStop { position: 0.5; color: "transparent" }
+            }
         }
 
         // ── телеметрия и управление: прижаты к правому краю ──
@@ -994,18 +1049,46 @@ PanelWindow {
         color: root.pillBg
         clip: true
         width: centerRow.implicitWidth + 2 * Theme.barPad
+        Behavior on width { NumberAnimation { duration: Theme.animMed; easing.type: Easing.OutCubic } }
         scale: clockHover.hovered ? 1.04 : 1
         Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
         HoverHandler { id: clockHover }
 
-        // зерно на стекле: лежит под содержимым, чтобы буквы оставались чёткими
+        // зерно на стекле: маска по скруглению — углы плашки остаются чистыми
         Image {
+            id: nzR
             anchors.fill: parent
             source: Qt.resolvedUrl("assets/noise.png")
             fillMode: Image.Tile
             smooth: false
             cache: true
+            visible: false
+            layer.enabled: true
+        }
+        MultiEffect {
+            anchors.fill: parent
+            source: nzR
+            maskEnabled: true
+            maskSource: nmR
             opacity: 0.10
+        }
+        Rectangle {
+            id: nmR
+            anchors.fill: parent
+            radius: Theme.barRadius
+            color: "white"
+            visible: false
+            layer.enabled: true
+        }
+
+        // стеклянный блик сверху — плашка читается как стекло
+        Rectangle {
+            anchors.fill: parent
+            radius: Theme.barRadius
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.05) }
+                GradientStop { position: 0.5; color: "transparent" }
+            }
         }
 
         Row {
@@ -1019,7 +1102,10 @@ PanelWindow {
             // (anchors.fill внутри Row — ошибка верстки)
             Item {
                 id: centerMedia
-                visible: root.mediaActive
+                // появляется и уходит плавно: держу видимым, пока гаснет
+                visible: root.mediaActive || opacity > 0
+                opacity: root.mediaActive ? 1 : 0
+                Behavior on opacity { NumberAnimation { duration: Theme.animMed; easing.type: Easing.OutCubic } }
                 anchors.verticalCenter: parent.verticalCenter
                 implicitWidth: centerMediaRow.implicitWidth
                 implicitHeight: 26
