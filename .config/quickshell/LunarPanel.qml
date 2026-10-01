@@ -555,9 +555,6 @@ PanelWindow {
         HoverHandler { id: hh }
     }
 
-    // Живость как у 43PR: группа мягко подрастает под курсором.
-    // scale — визуальный, раскладку не трогает, поэтому ничего не «плывёт».
-    component Grow: Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
 
     // Метрики моношрифта: по ним считаем ширины числовых полей, чтобы
     // цифры при скачках значений не дёргали раскладку.
@@ -642,7 +639,7 @@ PanelWindow {
                 implicitWidth: wsRow.implicitWidth
                 implicitHeight: 26
                 scale: wsBg.hovered ? Theme.hoverGrow : 1
-                Grow {}
+                Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
 
                 HoverBg { id: wsBg }
 
@@ -809,7 +806,7 @@ PanelWindow {
                 implicitWidth: netRow.implicitWidth
                 implicitHeight: 26
                 scale: netBg.hovered ? Theme.hoverGrow : 1
-                Grow {}
+                Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
 
                 HoverBg { id: netBg }
 
@@ -873,7 +870,7 @@ PanelWindow {
                 implicitWidth: actionRow.implicitWidth
                 implicitHeight: 26
                 scale: actBg.hovered ? Theme.hoverGrow : 1
-                Grow {}
+                Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
                 HoverBg { id: actBg }
                 Row {
                     id: actionRow
@@ -954,7 +951,7 @@ PanelWindow {
                     height: 26
                     implicitWidth: cpuRow.implicitWidth
                     scale: hCpu.hovered ? Theme.hoverGrow : 1
-                    Grow {}
+                    Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
                     HoverHandler { id: hCpu }
 
                     Row {
@@ -1015,7 +1012,7 @@ PanelWindow {
                     height: 26
                     implicitWidth: ramRow.implicitWidth
                     scale: hRam.hovered ? Theme.hoverGrow : 1
-                    Grow {}
+                    Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
                     HoverHandler { id: hRam }
 
                     Row {
@@ -1058,7 +1055,7 @@ PanelWindow {
                     height: 26
                     implicitWidth: gpuRow.implicitWidth
                     scale: hGpu.hovered ? Theme.hoverGrow : 1
-                    Grow {}
+                    Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
                     HoverHandler { id: hGpu }
 
                     Row {
@@ -1127,7 +1124,7 @@ PanelWindow {
                 implicitHeight: 26
 
                 scale: trayBg.hovered ? Theme.hoverGrow : 1
-                Grow {}
+                Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
                 HoverBg { id: trayBg; visible: root.trayCount > 0 }
 
                 Row {
@@ -1234,7 +1231,7 @@ PanelWindow {
                 implicitWidth: rightRow.implicitWidth
                 implicitHeight: 26
                 scale: rrBg.hovered ? Theme.hoverGrow : 1
-                Grow {}
+                Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
                 HoverBg { id: rrBg }
                 Row {
                     id: rightRow
