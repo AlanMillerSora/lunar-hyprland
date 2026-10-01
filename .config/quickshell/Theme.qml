@@ -55,7 +55,7 @@ QtObject {
     property color barText: hexColor(palette.barText, "#d5dce4")
     property color barDim: hexColor(palette.barDim, "#a6aeb9")
     property color barFaint: hexColor(palette.barFaint, "#5b636d")
-    property color barPill: Qt.rgba(_barPillBase.r, _barPillBase.g, _barPillBase.b, 0.93 * interfaceOpacity)
+    property color barPill: Qt.rgba(_barPillBase.r, _barPillBase.g, _barPillBase.b, 1.0 * interfaceOpacity)
 
     // ── токены «ритма» интерфейса (Hub и панели) ──
     property color hover: Qt.rgba(accent.r, accent.g, accent.b, 0.07)        // наведение: строки, карточки
@@ -143,7 +143,7 @@ QtObject {
     property int barH: 36
     property int barMargin: 8
     property int barPad: 12
-    property int barRadius: 10
+    property int barRadius: 8
 
     // мягкая реакция на наведение — масштаб глифа, без переверстки
     property real hoverGrow: 1.14
