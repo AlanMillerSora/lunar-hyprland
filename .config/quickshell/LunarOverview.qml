@@ -221,7 +221,7 @@ PanelWindow {
 
                     width: root.cardW
                     height: root.cardH
-                    radius: Theme.radius
+                    radius: Theme.radiusL
                     color: Theme.bgCard
                     border.color: wsCard.focused ? Theme.accent : Theme.border
                     border.width: wsCard.focused ? 2 : 1
@@ -305,7 +305,7 @@ PanelWindow {
                     ClippingRectangle {
                         id: preview
                         anchors.fill: parent
-                        radius: Theme.radius
+                        radius: Theme.radiusM
                         color: Theme.bgPanel
                         border.color: tile.hovered ? Theme.accent : Theme.border
                         border.width: 1

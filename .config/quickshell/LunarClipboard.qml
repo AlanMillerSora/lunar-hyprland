@@ -169,7 +169,7 @@ FloatingWindow {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 38
                 color: Theme.bgCard
-                radius: Theme.radius
+                radius: Theme.radiusM
                 border.width: 1
                 border.color: searchInput.activeFocus ? Theme.borderAccent : Theme.border
 
@@ -255,7 +255,7 @@ FloatingWindow {
 
                         width: list.width
                         height: Theme.rowHCompact
-                        radius: Theme.radius
+                        radius: Theme.radiusM
                         color: root.selectedIndex === index
                             ? Theme.active
                             : (rowMouse.containsMouse ? Theme.hover : "transparent")

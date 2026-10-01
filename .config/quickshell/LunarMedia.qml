@@ -116,7 +116,7 @@ PanelWindow {
         anchors.topMargin: 52
         anchors.right: parent.right
         anchors.rightMargin: 12
-        radius: Theme.radius
+        radius: Theme.radiusL
         color: Theme.bgPanel
         border.color: Theme.accent
         border.width: 1

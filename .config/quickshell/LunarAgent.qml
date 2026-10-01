@@ -144,7 +144,7 @@ FloatingWindow {
                     required property var modelData
                     width: agentList.width
                     height: msgText.implicitHeight + Theme.space4
-                    radius: Theme.radius
+                    radius: Theme.radiusM
                     color: modelData.role === "user" ? Theme.active
                          : (modelData.role === "system" ? "transparent" : Theme.fill)
 
@@ -170,7 +170,7 @@ FloatingWindow {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 46
                 visible: agent.pendingAction !== ""
-                radius: Theme.radius
+                radius: Theme.radiusL
                 color: Theme.bg
                 border.width: 1
                 border.color: Theme.borderAccent
@@ -202,7 +202,7 @@ FloatingWindow {
                     Rectangle {
                         Layout.preferredWidth: 118
                         Layout.preferredHeight: 26
-                        radius: Theme.radius
+                        radius: Theme.radiusM
                         color: runMouse.containsMouse ? Theme.active : Theme.hoverStrong
                         border.width: 1
                         border.color: Theme.danger
@@ -225,7 +225,7 @@ FloatingWindow {
                     Rectangle {
                         Layout.preferredWidth: 26
                         Layout.preferredHeight: 26
-                        radius: Theme.radius
+                        radius: Theme.radiusM
                         color: cancelMouse.containsMouse ? Theme.hover : "transparent"
                         border.width: 1
                         border.color: Theme.border
@@ -251,7 +251,7 @@ FloatingWindow {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 44
-                radius: Theme.radius
+                radius: Theme.radiusM
                 color: Theme.bg
                 border.width: 1
                 border.color: agentInput.activeFocus ? Theme.borderAccent : Theme.border
@@ -288,7 +288,7 @@ FloatingWindow {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 38
-                    radius: Theme.radius
+                    radius: Theme.radiusM
                     color: sendMouse.containsMouse ? Theme.active : Theme.hoverStrong
                     border.color: Theme.borderAccent
                     border.width: 1
@@ -313,7 +313,7 @@ FloatingWindow {
                 Rectangle {
                     Layout.preferredWidth: 42
                     Layout.preferredHeight: 38
-                    radius: Theme.radius
+                    radius: Theme.radiusM
                     color: newMouse.containsMouse ? Theme.alpha(Theme.danger, 0.12) : "transparent"
                     border.width: 1
                     border.color: newMouse.containsMouse ? Theme.danger : Theme.border
@@ -337,7 +337,7 @@ FloatingWindow {
                 Rectangle {
                     Layout.preferredWidth: 42
                     Layout.preferredHeight: 38
-                    radius: Theme.radius
+                    radius: Theme.radiusM
                     color: tuiMouse.containsMouse ? Theme.active : "transparent"
                     border.width: 1
                     border.color: tuiMouse.containsMouse ? Theme.accent : Theme.border

@@ -122,7 +122,7 @@ PanelWindow {
         anchors.topMargin: 52
         anchors.right: parent.right
         anchors.rightMargin: 12
-        radius: Theme.radius
+        radius: Theme.radiusL
         color: Theme.bgPanel
         border.color: Theme.accent
         border.width: 1
@@ -204,7 +204,7 @@ PanelWindow {
                     required property var modelData
                     width: list.width
                     height: Theme.rowHCompact
-                    radius: Theme.radius
+                    radius: Theme.radiusM
                     color: rowMouse.containsMouse ? Theme.hoverStrong : "transparent"
 
                     Item {

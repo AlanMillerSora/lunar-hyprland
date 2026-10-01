@@ -79,7 +79,7 @@ PanelWindow {
         anchors.centerIn: parent
         width: 460
         height: col.implicitHeight + Theme.space6
-        radius: Theme.radius
+        radius: Theme.radiusL
         color: Theme.bgPanel
         border.color: Theme.accent
         border.width: 1
@@ -121,7 +121,7 @@ PanelWindow {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 36
                 visible: root.flow ? root.flow.isResponseRequired : true
-                radius: Theme.radius
+                radius: Theme.radiusM
                 color: Theme.bgCard
                 border.width: 1
                 border.color: pw.activeFocus ? Theme.accent : Theme.border
@@ -172,7 +172,7 @@ PanelWindow {
                 Rectangle {
                     Layout.preferredWidth: 96
                     Layout.preferredHeight: 30
-                    radius: Theme.radius
+                    radius: Theme.radiusM
                     color: cancelMouse.containsMouse ? Theme.active : "transparent"
                     border.width: 1
                     border.color: Theme.border
@@ -195,7 +195,7 @@ PanelWindow {
                 Rectangle {
                     Layout.preferredWidth: 96
                     Layout.preferredHeight: 30
-                    radius: Theme.radius
+                    radius: Theme.radiusM
                     color: okMouse.containsMouse ? Theme.active : Theme.hoverStrong
                     border.width: 1
                     border.color: Theme.accent
