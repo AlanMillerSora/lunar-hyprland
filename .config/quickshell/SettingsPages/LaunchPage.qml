@@ -158,8 +158,8 @@ Item {
                             source: appIcon
                             visible: appIcon.status === Image.Ready
                             saturation: -1.0
-                            brightness: 0.22
-                            contrast: 0.12
+                            brightness: 0.20
+                            contrast: 0.22
                         }
 
                         Text {

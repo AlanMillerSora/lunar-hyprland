@@ -52,10 +52,10 @@ QtObject {
 
     // ── панель-бар: чуть мягче и холоднее общего текста (правил отдельно,
     //    чтобы не выцветал текст оверлеев) ──
-    property color barText: hexColor(palette.barText, "#c9d2db")
-    property color barDim: hexColor(palette.barDim, "#98a1ac")
+    property color barText: hexColor(palette.barText, "#d5dce4")
+    property color barDim: hexColor(palette.barDim, "#a6aeb9")
     property color barFaint: hexColor(palette.barFaint, "#5b636d")
-    property color barPill: Qt.rgba(_barPillBase.r, _barPillBase.g, _barPillBase.b, 0.72 * interfaceOpacity)
+    property color barPill: Qt.rgba(_barPillBase.r, _barPillBase.g, _barPillBase.b, 0.80 * interfaceOpacity)
 
     // ── токены «ритма» интерфейса (Hub и панели) ──
     property color hover: Qt.rgba(accent.r, accent.g, accent.b, 0.07)        // наведение: строки, карточки

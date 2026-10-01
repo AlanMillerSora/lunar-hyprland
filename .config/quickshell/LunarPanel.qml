@@ -203,33 +203,6 @@ PanelWindow {
         ? ((player.trackTitle || "") + (player.trackArtist ? "  —  " + player.trackArtist : ""))
         : ""
 
-    property int mqPos: 0
-    onTrackChanged: mqPos = 0
-
-    Timer {
-        interval: 180
-        running: root.playing && root.track.length > 0
-        repeat: true
-        onTriggered: root.mqPos = (root.mqPos + 1) % (root.track.length + 6)
-    }
-
-    // len — сколько символов показать (по ширине поля «сейчас играет»)
-    function marqueeText(len) {
-        if (!root.track)
-            return ""
-        if (!isFinite(len) || len < 4)
-            len = 4
-        if (len > 240)
-            len = 240
-        if (!root.playing)
-            return root.track.length > len ? root.track.substring(0, len - 1) + "…" : root.track
-        var s = root.track + "      "
-        var o = root.mqPos % s.length
-        var big = ""
-        while (big.length < o + len + 1)
-            big += s
-        return big.substring(o, o + len)
-    }
 
     // ── cava: спектр для полосы «сейчас играет» ──
     // Столбики рисуем только когда реально играет; иначе — линия.
@@ -612,6 +585,16 @@ PanelWindow {
         clip: true
         width: leftLayout.implicitWidth + 2 * Theme.barPad
 
+        // зерно на стекле: лежит под содержимым, чтобы буквы оставались чёткими
+        Image {
+            anchors.fill: parent
+            source: Qt.resolvedUrl("assets/noise.png")
+            fillMode: Image.Tile
+            smooth: false
+            cache: true
+            opacity: 0.10
+        }
+
         RowLayout {
             id: leftLayout
             anchors.fill: parent
@@ -782,6 +765,16 @@ PanelWindow {
         color: root.pillBg
         clip: true
         width: rightLayout.implicitWidth + 2 * Theme.barPad
+
+        // зерно на стекле: лежит под содержимым, чтобы буквы оставались чёткими
+        Image {
+            anchors.fill: parent
+            source: Qt.resolvedUrl("assets/noise.png")
+            fillMode: Image.Tile
+            smooth: false
+            cache: true
+            opacity: 0.10
+        }
 
         // ── телеметрия и управление: прижаты к правому краю ──
         RowLayout {
@@ -1323,6 +1316,16 @@ PanelWindow {
         clip: true
         width: centerRow.implicitWidth + 2 * Theme.barPad
 
+        // зерно на стекле: лежит под содержимым, чтобы буквы оставались чёткими
+        Image {
+            anchors.fill: parent
+            source: Qt.resolvedUrl("assets/noise.png")
+            fillMode: Image.Tile
+            smooth: false
+            cache: true
+            opacity: 0.10
+        }
+
         Row {
             id: centerRow
             anchors.centerIn: parent
@@ -1384,17 +1387,62 @@ PanelWindow {
                         font.pixelSize: Theme.fontSize(13)
                     }
 
-                    Text {
+                    // название трека: в покое — с многоточием, на ходу — плавная
+                    // непрерывная прокрутка (две копии), без рывков по символам
+                    Item {
                         id: centerTrack
                         width: 170
                         height: 26
-                        verticalAlignment: Text.AlignVCenter
                         clip: true
-                        text: root.marqueeText(Math.max(4,
-                            Math.floor(width / (fm12.advanceWidth("0") > 0 ? fm12.advanceWidth("0") : 8))))
-                        color: Theme.barText
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize(12)
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: parent.width
+                            visible: !root.playing
+                            elide: Text.ElideRight
+                            text: root.track
+                            color: Theme.barText
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize(12)
+                        }
+
+                        Item {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: parent.width
+                            height: 26
+                            clip: true
+                            visible: root.playing
+
+                            Row {
+                                id: marqRow
+                                spacing: 28
+                                anchors.verticalCenter: parent.verticalCenter
+
+                                Text {
+                                    id: marqA
+                                    text: root.track
+                                    color: Theme.barText
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.fontSize(12)
+                                }
+                                Text {
+                                    text: root.track
+                                    color: Theme.barText
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.fontSize(12)
+                                }
+
+                                // едет только если строка шире поля; линейно и бесшовно
+                                NumberAnimation on x {
+                                    running: root.playing && marqA.width > centerTrack.width
+                                    loops: Animation.Infinite
+                                    from: 0
+                                    to: -(marqA.width + marqRow.spacing)
+                                    duration: Math.max(4000, (marqA.width + marqRow.spacing) * 26)
+                                    easing.type: Easing.Linear
+                                }
+                            }
+                        }
                     }
 
                     Rectangle {
@@ -1475,39 +1523,4 @@ PanelWindow {
         }
     }
 
-    // ── ЗЕРНО НА ПЛАШКАХ ──
-    // Тайл кладу ровно по каждой плашке, а не на весь бар: между островами
-    // фон прозрачный, и зерно там было бы грязью на обоях. Image мышь не
-    // берёт — клики, ховер и тултипы под ним живут.
-    // Ассет: assets/noise.png (220×220, RGBA; светлый шум с низкой альфой).
-    // В терминале (kitty) свой тайл, см. ~/.config/kitty/kitty.conf.
-    Image {
-        x: leftBar.x; y: leftBar.y
-        width: leftBar.width; height: leftBar.height
-        source: Qt.resolvedUrl("assets/noise.png")
-        fillMode: Image.Tile
-        smooth: false
-        cache: true
-        opacity: 0.12
-    }
-
-    Image {
-        x: centerBar.x; y: centerBar.y
-        width: centerBar.width; height: centerBar.height
-        source: Qt.resolvedUrl("assets/noise.png")
-        fillMode: Image.Tile
-        smooth: false
-        cache: true
-        opacity: 0.12
-    }
-
-    Image {
-        x: rightBar.x; y: rightBar.y
-        width: rightBar.width; height: rightBar.height
-        source: Qt.resolvedUrl("assets/noise.png")
-        fillMode: Image.Tile
-        smooth: false
-        cache: true
-        opacity: 0.12
-    }
 }
