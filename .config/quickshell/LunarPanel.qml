@@ -19,7 +19,7 @@ PanelWindow {
     id: root
 
     anchors { top: true; left: true; right: true }
-    implicitHeight: 42
+    implicitHeight: Theme.barH
     color: "transparent"
 
     WlrLayershell.layer: WlrLayer.Top
@@ -37,7 +37,6 @@ PanelWindow {
     //   акценты — Theme.accent через Theme.alpha().
     readonly property color pillBg: Theme.barPill
     readonly property color pillHover: Theme.hoverStrong
-    readonly property color pillBorder: Theme.border
 
     // ─────────────── workspaces (Hyprland) ───────────────
     readonly property var wsList: Hyprland.workspaces.values
@@ -571,19 +570,10 @@ PanelWindow {
     // Две части бара: слева «LUNAR + фазы столов», справа — блок от конца
     // столов до правого края. Часы в правом блоке держатся ровно по
     // центру экрана, телеметрия — у правого края. Секции разделены 1px (Sep).
-    component Sep: Rectangle {
-        Layout.alignment: Qt.AlignVCenter
-        Layout.preferredWidth: 1
-        Layout.preferredHeight: 16
-        Layout.leftMargin: 5
-        Layout.rightMargin: 5
-        color: Theme.border
-    }
-
     // подсветка интерактивной секции при наведении
     component HoverBg: Rectangle {
         anchors.fill: parent
-        radius: 4
+        radius: Theme.radius
         color: Theme.hoverStrong
         opacity: hh.hovered ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 120 } }
@@ -614,21 +604,20 @@ PanelWindow {
     Rectangle {
         id: leftBar
         anchors.left: parent.left
-        anchors.leftMargin: 8
+        anchors.leftMargin: Theme.barMargin
         anchors.verticalCenter: parent.verticalCenter
-        height: 32
-        radius: Theme.radiusL
+        height: Theme.barH
+        radius: Theme.barRadius
         color: root.pillBg
-        border.color: root.pillBorder
-        border.width: 1
-        width: leftLayout.implicitWidth + 28
+        clip: true
+        width: leftLayout.implicitWidth + 2 * Theme.barPad
 
         RowLayout {
             id: leftLayout
             anchors.fill: parent
-            anchors.leftMargin: 14
-            anchors.rightMargin: 14
-            spacing: 0
+            anchors.leftMargin: Theme.barPad
+            anchors.rightMargin: Theme.barPad
+            spacing: Theme.space3
 
             // ── марка LUNAR + фаза активного стола ──
             Row {
@@ -657,8 +646,6 @@ PanelWindow {
                     font.letterSpacing: 1.5
                 }
             }
-
-            Sep {}
 
             // ── рабочие столы: 9 фаз ──
             Item {
@@ -787,24 +774,22 @@ PanelWindow {
     // Часы — ровно по центру экрана, телеметрия/управление — у правого края.
     Rectangle {
         id: rightBar
-        anchors.left: leftBar.right
-        anchors.leftMargin: 6
         anchors.right: parent.right
-        anchors.rightMargin: 8
+        anchors.rightMargin: Theme.barMargin
         anchors.verticalCenter: parent.verticalCenter
-        height: 32
-        radius: Theme.radiusL
+        height: Theme.barH
+        radius: Theme.barRadius
         color: root.pillBg
-        border.color: root.pillBorder
-        border.width: 1
         clip: true
+        width: rightLayout.implicitWidth + 2 * Theme.barPad
 
         // ── телеметрия и управление: прижаты к правому краю ──
         RowLayout {
-            anchors.right: parent.right
-            anchors.rightMargin: 11
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 0
+            id: rightLayout
+            anchors.fill: parent
+            anchors.leftMargin: Theme.barPad
+            anchors.rightMargin: Theme.barPad
+            spacing: Theme.space3
 
             // ── сеть: скорость + иконка подключения (клик — сети в Hub) ──
             Item {
@@ -869,8 +854,6 @@ PanelWindow {
                 }
             }
 
-            Sep {}
-
             // ── действия: Game Mode / питание / запись ──
             Item {
                 Layout.alignment: Qt.AlignVCenter
@@ -881,7 +864,7 @@ PanelWindow {
                     id: actionRow
                     anchors.centerIn: parent
                     height: 26
-                    spacing: 8
+                    spacing: Theme.space3
 
                     // Game Mode (клик — переключить)
                     Text {
@@ -907,13 +890,6 @@ PanelWindow {
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSize(13)
                         font.bold: true
-                    }
-
-                    Rectangle {
-                        width: 1
-                        height: 16
-                        color: Theme.border
-                        anchors.verticalCenter: parent.verticalCenter
                     }
 
                     // запись экрана
@@ -948,16 +924,14 @@ PanelWindow {
                 }
             }
 
-            Sep {}
-
-            // ── статистика: [CPU °] │ [RAM] │ [GPU °] ──
+            // ── статистика: [CPU °] [RAM] [GPU °] ──
             // Иконки (приглушённые) + значения (белые) + температуры (dim),
             // группы разделены тонкими линиями. Числа — фикс. ширины.
             Row {
                 id: statsRow
                 Layout.alignment: Qt.AlignVCenter
                 height: 26
-                spacing: 7
+                spacing: Theme.space3
 
                 // — процессор: загрузка + температура —
                 Item {
@@ -1017,15 +991,6 @@ PanelWindow {
                     }
                 }
 
-                Text {
-                    text: "│"
-                    color: Theme.barFaint
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(14)
-                    height: 26
-                    verticalAlignment: Text.AlignVCenter
-                }
-
                 // — оперативная память —
                 Item {
                     id: ramGrp
@@ -1063,16 +1028,6 @@ PanelWindow {
                         onEntered: root.showTip("оперативная память: занято", ramGrp)
                         onExited: Theme.tooltipShown = false
                     }
-                }
-
-                Text {
-                    visible: root.gpuLoad !== ""
-                    text: "│"
-                    color: Theme.barFaint
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(14)
-                    height: 26
-                    verticalAlignment: Text.AlignVCenter
                 }
 
                 // — видеокарта: загрузка + температура —
@@ -1136,8 +1091,6 @@ PanelWindow {
             }
 
             // ── трей: место под значки (Theme.trayVisible), лишние — в «+N» ──
-            Sep {}
-
             Item {
                 Layout.alignment: Qt.AlignVCenter
                 // место ровно под видимые значки (не под весь лимит); при
@@ -1259,7 +1212,7 @@ PanelWindow {
                     id: rightRow
                     anchors.centerIn: parent
                     height: 26
-                    spacing: 9
+                    spacing: Theme.space3
 
                     // раскладка (клик — переключить)
                     Text {
@@ -1301,13 +1254,6 @@ PanelWindow {
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSize(13)
                         font.bold: true
-                    }
-
-                    Rectangle {
-                        width: 1
-                        height: 16
-                        color: Theme.border
-                        anchors.verticalCenter: parent.verticalCenter
                     }
 
                     // volume
@@ -1364,156 +1310,62 @@ PanelWindow {
             }
         }
     }
-    // ── часы: жёстко по центру экрана ──
-    Item {
-        id: clockBox
-        width: clockRow.implicitWidth
-        height: 26
+    // ── ЦЕНТР: часы и дата; медиа встаёт рядом, только когда играет ──
+    // В покое остров маленький — центр дышит. Играет музыка — слева от часов
+    // вырастают столбики cava и бегущее название, не задевая часы.
+    Rectangle {
+        id: centerBar
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
+        height: Theme.barH
+        radius: Theme.barRadius
+        color: root.pillBg
+        clip: true
+        width: centerRow.implicitWidth + 2 * Theme.barPad
 
         Row {
-            id: clockRow
+            id: centerRow
             anchors.centerIn: parent
             height: 26
-            spacing: 10
+            spacing: Theme.space3
 
+            // ── медиа: только когда играет ──
             Row {
+                id: centerMedia
+                visible: root.mediaActive
                 anchors.verticalCenter: parent.verticalCenter
                 height: 26
-                spacing: 0
+                spacing: Theme.space2
 
-                Text {
-                    id: clockLabel
-                    text: root.clockText.substring(0, 2)
-                    color: Theme.barText
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(15)
-                    font.bold: true
-                    font.letterSpacing: 1
+                // столбики cava — фиксированные, чтобы не плясали
+                Row {
+                    anchors.verticalCenter: parent.verticalCenter
                     height: 26
-                    verticalAlignment: Text.AlignVCenter
-                }
-                Text {
-                    id: clockColon
-                    text: ":"
-                    color: Theme.barText
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(15)
-                    font.bold: true
-                    font.letterSpacing: 1
-                    height: 26
-                    verticalAlignment: Text.AlignVCenter
-                    opacity: root.colonOn ? 1.0 : 0.15
-                    // длительность заметно меньше периода (500 мс), иначе
-                    // анимация не успевает затихнуть и двоеточие «плывёт»
-                    Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.InOutSine } }
-                }
-                Text {
-                    id: clockMin
-                    text: root.clockText.substring(3)
-                    color: Theme.barText
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(15)
-                    font.bold: true
-                    font.letterSpacing: 1
-                    height: 26
-                    verticalAlignment: Text.AlignVCenter
-                }
-            }
+                    spacing: 2
 
-            Rectangle {
-                width: 1
-                height: 16
-                color: Theme.border
-                anchors.verticalCenter: parent.verticalCenter
-            }
+                    Repeater {
+                        model: root.barCount
 
-            Text {
-                id: dayLabel
-                text: root.dayText + " " + root.dateText
-                color: Theme.barDim
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize(13)
-                height: 26
-                verticalAlignment: Text.AlignVCenter
-            }
-        }
-    }
+                        delegate: Item {
+                            required property int index
+                            width: 3
+                            height: 26
 
-    // медиа «сейчас играет»: пусто — тонкая линия, играет — столбики cava
-    // (1/3 ширины) слева и бегущая строка с названием трека (2/3) справа.
-    // Лежит внутри правого блока, не задевая столы и часы.
-    Item {
-        id: mediaBox
-        anchors.verticalCenter: parent.verticalCenter
-        height: 26
-        // внутри правого блока, с отступом от столов и от часов
-        x: rightBar.x + 18
-        width: Math.max(0, clockBox.x - 18 - x)
-        readonly property bool active: root.mediaActive
-        readonly property real vizW: width / 3
-        // на узком экране столбикам не хватает места — прячем их целиком,
-        // иначе они вылезают за свою треть и лезут на название трека
-        readonly property bool showViz: vizW >= root.barCount + (root.barCount - 1) * 2
-        readonly property real titleW: Math.max(0, width - (showViz ? vizW + 12 : 0))
-        readonly property real mqCharW: fm12.advanceWidth("0") > 0 ? fm12.advanceWidth("0") : 8
-        readonly property int mqChars:
-            Math.max(4, Math.floor((titleW - 18 - 8) / mqCharW))
-
-        // холостой ход — линия
-        Rectangle {
-            anchors.verticalCenter: parent.verticalCenter
-            width: parent.width
-            height: 1
-            color: Theme.alpha(Theme.accent, 0.18)
-            visible: !mediaBox.active
-        }
-
-        // играет — столбики cava + название
-        Row {
-            visible: mediaBox.active
-            anchors.left: parent.left
-            anchors.verticalCenter: parent.verticalCenter
-            height: 26
-            spacing: 12
-
-            // столбики — треть ширины
-            Row {
-                anchors.verticalCenter: parent.verticalCenter
-                height: 26
-                spacing: 2
-                visible: mediaBox.showViz
-
-                Repeater {
-                    model: root.barCount
-
-                    delegate: Item {
-                        required property int index
-                        width: Math.max(1, (mediaBox.vizW - (root.barCount - 1) * 2) / root.barCount)
-                        height: 26
-
-                        Rectangle {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            anchors.bottom: parent.bottom
-                            anchors.bottomMargin: 3
-                            width: parent.width
-                            height: 2 + (root.barValues[index] || 0) * 18
-                            radius: 1
-                            color: Theme.alpha(Theme.accent, 0.5 + 0.5 * (root.barValues[index] || 0))
+                            Rectangle {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.bottom: parent.bottom
+                                anchors.bottomMargin: 3
+                                width: parent.width
+                                height: 2 + (root.barValues[index] || 0) * 18
+                                radius: 1
+                                color: Theme.alpha(Theme.accent, 0.5 + 0.5 * (root.barValues[index] || 0))
+                            }
                         }
                     }
                 }
-            }
-
-            // название трека — две трети
-            Row {
-                anchors.verticalCenter: parent.verticalCenter
-                height: 26
-                spacing: 8
 
                 Text {
-                    id: noteIcon
+                    id: centerNote
                     width: 18
                     height: 26
                     verticalAlignment: Text.AlignVCenter
@@ -1525,37 +1377,124 @@ PanelWindow {
                 }
 
                 Text {
-                    // при скрытых столбиках название занимает всю ширину
-                    width: Math.max(0, mediaBox.titleW - noteIcon.width - 8)
+                    id: centerTrack
+                    width: 170
                     height: 26
                     verticalAlignment: Text.AlignVCenter
                     clip: true
-                    text: mediaBox.showViz
-                        ? root.marqueeText(mediaBox.mqChars)
-                        : root.marqueeText(Math.max(4, Math.floor((width - 8) / mediaBox.mqCharW)))
+                    text: root.marqueeText(Math.max(4,
+                        Math.floor(width / (fm12.advanceWidth("0") > 0 ? fm12.advanceWidth("0") : 8))))
                     color: Theme.barText
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(12)
                 }
-            }
-        }
 
-        MouseArea {
-            anchors.fill: parent
-            cursorShape: Qt.PointingHandCursor
-            onClicked: mediaPanelProc.running = true   // попап «сейчас играет»
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 1
+                    height: 14
+                    color: Theme.border
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: mediaPanelProc.running = true   // попап «сейчас играет»
+                }
+            }
+
+            // ── часы + дата ──
+            Row {
+                anchors.verticalCenter: parent.verticalCenter
+                height: 26
+                spacing: Theme.space3
+
+                Row {
+                    anchors.verticalCenter: parent.verticalCenter
+                    height: 26
+                    spacing: 0
+
+                    Text {
+                        id: clockLabel
+                        text: root.clockText.substring(0, 2)
+                        color: Theme.barText
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(Theme.fontClock)
+                        font.bold: true
+                        font.letterSpacing: 1
+                        height: 26
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    Text {
+                        id: clockColon
+                        text: ":"
+                        color: Theme.barText
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(Theme.fontClock)
+                        font.bold: true
+                        font.letterSpacing: 1
+                        height: 26
+                        verticalAlignment: Text.AlignVCenter
+                        opacity: root.colonOn ? 1.0 : 0.15
+                        // длительность заметно меньше периода (500 мс), иначе
+                        // анимация не успевает затихнуть и двоеточие «плывёт»
+                        Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.InOutSine } }
+                    }
+                    Text {
+                        id: clockMin
+                        text: root.clockText.substring(3)
+                        color: Theme.barText
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(Theme.fontClock)
+                        font.bold: true
+                        font.letterSpacing: 1
+                        height: 26
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                }
+
+                Text {
+                    id: dayLabel
+                    text: root.dayText + " " + root.dateText
+                    color: Theme.barDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(13)
+                    height: 26
+                    verticalAlignment: Text.AlignVCenter
+                }
+            }
         }
     }
 
-    // ── ЗЕРНО ПОВЕРХ ВСЕГО БАРА ──
-    // Ассет: assets/noise.png (220×220, 8-битный RGBA; светлый шум с низкой
-    // альфой). Qt альфу уважает, поэтому зерно тихое, а не белый ТВ-снег.
-    // Рисую последним ребёнком: слой ложится на пилюли, часы и медиа целиком,
-    // Image мышь не берёт — клики, ховер и тултипы под ним живут.
-    // Крутилка силы — opacity ниже (сейчас 0.12). В терминале (kitty) свой,
-    // отдельный тайл: он тёмный и прозрачный, см. ~/.config/kitty/kitty.conf.
+    // ── ЗЕРНО НА ПЛАШКАХ ──
+    // Тайл кладу ровно по каждой плашке, а не на весь бар: между островами
+    // фон прозрачный, и зерно там было бы грязью на обоях. Image мышь не
+    // берёт — клики, ховер и тултипы под ним живут.
+    // Ассет: assets/noise.png (220×220, RGBA; светлый шум с низкой альфой).
+    // В терминале (kitty) свой тайл, см. ~/.config/kitty/kitty.conf.
     Image {
-        anchors.fill: parent
+        x: leftBar.x; y: leftBar.y
+        width: leftBar.width; height: leftBar.height
+        source: Qt.resolvedUrl("assets/noise.png")
+        fillMode: Image.Tile
+        smooth: false
+        cache: true
+        opacity: 0.12
+    }
+
+    Image {
+        x: centerBar.x; y: centerBar.y
+        width: centerBar.width; height: centerBar.height
+        source: Qt.resolvedUrl("assets/noise.png")
+        fillMode: Image.Tile
+        smooth: false
+        cache: true
+        opacity: 0.12
+    }
+
+    Image {
+        x: rightBar.x; y: rightBar.y
+        width: rightBar.width; height: rightBar.height
         source: Qt.resolvedUrl("assets/noise.png")
         fillMode: Image.Tile
         smooth: false

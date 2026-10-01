@@ -100,9 +100,9 @@ end
 
 hl.config({
   general = {
-    border_size = 1,          -- тонкая рамка 1px, как у карточки Hub
-    gaps_in    = 12,
-    gaps_out   = 20,
+    border_size = 0,          -- без обводки: окно держат тень и радиус (как в 43PR)
+    gaps_in    = 8,           -- воздух вокруг окна, но не разреженно
+    gaps_out   = 14,
     layout     = "dwindle",
     resize_on_border = false,
     allow_tearing = false,
@@ -114,17 +114,17 @@ hl.config({
   },
 
   decoration = {
-    rounding       = 6,       -- радиус 6, как у Hub
+    rounding       = 10,      -- мягче углы: 6 → 10, ближе к 43PR
     rounding_power = 2.0,      -- скругленные "сквирклы" как в превью
     active_opacity   = 0.94,
     inactive_opacity = 0.90,
     dim_inactive     = true,
-    dim_strength     = 0.12,
+    dim_strength     = 0.08,   -- тише фон: 0.12 → 0.08, неактивные окна не гаснут в ноль
 
     shadow = {
       enabled        = true,
-      range          = 18,
-      render_power   = 2,
+      range          = 12,      -- шире разлёт тени — мягкая подушка под окном
+      render_power   = 3,       -- 3 даёт плавный градиент, без жёсткой кромки
       offset         = { 0, 4 },
       color          = "0xff000000",   -- 0xAARRGGBB
       color_inactive = "0x66000000",
@@ -240,8 +240,8 @@ hl.window_rule({ match = { class = "org.pulseaudio.pavucontrol" }, float = true,
 -- Терминал: чуть прозрачнее неактивного, чтобы "пустота" ночи сквозила
 hl.window_rule({ match = { class = "^(kitty)$" }, opacity = "1.0 override 0.92 override" })
 
--- VS Code: терминальный вид — прямые углы, тонкая рамка (тема в ~/.config/Code)
-hl.window_rule({ match = { class = "^(code|code-url-handler)$" }, rounding = 0, border_size = 1 })
+-- VS Code: терминальный вид — прямые углы, без рамки (тема в ~/.config/Code)
+hl.window_rule({ match = { class = "^(code|code-url-handler)$" }, rounding = 0, border_size = 0 })
 
 -- yazi в kitty: непрозрачное окно, прямые углы (монохромный файловый менеджер)
 hl.window_rule({ match = { class = "^(lunar-yazi)$" }, rounding = 6, opacity = "1.0 override 1.0 override" })
@@ -262,14 +262,15 @@ hl.layer_rule({ match = { namespace = "lunar-sidebar-right" }, blur = true, igno
 -- Плеер — обычное окно (Quickshell FloatingWindow): плавающее, по центру,
 -- со скруглением и полупрозрачностью. Блюр Hyprland даёт сам (окно с
 -- opacity<1), общий blur включён — отдельный слой тут больше не нужен.
-hl.window_rule({ match = { title = "^(Lunar Player)$" }, float = true, center = true, rounding = 12, opacity = "0.94 override 0.94 override" })
+hl.window_rule({ match = { title = "^(Lunar Player)$" }, float = true, center = true, rounding = 14, opacity = "0.94 override 0.94 override" })
 
 -- Крупные модалки — тоже обычные окна (Quickshell FloatingWindow): их можно
 -- тянуть и ресайзить, блюр им даёт прозрачность окна. Заголовки ставлю в QML.
-hl.window_rule({ match = { title = "^(Lunar Hub)$" },       float = true, center = true, rounding = 12, opacity = "0.94 override 0.94 override" })
-hl.window_rule({ match = { title = "^(Lunar Clipboard)$" }, float = true, center = true, rounding = 12, opacity = "0.94 override 0.94 override" })
-hl.window_rule({ match = { title = "^(Lunar Power)$" },     float = true, center = true, rounding = 12, opacity = "0.94 override 0.94 override" })
-hl.window_rule({ match = { title = "^(Lunar Agent)$" },     float = true, center = true, rounding = 12, opacity = "0.94 override 0.94 override" })
+-- Радиус 14 (чуть больше системного): без обводки форму читает именно угол.
+hl.window_rule({ match = { title = "^(Lunar Hub)$" },       float = true, center = true, rounding = 14, opacity = "0.94 override 0.94 override" })
+hl.window_rule({ match = { title = "^(Lunar Clipboard)$" }, float = true, center = true, rounding = 14, opacity = "0.94 override 0.94 override" })
+hl.window_rule({ match = { title = "^(Lunar Power)$" },     float = true, center = true, rounding = 14, opacity = "0.94 override 0.94 override" })
+hl.window_rule({ match = { title = "^(Lunar Agent)$" },     float = true, center = true, rounding = 14, opacity = "0.94 override 0.94 override" })
 
 
 
