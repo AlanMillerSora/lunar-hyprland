@@ -4,15 +4,15 @@
     // холодный монохром: «цвета» ASCII-логотипа — оттенки серого
     "logo": {
         "color": {
-            "1": "#dfe7f2",
-            "2": "#93a1b5",
-            "3": "#cfd9e8",
-            "4": "#7aa2f7",
-            "5": "#dfe7f2",
-            "6": "#dfe7f2",
-            "7": "#dfe7f2",
-            "8": "#dfe7f2",
-            "9": "#dfe7f2"
+            "1": "#e8ecf2",
+            "2": "#98a1ac",
+            "3": "#d5dce4",
+            "4": "#e8edf4",
+            "5": "#e8ecf2",
+            "6": "#e8ecf2",
+            "7": "#e8ecf2",
+            "8": "#e8ecf2",
+            "9": "#e8ecf2"
         }
     },
 
@@ -20,14 +20,14 @@
         "separator": "  ",
         // ключи — светлые, значения — приглушённые, разделитель — faint
         "color": {
-            "keys": "#dfe7f2",
-            "title": "#7aa2f7",
-            "output": "#cfd9e8",
-            "separator": "#556377"
+            "keys": "#e8ecf2",
+            "title": "#e8edf4",
+            "output": "#d5dce4",
+            "separator": "#5b636d"
         },
         "key": {
             "type": "string",
-            "color": "#7aa2f7"
+            "color": "#e8edf4"
         },
         "percent": {
             "type": [
