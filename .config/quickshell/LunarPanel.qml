@@ -42,6 +42,7 @@ PanelWindow {
         Region { item: leftBar }
         Region { item: root.expanded ? null : bar }
         Region { item: root.expanded ? panel : null }
+        Region { item: root.recording ? recPill : null }
     }
 
     // Палитра из системной темы (Hub / лаунчер / настройки):
@@ -672,6 +673,60 @@ PanelWindow {
         HoverHandler { id: hh }
     }
 
+    // Ячейка-сегмент (по мотивам ArchEclipse): плотный фон + короткий
+    // акцентный штрих слева. Внутрь кладу что угодно (текст/иконку/строку).
+    component Cell: Rectangle {
+        id: cell
+        default property alias content: cellContent.children
+        property color accent: Theme.barFaint
+        property bool interactive: false
+        property string tip: ""
+        signal clicked()
+
+        height: 26
+        implicitWidth: cellContent.implicitWidth + Theme.space3 * 2 + 8
+        width: implicitWidth
+        radius: Theme.radiusS
+        color: cellHover.hovered && cell.interactive ? Theme.hoverStrong : Theme.fill
+
+        HoverHandler {
+            id: cellHover
+            onHoveredChanged: {
+                if (hovered && cell.tip !== "")
+                    root.showTip(cell.tip, cell)
+            }
+        }
+
+        // короткий штрих-акцент слева (как цветные флажки у ArchEclipse)
+        Rectangle {
+            anchors.left: parent.left
+            anchors.leftMargin: 6
+            anchors.verticalCenter: parent.verticalCenter
+            width: 2
+            height: 14
+            radius: 1
+            color: cell.accent
+        }
+
+        Row {
+            id: cellContent
+            anchors.left: parent.left
+            anchors.leftMargin: 14
+            anchors.right: parent.right
+            anchors.rightMargin: 8
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: Theme.space2
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            enabled: cell.interactive
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: cell.clicked()
+        }
+    }
+
 
     // Метрики моношрифта: по ним считаем ширины числовых полей, чтобы
     // цифры при скачках значений не дёргали раскладку.
@@ -941,6 +996,7 @@ PanelWindow {
     }
 
     // ── СОДЕРЖИМОЕ ЦЕНТРА: PERF + раскладка (внутри единого бара) ──
+    // Ячейки-сегменты: общий фон fill, слева короткий штрих-акцент.
     Rectangle {
         id: midBar
         anchors.left: bar.left
@@ -949,39 +1005,42 @@ PanelWindow {
         height: Theme.barH
         color: "transparent"
         clip: true
-        width: midLayout.implicitWidth + 2 * Theme.barPad
+        width: midLayout.implicitWidth + 2 * Theme.space2
 
-        RowLayout {
+        Row {
             id: midLayout
-            anchors.fill: parent
-            anchors.leftMargin: Theme.barPad
-            anchors.rightMargin: Theme.barPad
-            spacing: Theme.space3
+            anchors.centerIn: parent
+            height: Theme.barH
+            spacing: Theme.space2
 
-            // ── PERF: governor; краснеет, если уехал с performance ──
-            Text {
-                Layout.alignment: Qt.AlignVCenter
-                width: fm13.advanceWidth("PERF")
-                text: "PERF"
-                color: root.cpuGovernor === "performance" ? Theme.barFaint : Theme.danger
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize(13)
-                font.bold: root.cpuGovernor !== "performance"
+            // PERF: governor; штрих белый на performance, danger — если уехал
+            Cell {
+                anchors.verticalCenter: parent.verticalCenter
+                accent: root.cpuGovernor === "performance" ? Theme.barDim : Theme.danger
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "PERF"
+                    color: root.cpuGovernor === "performance" ? Theme.barFaint : Theme.danger
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(12)
+                    font.bold: root.cpuGovernor !== "performance"
+                }
             }
 
-            // ── раскладка (клик — переключить) ──
-            Text {
-                Layout.alignment: Qt.AlignVCenter
-                width: fm14.advanceWidth("EN")
-                text: root.kbLayout
-                color: Theme.barText
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize(14)
-                font.bold: true
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.switchLayout()
+            // раскладка (клик — переключить)
+            Cell {
+                anchors.verticalCenter: parent.verticalCenter
+                interactive: true
+                tip: "раскладка — клик переключить"
+                accent: Theme.barDim
+                onClicked: root.switchLayout()
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: root.kbLayout
+                    color: Theme.barText
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(13)
+                    font.bold: true
                 }
             }
         }
@@ -996,114 +1055,70 @@ PanelWindow {
         height: Theme.barH
         color: "transparent"
         clip: true
-        width: rightLayout.implicitWidth + 2 * Theme.barPad
+        width: rightLayout.implicitWidth + 2 * Theme.space2
 
-        // ── статус: сеть · игра/запись · трей · уведомления · звук ──
-        RowLayout {
+        // ── статус: сеть · игра · трей · уведомления · звук ──
+        Row {
             id: rightLayout
-            anchors.fill: parent
-            anchors.leftMargin: Theme.barPad
-            anchors.rightMargin: Theme.barPad
-            spacing: Theme.space3
+            anchors.centerIn: parent
+            height: Theme.barH
+            spacing: Theme.space2
 
-            // ── сеть: скорость + иконка подключения (клик — сети в Hub) ──
-            Item {
-                Layout.alignment: Qt.AlignVCenter
-                Layout.rightMargin: 10
-                implicitWidth: netRow.implicitWidth
-                implicitHeight: 26
-                scale: netBg.hovered ? Theme.hoverGrow : 1
-                Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
-
-                HoverBg { id: netBg }
-
-                Row {
-                    id: netRow
-                    anchors.centerIn: parent
-                    height: 26
-                    spacing: 6
-
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: Math.max(fmIcon17.advanceWidth("󰈀"), fmIcon17.advanceWidth("\uf1eb"))
-                        text: root.netKind === "eth" ? "󰈀" : "\uf1eb"
-                        color: root.netKind === "off" ? Theme.barFaint : Theme.barText
-                        font.family: Theme.iconFont
-                        font.pixelSize: Theme.fontSize(17)
+            // ── сеть: ДВУХЭТАЖНАЯ ячейка — иконка сверху, ↓/↑ мелко снизу ──
+            Cell {
+                anchors.verticalCenter: parent.verticalCenter
+                interactive: true
+                tip: "сеть — открыть в Hub"
+                accent: root.netKind === "off" ? Theme.barFaint : Theme.barDim
+                onClicked: root.openNetwork()
+                Column {
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 0
+                    Row {
+                        spacing: 5
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: root.netKind === "eth" ? "󰈀" : "\uf1eb"
+                            color: root.netKind === "off" ? Theme.barFaint : Theme.barText
+                            font.family: Theme.iconFont
+                            font.pixelSize: 14
+                        }
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: root.netKind === "off" ? "нет" : (root.netKind === "eth" ? "eth" : "wifi")
+                            color: Theme.barDim
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 10
+                        }
                     }
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.openNetwork()
+                    Text {
+                        text: "↓" + root.fmtRate(root.teleRx) + " ↑" + root.fmtRate(root.teleTx)
+                        color: Theme.barFaint
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 9
+                    }
                 }
             }
 
-            // ── действия: Game Mode / питание / запись ──
-            Item {
-                Layout.alignment: Qt.AlignVCenter
-                implicitWidth: actionRow.implicitWidth
-                implicitHeight: 26
-                scale: actBg.hovered ? Theme.hoverGrow : 1
-                Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
-                HoverBg { id: actBg }
-                Row {
-                    id: actionRow
-                    anchors.centerIn: parent
-                    height: 26
-                    spacing: Theme.space3
-
-                    // Game Mode (клик — переключить)
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: "\uf11b"
-                        color: root.gameMode ? Theme.danger : Theme.barDim
-                        font.family: Theme.iconFont
-                        font.pixelSize: Theme.fontSize(17)
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.toggleGameMode()
-                        }
-                    }
-
-                    // запись экрана — показываю только когда пишу
-                    Rectangle {
-                        visible: root.recording
-                        width: fm11.advanceWidth("● REC") + 20
-                        height: 24
-                        radius: Theme.radius
-                        anchors.verticalCenter: parent.verticalCenter
-                        color: root.recording
-                            ? Theme.alpha(Theme.danger, 0.16)
-                            : (recMouse.containsMouse ? Theme.alpha(Theme.danger, 0.08) : "transparent")
-                        border.width: 1
-                        border.color: root.recording ? Theme.danger : Theme.borderAccent
-
-                        Text {
-                            id: recLabel
-                            anchors.centerIn: parent
-                            text: root.recording ? "■ REC" : "● REC"
-                            color: root.recording ? Theme.danger : Theme.barDim
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(11)
-                            font.bold: root.recording
-                        }
-                        MouseArea {
-                            id: recMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.toggleRecording()
-                        }
-                    }
+            // ── действия: Game Mode (REC вынесен отдельной пилюлей справа) ──
+            Cell {
+                anchors.verticalCenter: parent.verticalCenter
+                interactive: true
+                tip: "игровой режим"
+                accent: root.gameMode ? Theme.danger : Theme.barFaint
+                onClicked: root.toggleGameMode()
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "\uf11b"
+                    color: root.gameMode ? Theme.danger : Theme.barDim
+                    font.family: Theme.iconFont
+                    font.pixelSize: 15
                 }
             }
 
             // ── трей: место под значки (Theme.trayVisible), лишние — в «+N» ──
             Item {
-                Layout.alignment: Qt.AlignVCenter
+                anchors.verticalCenter: parent.verticalCenter
                 // место ровно под видимые значки (не под весь лимит); при
                 // переполнении добавляю ещё и ширину плашки «+N»
                 implicitWidth: {
@@ -1226,100 +1241,130 @@ PanelWindow {
                 }
             }
 
-            // ── уведомления · громкость ──
-            Item {
-                Layout.alignment: Qt.AlignVCenter
-                // отступ от трея, чтобы «+N» не сливалась с раскладкой «RU»
-                Layout.leftMargin: 10
-                implicitWidth: rightRow.implicitWidth
-                implicitHeight: 26
-                scale: rrBg.hovered ? Theme.hoverGrow : 1
-                Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
-                HoverBg { id: rrBg }
-                Row {
-                    id: rightRow
-                    anchors.centerIn: parent
-                    height: 26
-                    spacing: Theme.space3
+            // ── уведомления · громкость — ячейками ──
+            Cell {
+                anchors.verticalCenter: parent.verticalCenter
+                interactive: true
+                tip: "уведомления"
+                accent: root.notifCount > 0 ? Theme.accent : Theme.barFaint
+                onClicked: root.togglePanel("notifs")
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: root.dnd ? "\uf1f6" : "\uf0f3"
+                    color: root.panelMode === "notifs" ? Theme.accent
+                        : (root.dnd ? Theme.barFaint
+                           : (root.notifCount > 0 ? Theme.barText : Theme.barDim))
+                    font.family: Theme.iconFont
+                    font.pixelSize: Theme.fontSize(14)
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: root.notifCount > 0
+                    text: root.notifCount
+                    color: Theme.accent
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(11)
+                    font.bold: true
+                }
+            }
 
-                    // уведомления: клик — открыть панель (активные + история)
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: Math.max(fmIcon15.advanceWidth("\uf1f6"), fmIcon15.advanceWidth("\uf0f3"))
-                        text: root.dnd ? "\uf1f6" : "\uf0f3"
-                        color: root.panelMode === "notifs" ? Theme.accent
-                            : (root.dnd ? Theme.barFaint
-                               : (root.notifCount > 0 ? Theme.barText : Theme.barDim))
-                        font.family: Theme.iconFont
-                        font.pixelSize: Theme.fontSize(15)
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.togglePanel("notifs")
+            // volume
+            Cell {
+                anchors.verticalCenter: parent.verticalCenter
+                interactive: true
+                tip: "звук — клик пульт, колесо шаг, ПКМ микшер"
+                accent: root.muted ? Theme.danger : Theme.barDim
+                onClicked: root.openVolumePanel()
+                Item {
+                    implicitWidth: volContent.implicitWidth
+                    implicitHeight: 26
+                    Row {
+                        id: volContent
+                        anchors.centerIn: parent
+                        spacing: Theme.space2
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: root.muted
+                                ? "󰖁"
+                                : (root.vol < 0.34 ? "󰕿" : (root.vol < 0.67 ? "󰖀" : "󰕾"))
+                            color: root.muted ? Theme.barFaint : Theme.barText
+                            font.family: Theme.iconFont
+                            font.pixelSize: Theme.fontSize(16)
+                        }
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: root.muted ? "mute" : Math.round(root.vol * 100) + "%"
+                            color: Theme.barDim
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize(12)
                         }
                     }
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: fm13.advanceWidth("999")
-                        text: root.notifCount > 0 ? root.notifCount : ""
-                        color: Theme.accent
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize(13)
-                        font.bold: true
+                    MouseArea {
+                        anchors.fill: parent
+                        acceptedButtons: Qt.RightButton
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.openMixer()
                     }
-
-                    // volume
-                    Item {
-                        width: volRow.implicitWidth
-                        height: 26
-
-                        Row {
-                            id: volRow
-                            anchors.centerIn: parent
-                            height: 26
-                            spacing: 6
-
-                            Text {
-                                width: Math.max(fmIcon19.advanceWidth("󰖁"), fmIcon19.advanceWidth("󰕿"),
-                                                fmIcon19.advanceWidth("󰖀"), fmIcon19.advanceWidth("󰕾"))
-                                text: root.muted
-                                    ? "󰖁"
-                                    : (root.vol < 0.34 ? "󰕿" : (root.vol < 0.67 ? "󰖀" : "󰕾"))
-                                color: root.muted ? Theme.barFaint : Theme.barText
-                                font.family: Theme.iconFont
-                                font.pixelSize: Theme.fontSize(19)
-                                height: 26
-                                verticalAlignment: Text.AlignVCenter
-                            }
-                            Text {
-                                width: fm14.advanceWidth("100%")
-                                text: root.muted ? "mute" : Math.round(root.vol * 100) + "%"
-                                color: Theme.barDim
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSize(14)
-                                height: 26
-                                verticalAlignment: Text.AlignVCenter
-                            }
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            acceptedButtons: Qt.LeftButton | Qt.RightButton
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: function (mouse) {
-                                if (mouse.button === Qt.RightButton)
-                                    root.openMixer()
-                                else
-                                    root.openVolumePanel()
-                            }
-                            onWheel: function (wheel) {
-                                root.bumpVol(wheel.angleDelta.y > 0 ? 0.05 : -0.05)
-                            }
-                        }
+                    WheelHandler {
+                        onWheel: (wheel) => root.bumpVol(wheel.angleDelta.y > 0 ? 0.05 : -0.05)
                     }
                 }
             }
+        }
+    }
+
+    // ── REC: отдельная правая пилюля (видна только при записи) ──
+    Rectangle {
+        id: recPill
+        visible: root.recording
+        anchors.right: parent.right
+        anchors.rightMargin: Theme.barMargin
+        anchors.top: parent.top
+        anchors.topMargin: Theme.barMargin
+        height: Theme.barH
+        radius: Theme.barRadius
+        color: Theme.alpha(Theme.danger, 0.16)
+        border.width: 1
+        border.color: Theme.alpha(Theme.danger, 0.5)
+        width: recPillRow.implicitWidth + 2 * Theme.barPad
+        opacity: (1 - root.morph) * (root.recording ? 1 : 0)
+
+        Row {
+            id: recPillRow
+            anchors.centerIn: parent
+            spacing: Theme.space2
+            Text {
+                id: recPillDot
+                anchors.verticalCenter: parent.verticalCenter
+                text: "\uf111"
+                color: Theme.danger
+                font.family: Theme.iconFont
+                font.pixelSize: 10
+                SequentialAnimation on opacity {
+                    running: root.recording
+                    loops: Animation.Infinite
+                    NumberAnimation { to: 0.3; duration: 700; easing.type: Easing.InOutSine }
+                    NumberAnimation { to: 1.0; duration: 700; easing.type: Easing.InOutSine }
+                }
+            }
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: "REC"
+                color: Theme.danger
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize(12)
+                font.bold: true
+                font.letterSpacing: 1
+            }
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onEntered: root.showTip("запись — клик остановить", recPill)
+            onExited: Theme.tooltipShown = false
+            onClicked: root.toggleRecording()
         }
     }
     // ── ЦЕНТР: часы/дата + медиа + кнопка пульта (внутри бара) ──
@@ -1343,87 +1388,103 @@ PanelWindow {
         Row {
             id: defRow
             anchors.centerIn: parent
-            height: 26
-            spacing: Theme.space3
+            height: Theme.barH
+            spacing: Theme.space2
 
             // «пульт» — раскрывает панель управления вниз
-            Item {
-                id: ctlBtn
-                width: 18
-                height: 26
+            Cell {
+                anchors.verticalCenter: parent.verticalCenter
+                interactive: true
+                tip: "пульт: действия, звук и микрофон"
+                accent: root.panelMode === "control" ? Theme.accent : Theme.barDim
+                onClicked: root.togglePanel("control")
                 Text {
-                    anchors.centerIn: parent
+                    anchors.verticalCenter: parent.verticalCenter
                     text: "\uf013"
                     color: root.panelMode === "control" ? Theme.accent : Theme.barDim
                     font.family: Theme.iconFont
                     font.pixelSize: Theme.fontSize(14)
                 }
-                MouseArea {
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onEntered: root.showTip("пульт: действия, звук и микрофон", ctlBtn)
-                    onExited: Theme.tooltipShown = false
-                    onClicked: root.togglePanel("control")
-                }
             }
 
-            // медиа-полоса (только когда играет) — клик раскрывает панель медиа
-            Item {
+            // медиа — ДВУХЭТАЖНАЯ ячейка (по мотивам ArchEclipse):
+            // сверху трек, снизу мини-спектр cava; клик — панель медиа.
+            Rectangle {
                 id: mediaInline
                 visible: root.mediaActive
-                width: inlineRow.implicitWidth
+                anchors.verticalCenter: parent.verticalCenter
+                width: mediaCol.width + Theme.space3 * 2 + 8
                 height: 26
-                Row {
-                    id: inlineRow
-                    anchors.centerIn: parent
-                    height: 26
-                    spacing: Theme.space2
+                radius: Theme.radiusS
+                color: mediaHover.hovered ? Theme.hoverStrong : Theme.fill
+
+                HoverHandler { id: mediaHover }
+
+                // штрих-акцент слева
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 6
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 2
+                    height: 14
+                    radius: 1
+                    color: root.playing ? Theme.accent : Theme.barFaint
+                }
+
+                Column {
+                    id: mediaCol
+                    anchors.left: parent.left
+                    anchors.leftMargin: 14
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 168
+                    spacing: 1
+
                     Row {
-                        anchors.verticalCenter: parent.verticalCenter
-                        height: 26
-                        spacing: 2
-                        Repeater {
-                            model: 10
-                            delegate: Item {
-                                required property int index
-                                width: 3
-                                height: 26
-                                Rectangle {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    anchors.bottom: parent.bottom
-                                    anchors.bottomMargin: 3
-                                    width: parent.width
-                                    height: 2 + (root.barValues[index] || 0) * 18
-                                    radius: 1
-                                    color: Theme.alpha(Theme.accent, 0.5 + 0.5 * (root.barValues[index] || 0))
-                                }
-                            }
-                        }
-                    }
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: root.playing ? "\uf04c" : "\uf04b"
-                        color: root.playing ? Theme.accent : Theme.barFaint
-                        font.family: Theme.iconFont
-                        font.pixelSize: Theme.fontSize(12)
-                    }
-                    Item {
-                        id: inlineTrack
-                        width: 150
-                        height: 26
-                        clip: true
+                        width: parent.width
+                        height: 12
+                        spacing: 4
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
-                            width: parent.width
+                            text: root.playing ? "\uf04c" : "\uf04b"
+                            color: root.playing ? Theme.accent : Theme.barFaint
+                            font.family: Theme.iconFont
+                            font.pixelSize: 10
+                        }
+                        Text {
+                            width: parent.width - 16
+                            anchors.verticalCenter: parent.verticalCenter
                             elide: Text.ElideRight
                             text: root.track
                             color: Theme.barText
                             font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(12)
+                            font.pixelSize: 11
+                        }
+                    }
+
+                    // нижний ряд — мини-спектр cava
+                    Row {
+                        width: parent.width
+                        height: 9
+                        spacing: 2
+                        Repeater {
+                            model: 14
+                            delegate: Item {
+                                required property int index
+                                width: 2
+                                height: 9
+                                Rectangle {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    anchors.bottom: parent.bottom
+                                    width: parent.width
+                                    height: 2 + (root.barValues[index] || 0) * 7
+                                    radius: 1
+                                    color: Theme.alpha(Theme.accent, 0.35 + 0.65 * (root.barValues[index] || 0))
+                                }
+                            }
                         }
                     }
                 }
+
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
@@ -1431,18 +1492,14 @@ PanelWindow {
                 }
             }
 
-            // часы + дата
-            Row {
-                id: clockRow
+            // часы + дата — одна ячейка со штрихом-акцентом
+            Cell {
                 anchors.verticalCenter: parent.verticalCenter
-                height: 26
-                spacing: Theme.space3
-
+                accent: Theme.accent
                 Row {
                     anchors.verticalCenter: parent.verticalCenter
                     height: 26
                     spacing: 0
-
                     Text {
                         id: clockLabel
                         text: root.clockText.substring(0, 2)
@@ -1479,13 +1536,13 @@ PanelWindow {
                         verticalAlignment: Text.AlignVCenter
                     }
                 }
-
                 Text {
                     id: dayLabel
+                    anchors.verticalCenter: parent.verticalCenter
                     text: root.dayText + " " + root.dateText
                     color: Theme.barDim
                     font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(13)
+                    font.pixelSize: 12
                     height: 26
                     verticalAlignment: Text.AlignVCenter
                 }
