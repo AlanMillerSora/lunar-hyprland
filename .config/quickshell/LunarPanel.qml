@@ -10,10 +10,9 @@ import QtQuick.Effects
 import QtQuick.Layouts
 
 // ────────────────────────────────────────────────────────────────
-//  Lunar top bar — единый монохромный HUD (один бар на всю ширину)
-//    слева  : LUNAR + фазы · PERF · раскладка
-//    центр  : часы/дата, медиа, пульт
-//    справа : сеть, игра/запись, трей, уведомления, звук
+//  Lunar top bar — монохромный HUD
+//    слева  : LUNAR + фазы столов (отдельная плашка)
+//    справа : один компактный бар — PERF · раскладка · часы/медиа/пульт · статус
 //  Панель во всю ширину, но ввод ловят только сами плашки (mask) —
 //  зазоры пропускают клики (важно для fullscreen). exclusiveZone
 //  держит окна вне полосы бара. Морф — по мотивам ArchEclipse.
@@ -37,6 +36,7 @@ PanelWindow {
     // клик-сквозь: ввод ловят только острова, зазоры между ними
     // прозрачны для мыши (окно шире своего содержимого).
     mask: Region {
+        Region { item: leftBar }
         Region { item: bar }
     }
 
@@ -497,8 +497,8 @@ PanelWindow {
     }
 
     // ───────────────────────────── layout ─────────────────────────────
-    // Один бар на всю ширину: слева марка/фазы/PERF/раскладка, по центру
-    // часы/медиа/пульт, справа статус. У каждой зоны свой слот — без наложений.
+    // Слева отдельная плашка LUNAR+фазы. Справа — один компактный бар:
+    // PERF · раскладка · часы/медиа/пульт · статус (по ширине содержимого).
     // Подсветка интерактивной секции при наведении.
     component HoverBg: Rectangle {
         id: hb
@@ -525,12 +525,11 @@ PanelWindow {
     // ── ЕДИНЫЙ БАР: один фон на весь верх, содержимое внутри ──
     Rectangle {
         id: bar
-        // один горизонтальный бар на всю ширину (как у ArchEclipse)
-        anchors.left: parent.left
+        // один компактный бар справа (по ширине содержимого, не на весь экран)
         anchors.right: parent.right
-        anchors.leftMargin: Theme.barMargin
         anchors.rightMargin: Theme.barMargin
         anchors.verticalCenter: parent.verticalCenter
+        width: midBar.width + centerPill.width + rightBar.width
         height: Theme.barH
         radius: Theme.barRadius
         color: root.pillBg
@@ -564,15 +563,44 @@ PanelWindow {
         }
     }
 
-    // ── ЛЕВО: марка LUNAR + фазы столов (внутри единого бара) ──
+    // ── ЛЕВО: марка LUNAR + фазы столов (отдельная плашка) ──
     Rectangle {
         id: leftBar
-        anchors.left: bar.left
-        anchors.verticalCenter: bar.verticalCenter
+        anchors.left: parent.left
+        anchors.leftMargin: Theme.barMargin
+        anchors.verticalCenter: parent.verticalCenter
         height: Theme.barH
-        color: "transparent"
+        radius: Theme.barRadius
+        color: root.pillBg
         clip: true
         width: leftLayout.implicitWidth + 2 * Theme.barPad
+
+        // зерно на стекле: маска по скруглению — углы плашки остаются чистыми
+        Image {
+            id: nzL
+            anchors.fill: parent
+            source: Qt.resolvedUrl("assets/noise.png")
+            fillMode: Image.Tile
+            smooth: false
+            cache: true
+            visible: false
+            layer.enabled: true
+        }
+        MultiEffect {
+            anchors.fill: parent
+            source: nzL
+            maskEnabled: true
+            maskSource: nmL
+            opacity: 0.07
+        }
+        Rectangle {
+            id: nmL
+            anchors.fill: parent
+            radius: Theme.barRadius
+            color: "white"
+            visible: false
+            layer.enabled: true
+        }
 
         RowLayout {
             id: leftLayout
@@ -749,7 +777,7 @@ PanelWindow {
     // ── СОДЕРЖИМОЕ ЦЕНТРА: PERF + раскладка (внутри единого бара) ──
     Rectangle {
         id: midBar
-        anchors.left: leftBar.right
+        anchors.left: bar.left
         anchors.verticalCenter: bar.verticalCenter
         height: Theme.barH
         color: "transparent"
@@ -795,7 +823,7 @@ PanelWindow {
     // ── ПРАВО: статус (сеть · игра/запись · трей · уведомления · звук) ──
     Rectangle {
         id: rightBar
-        anchors.right: bar.right
+        anchors.left: centerPill.right
         anchors.verticalCenter: bar.verticalCenter
         height: Theme.barH
         color: "transparent"
@@ -1132,7 +1160,7 @@ PanelWindow {
     Rectangle {
         id: centerPill
         // центр единого бара (фон — общий, у плашки только содержимое)
-        anchors.horizontalCenter: bar.horizontalCenter
+        anchors.left: midBar.right
         anchors.verticalCenter: bar.verticalCenter
         height: Theme.barH
         color: "transparent"
