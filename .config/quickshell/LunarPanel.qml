@@ -457,6 +457,51 @@ PanelWindow {
             root.setPill("default")
     }
 
+    // ── отклик на клавиши ──
+    // Громкость и медиа уже управляются XF86Audio*/mpv — бар просто
+    // отзеркаливает: крутишь звук или меняется трек, плашка сама
+    // показывает нужный режим. Первые 1.5 с после старта — тишина
+    // (метаданные и sink подтягиваются асинхронно, не пульсируем).
+    property bool settled: false
+    Timer {
+        running: true
+        interval: 1500
+        onTriggered: root.settled = true
+    }
+
+    onVolChanged: {
+        if (!root.settled)
+            return
+        if (root.pillState !== "volume")
+            root.setPill("volume", 2500)
+    }
+    onMutedChanged: {
+        if (!root.settled)
+            return
+        if (root.pillState !== "volume")
+            root.setPill("volume", 2500)
+    }
+
+    property string lastTrack: ""
+    onTrackChanged: {
+        if (root.track.length === 0 || root.track === root.lastTrack)
+            return
+        root.lastTrack = root.track
+        if (!root.settled || !root.playing || root.pillState !== "default")
+            return
+        root.setPill("media", 2500)
+    }
+
+    // IPC бара — для будущих хоткеев и тестов:
+    //   qs ipc call bar volume|control|media|reset
+    IpcHandler {
+        target: "bar"
+        function volume() { root.setPill("volume", 2500) }
+        function control() { root.togglePill("control") }
+        function media() { root.setPill("media", 2500) }
+        function reset() { root.setPill("default") }
+    }
+
     // быстрые действия «пульта»
     Process { id: powerProc; running: false }
     Process { id: hubToggleProc; running: false }
@@ -1135,6 +1180,24 @@ PanelWindow {
         scale: pillHover.hovered ? 1.03 : 1
         Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
 
+        // смена режима: контент не «щёлкает», а проявляется (морфинг)
+        property real contentOpacity: 1
+        Connections {
+            target: root
+            function onPillStateChanged() {
+                centerPill.contentOpacity = 0
+                morphIn.restart()
+            }
+        }
+        NumberAnimation {
+            id: morphIn
+            target: centerPill
+            property: "contentOpacity"
+            to: 1
+            duration: 170
+            easing.type: Easing.OutCubic
+        }
+
         HoverHandler {
             id: pillHover
             onHoveredChanged: {
@@ -1186,10 +1249,20 @@ PanelWindow {
             layer.enabled: true
         }
 
+        // лёгкий акцент в нештатных режимах — плашка «включена»
+        Rectangle {
+            anchors.fill: parent
+            radius: Theme.barRadius
+            color: Theme.alpha(Theme.accent, 0.05)
+            opacity: centerPill.mDefault ? 0 : 1
+            Behavior on opacity { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
+        }
+
         // ── режим ПОКОЙ: часы и дата (+ медиа при игре, + громкость на ховере) ──
         Row {
             id: defRow
             visible: centerPill.mDefault
+            opacity: centerPill.contentOpacity
             anchors.centerIn: parent
             height: 26
             spacing: Theme.space3
@@ -1377,9 +1450,51 @@ PanelWindow {
         Row {
             id: mediaRow
             visible: centerPill.mMedia
+            opacity: centerPill.contentOpacity
             anchors.centerIn: parent
             height: 26
             spacing: Theme.space2
+
+            // обложка трека: монохром, скруглённая; нет обложки — нота
+            Item {
+                width: 22
+                height: 22
+                anchors.verticalCenter: parent.verticalCenter
+                Image {
+                    id: coverImg
+                    anchors.fill: parent
+                    source: root.player ? (root.player.trackArtUrl || "") : ""
+                    sourceSize: Qt.size(44, 44)
+                    asynchronous: true
+                    fillMode: Image.PreserveAspectCrop
+                    visible: false
+                }
+                MultiEffect {
+                    anchors.fill: parent
+                    source: coverImg
+                    visible: coverImg.status === Image.Ready
+                    saturation: -1.0
+                    brightness: 0.06
+                    maskEnabled: true
+                    maskSource: coverMask
+                }
+                Rectangle {
+                    id: coverMask
+                    anchors.fill: parent
+                    radius: 4
+                    color: "white"
+                    visible: false
+                    layer.enabled: true
+                }
+                Text {
+                    anchors.centerIn: parent
+                    visible: coverImg.status !== Image.Ready
+                    text: "\uf001"
+                    color: Theme.barFaint
+                    font.family: Theme.iconFont
+                    font.pixelSize: Theme.fontSize(13)
+                }
+            }
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
@@ -1477,6 +1592,7 @@ PanelWindow {
         Row {
             id: volMorphRow
             visible: centerPill.mVolume
+            opacity: centerPill.contentOpacity
             anchors.centerIn: parent
             height: 26
             spacing: Theme.space2
@@ -1516,6 +1632,17 @@ PanelWindow {
                     radius: 2
                     color: Theme.accent
                 }
+                Rectangle {
+                    id: volHandle
+                    width: 10
+                    height: 10
+                    radius: 5
+                    color: Theme.accent
+                    anchors.verticalCenter: parent.verticalCenter
+                    x: Math.max(0, Math.min(volBar.width - width,
+                        (root.muted ? 0 : root.vol) * volBar.width - width / 2))
+                    Behavior on x { NumberAnimation { duration: 90; easing.type: Easing.OutCubic } }
+                }
                 MouseArea {
                     id: volDrag
                     anchors.fill: parent
@@ -1542,6 +1669,7 @@ PanelWindow {
         Row {
             id: ctlRow
             visible: centerPill.mControl
+            opacity: centerPill.contentOpacity
             anchors.centerIn: parent
             height: 26
             spacing: Theme.space3
@@ -1555,16 +1683,27 @@ PanelWindow {
                     { g: "\uf1eb", tip: "сеть", on: false, act: "net" },
                     { g: "\uf03e", tip: "обои", on: false, act: "wall" }
                 ]
-                delegate: Item {
+                delegate: Rectangle {
                     required property var modelData
-                    width: 22
+                    width: 30
                     height: 26
+                    radius: Theme.radius
+                    color: modelData.on
+                        ? Theme.alpha(Theme.danger, 0.14)
+                        : (ctlMouse.containsMouse ? Theme.hoverStrong : Theme.fill)
+                    border.width: 1
+                    border.color: modelData.on ? Theme.alpha(Theme.danger, 0.5) : "transparent"
+                    Behavior on color { ColorAnimation { duration: 140 } }
                     Text {
                         anchors.centerIn: parent
                         text: modelData.g
-                        color: modelData.on ? Theme.danger : Theme.barDim
+                        color: modelData.on
+                            ? Theme.danger
+                            : (ctlMouse.containsMouse ? Theme.barText : Theme.barDim)
                         font.family: Theme.iconFont
                         font.pixelSize: Theme.fontSize(16)
+                        scale: ctlMouse.containsMouse ? 1.08 : 1
+                        Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
                     }
                     MouseArea {
                         id: ctlMouse
