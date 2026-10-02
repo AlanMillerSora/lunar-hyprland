@@ -20,6 +20,13 @@ PanelWindow {
     id: root
 
     property bool showing: false
+    // плавный вход/выход: окно живёт, пока идёт затухание (иначе резко мигает)
+    property bool closing: false
+    property real fade: 0
+    Behavior on fade { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+    // наведение выбирает карточку только после того, как мышь реально двинулась —
+    // иначе при открытии курсор «наводится» на случайную карточку и выбор прыгает
+    property bool hoverArmed: false
     property var walls: []
     property bool scanned: false
     // имя файла -> 1 (какие миниатюры уже готовы)
@@ -33,7 +40,7 @@ PanelWindow {
     property real edgeSpacing: 80
     property int tileHeight: 1080
 
-    visible: root.showing
+    visible: root.showing || root.closing
     color: "transparent"
     anchors { top: true; left: true; right: true; bottom: true }
     exclusionMode: ExclusionMode.Ignore
@@ -55,15 +62,31 @@ PanelWindow {
     // при открытии: фокус на ловца клавиш; сканирую только если ещё не сканировал
     onShowingChanged: {
         if (showing) {
+            root.closing = false
+            root.fade = 1
+            root.hoverArmed = false
             if (!root.scanned)
                 wallScan.running = true
             keyCatcher.forceActiveFocus()
             Qt.callLater(carousel.centerOnStart)
         } else {
+            // плавный выход: гасим, окно прячем после затухания
+            root.closing = true
+            root.fade = 0
+            closeHide.restart()
             // закрыли до подтверждения — отменяю его
             confirmTimer.stop()
+            revealTimer.stop()
             root.confirming = false
         }
+    }
+
+    // окно прячем только когда затухание доиграло
+    Timer {
+        id: closeHide
+        interval: 220
+        repeat: false
+        onTriggered: root.closing = false
     }
 
     // ── полка: картинки из ~/Pictures, ~/Wallpapers, ~/Pictures/Wallpapers ──
@@ -132,7 +155,8 @@ PanelWindow {
                     Theme.wallpaperPath = f
                     Theme.wallpaperMode = "image"
                     Theme.applyPhotoPalette(f)
-                    root.showing = false
+                    // палитра/кроссфейд стартуют за ширмой, потом гаснем
+                    revealTimer.restart()
                 }
             }
         }
@@ -151,6 +175,18 @@ PanelWindow {
             Theme.wallpaperPath = p
             Theme.wallpaperMode = "image"
             Theme.applyPhotoPalette(p)
+            // обои и палитра встают ПОД тёмной подложкой, потом оверлей гаснет —
+            // так смена цвета не бьёт по глазам
+            revealTimer.restart()
+        }
+    }
+
+    // короткая пауза, чтобы кроссфейд обоев и палитра начали работу за ширмой
+    Timer {
+        id: revealTimer
+        interval: 320
+        repeat: false
+        onTriggered: {
             root.confirming = false
             root.showing = false
         }
@@ -218,7 +254,7 @@ PanelWindow {
     Rectangle {
         anchors.fill: parent
         color: "black"
-        opacity: root.showing ? (root.confirming ? 0.62 : 0.42) : 0
+        opacity: root.fade * (root.confirming ? 0.62 : 0.42)
         visible: opacity > 0
         Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
         MouseArea {
@@ -232,6 +268,7 @@ PanelWindow {
         anchors.centerIn: parent
         spacing: 10
         visible: root.walls.length === 0
+        opacity: root.fade
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: "обоев нет"
@@ -262,12 +299,10 @@ PanelWindow {
         clip: true
         contentHeight: height
         boundsBehavior: Flickable.StopAtBounds
-        // вход: лента мягко проявляется
-        opacity: root.showing ? 1 : 0
-        scale: root.showing ? 1 : 0.97
+        // вход: лента мягко проявляется (fade уже анимирован на root)
+        opacity: root.fade
+        scale: 0.97 + 0.03 * root.fade
         transformOrigin: Item.Center
-        Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
 
         property int selectedIndex: 0
         property bool ready: false
@@ -277,14 +312,28 @@ PanelWindow {
         readonly property real sideMargin: Math.max(0, viewportCenterX - tileWidth / 2)
         contentWidth: strip.width + 2 * sideMargin
 
+        // текущая обои: сперва точный путь, потом по имени файла (на случай
+        // переезда каталога). Если не нашли — 0, а не середина списка
+        // (середина читалась как «случайная»).
         function currentIndex() {
-            var i = root.walls.indexOf(Theme.wallpaperPath)
-            return i >= 0 ? i : Math.floor(root.walls.length / 2)
+            var p = Theme.wallpaperPath
+            if (p !== "") {
+                var i = root.walls.indexOf(p)
+                if (i >= 0)
+                    return i
+                var b = p.substring(p.lastIndexOf("/") + 1)
+                for (var j = 0; j < root.walls.length; j++)
+                    if (root.walls[j].substring(root.walls[j].lastIndexOf("/") + 1) === b)
+                        return j
+            }
+            return 0
         }
 
+        // открываюсь ровно на выбранной обои и сразу, без длинного глайда
         function centerOnStart() {
             if (root.walls.length <= 0 || width <= 0)
                 return
+            ready = false
             selectedIndex = Math.max(0, Math.min(currentIndex(), root.walls.length - 1))
             contentX = selectedIndex * step
             ready = true
@@ -300,9 +349,9 @@ PanelWindow {
         }
 
         Behavior on contentX {
-            // как у 43PR: глайдом (SmoothedAnimation), а не рывком
+            // глайдом (SmoothedAnimation), но спокойно: 5000 px/s читалось как «рывок»
             enabled: carousel.ready
-            SmoothedAnimation { velocity: 5000; duration: 1000 }
+            SmoothedAnimation { velocity: 1600; duration: 650 }
         }
 
         Row {
@@ -400,13 +449,16 @@ PanelWindow {
                     MouseArea {
                         anchors.fill: parent
                         hoverEnabled: true
-                        onEntered: carousel.selectedIndex = index
+                        // выбор наведением — только после реального движения мыши,
+                        // иначе при открытии курсор перебивает выбранную обои
+                        onPositionChanged: root.hoverArmed = true
+                        onEntered: if (root.hoverArmed) carousel.selectedIndex = index
                         onClicked: root.commit(index)
                         onWheel: function(wheel) {
                             if (wheel.angleDelta.y === 0)
                                 return
-                            // как у 43PR: колесо катит ленту, дальше глайд и доводка к центру
-                            carousel.flick(-wheel.angleDelta.y * 8, 0)
+                            // спокойно: один шаг за щелчок (раньше было слишком быстро)
+                            root.moveSel(wheel.angleDelta.y > 0 ? -1 : 1)
                             wheel.accepted = true
                         }
                     }
@@ -424,6 +476,7 @@ PanelWindow {
         color: Theme.textFaint
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSmall
+        opacity: root.fade
     }
 
     Text {
@@ -435,6 +488,7 @@ PanelWindow {
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSmall
         font.letterSpacing: 2
+        opacity: root.fade
         MouseArea {
             anchors.fill: parent
             anchors.margins: -Theme.space2
@@ -455,6 +509,7 @@ PanelWindow {
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSmall
         font.letterSpacing: 2
+        opacity: root.fade
         MouseArea {
             anchors.fill: parent
             anchors.margins: -Theme.space2
