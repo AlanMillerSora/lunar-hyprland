@@ -236,6 +236,15 @@ QtObject {
     property int barPad: 12
     property int barRadius: 8
 
+    // панель-остров (этап 2): шапка, строки, ширины режимов
+    property int panelHeaderH: 30
+    property int panelRowH: 30
+    property int panelWControl: 600
+    property int panelWSearch: 520
+    property int panelWNotifs: 460
+    property int panelWSys: 520
+    property int radiusS: 6
+
     // мягкая реакция на наведение — масштаб глифа, без переверстки
     property real hoverGrow: 1.25
 

@@ -18,7 +18,10 @@ Item {
     property color accentColor: Theme.accent
     property int trackHeight: 4
     property int handleSize: 12
-    property bool showLabel: label.length > 0 || icon.length > 0
+    // компактный режим — для инлайн-ползунков в панели: без строки-лейбла,
+    // высота по дорожке (иконку и проценты кладёт вызывающий рядом)
+    property bool compact: false
+    property bool showLabel: !root.compact && (label.length > 0 || icon.length > 0)
 
     // значение во время перетаскивания (не трогаем value, чтобы не рвать
     // привязку вызывающей стороны — иначе ползунок «застревает»)
@@ -38,11 +41,11 @@ Item {
     signal moved(real value)
     signal committed(real value)
 
-    implicitHeight: 50
+    implicitHeight: root.compact ? Math.max(16, root.handleSize + 6) : 50
 
     Column {
         anchors.fill: parent
-        spacing: 8
+        spacing: root.compact ? 0 : 8
 
         Row {
             width: parent.width
