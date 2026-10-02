@@ -40,7 +40,7 @@ PanelWindow {
     // клик-сквозь: ввод ловят левая плашка, бар и раскрытая панель
     mask: Region {
         Region { item: leftBar }
-        Region { item: bar }
+        Region { item: root.expanded ? null : bar }
         Region { item: root.expanded ? panel : null }
     }
 
@@ -428,15 +428,8 @@ PanelWindow {
     function closePanel() { panelMode = "" }
     function togglePanel(name) { panelMode = (panelMode === name ? "" : name) }
 
-    // панель сама закрывается, когда курсор ушёл и с бара, и с панели
-    Timer {
-        id: awayClose
-        interval: 500
-        repeat: false
-        onTriggered: { if (!root.barHovered && !root.panelHovered) root.closePanel() }
-    }
-    onBarHoveredChanged: { if (!root.barHovered && !root.panelHovered) awayClose.restart(); else awayClose.stop() }
-    onPanelHoveredChanged: { if (!root.barHovered && !root.panelHovered) awayClose.restart(); else awayClose.stop() }
+    // панель закрывается кликом по её фону, Esc (поиск) или повторным режимом
+    // (barHovered/panelHovered оставил для будущего) 
 
     // IPC: qs ipc call bar control|media|search|notifs|reset
     IpcHandler {
@@ -546,6 +539,8 @@ PanelWindow {
         radius: Theme.barRadius
         color: root.pillBg
         clip: true
+        // открыт режим — бар уступает место панели, она встаёт на его позицию
+        visible: !root.expanded
 
         HoverHandler { onHoveredChanged: root.barHovered = hovered }
 
@@ -794,6 +789,7 @@ PanelWindow {
         id: midBar
         anchors.left: bar.left
         anchors.verticalCenter: bar.verticalCenter
+        visible: !root.expanded
         height: Theme.barH
         color: "transparent"
         clip: true
@@ -840,6 +836,7 @@ PanelWindow {
         id: rightBar
         anchors.left: centerPill.right
         anchors.verticalCenter: bar.verticalCenter
+        visible: !root.expanded
         height: Theme.barH
         color: "transparent"
         clip: true
@@ -1174,6 +1171,7 @@ PanelWindow {
         id: centerPill
         anchors.left: midBar.right
         anchors.verticalCenter: bar.verticalCenter
+        visible: !root.expanded
         height: Theme.barH
         color: "transparent"
         clip: true
@@ -1339,22 +1337,26 @@ PanelWindow {
         }
     }
 
-    // ── ПАНЕЛЬ: выезжает вниз от бара (вариант 3) ──
-    // Один режим за раз: пульт · медиа · поиск · уведомления.
+    // ── ПАНЕЛЬ: заменяет бар на его же месте (как раньше, но раскрывается) ──
+    // Встаёт вместо бара: пульт и медиа — в строку (высота бара), поиск и
+    // уведомления — выше и вниз. Один режим за раз.
     Rectangle {
         id: panel
-        anchors.top: bar.bottom
-        anchors.topMargin: Theme.space1
-        anchors.horizontalCenter: bar.horizontalCenter
-        width: Math.max(bar.width, 400)
-        height: root.expanded ? 320 : 0
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: Theme.barMargin
+        width: root.panelMode === "control"
+                ? ctlRow.implicitWidth + 2 * Theme.barPad
+            : root.panelMode === "media"
+                ? mediaRow.implicitWidth + 2 * Theme.barPad
+            : Math.max(midBar.width + centerPill.width + rightBar.width, 460)
+        height: (root.panelMode === "search" || root.panelMode === "notifs") ? 320 : Theme.barH
         radius: Theme.barRadius
         color: root.pillBg
         clip: true
-        visible: height > 1
+        visible: root.expanded
+        Behavior on width { NumberAnimation { duration: Theme.animMed; easing.type: Easing.OutCubic } }
         Behavior on height { NumberAnimation { duration: Theme.animMed; easing.type: Easing.OutCubic } }
-        opacity: root.expanded ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
 
         // зерно
         Image {
@@ -1385,13 +1387,19 @@ PanelWindow {
 
         HoverHandler { onHoveredChanged: root.panelHovered = hovered }
 
-        // ── ПУЛЬТ ──
+        // клик по фону панели — закрыть (по кнопкам не срабатывает: они выше)
+        MouseArea {
+            anchors.fill: parent
+            z: -1
+            onClicked: root.closePanel()
+        }
+
+        // ── ПУЛЬТ (в строку) ──
         Row {
+            id: ctlRow
             visible: root.panelMode === "control"
-            anchors.left: parent.left
-            anchors.leftMargin: Theme.barPad
-            anchors.top: parent.top
-            anchors.topMargin: Theme.barPad
+            anchors.centerIn: parent
+            height: 28
             spacing: Theme.space3
 
             Repeater {
@@ -1453,103 +1461,103 @@ PanelWindow {
             }
         }
 
-        // ── МЕДИА ──
-        Column {
+        // ── МЕДИА (в строку) ──
+        Row {
+            id: mediaRow
             visible: root.panelMode === "media"
-            anchors.left: parent.left
-            anchors.leftMargin: Theme.barPad
-            anchors.top: parent.top
-            anchors.topMargin: Theme.barPad
+            anchors.centerIn: parent
+            height: 28
             spacing: Theme.space3
 
-            Row {
-                spacing: Theme.space3
-
-                // обложка трека: монохром, скруглённая
-                Item {
-                    width: 64
-                    height: 64
-                    anchors.verticalCenter: parent.verticalCenter
-                    Image {
-                        id: coverImg
-                        anchors.fill: parent
-                        source: root.player ? (root.player.trackArtUrl || "") : ""
-                        sourceSize: Qt.size(128, 128)
-                        asynchronous: true
-                        fillMode: Image.PreserveAspectCrop
-                        visible: false
-                    }
-                    MultiEffect {
-                        anchors.fill: parent
-                        source: coverImg
-                        visible: coverImg.status === Image.Ready
-                        saturation: -1.0
-                        brightness: 0.06
-                        maskEnabled: true
-                        maskSource: coverMaskP
-                    }
-                    Rectangle {
-                        id: coverMaskP
-                        anchors.fill: parent
-                        radius: Theme.radius
-                        color: "white"
-                        visible: false
-                        layer.enabled: true
-                    }
-                    Text {
-                        anchors.centerIn: parent
-                        visible: coverImg.status !== Image.Ready
-                        text: "\uf001"
-                        color: Theme.barFaint
-                        font.family: Theme.iconFont
-                        font.pixelSize: Theme.fontSize(22)
-                    }
+            // обложка трека: монохром, скруглённая
+            Item {
+                width: 26
+                height: 26
+                anchors.verticalCenter: parent.verticalCenter
+                Image {
+                    id: coverImg
+                    anchors.fill: parent
+                    source: root.player ? (root.player.trackArtUrl || "") : ""
+                    sourceSize: Qt.size(52, 52)
+                    asynchronous: true
+                    fillMode: Image.PreserveAspectCrop
+                    visible: false
                 }
-
-                Column {
-                    spacing: Theme.space2
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    Text {
-                        width: 340
-                        elide: Text.ElideRight
-                        text: root.track.length > 0 ? root.track : "ничего не играет"
-                        color: Theme.barText
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize(14)
-                    }
-                    Row {
-                        spacing: Theme.space4
-                        Text {
-                            text: "\uf048"
-                            color: Theme.barDim
-                            font.family: Theme.iconFont
-                            font.pixelSize: Theme.fontSize(18)
-                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: if (root.player) root.player.previous() }
-                        }
-                        Text {
-                            text: root.playing ? "\uf04c" : "\uf04b"
-                            color: root.playing ? Theme.accent : Theme.barFaint
-                            font.family: Theme.iconFont
-                            font.pixelSize: Theme.fontSize(20)
-                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: if (root.player) root.player.togglePlaying() }
-                        }
-                        Text {
-                            text: "\uf051"
-                            color: Theme.barDim
-                            font.family: Theme.iconFont
-                            font.pixelSize: Theme.fontSize(18)
-                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: if (root.player) root.player.next() }
-                        }
-                    }
-                    Text {
-                        text: "открыть плеер  →"
-                        color: Theme.barDim
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize(12)
-                        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: mediaPanelProc.running = true }
-                    }
+                MultiEffect {
+                    anchors.fill: parent
+                    source: coverImg
+                    visible: coverImg.status === Image.Ready
+                    saturation: -1.0
+                    brightness: 0.06
+                    maskEnabled: true
+                    maskSource: coverMaskP
                 }
+                Rectangle {
+                    id: coverMaskP
+                    anchors.fill: parent
+                    radius: 5
+                    color: "white"
+                    visible: false
+                    layer.enabled: true
+                }
+                Text {
+                    anchors.centerIn: parent
+                    visible: coverImg.status !== Image.Ready
+                    text: "\uf001"
+                    color: Theme.barFaint
+                    font.family: Theme.iconFont
+                    font.pixelSize: Theme.fontSize(14)
+                }
+            }
+
+            Text {
+                text: "\uf048"
+                color: Theme.barDim
+                font.family: Theme.iconFont
+                font.pixelSize: Theme.fontSize(15)
+                anchors.verticalCenter: parent.verticalCenter
+                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: if (root.player) root.player.previous() }
+            }
+            Text {
+                text: root.playing ? "\uf04c" : "\uf04b"
+                color: root.playing ? Theme.accent : Theme.barFaint
+                font.family: Theme.iconFont
+                font.pixelSize: Theme.fontSize(16)
+                anchors.verticalCenter: parent.verticalCenter
+                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: if (root.player) root.player.togglePlaying() }
+            }
+            Text {
+                text: "\uf051"
+                color: Theme.barDim
+                font.family: Theme.iconFont
+                font.pixelSize: Theme.fontSize(15)
+                anchors.verticalCenter: parent.verticalCenter
+                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: if (root.player) root.player.next() }
+            }
+
+            Item {
+                width: 220
+                height: 26
+                anchors.verticalCenter: parent.verticalCenter
+                clip: true
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width
+                    elide: Text.ElideRight
+                    text: root.track
+                    color: Theme.barText
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(12)
+                }
+            }
+
+            Text {
+                text: "\uf03d"
+                color: Theme.barDim
+                font.family: Theme.iconFont
+                font.pixelSize: Theme.fontSize(14)
+                anchors.verticalCenter: parent.verticalCenter
+                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: mediaPanelProc.running = true }
             }
         }
 
@@ -1560,7 +1568,6 @@ PanelWindow {
             anchors.margins: Theme.barPad
             spacing: Theme.space2
 
-            // строка ввода
             Rectangle {
                 width: parent.width
                 height: 34
@@ -1601,7 +1608,6 @@ PanelWindow {
                 }
             }
 
-            // результаты
             Column {
                 width: parent.width
                 spacing: 2
@@ -1624,7 +1630,7 @@ PanelWindow {
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: modelData.icon || ""
                                 color: index === root.searchIndex ? Theme.accent : Theme.textDim
-                                font.family: modelData.kind === "app" ? Theme.iconFont : Theme.iconFont
+                                font.family: Theme.iconFont
                                 font.pixelSize: Theme.fontSize(14)
                             }
                             Text {
