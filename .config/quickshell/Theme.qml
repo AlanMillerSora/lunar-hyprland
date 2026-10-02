@@ -238,7 +238,7 @@ QtObject {
     // панель-остров (этап 2): шапка, строки, ширины режимов
     property int panelHeaderH: 30
     property int panelRowH: 30
-    property int panelWControl: 600
+    property int panelWControl: 660
     property int panelWSearch: 520
     property int panelWNotifs: 460
     property int panelWSys: 520

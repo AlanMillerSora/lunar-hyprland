@@ -516,7 +516,7 @@ PanelWindow {
     onExpandedChanged: root.morph = root.expanded ? 1 : 0
     // высота панели по режиму (анимируется при смене режима)
     function panelHeightFor(m) {
-        if (m === "control") return 150
+        if (m === "control") return Theme.panelHeaderH + ctlBody.implicitHeight + Theme.space4
         if (m === "media") return 30 + mediaPanel.implicitHeight + Theme.space3
         if (m === "search") return 320
         if (m === "notifs") return 320
@@ -1648,194 +1648,265 @@ PanelWindow {
             }
         }
 
-        // ── ПУЛЬТ: чипы действий + инлайн-звук ──
-        Column {
+        // ── ПУЛЬТ: две колонки как у ArchEclipse — слева звук, справа
+        //    сетка действий и показатели. Внутри — карточки-секции,
+        //    никаких «квадратов-кнопок».
+        Item {
             id: ctlBody
             visible: root.panelMode === "control"
             opacity: root.panelContentOpacity
             anchors.top: parent.top
-            anchors.topMargin: Theme.panelHeaderH + Theme.space1
+            anchors.topMargin: Theme.panelHeaderH
             anchors.horizontalCenter: parent.horizontalCenter
-            width: parent.width - Theme.barPad * 2
-            spacing: Theme.space2
+            width: parent.width - Theme.space3 * 2
+            implicitHeight: ctlCols.height
+            height: implicitHeight
 
-            // действия — плоские чипы (без рамок): глиф + подпись
             Row {
-                id: ctlChips
+                id: ctlCols
                 width: parent.width
-                height: Theme.panelRowH
-                spacing: Theme.space2
+                spacing: Theme.space3
 
-                Repeater {
-                    model: root.ctlActions
-                    delegate: Rectangle {
-                        required property var modelData
-                        height: Theme.panelRowH
-                        width: (ctlChips.width - ctlChips.spacing * (root.ctlActions.length - 1))
-                            / root.ctlActions.length
-                        radius: Theme.radiusS
-                        color: modelData.on ? Theme.active
-                            : (chipMouse.containsMouse ? Theme.hoverStrong : Theme.fill)
-                        Behavior on color { ColorAnimation { duration: Theme.animFast } }
+                // ── ЛЕВАЯ КОЛОНКА: звук (вывод + микрофон) ──
+                Column {
+                    width: (ctlCols.width - ctlCols.spacing) / 2
+                    spacing: Theme.space3
 
-                        Row {
-                            id: chipRow
-                            anchors.centerIn: parent
-                            spacing: Theme.space2
-                            Text {
-                                anchors.verticalCenter: parent.verticalCenter
-                                text: modelData.g
-                                color: modelData.on ? Theme.accent
-                                    : (chipMouse.containsMouse ? Theme.barText : Theme.barDim)
-                                font.family: Theme.iconFont
-                                font.pixelSize: Theme.fontSize(15)
-                            }
-                            Text {
-                                anchors.verticalCenter: parent.verticalCenter
-                                text: modelData.label
-                                color: modelData.on ? Theme.text : Theme.textDim
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSize(12)
-                            }
-                        }
+                    // карточка: вывод
+                    Rectangle {
+                        width: parent.width
+                        height: outCard.implicitHeight + Theme.space3 * 2
+                        radius: Theme.radiusM
+                        color: Theme.fill
 
-                        MouseArea {
-                            id: chipMouse
+                        Column {
+                            id: outCard
                             anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (modelData.act === "game")
-                                    root.toggleGameMode()
-                                else if (modelData.act === "rec")
-                                    root.toggleRecording()
-                                else if (modelData.act === "power")
-                                    root.openPower()
-                                else if (modelData.act === "hub")
-                                    root.openHub()
-                                else if (modelData.act === "wall")
-                                    root.openWallpapers()
-                                else if (modelData.act === "search")
-                                    root.openPanel("search")
+                            anchors.margins: Theme.space3
+                            spacing: Theme.space2
+
+                            Row {
+                                width: parent.width
+                                spacing: Theme.space2
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: root.muted ? "\uf026"
+                                        : (root.vol < 0.34 ? "\uf027" : "\uf028")
+                                    color: root.muted ? Theme.danger : Theme.accent
+                                    font.family: Theme.iconFont
+                                    font.pixelSize: 15
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: root.toggleMute()
+                                    }
+                                }
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: "ВЫВОД"
+                                    color: Theme.textDim
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 11
+                                    font.bold: true
+                                    font.letterSpacing: 2
+                                }
+                                Item { width: parent.width - 90; height: 1 }
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: root.muted ? "mute" : Math.round(root.vol * 100) + "%"
+                                    color: root.muted ? Theme.textFaint : Theme.accent
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 12
+                                }
+                            }
+
+                            Slider {
+                                width: parent.width
+                                height: 18
+                                compact: true
+                                trackHeight: 5
+                                handleSize: 13
+                                value: root.muted ? 0 : root.vol
+                                onMoved: (v) => root.setVol(v)
+                                onCommitted: (v) => root.setVol(v)
+                                WheelHandler {
+                                    onWheel: (ev) => root.bumpVol(ev.angleDelta.y > 0 ? 0.05 : -0.05)
+                                }
+                            }
+                        }
+                    }
+
+                    // карточка: микрофон
+                    Rectangle {
+                        width: parent.width
+                        height: micCard.implicitHeight + Theme.space3 * 2
+                        radius: Theme.radiusM
+                        color: Theme.fill
+
+                        Column {
+                            id: micCard
+                            anchors.fill: parent
+                            anchors.margins: Theme.space3
+                            spacing: Theme.space2
+
+                            Row {
+                                width: parent.width
+                                spacing: Theme.space2
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: root.micMuted ? "\uf131" : "\uf130"
+                                    color: root.micMuted ? Theme.danger : Theme.accent
+                                    font.family: Theme.iconFont
+                                    font.pixelSize: 15
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: root.toggleMicMute()
+                                    }
+                                }
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: "МИКРОФОН"
+                                    color: Theme.textDim
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 11
+                                    font.bold: true
+                                    font.letterSpacing: 2
+                                }
+                                Item { width: parent.width - 110; height: 1 }
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: root.micMuted ? "off" : Math.round(root.micVol * 100) + "%"
+                                    color: root.micMuted ? Theme.textFaint : Theme.accent
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 12
+                                }
+                            }
+
+                            Slider {
+                                width: parent.width
+                                height: 18
+                                compact: true
+                                trackHeight: 5
+                                handleSize: 13
+                                value: root.micMuted ? 0 : root.micVol
+                                onMoved: (v) => root.setMicVol(v)
+                                onCommitted: (v) => root.setMicVol(v)
+                                WheelHandler {
+                                    onWheel: (ev) => root.bumpMic(ev.angleDelta.y > 0 ? 0.05 : -0.05)
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            // тонкая разделительная линия перед звуком
-            Rectangle {
-                width: parent.width
-                height: 1
-                color: Theme.border
-            }
+                // ── ПРАВАЯ КОЛОНКА: действия (сетка 2×3) и показатели ──
+                Column {
+                    width: (ctlCols.width - ctlCols.spacing) / 2
+                    spacing: Theme.space3
 
-            // ── звук: ВЫВОД (иконка — mute, drag — уровень, колесо — шаг) ──
-            Row {
-                id: outRow
-                width: parent.width
-                height: 24
-                spacing: Theme.space2
+                    Grid {
+                        id: actGrid
+                        width: parent.width
+                        columns: 3
+                        columnSpacing: Theme.space2
+                        rowSpacing: Theme.space2
 
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 44
-                    text: "ВЫВОД"
-                    color: Theme.textFaint
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontTiny
-                    font.letterSpacing: 1
-                }
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 18
-                    text: root.muted ? "󰖁"
-                        : (root.vol < 0.34 ? "󰕿" : (root.vol < 0.67 ? "󰖀" : "󰕾"))
-                    color: root.muted ? Theme.danger : Theme.barText
-                    font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSize(16)
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.toggleMute()
+                        Repeater {
+                            model: root.ctlActions
+                            delegate: Rectangle {
+                                required property var modelData
+                                width: (actGrid.width - actGrid.columnSpacing * 2) / 3
+                                height: 46
+                                radius: Theme.radius
+                                color: modelData.on ? Theme.active
+                                    : (actMouse.containsMouse ? Theme.hoverStrong : Theme.fill)
+                                Behavior on color { ColorAnimation { duration: Theme.animFast } }
+
+                                Column {
+                                    anchors.centerIn: parent
+                                    spacing: 2
+                                    Text {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        text: modelData.g
+                                        color: modelData.on ? Theme.accent
+                                            : (actMouse.containsMouse ? Theme.barText : Theme.barDim)
+                                        font.family: Theme.iconFont
+                                        font.pixelSize: 16
+                                    }
+                                    Text {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        text: modelData.label
+                                        color: modelData.on ? Theme.text : Theme.textFaint
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: 10
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: actMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        if (modelData.act === "game")
+                                            root.toggleGameMode()
+                                        else if (modelData.act === "rec")
+                                            root.toggleRecording()
+                                        else if (modelData.act === "power")
+                                            root.openPower()
+                                        else if (modelData.act === "hub")
+                                            root.openHub()
+                                        else if (modelData.act === "wall")
+                                            root.openWallpapers()
+                                        else if (modelData.act === "search")
+                                            root.openPanel("search")
+                                    }
+                                }
+                            }
+                        }
                     }
-                }
-                Slider {
-                    id: outSlider
-                    compact: true
-                    trackHeight: 5
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: outRow.width - 44 - 18 - 40 - outRow.spacing * 3
-                    value: root.muted ? 0 : root.vol
-                    onMoved: (v) => root.setVol(v)
-                    onCommitted: (v) => root.setVol(v)
-                }
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 40
-                    horizontalAlignment: Text.AlignRight
-                    text: root.muted ? "mute" : Math.round(root.vol * 100) + "%"
-                    color: root.muted ? Theme.textFaint : Theme.barDim
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(12)
-                }
 
-                // колесо над строкой — быстрый шаг
-                WheelHandler {
-                    onWheel: (ev) => root.bumpVol(ev.angleDelta.y > 0 ? 0.05 : -0.05)
-                }
-            }
-
-            // ── звук: МИКРОФОН ──
-            Row {
-                id: micRow
-                width: parent.width
-                height: 24
-                spacing: Theme.space2
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 44
-                    text: "МИК"
-                    color: Theme.textFaint
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontTiny
-                    font.letterSpacing: 1
-                }
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 18
-                    text: root.micMuted ? "\uf131" : "\uf130"
-                    color: root.micMuted ? Theme.danger : Theme.barText
-                    font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSize(15)
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.toggleMicMute()
+                    // карточка: живые показатели (открывается телеметрия)
+                    Rectangle {
+                        width: parent.width
+                        height: 46
+                        radius: Theme.radius
+                        color: Theme.fill
+                        Row {
+                            anchors.fill: parent
+                            anchors.leftMargin: Theme.space3
+                            anchors.rightMargin: Theme.space3
+                            spacing: Theme.space3
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: "CPU " + root.teleCpu + "%"
+                                color: Theme.textDim
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 11
+                            }
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: "RAM " + root.teleRam + "%"
+                                color: Theme.textDim
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 11
+                            }
+                            Item { width: parent.width - 130; height: 1 }
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: "\uf185 " + (root.teleGpu >= 0 ? root.teleGpu + "%" : "--")
+                                color: Theme.textFaint
+                                font.family: Theme.iconFont
+                                font.pixelSize: 11
+                            }
+                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.openPanel("sys")
+                        }
                     }
-                }
-                Slider {
-                    compact: true
-                    trackHeight: 5
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: micRow.width - 44 - 18 - 40 - micRow.spacing * 3
-                    value: root.micMuted ? 0 : root.micVol
-                    onMoved: (v) => root.setMicVol(v)
-                    onCommitted: (v) => root.setMicVol(v)
-                }
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 40
-                    horizontalAlignment: Text.AlignRight
-                    text: root.micMuted ? "off" : Math.round(root.micVol * 100) + "%"
-                    color: root.micMuted ? Theme.textFaint : Theme.barDim
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(12)
-                }
-
-                WheelHandler {
-                    onWheel: (ev) => root.bumpMic(ev.angleDelta.y > 0 ? 0.05 : -0.05)
                 }
             }
         }
