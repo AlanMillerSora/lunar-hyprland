@@ -512,8 +512,8 @@ FloatingWindow {
                                             anchors.verticalCenter: parent.verticalCenter
                                         }
                                         Image {
-                                            width: 22
-                                            height: 22
+                                            width: 18
+                                            height: 18
                                             visible: modelData.kind === "app"
                                                 && source != "" && status === Image.Ready
                                             source: modelData.kind === "app" && modelData.app.icon

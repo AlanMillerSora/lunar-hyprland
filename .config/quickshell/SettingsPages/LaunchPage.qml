@@ -132,8 +132,8 @@ Item {
                     spacing: 6
 
                     Item {
-                        width: 58
-                        height: 58
+                        width: 46
+                        height: 46
                         anchors.horizontalCenter: parent.horizontalCenter
 
                         // подложка: даёт иконкам одинаковый вес и «плитку»,
@@ -149,8 +149,8 @@ Item {
                         Image {
                             id: appIcon
                             anchors.centerIn: parent
-                            width: 46
-                            height: 46
+                            width: 34
+                            height: 34
                             sourceSize: Qt.size(160, 160)
                             fillMode: Image.PreserveAspectFit
                             smooth: true
@@ -179,7 +179,7 @@ Item {
                             text: AppModel.initials(modelData.name)
                             color: Theme.textDim
                             font.family: Theme.fontFamily
-                            font.pixelSize: 18
+                            font.pixelSize: 15
                             font.bold: true
                         }
                     }
