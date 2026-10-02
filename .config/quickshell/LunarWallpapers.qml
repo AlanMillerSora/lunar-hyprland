@@ -27,11 +27,11 @@ PanelWindow {
     property string thumbDir: Quickshell.env("HOME") + "/.cache/lunar/wall-thumbs"
 
     // ── веер ──
-    property int visibleCount: 10
+    property int visibleCount: 8
     property real zoomScale: 0.8
     property real edgeScale: 0.3
     property real edgeSpacing: 80
-    property int tileHeight: 900
+    property int tileHeight: 1080
 
     visible: root.showing
     color: "transparent"
@@ -262,8 +262,6 @@ PanelWindow {
         clip: true
         contentHeight: height
         boundsBehavior: Flickable.StopAtBounds
-        flickDeceleration: 800
-        maximumFlickVelocity: 6000
         // вход: лента мягко проявляется
         opacity: root.showing ? 1 : 0
         scale: root.showing ? 1 : 0.97
@@ -293,7 +291,7 @@ PanelWindow {
         }
 
         onWidthChanged: centerOnStart()
-        // после свободного флика прилипаю к ближайшей к центру карточке
+        // после свободного флика мягко довожу ближайшую карточку в центр
         onMovementEnded: {
             if (root.walls.length <= 0)
                 return
@@ -302,9 +300,9 @@ PanelWindow {
         }
 
         Behavior on contentX {
-            // во время свободного флика не мешаю физике, потом мягко довожу
-            enabled: carousel.ready && !carousel.moving
-            NumberAnimation { duration: 320; easing.type: Easing.OutCubic }
+            // как у 43PR: глайдом (SmoothedAnimation), а не рывком
+            enabled: carousel.ready
+            SmoothedAnimation { velocity: 5000; duration: 1000 }
         }
 
         Row {
@@ -407,8 +405,8 @@ PanelWindow {
                         onWheel: function(wheel) {
                             if (wheel.angleDelta.y === 0)
                                 return
-                            // инерционный флик: колесо катит ленту, потом прилипает к центру
-                            carousel.flick(-wheel.angleDelta.y * 12, 0)
+                            // как у 43PR: колесо катит ленту, дальше глайд и доводка к центру
+                            carousel.flick(-wheel.angleDelta.y * 8, 0)
                             wheel.accepted = true
                         }
                     }
