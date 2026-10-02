@@ -6,9 +6,9 @@ import QtQuick
 import QtQuick.Layouts
 
 // ════════════════════════════════════════════════════════════════
-//  LunarSidebarRight — правая панель: уведомления (mako),
-//  «сейчас играет» (mpris) и календарь. Выезжает от правого края
-//  по наведению. IPC:  qs ipc call rsidebar toggle|open|close
+//  LunarSidebarRight — правая панель: музыка, календарь, запись.
+//  Выезжает от правого края по наведению. Уведомления переехали в панель бара.
+//  IPC:  qs ipc call rsidebar toggle|open|close
 // ════════════════════════════════════════════════════════════════
 PanelWindow {
     id: root
@@ -25,7 +25,7 @@ PanelWindow {
     property bool collapsed: true
     property int tabIndex: 0
 
-    function openPanel() { collapsed = false; notif.load(); recModel.load(); recStatusProc.running = true; cal.reload() }
+    function openPanel() { collapsed = false; recModel.load(); recStatusProc.running = true; cal.reload() }
     function closePanel() { collapsed = true }
     // M35: открытие по IPC тоже подтягивает данные — toggle не должен просто переключать флаг
     function toggle() { if (collapsed) openPanel(); else closePanel() }
@@ -71,7 +71,7 @@ PanelWindow {
         function toggle(): void { root.toggle() }
         function open(): void { root.openPanel() }
         function close(): void { root.closePanel() }
-        function tab(idx: int): void { root.tabIndex = Math.max(0, Math.min(3, idx)) }
+        function tab(idx: int): void { root.tabIndex = Math.max(0, Math.min(2, idx)) }
     }
 
     // кнопка «горячие клавиши» в шапке панели
@@ -84,7 +84,7 @@ PanelWindow {
     // cava для вкладки «музыка»: только когда вкладка видна и реально играет
     Process {
         id: cavaProc
-        running: root.tabIndex === 1 && root.mediaPlaying && !root.collapsed
+        running: root.tabIndex === 0 && root.mediaPlaying && !root.collapsed
         command: ["cava", "-p", Quickshell.shellPath("cava-lunar-wide.conf")]
         stdout: SplitParser {
             splitMarker: "\n"
@@ -230,7 +230,7 @@ PanelWindow {
                     spacing: Theme.space1
                     Repeater {
                         id: rightTabRep
-                        model: ["уведомления", "музыка", "календарь", "запись"]
+                        model: ["музыка", "календарь", "запись"]
                         delegate: Rectangle {
                             required property int index
                             required property string modelData
@@ -288,184 +288,6 @@ PanelWindow {
                 Layout.fillHeight: true
                 currentIndex: root.tabIndex
 
-                // ═══════════ уведомления ═══════════
-                Rectangle {
-                    color: Theme.bgCard
-                    radius: Theme.radius
-
-                    ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: Theme.space4
-                        spacing: Theme.space2
-
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: Theme.space2
-                            Text {
-                                text: "уведомления"
-                                color: Theme.textDim
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSize(14)
-                            }
-                            Text {
-                                text: notif.items.length
-                                color: Theme.textFaint
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSize(14)
-                            }
-                            Item { Layout.fillWidth: true }
-
-                            // DND
-                            Rectangle {
-                                Layout.preferredWidth: 34
-                                Layout.preferredHeight: 26
-                                radius: Theme.radius
-                                color: notif.dnd ? Theme.alpha(Theme.danger, 0.15) : "transparent"
-                                border.width: notif.dnd ? 1 : 0
-                                border.color: Theme.danger
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: notif.dnd ? "\uf1f6" : "\uf0f3"
-                                    color: notif.dnd ? Theme.danger : Theme.textDim
-                                    font.family: Theme.iconFont
-                                    font.pixelSize: Theme.fontSize(15)
-                                }
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: notif.toggleDnd()
-                                }
-                            }
-
-                            // очистить всё
-                            Rectangle {
-                                Layout.preferredWidth: 82
-                                Layout.preferredHeight: 26
-                                radius: Theme.radius
-                                color: clearMouse.containsMouse ? Theme.alpha(Theme.danger, 0.12) : "transparent"
-                                border.width: clearMouse.containsMouse ? 1 : 0
-                                border.color: Theme.danger
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "очистить"
-                                    color: clearMouse.containsMouse ? Theme.danger : Theme.textFaint
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSize(13)
-                                }
-                                MouseArea {
-                                    id: clearMouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: notif.clear()
-                                }
-                            }
-                        }
-
-                        ListView {
-                            id: notifList
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            clip: true
-                            spacing: 6
-                            model: notif.items
-
-                            delegate: Rectangle {
-                                id: notifItem
-                                required property var modelData
-                                readonly property bool expanded: notif.expandedId === modelData.id
-
-                                width: notifList.width
-                                height: bodyCol.implicitHeight + Theme.space4
-                                radius: Theme.radius
-                                color: notifItem.expanded
-                                    ? Theme.active
-                                    : (itemMouse.containsMouse ? Theme.hover : "transparent")
-
-                                // клик — раскрыть/свернуть; крестик убирает (ниже)
-                                MouseArea {
-                                    id: itemMouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: notif.toggleExpand(modelData.id)
-                                }
-
-                                Column {
-                                    id: bodyCol
-                                    anchors.left: parent.left
-                                    anchors.right: parent.right
-                                    anchors.leftMargin: Theme.space3
-                                    anchors.rightMargin: 28
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    spacing: 2
-
-                                    Text {
-                                        width: parent.width
-                                        text: modelData.app
-                                        color: Theme.textFaint
-                                        font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSize(13)
-                                        elide: Text.ElideRight
-                                    }
-                                    Text {
-                                        width: parent.width
-                                        text: modelData.summary
-                                        color: Theme.text
-                                        font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSize(15)
-                                        wrapMode: notifItem.expanded ? Text.Wrap : Text.NoWrap
-                                        elide: notifItem.expanded ? Text.ElideNone : Text.ElideRight
-                                        maximumLineCount: notifItem.expanded ? 6 : 1
-                                    }
-                                    Text {
-                                        width: parent.width
-                                        visible: modelData.body.length > 0
-                                        text: modelData.body
-                                        color: Theme.textDim
-                                        font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSize(14)
-                                        wrapMode: notifItem.expanded ? Text.Wrap : Text.NoWrap
-                                        elide: notifItem.expanded ? Text.ElideNone : Text.ElideRight
-                                        maximumLineCount: notifItem.expanded ? 100 : 1
-                                    }
-                                }
-
-                                // крестик — убрать уведомление (поверх клика-раскрытия)
-                                Text {
-                                    id: dismissBtn
-                                    anchors.top: parent.top
-                                    anchors.right: parent.right
-                                    anchors.topMargin: 5
-                                    anchors.rightMargin: Theme.space2
-                                    text: "\uf00d"
-                                    color: dismissMouse.containsMouse ? Theme.danger : Theme.textFaint
-                                    font.family: Theme.iconFont
-                                    font.pixelSize: Theme.fontSize(13)
-                                    z: 1
-                                    MouseArea {
-                                        id: dismissMouse
-                                        anchors.fill: parent
-                                        anchors.margins: -6
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: notif.dismiss(modelData.id)
-                                    }
-                                }
-                            }
-                        }
-
-                        Text {
-                            Layout.fillWidth: true
-                            visible: notif.items.length === 0
-                            text: notif.dnd ? "режим «не беспокоить»" : "уведомлений нет"
-                            color: Theme.textFaint
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(15)
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-                    }
-                }
 
                 // ═══════════ сейчас играет ═══════════
                 Rectangle {
