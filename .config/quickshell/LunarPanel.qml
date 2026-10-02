@@ -421,6 +421,16 @@ PanelWindow {
     // (clip+opacity); повторный клик, Esc или уход курсора — свернуть.
     property string panelMode: ""   // "" | control | media | search | notifs
     readonly property bool expanded: panelMode !== ""
+    // появление контента режима (морфинг)
+    property real panelContentOpacity: 1
+    NumberAnimation {
+        id: panelFade
+        target: root
+        property: "panelContentOpacity"
+        to: 1
+        duration: 180
+        easing.type: Easing.OutCubic
+    }
     property bool panelHovered: false
     property bool barHovered: false
 
@@ -474,6 +484,8 @@ PanelWindow {
 
     // при открытии режима: уведы — обновить, поиск — фокус на поле
     onPanelModeChanged: {
+        root.panelContentOpacity = 0
+        panelFade.restart()
         if (panelMode === "notifs")
             NotifModel.load()
         else if (panelMode === "search")
@@ -1086,20 +1098,20 @@ PanelWindow {
                     height: 26
                     spacing: Theme.space3
 
-                    // уведомления / «не беспокоить» (клик — переключить)
+                    // уведомления: клик — открыть панель (активные + история)
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         width: Math.max(fmIcon15.advanceWidth("\uf1f6"), fmIcon15.advanceWidth("\uf0f3"))
                         text: root.dnd ? "\uf1f6" : "\uf0f3"
-                        color: root.dnd
-                            ? Theme.barFaint
-                            : (root.notifCount > 0 ? Theme.barText : Theme.barDim)
+                        color: root.panelMode === "notifs" ? Theme.accent
+                            : (root.dnd ? Theme.barFaint
+                               : (root.notifCount > 0 ? Theme.barText : Theme.barDim))
                         font.family: Theme.iconFont
                         font.pixelSize: Theme.fontSize(15)
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: root.toggleDnd()
+                            onClicked: root.togglePanel("notifs")
                         }
                     }
                     Text {
@@ -1353,6 +1365,8 @@ PanelWindow {
         height: (root.panelMode === "search" || root.panelMode === "notifs") ? 320 : Theme.barH
         radius: Theme.barRadius
         color: root.pillBg
+        border.width: 1
+        border.color: Theme.border
         clip: true
         visible: root.expanded
         Behavior on width { NumberAnimation { duration: Theme.animMed; easing.type: Easing.OutCubic } }
@@ -1398,6 +1412,7 @@ PanelWindow {
         Row {
             id: ctlRow
             visible: root.panelMode === "control"
+            opacity: root.panelContentOpacity
             anchors.centerIn: parent
             height: 28
             spacing: Theme.space3
@@ -1459,12 +1474,29 @@ PanelWindow {
                     }
                 }
             }
+
+            // закрыть
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: "\uf00d"
+                color: ctlCloseMouse.containsMouse ? Theme.danger : Theme.barFaint
+                font.family: Theme.iconFont
+                font.pixelSize: Theme.fontSize(14)
+                MouseArea {
+                    id: ctlCloseMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.closePanel()
+                }
+            }
         }
 
         // ── МЕДИА (в строку) ──
         Row {
             id: mediaRow
             visible: root.panelMode === "media"
+            opacity: root.panelContentOpacity
             anchors.centerIn: parent
             height: 28
             spacing: Theme.space3
@@ -1559,11 +1591,22 @@ PanelWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: mediaPanelProc.running = true }
             }
+
+            // закрыть
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: "\uf00d"
+                color: mediaCloseMouse.containsMouse ? Theme.danger : Theme.barFaint
+                font.family: Theme.iconFont
+                font.pixelSize: Theme.fontSize(14)
+                MouseArea { id: mediaCloseMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.closePanel() }
+            }
         }
 
         // ── ПОИСК ──
         Column {
             visible: root.panelMode === "search"
+            opacity: root.panelContentOpacity
             anchors.fill: parent
             anchors.margins: Theme.barPad
             spacing: Theme.space2
@@ -1606,6 +1649,14 @@ PanelWindow {
                         font.pixelSize: Theme.fontSize(14)
                     }
                 }
+            }
+
+            Text {
+                visible: root.searchQuery.trim() !== "" && root.searchResults.length === 0
+                text: "ничего не найдено"
+                color: Theme.textFaint
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize(13)
             }
 
             Column {
@@ -1665,6 +1716,7 @@ PanelWindow {
         // ── УВЕДОМЛЕНИЯ ──
         Column {
             visible: root.panelMode === "notifs"
+            opacity: root.panelContentOpacity
             anchors.fill: parent
             anchors.margins: Theme.barPad
             spacing: Theme.space2
@@ -1715,68 +1767,144 @@ PanelWindow {
                 font.pixelSize: Theme.fontSize(13)
             }
 
-            Column {
+            // список (скроллится)
+            ListView {
+                id: notifList
                 width: parent.width
+                height: parent.height - y
+                clip: true
                 spacing: Theme.space1
-                Repeater {
-                    model: NotifModel.items
-                    delegate: Rectangle {
-                        required property var modelData
-                        readonly property bool expanded: NotifModel.expandedId === modelData.id
-                        width: parent.width
-                        height: expanded ? Math.min(120, bodyText.implicitHeight + 46) : 40
-                        radius: Theme.radius
-                        color: expanded ? Theme.fill : (notifMouse.containsMouse ? Theme.hover : "transparent")
-                        Behavior on height { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
-                        Column {
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.leftMargin: Theme.space2
-                            anchors.rightMargin: Theme.space2
-                            anchors.verticalCenter: parent.verticalCenter
-                            spacing: 2
-                            Row {
-                                width: parent.width
-                                spacing: Theme.space2
-                                Text {
-                                    text: modelData.app
-                                    color: Theme.textDim
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontTiny
-                                }
-                                Text {
-                                    width: parent.width - 120
-                                    elide: Text.ElideRight
-                                    text: modelData.summary
-                                    color: Theme.text
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSize(12)
-                                    font.bold: true
-                                }
-                            }
-                            Text {
-                                id: bodyText
-                                width: parent.width
-                                visible: expanded
-                                wrapMode: Text.Wrap
-                                maximumLineCount: 4
-                                elide: Text.ElideRight
-                                text: modelData.body
-                                color: Theme.textDim
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSize(12)
+                model: NotifModel.items
+
+                delegate: Rectangle {
+                    required property var modelData
+                    readonly property bool expanded: NotifModel.expandedId === modelData.id
+                    width: notifList.width
+                    height: expanded ? Math.min(140, bodyText.implicitHeight + 46) : 40
+                    radius: Theme.radius
+                    color: expanded ? Theme.fill : (notifMouse.containsMouse ? Theme.hover : "transparent")
+
+                    // важность слева
+                    Rectangle {
+                        anchors.left: parent.left
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 3
+                        height: parent.height - 12
+                        radius: 1.5
+                        color: modelData.urgency === "critical" ? Theme.danger
+                            : (modelData.urgency === "low" ? Theme.borderAccent : Theme.accent)
+                        opacity: 0.8
+                    }
+
+                    // иконка приложения (монохром)
+                    Item {
+                        id: notifIcon
+                        anchors.left: parent.left
+                        anchors.leftMargin: Theme.space3
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 20
+                        height: 20
+                        Image {
+                            id: nIcon
+                            anchors.fill: parent
+                            visible: false
+                            asynchronous: true
+                            sourceSize: Qt.size(40, 40)
+                            fillMode: Image.PreserveAspectFit
+                            source: {
+                                var ic = modelData.icon || ""
+                                if (ic === "") return ""
+                                if (ic.charAt(0) === "/") return "file://" + ic
+                                if (ic.indexOf("file://") === 0 || ic.indexOf("image://") === 0) return ic
+                                return Quickshell.hasThemeIcon(ic) ? Quickshell.iconPath(ic, true) : ""
                             }
                         }
-                        MouseArea {
-                            id: notifMouse
+                        MultiEffect {
                             anchors.fill: parent
+                            source: nIcon
+                            visible: nIcon.status === Image.Ready
+                            saturation: -1.0
+                            brightness: 0.15
+                            contrast: 0.05
+                        }
+                        Text {
+                            anchors.centerIn: parent
+                            visible: nIcon.status !== Image.Ready
+                            text: "\uf0f3"
+                            color: Theme.textFaint
+                            font.family: Theme.iconFont
+                            font.pixelSize: Theme.fontSize(13)
+                        }
+                    }
+
+                    Column {
+                        anchors.left: notifIcon.right
+                        anchors.leftMargin: Theme.space3
+                        anchors.right: dismissBtn.left
+                        anchors.rightMargin: Theme.space2
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 2
+
+                        Text {
+                            width: parent.width
+                            elide: Text.ElideRight
+                            text: modelData.app
+                            color: Theme.textDim
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontTiny
+                        }
+                        Text {
+                            width: parent.width
+                            elide: Text.ElideRight
+                            text: modelData.summary
+                            color: Theme.text
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize(12)
+                            font.bold: true
+                        }
+                        Text {
+                            id: bodyText
+                            width: parent.width
+                            visible: expanded && modelData.body.length > 0
+                            wrapMode: Text.Wrap
+                            maximumLineCount: 4
+                            elide: Text.ElideRight
+                            text: modelData.body
+                            color: Theme.textDim
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize(12)
+                        }
+                    }
+
+                    Text {
+                        id: dismissBtn
+                        anchors.right: parent.right
+                        anchors.rightMargin: Theme.space2
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "\uf00d"
+                        color: dismissMouse.containsMouse ? Theme.danger
+                            : (notifMouse.containsMouse ? Theme.textFaint : "transparent")
+                        font.family: Theme.iconFont
+                        font.pixelSize: Theme.fontSize(13)
+                        MouseArea {
+                            id: dismissMouse
+                            anchors.fill: parent
+                            anchors.margins: -6
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            acceptedButtons: Qt.LeftButton | Qt.MiddleButton
-                            onClicked: function(m) {
-                                if (m.button === Qt.MiddleButton) NotifModel.dismiss(modelData.id)
-                                else NotifModel.toggleExpand(modelData.id)
-                            }
+                            onClicked: NotifModel.dismiss(modelData.id)
+                        }
+                    }
+
+                    MouseArea {
+                        id: notifMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+                        onClicked: function(m) {
+                            if (m.button === Qt.MiddleButton) NotifModel.dismiss(modelData.id)
+                            else NotifModel.toggleExpand(modelData.id)
                         }
                     }
                 }

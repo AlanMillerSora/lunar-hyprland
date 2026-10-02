@@ -33,7 +33,9 @@ QtObject {
                 id: n.id,
                 app: n.app_name || "",
                 summary: n.summary || "",
-                body: (n.body || "").replace(/\n/g, " ")
+                body: (n.body || "").replace(/\n/g, " "),
+                icon: n.app_icon || n.icon || "",
+                urgency: n.urgency || "normal"
             })
         }
         items = out
