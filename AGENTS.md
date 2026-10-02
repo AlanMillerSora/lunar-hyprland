@@ -182,7 +182,9 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 - `shell.qml` — корневой `ShellRoot`. Синглтоны (`pragma Singleton`): `Theme`, `AppModel`.
 - Hub-страницы (nav, 8): 0 Launch ·1 System ·2 Devices ·3 Network ·4 Interface ·
   5 Games ·6 Dev ·7 Update. Обои (сцена или картинки) — внутри Interface и в окне
-  подбора `LunarWallpapers` (IPC `wallpapers`, хоткей `SUPER + B`).
+  подбора `LunarWallpapers` (IPC `wallpapers`, хоткей `SUPER + B`): оверлей-веер с зумом
+  от центра, инерционный глайд, затемнение и подтверждение; картинки — из миниатюр
+  `~/.cache/lunar/wall-thumbs`, сами обои — `~/Pictures/Wallpapers` (набор 43PR, 21:9).
 - Левый сайдбар: 0 api-limit ·1 заметки. Правый: 0 уведомления ·1 музыка ·2 календарь ·3 запись.
 - 9 столов: 1 игры ·2 Firefox ·3 Discord ·4 Steam ·5 затмение/пусто ·6 кодинг ·7/8 пусто ·9 btop.
   **Фаза обоев = номер стола.**
@@ -339,6 +341,10 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 - Проверки экрана: `grim -g "X,Y WxH"` (не `WxH+X+Y`), `-o` и `-g` несовместимы. Окно
   OpenCode живёт в scratchpad (`kitty`, почти во весь экран) — для чистых скринов его прятать
   (`hl.dsp.workspace.toggle_special("scratchpad")`) или замерять пиксель у самого края экрана.
+- Не бросай `magick`/массовые конвертации без присмотра: прерванный `magick montage`
+  на сотни картинок завис в состоянии `D` и съел 18 ГБ (лечится `kill -9`). Проверять
+  `ps -eo pid,stat,rss,comm --sort=-rss | head` и `free -h`; сотни картинок монтировать
+  частями, а не одной командой.
 - Цвет из картинки: `eclipse-palette.py --from-image ФАЙЛ --apply` (доминирующий цвет через
   ImageMagick → фон/панель/акцент/текст; результат — пресет `photo`).
 - `cliphist delete` читает stdin: `cliphist list | grep -P '^ID\t' | cliphist delete`.
