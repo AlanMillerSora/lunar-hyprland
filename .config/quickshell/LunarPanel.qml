@@ -421,6 +421,13 @@ PanelWindow {
     // (clip+opacity); повторный клик, Esc или уход курсора — свернуть.
     property string panelMode: ""   // "" | control | media | search | notifs
     readonly property bool expanded: panelMode !== ""
+    // морф бар↔панель: 0 — бар, 1 — панель (кроссфейд + раскрытие вниз)
+    property real morph: 0
+    Behavior on morph { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+    onExpandedChanged: root.morph = root.expanded ? 1 : 0
+    // высота панели по режиму (анимируется при смене режима)
+    property real panelTargetH: (panelMode === "search" || panelMode === "notifs") ? 320 : Theme.barH
+    Behavior on panelTargetH { NumberAnimation { duration: Theme.animMed; easing.type: Easing.OutCubic } }
     // появление контента режима (морфинг)
     property real panelContentOpacity: 1
     NumberAnimation {
@@ -551,8 +558,8 @@ PanelWindow {
         radius: Theme.barRadius
         color: root.pillBg
         clip: true
-        // открыт режим — бар уступает место панели, она встаёт на его позицию
-        visible: !root.expanded
+        // открыт режим — бар уступает место панели (кроссфейд)
+        opacity: 1 - root.morph
 
         HoverHandler { onHoveredChanged: root.barHovered = hovered }
 
@@ -801,7 +808,7 @@ PanelWindow {
         id: midBar
         anchors.left: bar.left
         anchors.verticalCenter: bar.verticalCenter
-        visible: !root.expanded
+        opacity: 1 - root.morph
         height: Theme.barH
         color: "transparent"
         clip: true
@@ -848,7 +855,7 @@ PanelWindow {
         id: rightBar
         anchors.left: centerPill.right
         anchors.verticalCenter: bar.verticalCenter
-        visible: !root.expanded
+        opacity: 1 - root.morph
         height: Theme.barH
         color: "transparent"
         clip: true
@@ -1183,7 +1190,7 @@ PanelWindow {
         id: centerPill
         anchors.left: midBar.right
         anchors.verticalCenter: bar.verticalCenter
-        visible: !root.expanded
+        opacity: 1 - root.morph
         height: Theme.barH
         color: "transparent"
         clip: true
@@ -1362,15 +1369,17 @@ PanelWindow {
             : root.panelMode === "media"
                 ? mediaRow.implicitWidth + 2 * Theme.barPad
             : Math.max(midBar.width + centerPill.width + rightBar.width, 460)
-        height: (root.panelMode === "search" || root.panelMode === "notifs") ? 320 : Theme.barH
+        height: root.morph * root.panelTargetH
         radius: Theme.barRadius
         color: root.pillBg
         border.width: 1
         border.color: Theme.border
         clip: true
-        visible: root.expanded
+        visible: root.morph > 0.001
+        opacity: root.morph
+        scale: 0.97 + 0.03 * root.morph
+        transformOrigin: Item.Top
         Behavior on width { NumberAnimation { duration: Theme.animMed; easing.type: Easing.OutCubic } }
-        Behavior on height { NumberAnimation { duration: Theme.animMed; easing.type: Easing.OutCubic } }
 
         // зерно
         Image {
