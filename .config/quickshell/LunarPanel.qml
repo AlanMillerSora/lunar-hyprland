@@ -10,10 +10,9 @@ import QtQuick.Effects
 import QtQuick.Layouts
 
 // ────────────────────────────────────────────────────────────────
-//  Lunar top bar — монохромный HUD на два острова
-//    слева  : LUNAR + фазы столов + PERF + раскладка
-//    центр  : морфящая плашка (часы/дата, медиа, пульт) и рядом статус:
-//             сеть, игра/запись, трей, уведомления, звук
+//  Lunar top bar — единый монохромный HUD
+//    слева  : LUNAR + фазы столов (отдельная плашка)
+//    центр  : единый бар — PERF · раскладка · часы/медиа/пульт · статус
 //  Панель во всю ширину, но ввод ловят только сами плашки (mask) —
 //  зазоры пропускают клики (важно для fullscreen). exclusiveZone
 //  держит окна вне полосы бара. Морф — по мотивам ArchEclipse.
@@ -38,8 +37,7 @@ PanelWindow {
     // прозрачны для мыши (окно шире своего содержимого).
     mask: Region {
         Region { item: leftBar }
-        Region { item: centerPill }
-        Region { item: rightBar }
+        Region { item: bar }
     }
 
     // Палитра из системной темы (Hub / лаунчер / настройки):
@@ -499,8 +497,8 @@ PanelWindow {
     }
 
     // ───────────────────────────── layout ─────────────────────────────
-    // Два острова: слева «LUNAR + фазы + PERF + раскладка», в центре —
-    // морфящая плашка и рядом статус (сеть/действия/трей/уведомления/звук).
+    // Единый бар по центру: PERF · раскладка · часы/медиа/пульт · статус.
+    // Слева отдельной плашкой остаются только марка LUNAR и фазы столов.
     // Подсветка интерактивной секции при наведении.
     component HoverBg: Rectangle {
         id: hb
@@ -524,7 +522,47 @@ PanelWindow {
     FontMetrics { id: fmIcon17; font.family: Theme.iconFont; font.pixelSize: Theme.fontSize(17) }
     FontMetrics { id: fmIcon19; font.family: Theme.iconFont; font.pixelSize: Theme.fontSize(19) }
 
-    // ── ЛЕВАЯ ЧАСТЬ: марка LUNAR + рабочие столы ──
+    // ── ЕДИНЫЙ БАР: один фон на весь верх, содержимое внутри ──
+    Rectangle {
+        id: bar
+        // один бар по ширине содержимого, всё по центру экрана
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: parent.verticalCenter
+        width: midBar.width + centerPill.width + rightBar.width
+        height: Theme.barH
+        radius: Theme.barRadius
+        color: root.pillBg
+        clip: true
+
+        // зерно: один тайл на весь бар, маска по скруглению
+        Image {
+            id: nzBar
+            anchors.fill: parent
+            source: Qt.resolvedUrl("assets/noise.png")
+            fillMode: Image.Tile
+            smooth: false
+            cache: true
+            visible: false
+            layer.enabled: true
+        }
+        MultiEffect {
+            anchors.fill: parent
+            source: nzBar
+            maskEnabled: true
+            maskSource: nmBar
+            opacity: 0.07
+        }
+        Rectangle {
+            id: nmBar
+            anchors.fill: parent
+            radius: Theme.barRadius
+            color: "white"
+            visible: false
+            layer.enabled: true
+        }
+    }
+
+    // ── ЛЕВО (вне центра): марка LUNAR + фазы столов ──
     Rectangle {
         id: leftBar
         anchors.left: parent.left
@@ -731,10 +769,30 @@ PanelWindow {
                 }
             }
 
+            // (PERF и раскладка переехали в центральный бар)
+        }
+    }
+
+    // ── СОДЕРЖИМОЕ ЦЕНТРА: PERF + раскладка (внутри единого бара) ──
+    Rectangle {
+        id: midBar
+        anchors.left: bar.left
+        anchors.verticalCenter: parent.verticalCenter
+        height: Theme.barH
+        color: "transparent"
+        clip: true
+        width: midLayout.implicitWidth + 2 * Theme.barPad
+
+        RowLayout {
+            id: midLayout
+            anchors.fill: parent
+            anchors.leftMargin: Theme.barPad
+            anchors.rightMargin: Theme.barPad
+            spacing: Theme.space3
+
             // ── PERF: governor; краснеет, если уехал с performance ──
             Text {
                 Layout.alignment: Qt.AlignVCenter
-                Layout.leftMargin: Theme.space2
                 width: fm13.advanceWidth("PERF")
                 text: "PERF"
                 color: root.cpuGovernor === "performance" ? Theme.barFaint : Theme.danger
@@ -761,45 +819,15 @@ PanelWindow {
         }
     }
 
-    // ── СТАТУС: правый блок переехал в центр, встаёт за морфящей плашкой ──
-    // Сеть, игра/запись, трей, уведомления, звук — теперь в середине бара.
+    // ── ПРАВО: статус (сеть · игра/запись · трей · уведомления · звук) ──
     Rectangle {
         id: rightBar
-        // правый блок переехал в центр: встаёт сразу за морфящей плашкой
-        x: centerPill.x + centerPill.width + Theme.space2
+        anchors.right: bar.right
         anchors.verticalCenter: parent.verticalCenter
         height: Theme.barH
-        radius: Theme.barRadius
-        color: root.pillBg
+        color: "transparent"
         clip: true
         width: rightLayout.implicitWidth + 2 * Theme.barPad
-
-        // зерно на стекле: маска по скруглению — углы плашки остаются чистыми
-        Image {
-            id: nzC
-            anchors.fill: parent
-            source: Qt.resolvedUrl("assets/noise.png")
-            fillMode: Image.Tile
-            smooth: false
-            cache: true
-            visible: false
-            layer.enabled: true
-        }
-        MultiEffect {
-            anchors.fill: parent
-            source: nzC
-            maskEnabled: true
-            maskSource: nmC
-            opacity: 0.07
-        }
-        Rectangle {
-            id: nmC
-            anchors.fill: parent
-            radius: Theme.barRadius
-            color: "white"
-            visible: false
-            layer.enabled: true
-        }
 
         // ── статус: сеть · игра/запись · трей · уведомления · звук ──
         RowLayout {
@@ -1125,20 +1153,16 @@ PanelWindow {
             }
         }
     }
-    // ── ЦЕНТР: морфящая плашка ──
-    // В покое — часы и дата; на наведении подмешивается громкость
-    // (hover-expand), при игре встаёт медиа-полоса. Клик по «пульту»
-    // раскрывает быстрые действия, по медиа-полосе — развёрнутый плеер,
-    // по громкости — инлайн-ползунок. Ширина едет Behavior'ом, контент
-    // меняется мгновенно — морфинг как у ArchEclipse.
+    // ── ЦЕНТР: содержимое морфящего режима ──
+    // В покое — часы и дата, при игре встаёт медиа-полоса; клик по «пульту»
+    // раскрывает быстрые действия. Контент меняется мгновенно, проявляясь.
     Rectangle {
         id: centerPill
-        // центрую пару «плашка + статус» (правый блок больше не у края)
-        x: (parent.width - (centerPill.width + Theme.space2 + rightBar.width)) / 2
+        // центр единого бара (фон — общий, у плашки только содержимое)
+        anchors.horizontalCenter: bar.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
         height: Theme.barH
-        radius: Theme.barRadius
-        color: root.pillBg
+        color: "transparent"
         clip: true
 
         readonly property bool mDefault: root.pillState === "default"
@@ -1190,33 +1214,6 @@ PanelWindow {
             onWheel: function (ev) {
                 root.bumpVol(ev.angleDelta.y > 0 ? 0.05 : -0.05)
             }
-        }
-
-        // зерно на стекле: маска по скруглению — углы плашки остаются чистыми
-        Image {
-            id: nzR
-            anchors.fill: parent
-            source: Qt.resolvedUrl("assets/noise.png")
-            fillMode: Image.Tile
-            smooth: false
-            cache: true
-            visible: false
-            layer.enabled: true
-        }
-        MultiEffect {
-            anchors.fill: parent
-            source: nzR
-            maskEnabled: true
-            maskSource: nmR
-            opacity: 0.07
-        }
-        Rectangle {
-            id: nmR
-            anchors.fill: parent
-            radius: Theme.barRadius
-            color: "white"
-            visible: false
-            layer.enabled: true
         }
 
         // лёгкий акцент в нештатных режимах — плашка «включена»
