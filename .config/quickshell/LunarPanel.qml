@@ -10,10 +10,10 @@ import QtQuick.Effects
 import QtQuick.Layouts
 
 // ────────────────────────────────────────────────────────────────
-//  Lunar top bar — монохромный HUD на три острова
-//    слева  : LUNAR + фазы 9 рабочих столов
-//    центр  : морфящая плашка — часы/дата, медиа, громкость, пульт
-//    справа : сеть+скорость, действия, трей, раскладка/уведомления/звук
+//  Lunar top bar — монохромный HUD на два острова
+//    слева  : LUNAR + фазы столов + PERF + раскладка
+//    центр  : морфящая плашка (часы/дата, медиа, пульт) и рядом статус:
+//             сеть, игра/запись, трей, уведомления, звук
 //  Панель во всю ширину, но ввод ловят только сами плашки (mask) —
 //  зазоры пропускают клики (важно для fullscreen). exclusiveZone
 //  держит окна вне полосы бара. Морф — по мотивам ArchEclipse.
@@ -440,15 +440,7 @@ PanelWindow {
         if (root.pillState === name)
             root.setPill("default")
         else
-            root.setPill(name, name === "volume" ? 2500 : 0)
-    }
-
-    // громкость — и от колеса, и от инлайн-ползунка
-    function setVolume(v) {
-        if (sink && sink.audio)
-            sink.audio.volume = Math.max(0, Math.min(1, v))
-        if (root.pillState === "volume" && !root.pillHovered)
-            pillAutoClose.restart()
+            root.setPill(name)
     }
 
     // медиа кончилось — из медиа-режима возвращаем часы
@@ -458,28 +450,15 @@ PanelWindow {
     }
 
     // ── отклик на клавиши ──
-    // Громкость и медиа уже управляются XF86Audio*/mpv — бар просто
-    // отзеркаливает: крутишь звук или меняется трек, плашка сама
-    // показывает нужный режим. Первые 1.5 с после старта — тишина
-    // (метаданные и sink подтягиваются асинхронно, не пульсируем).
+    // Медиа идёт через mpv/XF86Audio* — на смену трека плашка сама
+    // показывает режим. Громкость теперь всегда видна в баре, её пульс
+    // не нужен. Первые 1.5 с после старта — тишина (метаданные
+    // подтягиваются асинхронно, не пульсируем).
     property bool settled: false
     Timer {
         running: true
         interval: 1500
         onTriggered: root.settled = true
-    }
-
-    onVolChanged: {
-        if (!root.settled)
-            return
-        if (root.pillState !== "volume")
-            root.setPill("volume", 2500)
-    }
-    onMutedChanged: {
-        if (!root.settled)
-            return
-        if (root.pillState !== "volume")
-            root.setPill("volume", 2500)
     }
 
     property string lastTrack: ""
@@ -496,7 +475,7 @@ PanelWindow {
     //   qs ipc call bar volume|control|media|reset
     IpcHandler {
         target: "bar"
-        function volume() { root.setPill("volume", 2500) }
+        function volume() { root.openVolumePanel() }
         function control() { root.togglePill("control") }
         function media() { root.setPill("media", 2500) }
         function reset() { root.setPill("default") }
@@ -520,8 +499,8 @@ PanelWindow {
     }
 
     // ───────────────────────────── layout ─────────────────────────────
-    // Три острова: слева «LUNAR + фазы столов», центр — морфящая плашка,
-    // справа — сеть/действия/трей/раскладка/уведомления/звук.
+    // Два острова: слева «LUNAR + фазы + PERF + раскладка», в центре —
+    // морфящая плашка и рядом статус (сеть/действия/трей/уведомления/звук).
     // Подсветка интерактивной секции при наведении.
     component HoverBg: Rectangle {
         id: hb
@@ -751,15 +730,43 @@ PanelWindow {
                     }
                 }
             }
+
+            // ── PERF: governor; краснеет, если уехал с performance ──
+            Text {
+                Layout.alignment: Qt.AlignVCenter
+                Layout.leftMargin: Theme.space2
+                width: fm13.advanceWidth("PERF")
+                text: "PERF"
+                color: root.cpuGovernor === "performance" ? Theme.barFaint : Theme.danger
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize(13)
+                font.bold: root.cpuGovernor !== "performance"
+            }
+
+            // ── раскладка (клик — переключить) ──
+            Text {
+                Layout.alignment: Qt.AlignVCenter
+                width: fm14.advanceWidth("EN")
+                text: root.kbLayout
+                color: Theme.barText
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize(14)
+                font.bold: true
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.switchLayout()
+                }
+            }
         }
     }
 
-    // ── ПРАВАЯ ЧАСТЬ: от конца столов до правого края ──
-    // Часы — ровно по центру экрана, телеметрия/управление — у правого края.
+    // ── СТАТУС: правый блок переехал в центр, встаёт за морфящей плашкой ──
+    // Сеть, игра/запись, трей, уведомления, звук — теперь в середине бара.
     Rectangle {
         id: rightBar
-        anchors.right: parent.right
-        anchors.rightMargin: Theme.barMargin
+        // правый блок переехал в центр: встаёт сразу за морфящей плашкой
+        x: centerPill.x + centerPill.width + Theme.space2
         anchors.verticalCenter: parent.verticalCenter
         height: Theme.barH
         radius: Theme.barRadius
@@ -794,7 +801,7 @@ PanelWindow {
             layer.enabled: true
         }
 
-        // ── телеметрия и управление: прижаты к правому краю ──
+        // ── статус: сеть · игра/запись · трей · уведомления · звук ──
         RowLayout {
             id: rightLayout
             anchors.fill: parent
@@ -862,19 +869,6 @@ PanelWindow {
                             cursorShape: Qt.PointingHandCursor
                             onClicked: root.toggleGameMode()
                         }
-                    }
-
-                    // питание: CPU всегда performance. PERF — индикатор: в норме
-                    // тихий серый, красным горит только когда governor уехал
-                    // (значит юнит lunar-cpu-performance не сработал).
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: fm13.advanceWidth("PERF")
-                        text: "PERF"
-                        color: root.cpuGovernor === "performance" ? Theme.barFaint : Theme.danger
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize(13)
-                        font.bold: root.cpuGovernor !== "performance"
                     }
 
                     // запись экрана — показываю только когда пишу
@@ -1035,7 +1029,7 @@ PanelWindow {
                 }
             }
 
-            // ── раскладка · уведомления · громкость — у самого края ──
+            // ── уведомления · громкость ──
             Item {
                 Layout.alignment: Qt.AlignVCenter
                 // отступ от трея, чтобы «+N» не сливалась с раскладкой «RU»
@@ -1050,22 +1044,6 @@ PanelWindow {
                     anchors.centerIn: parent
                     height: 26
                     spacing: Theme.space3
-
-                    // раскладка (клик — переключить)
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: fm14.advanceWidth("EN")
-                        text: root.kbLayout
-                        color: Theme.barText
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize(14)
-                        font.bold: true
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.switchLayout()
-                        }
-                    }
 
                     // уведомления / «не беспокоить» (клик — переключить)
                     Text {
@@ -1155,7 +1133,8 @@ PanelWindow {
     // меняется мгновенно — морфинг как у ArchEclipse.
     Rectangle {
         id: centerPill
-        anchors.horizontalCenter: parent.horizontalCenter
+        // центрую пару «плашка + статус» (правый блок больше не у края)
+        x: (parent.width - (centerPill.width + Theme.space2 + rightBar.width)) / 2
         anchors.verticalCenter: parent.verticalCenter
         height: Theme.barH
         radius: Theme.barRadius
@@ -1164,21 +1143,16 @@ PanelWindow {
 
         readonly property bool mDefault: root.pillState === "default"
         readonly property bool mMedia: root.pillState === "media"
-        readonly property bool mVolume: root.pillState === "volume"
         readonly property bool mControl: root.pillState === "control"
 
         width: {
             if (mMedia)
                 return mediaRow.implicitWidth + 2 * Theme.barPad
-            if (mVolume)
-                return volMorphRow.implicitWidth + 2 * Theme.barPad
             if (mControl)
                 return ctlRow.implicitWidth + 2 * Theme.barPad
             return defRow.implicitWidth + 2 * Theme.barPad
         }
         Behavior on width { NumberAnimation { duration: Theme.animMed; easing.type: Easing.OutCubic } }
-        scale: pillHover.hovered ? 1.03 : 1
-        Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
 
         // смена режима: контент не «щёлкает», а проявляется (морфинг)
         property real contentOpacity: 1
@@ -1204,9 +1178,6 @@ PanelWindow {
                 root.pillHovered = hovered
                 if (hovered) {
                     pillAutoClose.stop()
-                } else if (root.pillState === "volume") {
-                    pillAutoClose.interval = 2500
-                    pillAutoClose.start()
                 } else if (root.pillState === "control") {
                     pillAutoClose.interval = 900
                     pillAutoClose.start()
@@ -1214,11 +1185,10 @@ PanelWindow {
             }
         }
 
-        // колесо над плашкой — громкость и показ режима
+        // колесо над плашкой — громкость (в баре справа)
         WheelHandler {
             onWheel: function (ev) {
                 root.bumpVol(ev.angleDelta.y > 0 ? 0.05 : -0.05)
-                root.setPill("volume", 2500)
             }
         }
 
@@ -1286,39 +1256,6 @@ PanelWindow {
                     onEntered: root.showTip("пульт: игра · запись · питание · Hub", ctlBtn)
                     onExited: Theme.tooltipShown = false
                     onClicked: root.togglePill("control")
-                }
-            }
-
-            // hover-expand: громкость выезжает на наведении
-            Item {
-                id: hoverVol
-                visible: pillHover.hovered
-                width: hvRow.implicitWidth
-                height: 26
-                Row {
-                    id: hvRow
-                    anchors.centerIn: parent
-                    height: 26
-                    spacing: 6
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: root.muted ? "󰖁" : (root.vol < 0.34 ? "󰕿" : (root.vol < 0.67 ? "󰖀" : "󰕾"))
-                        color: root.muted ? Theme.barFaint : Theme.barDim
-                        font.family: Theme.iconFont
-                        font.pixelSize: Theme.fontSize(15)
-                    }
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: root.muted ? "mute" : Math.round(root.vol * 100) + "%"
-                        color: Theme.barDim
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize(12)
-                    }
-                }
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.setPill("volume", 2500)
                 }
             }
 
@@ -1585,83 +1522,6 @@ PanelWindow {
                     onExited: Theme.tooltipShown = false
                     onClicked: mediaPanelProc.running = true
                 }
-            }
-        }
-
-        // ── режим ГРОМКОСТЬ: иконка, инлайн-ползунок, процент ──
-        Row {
-            id: volMorphRow
-            visible: centerPill.mVolume
-            opacity: centerPill.contentOpacity
-            anchors.centerIn: parent
-            height: 26
-            spacing: Theme.space2
-
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                width: Math.max(fmIcon19.advanceWidth("󰖁"), fmIcon19.advanceWidth("󰕾"))
-                horizontalAlignment: Text.AlignHCenter
-                text: root.muted ? "󰖁" : (root.vol < 0.34 ? "󰕿" : (root.vol < 0.67 ? "󰖀" : "󰕾"))
-                color: root.muted ? Theme.barFaint : Theme.barText
-                font.family: Theme.iconFont
-                font.pixelSize: Theme.fontSize(18)
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: if (root.sink && root.sink.audio) root.sink.audio.muted = !root.sink.audio.muted
-                }
-            }
-
-            Item {
-                id: volBar
-                anchors.verticalCenter: parent.verticalCenter
-                width: 110
-                height: 26
-                Rectangle {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: parent.width
-                    height: 4
-                    radius: 2
-                    color: Theme.active
-                }
-                Rectangle {
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.left: parent.left
-                    width: (root.muted ? 0 : root.vol) * parent.width
-                    height: 4
-                    radius: 2
-                    color: Theme.accent
-                }
-                Rectangle {
-                    id: volHandle
-                    width: 10
-                    height: 10
-                    radius: 5
-                    color: Theme.accent
-                    anchors.verticalCenter: parent.verticalCenter
-                    x: Math.max(0, Math.min(volBar.width - width,
-                        (root.muted ? 0 : root.vol) * volBar.width - width / 2))
-                    Behavior on x { NumberAnimation { duration: 90; easing.type: Easing.OutCubic } }
-                }
-                MouseArea {
-                    id: volDrag
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    function apply(x) {
-                        root.setVolume(x / width)
-                    }
-                    onPressed: (m) => apply(m.x)
-                    onPositionChanged: (m) => { if (pressed) apply(m.x) }
-                }
-            }
-
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                width: fm14.advanceWidth("100%")
-                text: root.muted ? "mute" : Math.round(root.vol * 100) + "%"
-                color: Theme.barDim
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize(13)
             }
         }
 
