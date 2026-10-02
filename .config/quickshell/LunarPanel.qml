@@ -21,23 +21,27 @@ PanelWindow {
     id: root
 
     anchors { top: true; left: true; right: true }
-    implicitHeight: Theme.barH
+    // окно выше бара — под выезжающую вниз панель (вариант 3)
+    implicitHeight: Theme.barH + 320
     color: "transparent"
 
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.namespace: "lunar-panel"
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
-    WlrLayershell.exclusiveZone: implicitHeight
+    // фокус нужен только пока открыт поиск (ввод)
+    WlrLayershell.keyboardFocus: root.panelMode === "search"
+        ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    // окна не заезжают только под полосу бара
+    WlrLayershell.exclusiveZone: Theme.barH
     WlrLayershell.anchors.top: true
     WlrLayershell.anchors.left: true
     WlrLayershell.anchors.right: true
     exclusionMode: ExclusionMode.Normal
 
-    // клик-сквозь: ввод ловят только острова, зазоры между ними
-    // прозрачны для мыши (окно шире своего содержимого).
+    // клик-сквозь: ввод ловят левая плашка, бар и раскрытая панель
     mask: Region {
         Region { item: leftBar }
         Region { item: bar }
+        Region { item: root.expanded ? panel : null }
     }
 
     // Палитра из системной темы (Hub / лаунчер / настройки):
@@ -411,72 +415,80 @@ PanelWindow {
         recordProc.running = true
     }
 
-    // ─────────────── морф центральной плашки ───────────────
-    // Один режим — один вид центра. Контент меняется мгновенно, а ширину
-    // ведёт Behavior — отсюда «морфинг». Громкость сама закрывается, если
-    // курсор не на плашке; пульт держится до клика/Esc/ухода.
-    property string pillState: "default"   // default | media | volume | control
-    property bool pillHovered: false
+    // ─────────────── панель бара (вариант 3) ───────────────
+    // Бар в покое — одна строка; по клику вниз выезжает панель одного из
+    // режимов: пульт · медиа · поиск · уведомления. Контент разворачивается
+    // (clip+opacity); повторный клик, Esc или уход курсора — свернуть.
+    property string panelMode: ""   // "" | control | media | search | notifs
+    readonly property bool expanded: panelMode !== ""
+    property bool panelHovered: false
+    property bool barHovered: false
 
+    function openPanel(name) { panelMode = name }
+    function closePanel() { panelMode = "" }
+    function togglePanel(name) { panelMode = (panelMode === name ? "" : name) }
+
+    // панель сама закрывается, когда курсор ушёл и с бара, и с панели
     Timer {
-        id: pillAutoClose
-        interval: 2500
+        id: awayClose
+        interval: 500
         repeat: false
-        onTriggered: root.setPill("default")
+        onTriggered: { if (!root.barHovered && !root.panelHovered) root.closePanel() }
     }
+    onBarHoveredChanged: { if (!root.barHovered && !root.panelHovered) awayClose.restart(); else awayClose.stop() }
+    onPanelHoveredChanged: { if (!root.barHovered && !root.panelHovered) awayClose.restart(); else awayClose.stop() }
 
-    function setPill(name, holdMs) {
-        root.pillState = name
-        pillAutoClose.stop()
-        if (holdMs && holdMs > 0) {
-            pillAutoClose.interval = holdMs
-            pillAutoClose.start()
-        }
-    }
-
-    function togglePill(name) {
-        if (root.pillState === name)
-            root.setPill("default")
-        else
-            root.setPill(name)
-    }
-
-    // медиа кончилось — из медиа-режима возвращаем часы
-    onMediaActiveChanged: {
-        if (!root.mediaActive && root.pillState === "media")
-            root.setPill("default")
-    }
-
-    // ── отклик на клавиши ──
-    // Медиа идёт через mpv/XF86Audio* — на смену трека плашка сама
-    // показывает режим. Громкость теперь всегда видна в баре, её пульс
-    // не нужен. Первые 1.5 с после старта — тишина (метаданные
-    // подтягиваются асинхронно, не пульсируем).
-    property bool settled: false
-    Timer {
-        running: true
-        interval: 1500
-        onTriggered: root.settled = true
-    }
-
-    property string lastTrack: ""
-    onTrackChanged: {
-        if (root.track.length === 0 || root.track === root.lastTrack)
-            return
-        root.lastTrack = root.track
-        if (!root.settled || !root.playing || root.pillState !== "default")
-            return
-        root.setPill("media", 2500)
-    }
-
-    // IPC бара — для будущих хоткеев и тестов:
-    //   qs ipc call bar volume|control|media|reset
+    // IPC: qs ipc call bar control|media|search|notifs|reset
     IpcHandler {
         target: "bar"
         function volume() { root.openVolumePanel() }
-        function control() { root.togglePill("control") }
-        function media() { root.setPill("media", 2500) }
-        function reset() { root.setPill("default") }
+        function control() { root.togglePanel("control") }
+        function media() { root.togglePanel("media") }
+        function search() { root.togglePanel("search") }
+        function notifs() { root.togglePanel("notifs") }
+        function reset() { root.closePanel() }
+    }
+
+    // ── поиск в панели (общий SearchModel) ──
+    property string searchQuery: ""
+    property var searchResults: []
+    property int searchIndex: 0
+    Timer {
+        id: searchDebounce
+        interval: 120
+        repeat: false
+        onTriggered: {
+            root.searchResults = SearchModel.search(root.searchQuery)
+            root.searchIndex = 0
+        }
+    }
+    function setSearchQuery(q) {
+        root.searchQuery = q
+        searchDebounce.restart()
+    }
+    function moveSearch(d) {
+        if (root.searchResults.length === 0) return
+        root.searchIndex = (root.searchIndex + d + root.searchResults.length) % root.searchResults.length
+    }
+    function runSearch() {
+        var r = root.searchResults[root.searchIndex]
+        SearchModel.activate(r)
+        root.closePanel()
+        root.searchQuery = ""
+        root.searchResults = []
+        root.searchIndex = 0
+    }
+
+    // при открытии режима: уведы — обновить, поиск — фокус на поле
+    onPanelModeChanged: {
+        if (panelMode === "notifs")
+            NotifModel.load()
+        else if (panelMode === "search")
+            Qt.callLater(function() { if (searchInput) searchInput.forceActiveFocus() })
+        else {
+            searchQuery = ""
+            searchResults = []
+        }
     }
 
     // быстрые действия «пульта»
@@ -527,12 +539,15 @@ PanelWindow {
         id: bar
         // один компактный бар по центру (по ширине содержимого)
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.verticalCenter: parent.verticalCenter
+        anchors.top: parent.top
+        anchors.topMargin: Theme.barMargin
         width: midBar.width + centerPill.width + rightBar.width
         height: Theme.barH
         radius: Theme.barRadius
         color: root.pillBg
         clip: true
+
+        HoverHandler { onHoveredChanged: root.barHovered = hovered }
 
         // зерно: один тайл на весь бар, маска по скруглению
         Image {
@@ -567,7 +582,8 @@ PanelWindow {
         id: leftBar
         anchors.left: parent.left
         anchors.leftMargin: Theme.barMargin
-        anchors.verticalCenter: parent.verticalCenter
+        anchors.top: parent.top
+        anchors.topMargin: Theme.barMargin
         height: Theme.barH
         radius: Theme.barRadius
         color: root.pillBg
@@ -1153,88 +1169,30 @@ PanelWindow {
             }
         }
     }
-    // ── ЦЕНТР: содержимое морфящего режима ──
-    // В покое — часы и дата, при игре встаёт медиа-полоса; клик по «пульту»
-    // раскрывает быстрые действия. Контент меняется мгновенно, проявляясь.
+    // ── ЦЕНТР: часы/дата + медиа + кнопка пульта (внутри бара) ──
     Rectangle {
         id: centerPill
-        // центр единого бара (фон — общий, у плашки только содержимое)
         anchors.left: midBar.right
         anchors.verticalCenter: bar.verticalCenter
         height: Theme.barH
         color: "transparent"
         clip: true
+        width: defRow.implicitWidth + 2 * Theme.barPad
 
-        readonly property bool mDefault: root.pillState === "default"
-        readonly property bool mMedia: root.pillState === "media"
-        readonly property bool mControl: root.pillState === "control"
-
-        width: {
-            if (mMedia)
-                return mediaRow.implicitWidth + 2 * Theme.barPad
-            if (mControl)
-                return ctlRow.implicitWidth + 2 * Theme.barPad
-            return defRow.implicitWidth + 2 * Theme.barPad
-        }
-        Behavior on width { NumberAnimation { duration: Theme.animMed; easing.type: Easing.OutCubic } }
-
-        // смена режима: контент не «щёлкает», а проявляется (морфинг)
-        property real contentOpacity: 1
-        Connections {
-            target: root
-            function onPillStateChanged() {
-                centerPill.contentOpacity = 0
-                morphIn.restart()
-            }
-        }
-        NumberAnimation {
-            id: morphIn
-            target: centerPill
-            property: "contentOpacity"
-            to: 1
-            duration: 170
-            easing.type: Easing.OutCubic
-        }
-
-        HoverHandler {
-            id: pillHover
-            onHoveredChanged: {
-                root.pillHovered = hovered
-                if (hovered) {
-                    pillAutoClose.stop()
-                } else if (root.pillState === "control") {
-                    pillAutoClose.interval = 900
-                    pillAutoClose.start()
-                }
-            }
-        }
-
-        // колесо над плашкой — громкость (в баре справа)
+        // колесо над плашкой — громкость
         WheelHandler {
             onWheel: function (ev) {
                 root.bumpVol(ev.angleDelta.y > 0 ? 0.05 : -0.05)
             }
         }
 
-        // лёгкий акцент в нештатных режимах — плашка «включена»
-        Rectangle {
-            anchors.fill: parent
-            radius: Theme.barRadius
-            color: Theme.alpha(Theme.accent, 0.05)
-            opacity: centerPill.mDefault ? 0 : 1
-            Behavior on opacity { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
-        }
-
-        // ── режим ПОКОЙ: часы и дата (+ медиа при игре, + громкость на ховере) ──
         Row {
             id: defRow
-            visible: centerPill.mDefault
-            opacity: centerPill.contentOpacity
             anchors.centerIn: parent
             height: 26
             spacing: Theme.space3
 
-            // «пульт» — вход в быстрые действия
+            // «пульт» — раскрывает панель управления вниз
             Item {
                 id: ctlBtn
                 width: 18
@@ -1242,7 +1200,7 @@ PanelWindow {
                 Text {
                     anchors.centerIn: parent
                     text: "\uf013"
-                    color: centerPill.mControl ? Theme.accent : Theme.barDim
+                    color: root.panelMode === "control" ? Theme.accent : Theme.barDim
                     font.family: Theme.iconFont
                     font.pixelSize: Theme.fontSize(14)
                 }
@@ -1250,13 +1208,13 @@ PanelWindow {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onEntered: root.showTip("пульт: игра · запись · питание · Hub", ctlBtn)
+                    onEntered: root.showTip("пульт: игра · запись · питание · Hub · поиск", ctlBtn)
                     onExited: Theme.tooltipShown = false
-                    onClicked: root.togglePill("control")
+                    onClicked: root.togglePanel("control")
                 }
             }
 
-            // медиа-полоса (только когда играет) — клик разворачивает плеер
+            // медиа-полоса (только когда играет) — клик раскрывает панель медиа
             Item {
                 id: mediaInline
                 visible: root.mediaActive
@@ -1315,7 +1273,7 @@ PanelWindow {
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.setPill("media")
+                    onClicked: root.togglePanel("media")
                 }
             }
 
@@ -1379,156 +1337,61 @@ PanelWindow {
                 }
             }
         }
+    }
 
-        // ── режим МЕДИА: трек + управление, клик — полный плеер ──
-        Row {
-            id: mediaRow
-            visible: centerPill.mMedia
-            opacity: centerPill.contentOpacity
-            anchors.centerIn: parent
-            height: 26
-            spacing: Theme.space2
+    // ── ПАНЕЛЬ: выезжает вниз от бара (вариант 3) ──
+    // Один режим за раз: пульт · медиа · поиск · уведомления.
+    Rectangle {
+        id: panel
+        anchors.top: bar.bottom
+        anchors.topMargin: Theme.space1
+        anchors.horizontalCenter: bar.horizontalCenter
+        width: Math.max(bar.width, 400)
+        height: root.expanded ? 320 : 0
+        radius: Theme.barRadius
+        color: root.pillBg
+        clip: true
+        visible: height > 1
+        Behavior on height { NumberAnimation { duration: Theme.animMed; easing.type: Easing.OutCubic } }
+        opacity: root.expanded ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
 
-            // обложка трека: монохром, скруглённая; нет обложки — нота
-            Item {
-                width: 22
-                height: 22
-                anchors.verticalCenter: parent.verticalCenter
-                Image {
-                    id: coverImg
-                    anchors.fill: parent
-                    source: root.player ? (root.player.trackArtUrl || "") : ""
-                    sourceSize: Qt.size(44, 44)
-                    asynchronous: true
-                    fillMode: Image.PreserveAspectCrop
-                    visible: false
-                }
-                MultiEffect {
-                    anchors.fill: parent
-                    source: coverImg
-                    visible: coverImg.status === Image.Ready
-                    saturation: -1.0
-                    brightness: 0.06
-                    maskEnabled: true
-                    maskSource: coverMask
-                }
-                Rectangle {
-                    id: coverMask
-                    anchors.fill: parent
-                    radius: 4
-                    color: "white"
-                    visible: false
-                    layer.enabled: true
-                }
-                Text {
-                    anchors.centerIn: parent
-                    visible: coverImg.status !== Image.Ready
-                    text: "\uf001"
-                    color: Theme.barFaint
-                    font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSize(13)
-                }
-            }
-
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                width: 18
-                horizontalAlignment: Text.AlignHCenter
-                text: "\uf048"
-                color: Theme.barDim
-                font.family: Theme.iconFont
-                font.pixelSize: Theme.fontSize(13)
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: if (root.player) root.player.previous()
-                }
-            }
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                width: 18
-                horizontalAlignment: Text.AlignHCenter
-                text: root.playing ? "\uf04c" : "\uf04b"
-                color: root.playing ? Theme.accent : Theme.barFaint
-                font.family: Theme.iconFont
-                font.pixelSize: Theme.fontSize(14)
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: if (root.player) root.player.togglePlaying()
-                }
-            }
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                width: 18
-                horizontalAlignment: Text.AlignHCenter
-                text: "\uf051"
-                color: Theme.barDim
-                font.family: Theme.iconFont
-                font.pixelSize: Theme.fontSize(13)
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: if (root.player) root.player.next()
-                }
-            }
-
-            Item {
-                id: mediaTrack
-                anchors.verticalCenter: parent.verticalCenter
-                width: 190
-                height: 26
-                clip: true
-                Item {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: parent.width
-                    height: 26
-                    clip: true
-                    Row {
-                        id: mediaMarq
-                        spacing: 28
-                        anchors.verticalCenter: parent.verticalCenter
-                        Text { id: mediaMarqA; text: root.track; color: Theme.barText; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSize(12) }
-                        Text { text: root.track; color: Theme.barText; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSize(12) }
-                        NumberAnimation on x {
-                            running: root.playing && mediaMarqA.width > mediaTrack.width
-                            loops: Animation.Infinite
-                            from: 0
-                            to: -(mediaMarqA.width + mediaMarq.spacing)
-                            duration: Math.max(4000, (mediaMarqA.width + mediaMarq.spacing) * 26)
-                            easing.type: Easing.Linear
-                        }
-                    }
-                }
-            }
-
-            Text {
-                id: mediaOpenText
-                anchors.verticalCenter: parent.verticalCenter
-                width: 18
-                horizontalAlignment: Text.AlignHCenter
-                text: "\uf03d"
-                color: Theme.barDim
-                font.family: Theme.iconFont
-                font.pixelSize: Theme.fontSize(13)
-                MouseArea {
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onEntered: root.showTip("открыть плеер", mediaOpenText)
-                    onExited: Theme.tooltipShown = false
-                    onClicked: mediaPanelProc.running = true
-                }
-            }
+        // зерно
+        Image {
+            id: nzP
+            anchors.fill: parent
+            source: Qt.resolvedUrl("assets/noise.png")
+            fillMode: Image.Tile
+            smooth: false
+            cache: true
+            visible: false
+            layer.enabled: true
+        }
+        MultiEffect {
+            anchors.fill: parent
+            source: nzP
+            maskEnabled: true
+            maskSource: nmP
+            opacity: 0.07
+        }
+        Rectangle {
+            id: nmP
+            anchors.fill: parent
+            radius: Theme.barRadius
+            color: "white"
+            visible: false
+            layer.enabled: true
         }
 
-        // ── режим ПУЛЬТ: быстрые действия ──
+        HoverHandler { onHoveredChanged: root.panelHovered = hovered }
+
+        // ── ПУЛЬТ ──
         Row {
-            id: ctlRow
-            visible: centerPill.mControl
-            opacity: centerPill.contentOpacity
-            anchors.centerIn: parent
-            height: 26
+            visible: root.panelMode === "control"
+            anchors.left: parent.left
+            anchors.leftMargin: Theme.barPad
+            anchors.top: parent.top
+            anchors.topMargin: Theme.barPad
             spacing: Theme.space3
 
             Repeater {
@@ -1538,24 +1401,24 @@ PanelWindow {
                     { g: "\uf011", tip: "питание", on: false, act: "power" },
                     { g: "\uf009", tip: "Hub", on: false, act: "hub" },
                     { g: "\uf1eb", tip: "сеть", on: false, act: "net" },
-                    { g: "\uf03e", tip: "обои", on: false, act: "wall" }
+                    { g: "\uf03e", tip: "обои", on: false, act: "wall" },
+                    { g: "\uf002", tip: "поиск", on: root.panelMode === "search", act: "search" }
                 ]
                 delegate: Rectangle {
                     required property var modelData
                     width: 30
-                    height: 26
+                    height: 28
                     radius: Theme.radius
                     color: modelData.on
-                        ? Theme.alpha(Theme.danger, 0.14)
+                        ? Theme.alpha(Theme.accent, 0.14)
                         : (ctlMouse.containsMouse ? Theme.hoverStrong : Theme.fill)
                     border.width: 1
-                    border.color: modelData.on ? Theme.alpha(Theme.danger, 0.5) : "transparent"
+                    border.color: modelData.on ? Theme.alpha(Theme.accent, 0.5) : "transparent"
                     Behavior on color { ColorAnimation { duration: 140 } }
                     Text {
                         anchors.centerIn: parent
                         text: modelData.g
-                        color: modelData.on
-                            ? Theme.danger
+                        color: modelData.on ? Theme.accent
                             : (ctlMouse.containsMouse ? Theme.barText : Theme.barDim)
                         font.family: Theme.iconFont
                         font.pixelSize: Theme.fontSize(16)
@@ -1582,6 +1445,332 @@ PanelWindow {
                                 root.openNetwork()
                             else if (modelData.act === "wall")
                                 root.openWallpapers()
+                            else if (modelData.act === "search")
+                                root.openPanel("search")
+                        }
+                    }
+                }
+            }
+        }
+
+        // ── МЕДИА ──
+        Column {
+            visible: root.panelMode === "media"
+            anchors.left: parent.left
+            anchors.leftMargin: Theme.barPad
+            anchors.top: parent.top
+            anchors.topMargin: Theme.barPad
+            spacing: Theme.space3
+
+            Row {
+                spacing: Theme.space3
+
+                // обложка трека: монохром, скруглённая
+                Item {
+                    width: 64
+                    height: 64
+                    anchors.verticalCenter: parent.verticalCenter
+                    Image {
+                        id: coverImg
+                        anchors.fill: parent
+                        source: root.player ? (root.player.trackArtUrl || "") : ""
+                        sourceSize: Qt.size(128, 128)
+                        asynchronous: true
+                        fillMode: Image.PreserveAspectCrop
+                        visible: false
+                    }
+                    MultiEffect {
+                        anchors.fill: parent
+                        source: coverImg
+                        visible: coverImg.status === Image.Ready
+                        saturation: -1.0
+                        brightness: 0.06
+                        maskEnabled: true
+                        maskSource: coverMaskP
+                    }
+                    Rectangle {
+                        id: coverMaskP
+                        anchors.fill: parent
+                        radius: Theme.radius
+                        color: "white"
+                        visible: false
+                        layer.enabled: true
+                    }
+                    Text {
+                        anchors.centerIn: parent
+                        visible: coverImg.status !== Image.Ready
+                        text: "\uf001"
+                        color: Theme.barFaint
+                        font.family: Theme.iconFont
+                        font.pixelSize: Theme.fontSize(22)
+                    }
+                }
+
+                Column {
+                    spacing: Theme.space2
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Text {
+                        width: 340
+                        elide: Text.ElideRight
+                        text: root.track.length > 0 ? root.track : "ничего не играет"
+                        color: Theme.barText
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(14)
+                    }
+                    Row {
+                        spacing: Theme.space4
+                        Text {
+                            text: "\uf048"
+                            color: Theme.barDim
+                            font.family: Theme.iconFont
+                            font.pixelSize: Theme.fontSize(18)
+                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: if (root.player) root.player.previous() }
+                        }
+                        Text {
+                            text: root.playing ? "\uf04c" : "\uf04b"
+                            color: root.playing ? Theme.accent : Theme.barFaint
+                            font.family: Theme.iconFont
+                            font.pixelSize: Theme.fontSize(20)
+                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: if (root.player) root.player.togglePlaying() }
+                        }
+                        Text {
+                            text: "\uf051"
+                            color: Theme.barDim
+                            font.family: Theme.iconFont
+                            font.pixelSize: Theme.fontSize(18)
+                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: if (root.player) root.player.next() }
+                        }
+                    }
+                    Text {
+                        text: "открыть плеер  →"
+                        color: Theme.barDim
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(12)
+                        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: mediaPanelProc.running = true }
+                    }
+                }
+            }
+        }
+
+        // ── ПОИСК ──
+        Column {
+            visible: root.panelMode === "search"
+            anchors.fill: parent
+            anchors.margins: Theme.barPad
+            spacing: Theme.space2
+
+            // строка ввода
+            Rectangle {
+                width: parent.width
+                height: 34
+                radius: Theme.radius
+                color: Theme.fill
+                border.width: 1
+                border.color: searchInput.activeFocus ? Theme.borderAccent : Theme.border
+
+                TextInput {
+                    id: searchInput
+                    anchors.fill: parent
+                    anchors.leftMargin: Theme.space3
+                    anchors.rightMargin: Theme.space3
+                    verticalAlignment: TextInput.AlignVCenter
+                    color: Theme.text
+                    selectionColor: Theme.accent
+                    selectedTextColor: Theme.bg
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(14)
+                    clip: true
+                    onTextChanged: root.setSearchQuery(text)
+                    Keys.onEscapePressed: {
+                        if (text !== "") { text = ""; root.setSearchQuery("") }
+                        else root.closePanel()
+                    }
+                    Keys.onUpPressed: root.moveSearch(-1)
+                    Keys.onDownPressed: root.moveSearch(1)
+                    Keys.onReturnPressed: root.runSearch()
+                    Keys.onEnterPressed: root.runSearch()
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "поиск: приложение, страница Hub, действие…"
+                        visible: searchInput.text === ""
+                        color: Theme.textFaint
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(14)
+                    }
+                }
+            }
+
+            // результаты
+            Column {
+                width: parent.width
+                spacing: 2
+                Repeater {
+                    model: root.searchResults
+                    delegate: Rectangle {
+                        required property var modelData
+                        required property int index
+                        width: parent.width
+                        height: 32
+                        radius: Theme.radius
+                        color: index === root.searchIndex ? Theme.active
+                            : (resMouse.containsMouse ? Theme.hover : "transparent")
+                        Row {
+                            anchors.left: parent.left
+                            anchors.leftMargin: Theme.space2
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: Theme.space2
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: modelData.icon || ""
+                                color: index === root.searchIndex ? Theme.accent : Theme.textDim
+                                font.family: modelData.kind === "app" ? Theme.iconFont : Theme.iconFont
+                                font.pixelSize: Theme.fontSize(14)
+                            }
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: modelData.label
+                                color: index === root.searchIndex ? Theme.text : Theme.barText
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSize(13)
+                            }
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: modelData.kind === "page" ? "страница"
+                                    : (modelData.kind === "action" ? "действие" : "приложение")
+                                color: Theme.textDim
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontTiny
+                            }
+                        }
+                        MouseArea {
+                            id: resMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onEntered: root.searchIndex = index
+                            onClicked: { root.searchIndex = index; root.runSearch() }
+                        }
+                    }
+                }
+            }
+        }
+
+        // ── УВЕДОМЛЕНИЯ ──
+        Column {
+            visible: root.panelMode === "notifs"
+            anchors.fill: parent
+            anchors.margins: Theme.barPad
+            spacing: Theme.space2
+
+            Row {
+                width: parent.width
+                spacing: Theme.space3
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "УВЕДОМЛЕНИЯ"
+                    color: Theme.textDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(12)
+                    font.letterSpacing: 2
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: NotifModel.items.length
+                    color: Theme.accent
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(12)
+                    font.bold: true
+                }
+                Item { width: 1; height: 1 }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: NotifModel.dnd ? "DND ВКЛ" : "DND"
+                    color: NotifModel.dnd ? Theme.danger : Theme.textDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(12)
+                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: NotifModel.toggleDnd() }
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "очистить"
+                    color: Theme.textDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(12)
+                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: NotifModel.clear() }
+                }
+            }
+
+            Text {
+                visible: NotifModel.items.length === 0
+                text: NotifModel.dnd ? "режим «не беспокоить»" : "уведомлений нет"
+                color: Theme.textFaint
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize(13)
+            }
+
+            Column {
+                width: parent.width
+                spacing: Theme.space1
+                Repeater {
+                    model: NotifModel.items
+                    delegate: Rectangle {
+                        required property var modelData
+                        readonly property bool expanded: NotifModel.expandedId === modelData.id
+                        width: parent.width
+                        height: expanded ? Math.min(120, bodyText.implicitHeight + 46) : 40
+                        radius: Theme.radius
+                        color: expanded ? Theme.fill : (notifMouse.containsMouse ? Theme.hover : "transparent")
+                        Behavior on height { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
+                        Column {
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.leftMargin: Theme.space2
+                            anchors.rightMargin: Theme.space2
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 2
+                            Row {
+                                width: parent.width
+                                spacing: Theme.space2
+                                Text {
+                                    text: modelData.app
+                                    color: Theme.textDim
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.fontTiny
+                                }
+                                Text {
+                                    width: parent.width - 120
+                                    elide: Text.ElideRight
+                                    text: modelData.summary
+                                    color: Theme.text
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.fontSize(12)
+                                    font.bold: true
+                                }
+                            }
+                            Text {
+                                id: bodyText
+                                width: parent.width
+                                visible: expanded
+                                wrapMode: Text.Wrap
+                                maximumLineCount: 4
+                                elide: Text.ElideRight
+                                text: modelData.body
+                                color: Theme.textDim
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSize(12)
+                            }
+                        }
+                        MouseArea {
+                            id: notifMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+                            onClicked: function(m) {
+                                if (m.button === Qt.MiddleButton) NotifModel.dismiss(modelData.id)
+                                else NotifModel.toggleExpand(modelData.id)
+                            }
                         }
                     }
                 }

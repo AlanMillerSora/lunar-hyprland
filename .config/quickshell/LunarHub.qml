@@ -38,14 +38,6 @@ FloatingWindow {
     function openPanel() { showing = true }
     function closePanel() {
         showing = false
-        // L29: сбрасываем поиск, чтобы при следующем открытии поле было пустым
-        if (query !== "") {
-            query = ""
-            results = []
-            resultIndex = 0
-        }
-        if (hubSearch)
-            hubSearch.text = ""
     }
     function toggle() { showing = !showing }
 
@@ -233,8 +225,6 @@ FloatingWindow {
             root.searchActions[r.act].run()
         else if (r.kind === "app")
             AppModel.launch(r.app)
-        if (hubSearch)
-            hubSearch.text = ""
         root.query = ""
         root.results = []
         root.resultIndex = 0
@@ -249,35 +239,8 @@ FloatingWindow {
         anchors.fill: parent
         focus: true
 
-        // клавиатура обычного окна: Esc закрывает, стрелки/Enter — по поиску
-        Keys.onEscapePressed: {
-            if (hubSearch.text !== "") {
-                hubSearch.text = ""
-                root.query = ""
-                root.results = []
-                root.resultIndex = 0
-            } else {
-                root.closePanel()
-            }
-        }
-        Keys.onUpPressed: root.moveResult(-1)
-        Keys.onDownPressed: root.moveResult(1)
-        Keys.onReturnPressed: {
-            // H38: если debounce ещё не сработал — досчитываю сразу
-            if (searchDebounce.running) {
-                searchDebounce.stop()
-                root.applyQuery(root.query)
-            }
-            root.activateResult()
-        }
-        Keys.onPressed: (e) => {
-            // H14: цифры остаются обычным вводом; быстрый выбор — по Ctrl+1…9
-            if (e.key >= Qt.Key_1 && e.key <= Qt.Key_9
-                && (e.modifiers & Qt.ControlModifier)) {
-                root.activateIndex(e.key - Qt.Key_1)
-                e.accepted = true
-            }
-        }
+        // клавиатура обычного окна: Esc закрывает
+        Keys.onEscapePressed: root.closePanel()
 
         // приглушённые HUD-скобки: намёк на кибер-рамку, не спорящий с контентом
         Rectangle {
@@ -303,7 +266,7 @@ FloatingWindow {
         Row {
                 anchors.fill: parent
                 anchors.margins: Theme.space6
-                anchors.bottomMargin: Theme.space6 + hubSearchBox.height + Theme.space4
+                anchors.bottomMargin: Theme.space6
                 spacing: Theme.space6
 
                 // ---------------- Sidebar ----------------
@@ -448,175 +411,8 @@ FloatingWindow {
                         }
                     }
 
-                    // результаты поиска — поверх контента
-                    Rectangle {
-                        id: searchOverlay
-                        anchors.fill: parent
-                        visible: root.query.trim() !== ""
-                        color: Theme.alpha(Theme.bgPanel, 0.97)
-                        radius: Theme.radiusL
-                        border.color: Theme.border
-                        border.width: 1
-                        clip: true
-
-                        Text {
-                            anchors.centerIn: parent
-                            visible: root.results.length === 0
-                            text: "ничего не найдено"
-                            color: Theme.textFaint
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 12
-                        }
-
-                        Column {
-                            anchors.fill: parent
-                            anchors.margins: Theme.space4
-                            spacing: Theme.space1
-
-                            Repeater {
-                                model: root.results
-
-                                delegate: Rectangle {
-                                    required property var modelData
-                                    required property int index
-                                    width: parent.width
-                                    height: Theme.rowH
-                                    radius: Theme.radiusM
-                                    color: index === root.resultIndex
-                                        ? Theme.active
-                                        : (rowMouse.containsMouse ? Theme.hover : "transparent")
-
-                                    Row {
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        anchors.left: parent.left
-                                        anchors.leftMargin: Theme.space4
-                                        height: Theme.rowH
-                                        spacing: Theme.space3
-
-                                        Text {
-                                            width: 18
-                                            text: index < 9 ? (index + 1) : ""
-                                            color: Theme.textFaint
-                                            font.family: Theme.fontFamily
-                                            font.pixelSize: Theme.fontSmall
-                                            anchors.verticalCenter: parent.verticalCenter
-                                        }
-                                        Text {
-                                            width: 22
-                                            visible: modelData.kind !== "app"
-                                            text: modelData.icon || ""
-                                            color: index === root.resultIndex ? Theme.accent : Theme.text
-                                            font.family: Theme.iconFont
-                                            font.pixelSize: 16
-                                            horizontalAlignment: Text.AlignHCenter
-                                            anchors.verticalCenter: parent.verticalCenter
-                                        }
-                                        Image {
-                                            width: 18
-                                            height: 18
-                                            visible: modelData.kind === "app"
-                                                && source != "" && status === Image.Ready
-                                            source: modelData.kind === "app" && modelData.app.icon
-                                                ? Quickshell.iconPath(modelData.app.icon, true) : ""
-                                            sourceSize: Qt.size(36, 36)
-                                            fillMode: Image.PreserveAspectFit
-                                            smooth: true
-                                            anchors.verticalCenter: parent.verticalCenter
-                                        }
-                                        Text {
-                                            text: modelData.label
-                                            color: index === root.resultIndex ? Theme.text : Theme.barText
-                                            font.family: Theme.fontFamily
-                                            font.pixelSize: Theme.fontBody
-                                            anchors.verticalCenter: parent.verticalCenter
-                                        }
-                                        Text {
-                                            text: modelData.kind === "page" ? "страница"
-                                                : (modelData.kind === "action" ? "действие" : "приложение")
-                                            color: Theme.textDim
-                                            font.family: Theme.fontFamily
-                                            font.pixelSize: Theme.fontTiny
-                                            anchors.verticalCenter: parent.verticalCenter
-                                        }
-                                    }
-
-                                    MouseArea {
-                                        id: rowMouse
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onEntered: root.resultIndex = index
-                                        onClicked: root.activateIndex(index)
-                                    }
-                                }
-                            }
-                        }
-                    }
                 }
             }
 
-            // поиск по Hub — во всю ширину окна, внизу: место под длинные запросы
-            // и подсказку про быстрый выбор
-            Rectangle {
-                id: hubSearchBox
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                anchors.margins: Theme.space6
-                height: Theme.rowH
-                radius: Theme.radiusM
-                color: Theme.bgCard
-                border.width: 1
-                border.color: hubSearch.activeFocus ? Theme.borderAccent : Theme.border
-
-                TextInput {
-                    id: hubSearch
-                    anchors.fill: parent
-                    anchors.leftMargin: Theme.space4
-                    anchors.rightMargin: Theme.space4
-                    verticalAlignment: TextInput.AlignVCenter
-                    color: Theme.text
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontBody
-                    clip: true
-                    selectByMouse: true
-
-                    Text {
-                        anchors.fill: parent
-                        verticalAlignment: Text.AlignVCenter
-                        text: "поиск по Hub…   (Ctrl+1…9 — быстрый выбор)"
-                        color: Theme.textFaint
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontBody
-                        visible: hubSearch.text === ""
-                    }
-
-                    onTextChanged: root.setQuery(text)
-                    Keys.onEscapePressed: {
-                        if (text !== "")
-                            text = ""
-                        else
-                            root.closePanel()
-                    }
-                    Keys.onUpPressed: root.moveResult(-1)
-                    Keys.onDownPressed: root.moveResult(1)
-                    Keys.onReturnPressed: {
-                        // H38: если debounce ещё не сработал — досчитываем сразу
-                        if (searchDebounce.running) {
-                            searchDebounce.stop()
-                            root.applyQuery(root.query)
-                        }
-                        root.activateResult()
-                    }
-                    Keys.onPressed: (e) => {
-                        // H14: цифры остаются обычным вводом; быстрый выбор — по Ctrl+1…9
-                        if (e.key >= Qt.Key_1 && e.key <= Qt.Key_9
-                            && (e.modifiers & Qt.ControlModifier)) {
-                            root.activateIndex(e.key - Qt.Key_1)
-                            e.accepted = true
-                        }
-                    }
-                }
-            }
         }
 }
