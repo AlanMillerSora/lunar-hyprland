@@ -53,11 +53,17 @@ PanelWindow {
     }
 
     // при открытии: фокус на ловца клавиш; сканирую только если ещё не сканировал
-    onShowingChanged: if (showing) {
-        if (!root.scanned)
-            wallScan.running = true
-        keyCatcher.forceActiveFocus()
-        Qt.callLater(carousel.centerOnStart)
+    onShowingChanged: {
+        if (showing) {
+            if (!root.scanned)
+                wallScan.running = true
+            keyCatcher.forceActiveFocus()
+            Qt.callLater(carousel.centerOnStart)
+        } else {
+            // закрыли до подтверждения — отменяю его
+            confirmTimer.stop()
+            root.confirming = false
+        }
     }
 
     // ── полка: картинки из ~/Pictures, ~/Wallpapers, ~/Pictures/Wallpapers ──
@@ -67,7 +73,7 @@ PanelWindow {
         command: ["bash", "-c",
             "find \"$HOME/Pictures\" \"$HOME/Wallpapers\" \"$HOME/Pictures/Wallpapers\" " +
             "-maxdepth 2 -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \\) " +
-            "2>/dev/null | sort -u | head -80"]
+            "2>/dev/null | sort -u | head -150"]
         stdout: StdioCollector {
             onStreamFinished: {
                 root.walls = text.trim().split("\n").filter(function(x) { return x.length > 0 })
@@ -133,14 +139,35 @@ PanelWindow {
     }
 
     // ── поставить и выйти ──
+    property bool confirming: false
+    property int commitIndex: -1
+
+    Timer {
+        id: confirmTimer
+        interval: 300
+        repeat: false
+        onTriggered: {
+            var p = root.walls[root.commitIndex]
+            Theme.wallpaperPath = p
+            Theme.wallpaperMode = "image"
+            Theme.applyPhotoPalette(p)
+            root.confirming = false
+            root.showing = false
+        }
+    }
+
     function commit(i) {
         if (i < 0 || i >= root.walls.length)
             return
-        var p = root.walls[i]
-        Theme.wallpaperPath = p
-        Theme.wallpaperMode = "image"
-        Theme.applyPhotoPalette(p)
-        root.showing = false
+        if (root.confirming)
+            return
+        // короткое подтверждение: выбранная карточка приподнимается и светлеет,
+        // потом обои встают и оверлей уходит
+        root.confirming = true
+        root.commitIndex = i
+        carousel.selectedIndex = i
+        carousel.contentX = i * carousel.step
+        confirmTimer.restart()
     }
 
     function moveSel(delta) {
@@ -187,10 +214,17 @@ PanelWindow {
         }
     }
 
-    // клик мимо ленты закрывает
-    MouseArea {
+    // затемнение фона: объём и фокус на карточках; клик мимо закрывает
+    Rectangle {
         anchors.fill: parent
-        onClicked: root.showing = false
+        color: "black"
+        opacity: root.showing ? (root.confirming ? 0.62 : 0.42) : 0
+        visible: opacity > 0
+        Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+        MouseArea {
+            anchors.fill: parent
+            onClicked: root.showing = false
+        }
     }
 
     // ── пустая полка ──
@@ -228,6 +262,14 @@ PanelWindow {
         clip: true
         contentHeight: height
         boundsBehavior: Flickable.StopAtBounds
+        flickDeceleration: 800
+        maximumFlickVelocity: 6000
+        // вход: лента мягко проявляется
+        opacity: root.showing ? 1 : 0
+        scale: root.showing ? 1 : 0.97
+        transformOrigin: Item.Center
+        Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
 
         property int selectedIndex: 0
         property bool ready: false
@@ -251,16 +293,18 @@ PanelWindow {
         }
 
         onWidthChanged: centerOnStart()
-        // после свободного флика прилипаю выбором к ближайшей к центру карточке
+        // после свободного флика прилипаю к ближайшей к центру карточке
         onMovementEnded: {
             if (root.walls.length <= 0)
                 return
             selectedIndex = Math.max(0, Math.min(Math.round(contentX / step), root.walls.length - 1))
+            contentX = selectedIndex * step
         }
 
         Behavior on contentX {
-            enabled: carousel.ready
-            SmoothedAnimation { duration: 700 }
+            // во время свободного флика не мешаю физике, потом мягко довожу
+            enabled: carousel.ready && !carousel.moving
+            NumberAnimation { duration: 320; easing.type: Easing.OutCubic }
         }
 
         Row {
@@ -310,7 +354,9 @@ PanelWindow {
                         height: delegateItem.height
                         x: delegateItem.edgeOffset
                         scale: delegateItem.scaleFactor
+                            * (root.confirming && delegateItem.index === root.commitIndex ? 1.07 : 1)
                         transformOrigin: Item.Center
+                        Behavior on scale { NumberAnimation { duration: 170; easing.type: Easing.OutCubic } }
 
                         // тень — запечённый PNG, 9-слайс: один квад, без MultiEffect
                         BorderImage {
@@ -345,10 +391,11 @@ PanelWindow {
                         Rectangle {
                             z: 10
                             anchors.fill: parent
-                            visible: delegateItem.active
+                            visible: delegateItem.active || (root.confirming && delegateItem.index === root.commitIndex)
                             color: "transparent"
                             border.width: 2
-                            border.color: Theme.alpha(Theme.accent, 0.6)
+                            border.color: (root.confirming && delegateItem.index === root.commitIndex)
+                                ? Theme.accent : Theme.alpha(Theme.accent, 0.6)
                         }
                     }
 
@@ -358,7 +405,10 @@ PanelWindow {
                         onEntered: carousel.selectedIndex = index
                         onClicked: root.commit(index)
                         onWheel: function(wheel) {
-                            carousel.flick(-wheel.angleDelta.y * 8, 0)
+                            if (wheel.angleDelta.y === 0)
+                                return
+                            // инерционный флик: колесо катит ленту, потом прилипает к центру
+                            carousel.flick(-wheel.angleDelta.y * 12, 0)
                             wheel.accepted = true
                         }
                     }
