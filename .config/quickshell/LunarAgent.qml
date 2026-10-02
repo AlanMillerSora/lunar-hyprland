@@ -520,11 +520,17 @@ FloatingWindow {
         // whitelist по argv: hyprctl / qs ipc call <наша цель> / наши скрипты /
         // простые системные утилиты / systemctl --user (ограниченно)
         readonly property var qsTargets: ["hub", "sidebar", "rsidebar", "clipboard",
-            "volume", "media", "tray", "power", "agent", "overview"]
-        readonly property var simpleTools: ["wpctl", "playerctl", "pactl",
+            "volume", "tray", "power", "overview"]
+        readonly property var simpleTools: ["wpctl", "playerctl",
             "grim", "slurp", "wl-copy", "wl-paste", "notify-send",
             "checkupdates", "df", "free", "uptime", "nvidia-smi", "lscpu",
             "lsblk", "sensors", "uname"]
+        // pactl разрешаю только чтением/регулировкой: load-module/unload-module
+        // грузят код в PipeWire-демон — это лишняя поверхность для агента.
+        readonly property var pactlSafe: ["get-sink-volume", "get-source-volume",
+            "get-sink-mute", "get-source-mute", "set-sink-volume",
+            "set-source-volume", "set-sink-mute", "set-source-mute",
+            "list", "stat", "info"]
         readonly property var systemctlRead: ["status", "is-active", "is-enabled",
             "show", "list-units", "list-unit-files", "cat"]
         // у hyprctl разрешаю только чтение + eval/dispatch с безопасной Lua
@@ -593,6 +599,9 @@ FloatingWindow {
                 if (systemctlMutate.indexOf(verb) !== -1)
                     return argv.length === 4 && isLunarUnit(argv[3])
                 return false
+            }
+            if (isTool(prog, "pactl")) {
+                return pactlSafe.indexOf(argv[1] || "") !== -1
             }
             for (var i = 0; i < simpleTools.length; i++)
                 if (isTool(prog, simpleTools[i])) return true

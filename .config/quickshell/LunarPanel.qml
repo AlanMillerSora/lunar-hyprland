@@ -272,7 +272,7 @@ PanelWindow {
         target: Theme
         function onTrayVisibleChanged() { root.refreshTray() }
     }
-    Component.onCompleted: root.refreshTray()
+    Component.onCompleted: { root.refreshTray(); root.setTeleMark(false) }
 
     Process { id: trayPanelProc; running: false }
     function openTrayPanel() {
@@ -475,7 +475,7 @@ PanelWindow {
 
     function openNetwork() {
         hubOpenProc.command = ["bash", "-c",
-            "qs ipc call hub open; sleep 0.15; qs ipc call hub nav 4"]
+            "qs ipc call hub open; sleep 0.15; qs ipc call hub nav 3"]
         hubOpenProc.running = true
     }
 
@@ -645,6 +645,10 @@ PanelWindow {
                : "rm -f \"$HOME/.cache/lunar/tele\""]
         teleMarkProc.running = true
     }
+    // шелл упал/перезапустился в режиме sys — маркер мог остаться:
+    // снимаю при завершении, иначе nvidia-smi дёргается вечно в горячем пути
+    // (при старте тоже — см. общий Component.onCompleted у трея)
+    Component.onDestruction: setTeleMark(false)
     function openPower() {
         powerProc.command = ["qs", "ipc", "call", "power", "toggle"]
         powerProc.running = true
@@ -1977,6 +1981,7 @@ PanelWindow {
             anchors.top: parent.top
             anchors.topMargin: Theme.space3
             anchors.horizontalCenter: parent.horizontalCenter
+            onOpenPlayerRequested: root.openPlayer()
         }
 
         // ── ТЕЛЕМЕТРИЯ: CPU · RAM · GPU · сеть (только при открытой панели) ──

@@ -53,10 +53,15 @@ QtObject {
     readonly property string album: player && player.trackAlbum ? player.trackAlbum : ""
     readonly property string art: player && player.trackArtUrl ? player.trackArtUrl : ""
     readonly property real len: (player && player.length) ? player.length : 0
-    readonly property bool seekable: player !== null && player.canSeek === true && len > 0
-    readonly property bool shuffleSupported: player !== null && player.shuffleSupported === true
+    // писать position можно только если canSeek И positionSupported;
+    // length нужен валидный (lengthSupported) — иначе полоса бессмысленна
+    readonly property bool seekable: player !== null && player.canSeek === true
+        && player.positionSupported === true && player.lengthSupported === true && len > 0
+    readonly property bool shuffleSupported: player !== null && player.canControl === true
+        && player.shuffleSupported === true
     readonly property bool shuffle: player !== null && player.shuffle === true
-    readonly property bool loopSupported: player !== null && player.loopSupported === true
+    readonly property bool loopSupported: player !== null && player.canControl === true
+        && player.loopSupported === true
     // 0 = выкл, 1 = трек, 2 = плейлист (MprisLoopState)
     readonly property int loopState: player !== null ? player.loopState : 0
 
@@ -99,7 +104,12 @@ QtObject {
         if (!mc.seekable || !mc.player || mc.len <= 0)
             return
         var t = Math.max(0, Math.min(mc.len, sec))
-        mc.player.position = t
+        if (mc.player.positionSupported) {
+            mc.player.position = t
+        } else {
+            // фолбэк: относительный seek от текущей позиции
+            mc.player.seek(t - (mc.player.position || 0))
+        }
         mc.shownPos = t
     }
 
@@ -120,12 +130,9 @@ QtObject {
         mc.player.loopState = (s === 0) ? 2 : (s === 2 ? 1 : 0)
     }
 
-    // очередь «далее»: у MPRIS списка нет, поэтому показываю соседей
-    // по плейлисту, если он есть (xesam:trackNumber), иначе — заголовок
-    readonly property var upNext: {
-        if (!player)
-            return []
-        var list = player.trackList || []
-        return list.slice(0, 8)
-    }
+    // Очередь у MPRIS недоступна: интерфейсы TrackList/Playlist в
+    // Quickshell 0.3.1 не реализованы (свойство trackList у MprisPlayer
+    // отсутствует). Свой mpv-плеер отдаёт очередь через PlayerCore —
+    // поэтому в панели показываю не «ДАЛЕЕ», а вход в полный плеер.
+    readonly property bool queueAvailable: false
 }

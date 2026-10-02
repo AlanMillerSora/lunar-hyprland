@@ -50,15 +50,31 @@ gm="0"
 pp="$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || echo performance)"
 
 # ── CPU / RAM: всегда (лёгкое чтение /proc, без nvidia-smi) ──
+# Поля /proc/stat после «cpu»: user nice system idle iowait irq softirq steal.
+# Раньше разбор был сдвинут (первое поле «cpu» в a) — idle считался как
+# system+idle, а total без iowait/irq → процент врал. Беру по именам.
 cpu=0
-read -r a b c d e rest < /proc/stat 2>/dev/null
-idle=$((d + e)); total=$((a + b + c + d + e))
+read -r _ u n s i w irq soft steal rest < /proc/stat 2>/dev/null
+idle=$((i + w)); total=$((u + n + s + i + w + irq + soft + steal))
+[ "$total" -gt 0 ] || total=1
 if [ -r "$HOME/.cache/lunar/cpu-last" ]; then
-  read -r pi pt < "$HOME/.cache/lunar/cpu-last"
-  dt=$((total - pt)); di=$((idle - pi))
-  [ "$dt" -gt 0 ] && cpu=$(( (100 * (dt - di)) / dt ))
+  read -r pi pt pts < "$HOME/.cache/lunar/cpu-last"
+  # валидация: битый/пустой файл не должен давать мусорный процент
+  case "${pi:-x}${pt:-x}${pts:-x}" in
+    *[!0-9]*|*x*) pi=0; pt=0; pts=0 ;;
+  esac
+  dt=$((total - pt)); di=$((idle - pi)); now=$(date +%s)
+  # слишком короткий интервал (частые перезапуски/открытия панели) —
+  # дельта шумная, оставляю прошлый процент
+  if [ "$dt" -gt 0 ] && [ $((now - pts)) -ge 1 ]; then
+    v=$(( (100 * (dt - di)) / dt ))
+    [ "$v" -lt 0 ] && v=0
+    [ "$v" -gt 100 ] && v=100
+    cpu=$v
+  fi
 fi
-printf '%s %s\n' "$idle" "$total" > "$HOME/.cache/lunar/cpu-last"
+mkdir -p "$HOME/.cache/lunar" 2>/dev/null
+printf '%s %s %s\n' "$idle" "$total" "$(date +%s)" > "$HOME/.cache/lunar/cpu-last" 2>/dev/null
 
 # температура CPU (k10temp/zenpower/coretemp)
 ctemp=""

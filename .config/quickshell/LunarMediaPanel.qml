@@ -11,6 +11,9 @@ import Quickshell.Services.Mpris
 Item {
     id: mp
 
+    // просьба открыть полный плеер — ловит LunarPanel (там есть openPlayer)
+    signal openPlayerRequested()
+
     implicitWidth: 430
     implicitHeight: col.implicitHeight
 
@@ -118,7 +121,7 @@ Item {
                     anchors.margins: -6
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.openPlayer()
+                    onClicked: mp.openPlayerRequested()
                 }
             }
         }
@@ -289,7 +292,7 @@ Item {
             }
         }
 
-        // ── разделитель + очередь «далее» ──
+        // ── разделитель + вход в полный плеер ──
         Rectangle {
             width: parent.width
             height: 1
@@ -297,48 +300,44 @@ Item {
         }
 
         Text {
-            text: "ДАЛЕЕ"
+            text: "ОЧЕРЕДЬ И ПОИСК — В ПОЛНОМ ПЛЕЕРЕ"
             color: Theme.textFaint
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontTiny
             font.letterSpacing: 2
         }
 
-        Column {
+        Rectangle {
             width: parent.width
-            spacing: Theme.space1
+            height: 30
+            radius: Theme.radius
+            color: openFullMouse.containsMouse ? Theme.hoverStrong : Theme.fill
 
-            Repeater {
-                model: MediaCore.upNext
-                delegate: Row {
-                    required property var modelData
-                    width: parent.width
-                    height: 20
-                    spacing: Theme.space2
-                    Text {
-                        width: 20
-                        text: (index + 1) + ""
-                        color: Theme.textFaint
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontTiny
-                    }
-                    Text {
-                        width: parent.width - 28
-                        elide: Text.ElideRight
-                        text: (modelData.trackTitle || modelData.title || modelData.name || "")
-                        color: Theme.textDim
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize(12)
-                    }
+            Row {
+                anchors.centerIn: parent
+                spacing: Theme.space2
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "\uf03d"
+                    color: Theme.barDim
+                    font.family: Theme.iconFont
+                    font.pixelSize: 13
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "открыть плеер"
+                    color: Theme.textDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 12
                 }
             }
 
-            Text {
-                visible: MediaCore.upNext.length === 0
-                text: "очередь пуста"
-                color: Theme.textFaint
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize(12)
+            MouseArea {
+                id: openFullMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: mp.openPlayerRequested()
             }
         }
     }
