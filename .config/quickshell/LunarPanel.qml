@@ -525,9 +525,8 @@ PanelWindow {
     // ── ЕДИНЫЙ БАР: один фон на весь верх, содержимое внутри ──
     Rectangle {
         id: bar
-        // один компактный бар справа (по ширине содержимого, не на весь экран)
-        anchors.right: parent.right
-        anchors.rightMargin: Theme.barMargin
+        // один компактный бар по центру (по ширине содержимого)
+        anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
         width: midBar.width + centerPill.width + rightBar.width
         height: Theme.barH
