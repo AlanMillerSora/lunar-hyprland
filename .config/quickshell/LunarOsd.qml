@@ -58,21 +58,8 @@ PanelWindow {
     readonly property string icon: muted ? "\uf026" : (volume < 50 ? "\uf027" : "\uf028")
 
     function showOsd() {
-        // попап громкости открыт — OSD не нужен (иначе дубль по центру)
-        if (Theme.volumePopupOpen) {
-            showing = false
-            return
-        }
         showing = true
         hideTimer.restart()
-    }
-
-    Connections {
-        target: Theme
-        function onVolumePopupOpenChanged() {
-            if (Theme.volumePopupOpen)
-                root.showing = false
-        }
     }
 
     Timer {

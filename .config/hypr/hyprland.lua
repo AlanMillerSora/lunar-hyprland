@@ -318,6 +318,12 @@ hl.bind(M .. " + SHIFT + E", dsp.exec_cmd("qs ipc call sidebar toggle"))   -- б
 hl.bind(M .. " + SHIFT + N", dsp.exec_cmd("qs ipc call rsidebar toggle"))  -- панель справа: уведомления/музыка/календарь
 hl.bind(M .. " + A",       dsp.exec_cmd("qs ipc call agent toggle"))      -- оверлей-агент OpenCode (Quickshell)
 hl.bind(M .. " + O",       dsp.exec_cmd("qs ipc call overview toggle"))   -- обзор столов (Quickshell)
+-- панель бара: режимы вниз (пульт/медиа/поиск/уведы/телеметрия)
+hl.bind(M .. " + C",       dsp.exec_cmd("qs ipc call bar control"))
+hl.bind(M .. " + X",       dsp.exec_cmd("qs ipc call bar media"))
+hl.bind(M .. " + D",       dsp.exec_cmd("qs ipc call bar search"))
+hl.bind(M .. " + N",       dsp.exec_cmd("qs ipc call bar notifs"))
+hl.bind(M .. " + I",       dsp.exec_cmd("qs ipc call bar sys"))
 hl.bind(M .. " + SHIFT + R", dsp.exec_cmd("~/.config/hypr/scripts/eclipse-record.sh toggle"))  -- запись экрана (start/stop)
 hl.bind(M .. " + SHIFT + G", dsp.exec_cmd("~/.config/hypr/scripts/eclipse-gamemode.sh toggle"))  -- Game Mode (анимации/blur выкл, performance)
 hl.bind(M .. " + SHIFT + P", dsp.window.pin())                             -- закрепить окно поверх всех

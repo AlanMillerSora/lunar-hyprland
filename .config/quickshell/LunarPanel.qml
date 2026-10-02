@@ -238,12 +238,8 @@ PanelWindow {
         pavuProc.running = true
     }
 
-    // Клик по значку громкости открывает попап с крупным ползунком (LunarVolume)
-    Process { id: volPanelProc; running: false }
-    function openVolumePanel() {
-        volPanelProc.command = ["bash", "-c", "qs ipc call volume toggle"]
-        volPanelProc.running = true
-    }
+    // Значок звука в баре открывает панель-пульт (там инлайн-громкость и мик).
+    function openVolumePanel() { root.togglePanel("control") }
 
     // ─────────── системный трей ───────────
     // сколько значков показываем в панели, остальные — в списке (Theme.trayVisible)
@@ -362,6 +358,39 @@ PanelWindow {
     property bool gameMode: false
     property string cpuGovernor: ""
     property bool recording: false
+
+    // ── телеметрия для режима sys (заполняет eclipse-status.sh) ──
+    property int teleCpu: 0
+    property int teleCpuTemp: 0
+    property int teleRam: 0
+    property int teleRamTotal: 0
+    property int teleGpu: -1
+    property int teleGpuTemp: -1
+    property real teleRx: 0      // скорость, КБ/с (дельта счётчиков)
+    property real teleTx: 0
+    property real rxRaw: -1      // сырые суммарные счётчики /proc/net/dev
+    property real txRaw: -1
+    property real prevRx: -1     // предыдущий сырой счётчик /proc/net/dev
+    property real prevTx: -1
+    property double prevNetTs: 0
+
+    function fmtRate(kb) {
+        if (kb >= 1024)
+            return (kb / 1024).toFixed(1) + " МБ/с"
+        return Math.round(kb) + " КБ/с"
+    }
+
+    // считаю скорость по дельте счётчиков и времени опроса
+    function feedNet(rx, tx, now) {
+        if (root.prevRx >= 0 && now > root.prevNetTs) {
+            var dt = (now - root.prevNetTs) / 1000
+            root.teleRx = Math.max(0, (rx - root.prevRx) / 1024 / dt)
+            root.teleTx = Math.max(0, (tx - root.prevTx) / 1024 / dt)
+        }
+        root.prevRx = rx
+        root.prevTx = tx
+        root.prevNetTs = now
+    }
     readonly property int focusedPhase:
         (root.focusedWs && root.focusedWs.id > 0) ? root.focusedWs.id : 0
 
@@ -394,8 +423,30 @@ PanelWindow {
                         root.cpuGovernor = v
                     } else if (k === "rec") {
                         root.recording = (v === "1")
+                    } else if (k === "cpu") {
+                        root.teleCpu = Math.round(parseFloat(v) || 0)
+                    } else if (k === "ctemp") {
+                        root.teleCpuTemp = Math.round(parseFloat(v) || 0)
+                    } else if (k === "ram") {
+                        root.teleRam = Math.round(parseFloat(v) || 0)
+                    } else if (k === "rtot") {
+                        root.teleRamTotal = parseInt(v) || 0
+                    } else if (k === "gpu") {
+                        // есть только в режиме телеметрии (иначе пусто)
+                        root.teleGpu = (v === "") ? -1 : (Math.round(parseFloat(v) || 0))
+                    } else if (k === "gput") {
+                        root.teleGpuTemp = (v === "") ? -1 : (Math.round(parseFloat(v) || 0))
+                    } else if (k === "rx") {
+                        root.rxRaw = parseFloat(v) || 0
+                    } else if (k === "tx") {
+                        root.txRaw = parseFloat(v) || 0
                     }
                 }
+
+                // скорость сети: дельта сырых счётчиков (получаю их в одной
+                // строке статуса — отдельный опрос не нужен)
+                if (root.rxRaw >= 0)
+                    root.feedNet(root.rxRaw, root.txRaw, Date.now())
             }
         }
     }
@@ -414,11 +465,12 @@ PanelWindow {
     Process { id: dndProc; running: false }
     Process { id: gameProc; running: false }
     Process { id: recordProc; running: false }
-    Process {
-        id: mediaPanelProc
-        running: false
-        command: ["qs", "ipc", "call", "media", "toggle"]
+
+    function openPlayer() {
+        quitProc.command = ["qs", "ipc", "call", "player", "toggle"]
+        quitProc.running = true
     }
+    Process { id: quitProc; running: false }
 
     function openNetwork() {
         hubOpenProc.command = ["bash", "-c",
@@ -465,10 +517,10 @@ PanelWindow {
     // высота панели по режиму (анимируется при смене режима)
     function panelHeightFor(m) {
         if (m === "control") return 150
-        if (m === "media") return Theme.barH
+        if (m === "media") return 30 + mediaPanel.implicitHeight + Theme.space3
         if (m === "search") return 320
         if (m === "notifs") return 320
-        if (m === "sys") return 220
+        if (m === "sys") return 30 + sysBody.implicitHeight + Theme.space3
         return Theme.barH
     }
     property real panelTargetH: root.panelHeightFor(panelMode)
@@ -477,7 +529,7 @@ PanelWindow {
     // ширина панели по режиму: пульт/поиск/уведы — фикс, медиа — по содержимому
     function panelWidthFor(m) {
         if (m === "control") return Theme.panelWControl
-        if (m === "media") return mediaRow.implicitWidth + 2 * Theme.barPad
+        if (m === "media") return mediaPanel.implicitWidth + 2 * Theme.space3
         if (m === "notifs") return Theme.panelWNotifs
         return Theme.panelWSearch
     }
@@ -528,6 +580,7 @@ PanelWindow {
         function media() { root.togglePanel("media") }
         function search() { root.togglePanel("search") }
         function notifs() { root.togglePanel("notifs") }
+        function sys() { root.togglePanel("sys") }
         function reset() { root.closePanel() }
     }
 
@@ -561,7 +614,8 @@ PanelWindow {
         root.searchIndex = 0
     }
 
-    // при открытии режима: уведы — обновить, поиск — фокус на поле
+    // при открытии режима: уведы — обновить, поиск — фокус на поле,
+    // прочие — свежий статус (телеметрия в sys)
     onPanelModeChanged: {
         root.panelContentOpacity = 0
         panelFade.restart()
@@ -569,7 +623,10 @@ PanelWindow {
             NotifModel.load()
         else if (panelMode === "search")
             Qt.callLater(function() { if (searchInput) searchInput.forceActiveFocus() })
-        else {
+        if (panelMode !== "" && panelMode !== "search")
+            statusProc.running = true
+        root.setTeleMark(panelMode === "sys")
+        if (panelMode !== "search") {
             searchQuery = ""
             searchResults = []
         }
@@ -579,6 +636,14 @@ PanelWindow {
     Process { id: powerProc; running: false }
     Process { id: hubToggleProc; running: false }
     Process { id: wallpapersProc; running: false }
+    // режим sys просит eclipse-status.sh мерить GPU (nvidia-smi) — маркер-файл
+    Process { id: teleMarkProc; running: false }
+    function setTeleMark(on) {
+        teleMarkProc.command = ["bash", "-c",
+            on ? "mkdir -p \"$HOME/.cache/lunar\" && : > \"$HOME/.cache/lunar/tele\""
+               : "rm -f \"$HOME/.cache/lunar/tele\""]
+        teleMarkProc.running = true
+    }
     function openPower() {
         powerProc.command = ["qs", "ipc", "call", "power", "toggle"]
         powerProc.running = true
@@ -1588,12 +1653,10 @@ PanelWindow {
             id: ctlBody
             visible: root.panelMode === "control"
             opacity: root.panelContentOpacity
-            anchors.left: parent.left
-            anchors.right: parent.right
             anchors.top: parent.top
-            anchors.topMargin: Theme.panelHeaderH + Theme.space2
-            anchors.leftMargin: Theme.barPad
-            anchors.rightMargin: Theme.barPad
+            anchors.topMargin: Theme.panelHeaderH + Theme.space1
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: parent.width - Theme.barPad * 2
             spacing: Theme.space2
 
             // действия — плоские чипы (без рамок): глиф + подпись
@@ -1777,114 +1840,124 @@ PanelWindow {
             }
         }
 
-        // ── МЕДИА (в строку) ──
-        Row {
-            id: mediaRow
+        // ── МЕДИА: обложка, seek, транспорт, shuffle/repeat, очередь ──
+        // Единый компонент LunarMediaPanel (источник — MediaCore/MPRIS).
+        LunarMediaPanel {
+            id: mediaPanel
             visible: root.panelMode === "media"
             opacity: root.panelContentOpacity
-            anchors.centerIn: parent
-            height: 28
-            spacing: Theme.space3
+            anchors.top: parent.top
+            anchors.topMargin: Theme.space3
+            anchors.horizontalCenter: parent.horizontalCenter
+        }
 
-            // обложка трека: монохром, скруглённая
-            Item {
-                width: 26
-                height: 26
-                anchors.verticalCenter: parent.verticalCenter
-                Image {
-                    id: coverImg
-                    anchors.fill: parent
-                    source: root.player ? (root.player.trackArtUrl || "") : ""
-                    sourceSize: Qt.size(52, 52)
-                    asynchronous: true
-                    fillMode: Image.PreserveAspectCrop
-                    visible: false
+        // ── ТЕЛЕМЕТРИЯ: CPU · RAM · GPU · сеть (только при открытой панели) ──
+        Column {
+            id: sysBody
+            visible: root.panelMode === "sys"
+            opacity: root.panelContentOpacity
+            anchors.top: parent.top
+            anchors.topMargin: Theme.panelHeaderH + Theme.space2
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: parent.width - Theme.barPad * 2
+            spacing: Theme.space2
+
+            Repeater {
+                model: [
+                    { label: "CPU", v: root.teleCpu,
+                      extra: root.teleCpuTemp > 0 ? (root.teleCpuTemp + "°C") : "" },
+                    { label: "RAM", v: root.teleRam,
+                      extra: root.teleRamTotal > 0 ? (root.teleRamTotal + " МБ") : "" },
+                    { label: "GPU", v: root.teleGpu,
+                      extra: root.teleGpuTemp >= 0 ? (root.teleGpuTemp + "°C") : "" }
+                ]
+                delegate: Row {
+                    required property var modelData
+                    width: parent.width
+                    height: 22
+                    spacing: Theme.space2
+                    Text {
+                        width: 44
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: modelData.label
+                        color: Theme.textFaint
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontTiny
+                        font.letterSpacing: 1
+                    }
+                    Text {
+                        width: 46
+                        horizontalAlignment: Text.AlignRight
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: modelData.v < 0 ? "--" : (modelData.v + "%")
+                        color: Theme.text
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(13)
+                        font.bold: true
+                    }
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: parent.width - 44 - 46 - 70 - parent.spacing * 3
+                        height: 5
+                        radius: 2.5
+                        color: Theme.trackBg
+                        Rectangle {
+                            width: parent.width * Math.max(0, Math.min(1, (modelData.v < 0 ? 0 : modelData.v) / 100))
+                            height: parent.height
+                            radius: parent.radius
+                            color: Theme.accent
+                            Behavior on width { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+                        }
+                    }
+                    Text {
+                        width: 70
+                        horizontalAlignment: Text.AlignRight
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: modelData.extra
+                        color: Theme.textDim
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(12)
+                    }
                 }
-                MultiEffect {
-                    anchors.fill: parent
-                    source: coverImg
-                    visible: coverImg.status === Image.Ready
-                    saturation: -1.0
-                    brightness: 0.06
-                    maskEnabled: true
-                    maskSource: coverMaskP
-                }
-                Rectangle {
-                    id: coverMaskP
-                    anchors.fill: parent
-                    radius: 5
-                    color: "white"
-                    visible: false
-                    layer.enabled: true
-                }
+            }
+
+            // ── сеть: скорость (КБ/с), без процента — это поток, не загрузка ──
+            Row {
+                width: parent.width
+                height: 22
+                spacing: Theme.space2
                 Text {
-                    anchors.centerIn: parent
-                    visible: coverImg.status !== Image.Ready
-                    text: "\uf001"
-                    color: Theme.barFaint
-                    font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSize(14)
+                    width: 44
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "СЕТЬ"
+                    color: Theme.textFaint
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontTiny
+                    font.letterSpacing: 1
                 }
-            }
-
-            Text {
-                text: "\uf048"
-                color: Theme.barDim
-                font.family: Theme.iconFont
-                font.pixelSize: Theme.fontSize(15)
-                anchors.verticalCenter: parent.verticalCenter
-                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: if (root.player) root.player.previous() }
-            }
-            Text {
-                text: root.playing ? "\uf04c" : "\uf04b"
-                color: root.playing ? Theme.accent : Theme.barFaint
-                font.family: Theme.iconFont
-                font.pixelSize: Theme.fontSize(16)
-                anchors.verticalCenter: parent.verticalCenter
-                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: if (root.player) root.player.togglePlaying() }
-            }
-            Text {
-                text: "\uf051"
-                color: Theme.barDim
-                font.family: Theme.iconFont
-                font.pixelSize: Theme.fontSize(15)
-                anchors.verticalCenter: parent.verticalCenter
-                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: if (root.player) root.player.next() }
-            }
-
-            Item {
-                width: 220
-                height: 26
-                anchors.verticalCenter: parent.verticalCenter
-                clip: true
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    width: parent.width
-                    elide: Text.ElideRight
-                    text: root.track
-                    color: Theme.barText
+                    text: "↓ " + root.fmtRate(root.teleRx)
+                    color: Theme.text
                     font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(12)
+                    font.pixelSize: Theme.fontSize(13)
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "↑ " + root.fmtRate(root.teleTx)
+                    color: Theme.textDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(13)
                 }
             }
 
             Text {
-                text: "\uf03d"
-                color: Theme.barDim
-                font.family: Theme.iconFont
-                font.pixelSize: Theme.fontSize(14)
-                anchors.verticalCenter: parent.verticalCenter
-                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: mediaPanelProc.running = true }
-            }
-
-            // закрыть
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: "\uf00d"
-                color: mediaCloseMouse.containsMouse ? Theme.danger : Theme.barFaint
-                font.family: Theme.iconFont
-                font.pixelSize: Theme.fontSize(14)
-                MouseArea { id: mediaCloseMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.closePanel() }
+                visible: root.teleGpu < 0
+                width: parent.width
+                text: "GPU — только в открытой панели (nvidia-smi не в горячем пути)"
+                color: Theme.textFaint
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontTiny
             }
         }
 
