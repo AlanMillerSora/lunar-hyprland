@@ -56,15 +56,15 @@ Item {
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSize(16)
             clip: true
-            onTextChanged: host.setSearchQuery(text)
+            onTextChanged: Launcher.setQuery(text)
             Keys.onEscapePressed: {
-                if (text !== "") { text = ""; host.setSearchQuery("") }
+                if (text !== "") { text = ""; Launcher.setQuery("") }
                 else host.closePanel()
             }
-            Keys.onUpPressed: host.moveSearch(-1)
-            Keys.onDownPressed: host.moveSearch(1)
-            Keys.onReturnPressed: host.runSearch()
-            Keys.onEnterPressed: host.runSearch()
+            Keys.onUpPressed: Launcher.move(-1)
+            Keys.onDownPressed: Launcher.move(1)
+            Keys.onReturnPressed: Launcher.run()
+            Keys.onEnterPressed: Launcher.run()
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "поиск: приложение, страница Hub, действие, счёт…"
@@ -103,7 +103,7 @@ Item {
         anchors.top: searchField.bottom
         anchors.topMargin: Theme.space4
         anchors.horizontalCenter: parent.horizontalCenter
-        visible: host.searchQuery.trim() !== "" && host.searchResults.length === 0
+        visible: Launcher.query.trim() !== "" && Launcher.results.length === 0
         text: "ничего не найдено"
         color: Theme.textFaint
         font.family: Theme.fontFamily
@@ -122,7 +122,7 @@ Item {
         clip: true
         spacing: 2
         boundsBehavior: Flickable.StopAtBounds
-        model: host.searchResults
+        model: Launcher.results
         ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
         delegate: Item {
@@ -163,8 +163,8 @@ Item {
                 anchors.fill: parent
                 radius: Theme.cardRadius
                 border.width: 1
-                border.color: index === host.searchIndex ? Theme.alpha(Theme.accent, 0.4) : "transparent"
-                color: index === host.searchIndex ? Theme.active
+                border.color: index === Launcher.index ? Theme.alpha(Theme.accent, 0.4) : "transparent"
+                color: index === Launcher.index ? Theme.active
                     : (resMouse.containsMouse ? Theme.hover : "transparent")
                 Behavior on color { ColorAnimation { duration: Theme.animFast } }
 
@@ -184,7 +184,7 @@ Item {
                             visible: modelData.image === undefined || modelData.image === ""
                                 || resIcon.status !== Image.Ready
                             text: modelData.kind === "app" ? "\uf009" : (modelData.icon || "")
-                            color: index === host.searchIndex ? Theme.accent : Theme.textDim
+                            color: index === Launcher.index ? Theme.accent : Theme.textDim
                             font.family: Theme.iconFont
                             font.pixelSize: modelData.kind === "app" ? 16 : Theme.fontSize(18)
                         }
@@ -216,7 +216,7 @@ Item {
                             width: parent.width
                             elide: Text.ElideRight
                             text: modelData.label
-                            color: index === host.searchIndex ? Theme.text : Theme.barText
+                            color: index === Launcher.index ? Theme.text : Theme.barText
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.fontSize(14)
                         }
@@ -249,8 +249,8 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onEntered: host.searchIndex = index
-                    onClicked: { host.searchIndex = index; host.runSearch() }
+                    onEntered: Launcher.index = index
+                    onClicked: { Launcher.index = index; Launcher.run() }
                 }
             }
         }
@@ -258,10 +258,10 @@ Item {
 
     // прокрутка к выбранному при навигации
     Connections {
-        target: host
-        function onSearchIndexChanged() {
-            if (host.searchIndex >= 0 && host.searchIndex < resList.count)
-                resList.positionViewAtIndex(host.searchIndex, ListView.Contain)
+        target: Launcher
+        function onIndexChanged() {
+            if (Launcher.index >= 0 && Launcher.index < resList.count)
+                resList.positionViewAtIndex(Launcher.index, ListView.Contain)
         }
     }
 }

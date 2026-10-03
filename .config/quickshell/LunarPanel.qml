@@ -680,61 +680,7 @@ PanelWindow {
         function reset() { BarState.closePanel() }
     }
 
-    // ── поиск в панели (общий SearchModel) ──
-    property string searchQuery: ""
-    property var searchResults: []
-    property int searchIndex: 0
-    Timer {
-        id: searchDebounce
-        interval: 120
-        repeat: false
-        onTriggered: {
-            root.searchResults = SearchModel.search(root.searchQuery)
-            root.searchIndex = root.firstSelectable(0)
-        }
-    }
-    function setSearchQuery(q) {
-        root.searchQuery = q
-        searchDebounce.restart()
-    }
-    // первый выбираемый (не заголовок-секция) результат
-    function firstSelectable(from) {
-        var n = root.searchResults.length
-        for (var i = from; i < n; i++)
-            if (!root.searchResults[i].isHeader)
-                return i
-        for (var j = 0; j < n; j++)
-            if (!root.searchResults[j].isHeader)
-                return j
-        return -1
-    }
-    function moveSearch(d) {
-        var n = root.searchResults.length
-        if (n === 0)
-            return
-        var i = root.searchIndex
-        for (var k = 0; k < n; k++) {
-            i = (i + d + n) % n
-            if (!root.searchResults[i].isHeader) {
-                root.searchIndex = i
-                return
-            }
-        }
-    }
-    function runSearch() {
-        var r = root.searchResults[root.searchIndex]
-        if (!r || r.isHeader) {
-            var f = root.firstSelectable(0)
-            if (f < 0)
-                return
-            r = root.searchResults[f]
-        }
-        SearchModel.activate(r)
-        BarState.closePanel()
-        root.searchQuery = ""
-        root.searchResults = []
-        root.searchIndex = 0
-    }
+    // поиск — в сервисе Launcher (панель биндится к нему)
 
     // при открытии режима: уведы — обновить, поиск — фокус на поле,
     // прочие — свежий статус (телеметрия в sys)
@@ -746,17 +692,15 @@ PanelWindow {
             if (BarState.mode === "notifs")
                 NotifModel.load()
             else if (BarState.mode === "search") {
-                root.setSearchQuery("")
+                Launcher.open()
                 Qt.callLater(function() { if (searchPanel) searchPanel.focusInput() })
             }
             if (BarState.mode !== "" && BarState.mode !== "search")
                 statusProc.running = true
             // «пульт» содержит свой ползунок громкости — OSD при нём не дублирую
             Theme.barControlOpen = (BarState.mode === "control")
-            if (BarState.mode !== "search") {
-                searchQuery = ""
-                searchResults = []
-            }
+            if (BarState.mode !== "search")
+                Launcher.reset()
         }
     }
 
