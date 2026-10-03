@@ -2,7 +2,7 @@
 # ════════════════════════════════════════════════════════════════
 #  eclipse-status.sh — быстрый статус для панели одной строкой:
 #     net=… kb=… kbdev=… dnd=… notif=… gpu=… gput=… gm=… pp=…
-#  net  — eth | wifi:<сигнал> | off
+#  net  — eth | wifi | off
 #  kb   — текущая раскладка (RU/EN), kbdev — устройство
 #  dnd  — 1 если mako в режиме «не беспокоить»
 #  notif — сколько уведомлений
@@ -15,13 +15,23 @@
 # ════════════════════════════════════════════════════════════════
 
 # ── сеть ──
+# Определяю по маршруту/интерфейсам (networkd, без NetworkManager):
+# ethernet-устройство → eth, wireless → wifi, иначе off.
 net="off"
-dev_types="$(nmcli -t -f TYPE,STATE device status 2>/dev/null)"
-if grep -q '^ethernet:connected' <<<"$dev_types"; then
-  net="eth"
-elif grep -q '^wifi:connected' <<<"$dev_types"; then
-  sig="$(nmcli -t -f IN-USE,SIGNAL device wifi list --rescan no 2>/dev/null | grep '^\*' | head -1 | cut -d: -f2)"
-  net="wifi:${sig:-0}"
+defdev="$(ip route show default 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="dev"){print $(i+1); exit}}' | head -1)"
+if [ -z "$defdev" ]; then
+  for d in /sys/class/net/*; do
+    n="$(basename "$d")"
+    [ "$n" = "lo" ] && continue
+    [ "$(cat "$d/operstate" 2>/dev/null)" = "up" ] && { defdev="$n"; break; }
+  done
+fi
+if [ -n "$defdev" ]; then
+  if [ -d "/sys/class/net/$defdev/wireless" ]; then
+    net="wifi:0"
+  else
+    net="eth"
+  fi
 fi
 
 # ── раскладка ──
