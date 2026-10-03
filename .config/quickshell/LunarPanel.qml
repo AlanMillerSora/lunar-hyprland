@@ -742,11 +742,12 @@ PanelWindow {
     // ── ЕДИНЫЙ БАР: один фон на весь верх, содержимое внутри ──
     Rectangle {
         id: bar
-        // один компактный бар по центру (по ширине содержимого)
-        anchors.horizontalCenter: parent.horizontalCenter
+        // фон тянется от левого края midBar до правого края rightBar:
+        // часы (centerPill) держу по центру экрана независимо от ширины
+        anchors.left: midBar.left
+        anchors.right: rightBar.right
         anchors.top: parent.top
         anchors.topMargin: Theme.barMargin
-        width: midBar.width + centerPill.width + rightBar.width
         height: Theme.barH
         radius: Theme.barRadius
         color: root.pillBg
@@ -1000,7 +1001,7 @@ PanelWindow {
     // Ячейки-сегменты: общий фон fill, слева короткий штрих-акцент.
     Rectangle {
         id: midBar
-        anchors.left: bar.left
+        anchors.right: centerPill.left
         anchors.verticalCenter: bar.verticalCenter
         opacity: 1 - root.morph
         height: Theme.barH
@@ -1475,7 +1476,11 @@ PanelWindow {
     // ── ЦЕНТР: часы/дата + медиа + кнопка пульта (внутри бара) ──
     Rectangle {
         id: centerPill
-        anchors.left: midBar.right
+        // часы (последняя ячейка defRow) ставлю ровно на центр экрана: сдвигаю
+        // плашку так, чтобы её правая ячейка легла центром на центр экрана, —
+        // тогда ширина midBar/rightBar и рост медиа часы не двигают
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.horizontalCenterOffset: Theme.barPad + clockCell.width / 2 - centerPill.width / 2
         anchors.verticalCenter: bar.verticalCenter
         opacity: 1 - root.morph
         height: Theme.barH
@@ -1614,6 +1619,7 @@ PanelWindow {
 
             // часы + дата — одна ячейка со штрихом-акцентом
             Cell {
+                id: clockCell
                 anchors.verticalCenter: parent.verticalCenter
                 accent: Theme.accent
                 Row {
