@@ -45,6 +45,7 @@ PanelWindow {
     // по-прежнему пропускают клики (важно для fullscreen).
     mask: Region {
         Region { item: BarState.expanded ? clickShield : null }
+        Region { item: !BarState.barLock ? barHot : null }
         Region { item: bar }
         Region { item: root.recording ? recPill : null }
     }
@@ -58,6 +59,39 @@ PanelWindow {
             anchors.fill: parent
             onClicked: BarState.closePanel()
         }
+    }
+
+    // ── авто-скрытие бара ──
+    // BarState.barLock (по умолчанию включён) держит бар всегда видимым.
+    // Выключил (IPC «bar lock») — бар прячется и выезжает по кромке сверху.
+    property bool barHidden: false
+    property bool barHotHovered: false
+    readonly property bool barPinnedVisible: BarState.barLock || BarState.expanded
+        || BarState.barHovered || root.barHotHovered || root.recording
+    onBarPinnedVisibleChanged: {
+        if (root.barPinnedVisible) {
+            root.barHidden = false
+            hideBarTimer.stop()
+        } else {
+            hideBarTimer.restart()
+        }
+    }
+    Timer {
+        id: hideBarTimer
+        interval: 1400
+        repeat: false
+        onTriggered: if (!root.barPinnedVisible) root.barHidden = true
+    }
+
+    // кромка-ловушка: выезд бара при авто-скрытии
+    Item {
+        id: barHot
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: Math.max(4, Theme.barMargin)
+        visible: !BarState.barLock
+        HoverHandler { onHoveredChanged: root.barHotHovered = hovered }
     }
 
     // Палитра из системной темы (Hub / лаунчер / настройки):
@@ -677,6 +711,7 @@ PanelWindow {
         function sys() { BarState.togglePanel("sys") }
         function weather() { BarState.togglePanel("weather") }
         function reset() { BarState.closePanel() }
+        function lock() { BarState.barLock = !BarState.barLock }
     }
 
     // ── поиск в панели (общий SearchModel) ──
@@ -779,6 +814,16 @@ PanelWindow {
     FontMetrics { id: fmIcon19; font.family: Theme.iconFont; font.pixelSize: Theme.fontSize(19) }
 
     // ── ЕДИНЫЙ БАР: один фон на весь верх, содержимое внутри ──
+    // ── ГРУППА БАРА: единая плашка (общая для авто-скрытия) ──
+    Item {
+        id: barGroup
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: Theme.barH + Theme.barMargin * 2
+        y: root.barHidden ? -(height + 4) : 0
+        opacity: root.barHidden ? 0 : 1
+        Behavior on y { Anim { type: Anim.FastSpatial } }
+        Behavior on opacity { Anim { type: Anim.FastEffects } }
     Rectangle {
         id: bar
         // единый остров: в покое — строка по ширине содержимого и по центру
@@ -1727,6 +1772,7 @@ PanelWindow {
             }
         }
     }
+    }
 
     // ── ПАНЕЛЬ: контент режима внутри раскрытой вниз плашки бара ──
     // Сама плашка растёт вниз; здесь — только контент (шапка + тело),
@@ -1736,8 +1782,8 @@ PanelWindow {
         anchors.horizontalCenter: parent.horizontalCenter
         // контент раскрывается внутри плашки бара, из-под его строки
         // выезжает из-под строки бара и в финале заполняет всю плашку
-        anchors.top: bar.top
-        anchors.topMargin: (1 - root.morph) * Theme.barH
+        anchors.top: barGroup.top
+        anchors.topMargin: Theme.barMargin + (1 - root.morph) * Theme.barH
         width: root.panelWidthFor(BarState.mode)
         height: root.morph * root.panelTargetH
         color: "transparent"

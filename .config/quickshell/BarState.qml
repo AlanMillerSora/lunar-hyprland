@@ -20,6 +20,8 @@ QtObject {
     readonly property bool pinned: barHovered || panelHovered
     // игра: пульсовые острова не всплывают (синхронизируется из LunarPanel)
     property bool gameMode: false
+    // бар закреплён (всегда виден). Выключить — бар уходит и выезжает по кромке.
+    property bool barLock: true
 
     property Timer holdTimer: Timer {
         repeat: false
