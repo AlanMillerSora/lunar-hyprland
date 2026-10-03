@@ -254,44 +254,12 @@ import "../widgets/shared"
                                 { label: "GPU", v: host.teleGpu,
                                   extra: host.teleGpuTemp >= 0 ? (host.teleGpuTemp + "°C") : "" }
                             ]
-                            delegate: Row {
+                            delegate: MetricRow {
                                 required property var modelData
                                 width: parent.width
-                                height: 22
-                                spacing: Theme.space2
-                                Text {
-                                    width: 40
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: modelData.label
-                                    color: Theme.textFaint
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontTiny
-                                    font.letterSpacing: 1
-                                }
-                                Text {
-                                    width: 42
-                                    horizontalAlignment: Text.AlignRight
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: modelData.v < 0 ? "--" : (modelData.v + "%")
-                                    color: Theme.text
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSize(13)
-                                    font.bold: true
-                                }
-                                MiniBar {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    width: parent.width - 40 - 42 - 60 - spacing * 3
-                                    value: modelData.v
-                                }
-                                Text {
-                                    width: 60
-                                    horizontalAlignment: Text.AlignRight
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: modelData.extra
-                                    color: Theme.textDim
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSize(12)
-                                }
+                                label: modelData.label
+                                value: modelData.v
+                                extra: modelData.extra
                             }
                         }
                     }
