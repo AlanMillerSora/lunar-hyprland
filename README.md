@@ -18,7 +18,7 @@
 
 ## Коротко
 
-- **Панель** — три плавающих острова: марка и фазы столов · часы · телеметрия и управление.
+- **Панель** — одна плашка по содержимому: марка и фазы столов · пульт/медиа/часы · статус (погода, сеть, PERF, CPU·RAM·GPU, трей, звук). Клик по «пульту» раскрывает саму плашку, остальные режимы выезжают карточкой снизу (`SUPER + C/X/D/N/I`, Esc закрывает).
 - **Hub** — лаунчер и настройки одним окном, которое ресайзится (`SUPER + G`).
 - **Палитра** — один источник цвета (три пресета) на шелл, kitty, GTK, qt6ct, mako, btop, yazi.
 - **Обои** — живая сцена затмения на Qt Quick; фаза = номер рабочего стола.
@@ -45,7 +45,7 @@
 | **07–08** | пустые |
 | **09** | btop — автозапуск |
 
-Иконки столов в панели — ряд фаз: `01`/`09` полная луна, `02–04` серпы со светом слева, `05` кольцо, `06–08` серпы со светом справа. Остальные приложения открываются на текущем столе (правило `app_ws` в `hyprland.lua`).
+Иконки столов в панели — ряд фаз: `01`/`09` полная луна, `02–04` серпы со светом слева, `05` кольцо, `06–08` серпы со светом справа. При наведении (или при переключении — короткий «пик») фаза показывает иконку приложения стола; новое окно на неактивном столе мигает. Остальные приложения открываются на текущем столе (правило `app_ws` в `hyprland.lua`).
 
 ## Обои
 
@@ -79,7 +79,7 @@ palette.toml ──> eclipse-palette.py ──┬──> ~/.cache/lunar/palette.
 ~/.config/hypr/scripts/eclipse-palette.py --apply         # разложить цвета
 ```
 
-Ритм интерфейса — токены в `quickshell/Theme.qml`: отступы `space1..6` (4/8/12/16/24/32), высоты строк `rowHCompact/rowH/rowHComfy` (34/42/48), радиусы `radius/radiusM/radiusL/radiusXL` (8/10/12/16), шкала шрифтов `fontTiny..fontTitle` (10/11/13/20), геометрия панели (`barH`, `barMargin`, `barPad`, `barRadius`). Меняешь токен — меняется весь рис.
+Ритм интерфейса — токены в `quickshell/Theme.qml`: отступы `space1..6` (4/8/12/16/24/32), высоты строк `rowHCompact/rowH/rowHComfy` (34/42/48), радиусы `radius/radiusM/radiusL` (8/10/12), шкала шрифтов `fontTiny/fontSmall/fontBody/fontPanelTitle/fontTitle` (11/12/14/16/22), геометрия панели (`barH` 32, `barMargin` 8, `barPad` 12, `barRadius` 8), подложка карточек `cardBg`/`cardPad` и движение `anim` (spatial/effects, expressиве-кривые). Меняешь токен — меняется весь рис.
 
 **Hub → Interface**: прозрачность, размытие, размер шрифта, тумблер **OPTIMIZE**, пресеты палитры, курсор Bibata-Modern-Ice. Размытие и профиль сохраняются и переживают `hyprctl reload`.
 
@@ -228,12 +228,13 @@ lib32-nvidia-utils
 | Компонент | Файл | Что делает |
 |---|---|---|
 | **Обои** | `quickshell/LunarWallpaper.qml`, `LunarWallpaperScene.qml` | Живая сцена затмения (Qt Quick): фаза по столу 1–9, звёзды, метеоры, пыль. Превью — `preview.qml` |
-| **Панель** | `quickshell/LunarPanel.qml` | 36px, три острова: слева `LUNAR` + фазы, в центре часы с датой (и медиа, когда играет), справа — сеть, Game Mode, PERF, REC, CPU/RAM/°C/GPU, трей, раскладка, уведомления, громкость |
+| **Панель** | `quickshell/LunarPanel.qml`, `BarState.qml` | Одна плашка по содержимому (32px): слева `LUNAR` + фазы, центр — пульт/медиа/часы, справа — погода, сеть, Game Mode, PERF, систем-остров CPU·RAM·GPU, трей, уведомления, звук. Клик по «пульту» раскрывает саму плашку, прочие режимы — карточкой снизу; состояния — `BarState` |
+| **Панели режимов** | `quickshell/panels/Panel*.qml` | Тела режимов бара: пульт (2 колонки: звук · состояние · действия · телеметрия), погода (описание по-русски), телеметрия (плашки CPU/RAM/GPU + сеть), поиск (иконки приложений), уведомления |
 | **Hub** | `quickshell/LunarHub.qml` | Лаунчер + настройки (1320×820, ресайзится): Launch, System, Devices, Network, Interface, Games, Dev, Update |
 | **Sidebar** | `quickshell/LunarSidebar.qml` | Слева (560px): чат OpenCode, буфер cliphist (ПКМ — удалить), заметки |
 | **Sidebar R** | `quickshell/LunarSidebarRight.qml` | Справа: уведомления (mako), «сейчас играет» (MPRIS), календарь, запись экрана |
 | **Палитра** | `.config/lunar/palette.toml`, `hypr/scripts/eclipse-palette.py` | Один источник цвета: пресеты LUNAR/GRAPHITE/STEEL → шелл, kitty, GTK3/4, qt6ct, mako, btop, yazi |
-| **Тема** | `quickshell/Theme.qml` | Токены ритма и палитра; прозрачность, размер шрифта, число значков трея, размытие сохраняются |
+| **Тема** | `quickshell/Theme.qml` | Токены ритма и палитра; движение `anim` (spatial/effects, expressиве-кривые); прозрачность, размер шрифта, число значков трея, размытие сохраняются |
 | **Очистка** | `SettingsPages/…`, `hypr/scripts/eclipse-cleanup.sh` | RAM/SWAP и кнопка «ОЧИСТИТЬ»: сироты, кэш, журнал, tmpfiles |
 | **Game Mode** | `hypr/scripts/eclipse-gamemode.sh` | Анимации/blur выкл, DND, пауза hypridle, tearing + пауза фоновых задач |
 | **Запись** | `hypr/scripts/eclipse-record.sh` | wf-recorder → `~/Videos/lunar-*.mp4`; аппаратный кодек (VAAPI/NVENC) с откатом на софт. Качество — Hub → System |
