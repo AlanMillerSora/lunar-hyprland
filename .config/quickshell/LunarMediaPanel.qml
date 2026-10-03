@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Effects
 import Quickshell.Services.Mpris
+import "widgets/shared"
 
 // ════════════════════════════════════════════════════════════════
 //  LunarMediaPanel — содержимое медиа-режима панели бара.
@@ -29,7 +30,13 @@ Item {
     Column {
         id: col
         width: parent.width
-        spacing: Theme.space3
+        spacing: Theme.space2
+
+        // верхний блок — карточка: трек, seek, транспорт
+        Card {
+            width: parent.width
+            contentMargins: 14
+            contentSpacing: 10
 
         // ── трек: обложка + название/исполнитель + к плееру ──
         Row {
@@ -291,6 +298,7 @@ Item {
                 }
             }
         }
+        }
 
         // ── разделитель + вход в полный плеер ──
         Rectangle {
@@ -311,7 +319,9 @@ Item {
             width: parent.width
             height: 30
             radius: Theme.radius
-            color: openFullMouse.containsMouse ? Theme.hoverStrong : Theme.fill
+            color: openFullMouse.containsMouse ? Theme.hoverStrong : Theme.cardBg
+            border.width: 1
+            border.color: Theme.border
 
             Row {
                 anchors.centerIn: parent
