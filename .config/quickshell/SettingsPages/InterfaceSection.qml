@@ -869,7 +869,7 @@ Item {
             // плавное заполнение, как у полос в «Памяти»
             Behavior on width {
                 enabled: !sliderDrag.pressed
-                NumberAnimation { duration: 200 }
+                NumberAnimation { duration: Theme.animMed }
             }
         }
 

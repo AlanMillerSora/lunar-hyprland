@@ -218,9 +218,9 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
   `hoverGrow` 1.25 (ховер-рост групп панели); `hover/hoverStrong/active/activeBorder/fill/onAccent`;
   `tooltipDelay` 600; `clamp()`.
 - HUD-заголовки секций: `SectionLabel` (дефолт 11px `fontTiny`, letterSpacing 2, bold; на
-  страницах Hub `size` задаётся — 12/14/15). Заголовки страниц Hub: `fontTitle`.
+  страницах Hub и в сайдбарах `size` задаётся явно — 11/12/14/15). Заголовки страниц Hub: `fontTitle`.
 - Ховер: `scale` (визуальный, раскладку не трогает) + фоновая подсветка.
-- Плавные заполнения: анимация 200 мс (`Behavior on width`) и заполнение с нуля
+- Плавные заполнения: анимация по токену движения (`Theme.animMed`) и заполнение с нуля
   (старт 0 → `Timer{interval:60}` → целевое; `enabled: !pressed`).
 - Один акцент — белый (или акцент пресета); красный — «опасное». Зелёного в рисе нет:
   `ok` в палитре тоже нейтральный (светлый) — зелёные «успехи» пользователь убрал.

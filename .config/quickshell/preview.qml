@@ -18,7 +18,7 @@ Window {
     width: 1280
     height: 720
     visible: true
-    color: Qt.rgba(Theme.bg.r, Theme.bg.g, Theme.bg.b, 1)
+    color: Theme.onAccent
     title: "Lunar Eclipse — preview (1..9 — фазы, L — лёгкий)"
 
     property int phase: 5
