@@ -24,7 +24,7 @@ PanelWindow {
 
     anchors { top: true; left: true; right: true }
     // окно выше бара — под выезжающую вниз панель (вариант 3)
-    implicitHeight: Theme.barH + 360
+    implicitHeight: Theme.barH + 500
     color: "transparent"
 
     WlrLayershell.layer: WlrLayer.Top
@@ -643,14 +643,14 @@ PanelWindow {
     Connections {
         target: BarState
         function onModeChanged() {
-            root.morph = (BarState.mode === "control") ? 1 : 0
+            root.morph = (BarState.mode === "control" || BarState.mode === "search") ? 1 : 0
         }
     }
     // высота панели по режиму (анимируется при смене режима)
     function panelHeightFor(m) {
         if (m === "control") return Theme.panelHeaderH + ctlBody.implicitHeight + Theme.space4
         if (m === "media") return 30 + mediaPanel.implicitHeight + Theme.space3
-        if (m === "search") return 320
+        if (m === "search") return 430
         if (m === "notifs") return 320
         if (m === "sys") return 30 + sysBody.implicitHeight + Theme.space3
         if (m === "weather") return 30 + wxBody.implicitHeight + Theme.space3
@@ -662,12 +662,13 @@ PanelWindow {
     // ширина панели по режиму: пульт/поиск/уведы — фикс, медиа — по содержимому
     function panelWidthFor(m) {
         if (m === "control") return Theme.panelWControl
+        if (m === "search") return 720
         if (m === "media") return mediaPanel.implicitWidth + 2 * Theme.space3
         if (m === "notifs") return Theme.panelWNotifs
         return Theme.panelWSearch
     }
     readonly property bool panelHasHeader: BarState.mode === "control"
-        || BarState.mode === "search" || BarState.mode === "notifs" || BarState.mode === "sys"
+        || BarState.mode === "notifs" || BarState.mode === "sys"
         || BarState.mode === "weather"
     readonly property string panelTitle: {
         if (BarState.mode === "control") return "ПУЛЬТ"
@@ -720,19 +721,45 @@ PanelWindow {
         repeat: false
         onTriggered: {
             root.searchResults = SearchModel.search(root.searchQuery)
-            root.searchIndex = 0
+            root.searchIndex = root.firstSelectable(0)
         }
     }
     function setSearchQuery(q) {
         root.searchQuery = q
         searchDebounce.restart()
     }
+    // первый выбираемый (не заголовок-секция) результат
+    function firstSelectable(from) {
+        var n = root.searchResults.length
+        for (var i = from; i < n; i++)
+            if (!root.searchResults[i].isHeader)
+                return i
+        for (var j = 0; j < n; j++)
+            if (!root.searchResults[j].isHeader)
+                return j
+        return -1
+    }
     function moveSearch(d) {
-        if (root.searchResults.length === 0) return
-        root.searchIndex = (root.searchIndex + d + root.searchResults.length) % root.searchResults.length
+        var n = root.searchResults.length
+        if (n === 0)
+            return
+        var i = root.searchIndex
+        for (var k = 0; k < n; k++) {
+            i = (i + d + n) % n
+            if (!root.searchResults[i].isHeader) {
+                root.searchIndex = i
+                return
+            }
+        }
     }
     function runSearch() {
         var r = root.searchResults[root.searchIndex]
+        if (!r || r.isHeader) {
+            var f = root.firstSelectable(0)
+            if (f < 0)
+                return
+            r = root.searchResults[f]
+        }
         SearchModel.activate(r)
         BarState.closePanel()
         root.searchQuery = ""
@@ -742,8 +769,6 @@ PanelWindow {
 
     // при открытии режима: уведы — обновить, поиск — фокус на поле,
     // прочие — свежий статус (телеметрия в sys)
-    // при открытии режима: уведы — обновить, поиск — фокус на поле,
-    // прочие — свежий статус (телеметрия в sys)
     Connections {
         target: BarState
         function onModeChanged() {
@@ -751,8 +776,10 @@ PanelWindow {
             panelFade.restart()
             if (BarState.mode === "notifs")
                 NotifModel.load()
-            else if (BarState.mode === "search")
+            else if (BarState.mode === "search") {
+                root.setSearchQuery("")
                 Qt.callLater(function() { if (searchPanel) searchPanel.focusInput() })
+            }
             if (BarState.mode !== "" && BarState.mode !== "search")
                 statusProc.running = true
             // «пульт» содержит свой ползунок громкости — OSD при нём не дублирую
@@ -1769,11 +1796,11 @@ PanelWindow {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: bar.top
         // «пульт» — внутри плашки; прочие режимы — карточкой под строкой бара
-        anchors.topMargin: BarState.mode === "control" ? 0 : (Theme.barH + Theme.space1)
+        anchors.topMargin: (BarState.mode === "control" || BarState.mode === "search") ? 0 : (Theme.barH + Theme.space1)
         width: root.panelWidthFor(BarState.mode)
         height: root.panelOpen * root.panelTargetH
-        color: BarState.mode === "control" ? "transparent" : root.pillBg
-        border.width: BarState.mode === "control" ? 0 : 1
+        color: (BarState.mode === "control" || BarState.mode === "search") ? "transparent" : root.pillBg
+        border.width: (BarState.mode === "control" || BarState.mode === "search") ? 0 : 1
         border.color: Theme.border
         radius: Theme.barRadius
         clip: true

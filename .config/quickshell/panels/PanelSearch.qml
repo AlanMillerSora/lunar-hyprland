@@ -1,173 +1,267 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Effects
 import ".."
 
-        Column {
-            property var host
+// ════════════════════════════════════════════════════════════════
+//  PanelSearch — поиск-лаунчер внутри раскрытой плашки бара.
+//  Ввод сверху, результаты секциями, минимальные строки с крупной
+//  иконкой. Пустой запрос — недавние приложения.
+// ════════════════════════════════════════════════════════════════
+Item {
+    id: root
+    property var host
+
     function focusInput() { searchInput.forceActiveFocus() }
-            visible: BarState.mode === "search"
-            opacity: host.panelContentOpacity
+
+    visible: BarState.mode === "search"
+    opacity: host.panelContentOpacity
+    anchors.fill: parent
+    anchors.margins: Theme.barPad
+    anchors.topMargin: Theme.space3
+
+    // ── строка ввода ──
+    Rectangle {
+        id: searchField
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: 46
+        radius: Theme.cardRadius
+        color: Theme.cardBg
+        border.width: 1
+        border.color: searchInput.activeFocus ? Theme.borderAccent : Theme.border
+
+        Text {
+            anchors.left: parent.left
+            anchors.leftMargin: Theme.space3
+            anchors.verticalCenter: parent.verticalCenter
+            text: "\uf002"
+            color: searchInput.activeFocus ? Theme.accent : Theme.textDim
+            font.family: Theme.iconFont
+            font.pixelSize: Theme.fontSize(16)
+            Behavior on color { ColorAnimation { duration: Theme.animFast } }
+        }
+
+        TextInput {
+            id: searchInput
             anchors.fill: parent
-            anchors.margins: Theme.barPad
-            anchors.topMargin: Theme.panelHeaderH + Theme.space1
-            spacing: Theme.space2
+            anchors.leftMargin: 42
+            anchors.rightMargin: 64
+            verticalAlignment: TextInput.AlignVCenter
+            color: Theme.text
+            selectionColor: Theme.accent
+            selectedTextColor: Theme.bg
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSize(16)
+            clip: true
+            onTextChanged: host.setSearchQuery(text)
+            Keys.onEscapePressed: {
+                if (text !== "") { text = ""; host.setSearchQuery("") }
+                else host.closePanel()
+            }
+            Keys.onUpPressed: host.moveSearch(-1)
+            Keys.onDownPressed: host.moveSearch(1)
+            Keys.onReturnPressed: host.runSearch()
+            Keys.onEnterPressed: host.runSearch()
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: "поиск: приложение, страница Hub, действие, счёт…"
+                visible: searchInput.text === ""
+                color: Theme.textFaint
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize(16)
+            }
+        }
 
-            Rectangle {
-                width: parent.width
-                height: 36
-                radius: Theme.cardRadius
-                color: Theme.cardBg
-                border.width: 1
-                border.color: searchInput.activeFocus ? Theme.borderAccent : Theme.border
+        Text {
+            anchors.right: parent.right
+            anchors.rightMargin: Theme.space3
+            anchors.verticalCenter: parent.verticalCenter
+            text: "ENTER"
+            color: Theme.textFaint
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontTiny
+            font.letterSpacing: 1
+        }
+    }
 
-                // ведущий глиф поиска
-                Text {
-                    anchors.left: parent.left
-                    anchors.leftMargin: Theme.space3
+    // ── подсказка-футер ──
+    Text {
+        id: footer
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        text: "↑↓ выбрать · Enter — открыть · Esc — закрыть"
+        color: Theme.textFaint
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontTiny
+        font.letterSpacing: 1
+    }
+
+    Text {
+        anchors.top: searchField.bottom
+        anchors.topMargin: Theme.space4
+        anchors.horizontalCenter: parent.horizontalCenter
+        visible: host.searchQuery.trim() !== "" && host.searchResults.length === 0
+        text: "ничего не найдено"
+        color: Theme.textFaint
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSize(13)
+    }
+
+    // ── результаты ──
+    ListView {
+        id: resList
+        anchors.top: searchField.bottom
+        anchors.topMargin: Theme.space2
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: footer.top
+        anchors.bottomMargin: Theme.space1
+        clip: true
+        spacing: 2
+        boundsBehavior: Flickable.StopAtBounds
+        model: host.searchResults
+        ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+
+        delegate: Item {
+            required property var modelData
+            required property int index
+            width: resList.width
+            height: modelData.isHeader ? 26 : 46
+
+            // заголовок секции
+            Row {
+                visible: modelData.isHeader === true
+                anchors.left: parent.left
+                anchors.leftMargin: Theme.space1
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 4
+                spacing: Theme.space2
+                Rectangle {
+                    width: 3
+                    height: 12
+                    radius: 1.5
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "\uf002"
-                    color: searchInput.activeFocus ? Theme.accent : Theme.textDim
-                    font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSize(13)
-                    Behavior on color { ColorAnimation { duration: Theme.animFast } }
+                    color: Theme.accent
                 }
-
-                TextInput {
-                    id: searchInput
-                    anchors.fill: parent
-                    anchors.leftMargin: 34
-                    anchors.rightMargin: 52
-                    verticalAlignment: TextInput.AlignVCenter
-                    color: Theme.text
-                    selectionColor: Theme.accent
-                    selectedTextColor: Theme.bg
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(14)
-                    clip: true
-                    onTextChanged: host.setSearchQuery(text)
-                    Keys.onEscapePressed: {
-                        if (text !== "") { text = ""; host.setSearchQuery("") }
-                        else BarState.closePanel()
-                    }
-                    Keys.onUpPressed: host.moveSearch(-1)
-                    Keys.onDownPressed: host.moveSearch(1)
-                    Keys.onReturnPressed: host.runSearch()
-                    Keys.onEnterPressed: host.runSearch()
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: "поиск: приложение, страница Hub, действие, счёт…"
-                        visible: searchInput.text === ""
-                        color: Theme.textFaint
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize(14)
-                    }
-                }
-
-                // подсказка ввода
                 Text {
-                    anchors.right: parent.right
-                    anchors.rightMargin: Theme.space3
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "ENTER"
+                    text: modelData.title || ""
                     color: Theme.textFaint
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontTiny
-                    font.letterSpacing: 1
+                    font.bold: true
+                    font.letterSpacing: 2
                 }
             }
 
-            Text {
-                visible: host.searchQuery.trim() !== "" && host.searchResults.length === 0
-                text: "ничего не найдено"
-                color: Theme.textFaint
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize(13)
-            }
+            // строка результата
+            Rectangle {
+                visible: modelData.isHeader !== true
+                anchors.fill: parent
+                radius: Theme.cardRadius
+                border.width: 1
+                border.color: index === host.searchIndex ? Theme.alpha(Theme.accent, 0.4) : "transparent"
+                color: index === host.searchIndex ? Theme.active
+                    : (resMouse.containsMouse ? Theme.hover : "transparent")
+                Behavior on color { ColorAnimation { duration: Theme.animFast } }
 
-            Column {
-                width: parent.width
-                spacing: 2
-                Repeater {
-                    model: host.searchResults
-                    delegate: Rectangle {
-                        required property var modelData
-                        required property int index
-                        width: parent.width
-                        height: 34
-                        radius: Theme.cardRadius
-                        border.width: 1
-                        border.color: index === host.searchIndex ? Theme.alpha(Theme.accent, 0.4) : "transparent"
-                        color: index === host.searchIndex ? Theme.active
-                            : (resMouse.containsMouse ? Theme.hover : "transparent")
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.leftMargin: Theme.space3
-                            anchors.rightMargin: Theme.space3
-                            spacing: Theme.space2
-                            Item {
-                                Layout.alignment: Qt.AlignVCenter
-                                implicitWidth: 18
-                                implicitHeight: 18
-                                Text {
-                                    anchors.centerIn: parent
-                                    visible: modelData.kind !== "app" || modelData.image === "" || resIcon.status !== Image.Ready
-                                    text: modelData.kind === "app" ? "\uf009" : (modelData.icon || "")
-                                    color: index === host.searchIndex ? Theme.accent : Theme.textDim
-                                    font.family: Theme.iconFont
-                                    font.pixelSize: Theme.fontSize(14)
-                                }
-                                Image {
-                                    id: resIcon
-                                    anchors.fill: parent
-                                    visible: false
-                                    source: (modelData.kind === "app" && modelData.image) ? modelData.image : ""
-                                    sourceSize: Qt.size(36, 36)
-                                    fillMode: Image.PreserveAspectFit
-                                    smooth: true
-                                    asynchronous: true
-                                }
-                                MultiEffect {
-                                    anchors.fill: parent
-                                    source: resIcon
-                                    visible: modelData.kind === "app" && modelData.image !== "" && resIcon.status === Image.Ready
-                                    saturation: -1.0
-                                    brightness: 0.35
-                                    contrast: 0.05
-                                }
-                            }
-                            Text {
-                                Layout.alignment: Qt.AlignVCenter
-                                Layout.fillWidth: true
-                                elide: Text.ElideRight
-                                text: modelData.label
-                                color: index === host.searchIndex ? Theme.text : Theme.barText
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSize(13)
-                            }
-                            Text {
-                                Layout.alignment: Qt.AlignVCenter
-                                text: modelData.kind === "page" ? "страница"
-                                    : (modelData.kind === "action" ? "действие"
-                                    : (modelData.kind === "calc" ? "калькулятор · Enter — копирую"
-                                    : (modelData.kind === "unit" ? "конверсия · Enter — копирую"
-                                    : (modelData.kind === "emoji" ? "эмодзи · Enter — копирую"
-                                    : (modelData.kind === "url" ? "ссылка · Enter — открыть"
-                                    : "приложение")))))
-                                color: Theme.textDim
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontTiny
-                            }
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: Theme.space2
+                    anchors.rightMargin: Theme.space3
+                    spacing: Theme.space3
+
+                    // иконка: картинка для приложений, глиф для прочего
+                    Item {
+                        Layout.alignment: Qt.AlignVCenter
+                        implicitWidth: 30
+                        implicitHeight: 30
+                        Text {
+                            anchors.centerIn: parent
+                            visible: modelData.image === undefined || modelData.image === ""
+                                || resIcon.status !== Image.Ready
+                            text: modelData.kind === "app" ? "\uf009" : (modelData.icon || "")
+                            color: index === host.searchIndex ? Theme.accent : Theme.textDim
+                            font.family: Theme.iconFont
+                            font.pixelSize: modelData.kind === "app" ? 16 : Theme.fontSize(18)
                         }
-                        MouseArea {
-                            id: resMouse
+                        Image {
+                            id: resIcon
                             anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onEntered: host.searchIndex = index
-                            onClicked: { host.searchIndex = index; host.runSearch() }
+                            visible: false
+                            source: (modelData.kind === "app" && modelData.image) ? modelData.image : ""
+                            sourceSize: Qt.size(60, 60)
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            asynchronous: true
+                        }
+                        MultiEffect {
+                            anchors.fill: parent
+                            source: resIcon
+                            visible: modelData.kind === "app" && modelData.image !== "" && resIcon.status === Image.Ready
+                            saturation: -1.0
+                            brightness: 0.35
+                            contrast: 0.05
                         }
                     }
+
+                    Column {
+                        Layout.alignment: Qt.AlignVCenter
+                        Layout.fillWidth: true
+                        spacing: 0
+                        Text {
+                            width: parent.width
+                            elide: Text.ElideRight
+                            text: modelData.label
+                            color: index === host.searchIndex ? Theme.text : Theme.barText
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize(14)
+                        }
+                        Text {
+                            width: parent.width
+                            visible: (modelData.desc || "") !== ""
+                            elide: Text.ElideRight
+                            text: modelData.desc || ""
+                            color: Theme.textFaint
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontTiny
+                        }
+                    }
+
+                    Text {
+                        Layout.alignment: Qt.AlignVCenter
+                        text: modelData.kind === "page" ? "страница"
+                            : (modelData.kind === "action" ? "действие"
+                            : (modelData.kind === "calc" || modelData.kind === "unit" || modelData.kind === "emoji" ? "Enter — копирую"
+                            : (modelData.kind === "url" ? "Enter — открыть"
+                            : "приложение")))
+                        color: Theme.textFaint
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontTiny
+                    }
+                }
+
+                MouseArea {
+                    id: resMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onEntered: host.searchIndex = index
+                    onClicked: { host.searchIndex = index; host.runSearch() }
                 }
             }
         }
+    }
+
+    // прокрутка к выбранному при навигации
+    Connections {
+        target: host
+        function onSearchIndexChanged() {
+            if (host.searchIndex >= 0 && host.searchIndex < resList.count)
+                resList.positionViewAtIndex(host.searchIndex, ListView.Contain)
+        }
+    }
+}

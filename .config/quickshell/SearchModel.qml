@@ -297,41 +297,109 @@ QtObject {
         sm.appHay = h
     }
 
+    // ── недавние приложения (для пустого запроса) ──
+    readonly property string recentFile: Quickshell.env("HOME") + "/.cache/lunar/recent-apps.txt"
+    property var recentIds: []
+    property Process recentWrite: Process { running: false }
+    property Process recentRead: Process {
+        running: false
+        command: ["bash", "-c", "cat \"$1\" 2>/dev/null", "--", sm.recentFile]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var t = text.trim()
+                if (t === "")
+                    return
+                sm.recentIds = t.split("\n").filter(function(x) { return x.trim() !== "" })
+            }
+        }
+    }
+    Component.onCompleted: sm.recentRead.running = true
+
+    function recordRecent(id) {
+        if (!id)
+            return
+        var list = [id]
+        for (var i = 0; i < sm.recentIds.length; i++)
+            if (sm.recentIds[i] !== id)
+                list.push(sm.recentIds[i])
+        sm.recentIds = list.slice(0, 10)
+        sm.recentWrite.command = ["bash", "-c",
+            "mkdir -p \"$(dirname \"$1\")\" && printf %s \"$2\" > \"$1\"",
+            "--", sm.recentFile, sm.recentIds.join("\n")]
+        sm.recentWrite.running = false
+        sm.recentWrite.running = true
+    }
+    function appById(id) {
+        var apps = AppModel.allApps
+        for (var i = 0; i < apps.length; i++)
+            if (apps[i].id === id)
+                return apps[i]
+        return null
+    }
+    function appResult(ap, rank) {
+        return { kind: "app", group: "ПРИЛОЖЕНИЯ", rank: rank, label: ap.name,
+                 app: ap, desc: ap.generic || "", icon: ap.icon || "",
+                 image: (ap.icon && Quickshell.hasThemeIcon(ap.icon)) ? Quickshell.iconPath(ap.icon, true) : "" }
+    }
+    // раскладываю результаты по категориям, вставляя заголовки-секции
+    function grouped(items, order) {
+        var out = []
+        for (var g = 0; g < order.length; g++) {
+            var sub = []
+            for (var i = 0; i < items.length; i++)
+                if (items[i].group === order[g])
+                    sub.push(items[i])
+            if (sub.length === 0)
+                continue
+            sub.sort(function(x, y) { return x.rank - y.rank })
+            out.push({ isHeader: true, title: order[g] })
+            for (var j = 0; j < sub.length; j++)
+                out.push(sub[j])
+        }
+        return out
+    }
+
     function search(q) {
         q = ("" + q).trim().toLowerCase()
-        if (q === "") return []
-        var out = []
-        // Калькулятор — первым: если запрос считаю выражением, ставлю его впереди.
+        // пустой запрос — недавние (или первые приложения)
+        if (q === "") {
+            var rec = []
+            for (var r = 0; r < sm.recentIds.length; r++) {
+                var recApp = sm.appById(sm.recentIds[r])
+                if (recApp)
+                    rec.push(sm.appResult(recApp, r))
+            }
+            if (rec.length === 0) {
+                var all = AppModel.allApps
+                for (var f = 0; f < Math.min(all.length, 8); f++)
+                    rec.push(sm.appResult(all[f], f))
+            }
+            for (var k = 0; k < rec.length; k++)
+                rec[k].group = "НЕДАВНИЕ"
+            return sm.grouped(rec, ["НЕДАВНИЕ"])
+        }
+        var items = []
         var ans = sm.calcAnswer(q)
         if (ans !== null)
-            out.push({ kind: "calc", rank: -1000, label: "= " + ans,
-                       icon: "\uf1ec", text: ans })
-        // Ссылка: похоже на URL — открыть.
-        var url = sm.urlOf(q)
-        if (url !== "")
-            out.push({ kind: "url", rank: -990, label: "Открыть " + url,
-                       icon: "\uf0c1", url: url })
-        // Конверсия единиц: «10 km to mi».
+            items.push({ kind: "calc", group: "СЧЁТ", rank: -1000, label: "= " + ans, icon: "\uf1ec", text: ans })
         var unit = sm.unitAnswer(q)
         if (unit !== null)
-            out.push({ kind: "unit", rank: -980, label: "= " + unit,
-                       icon: "\uf1ec", text: unit })
-        // Эмодзи: точное имя — копировать знак.
+            items.push({ kind: "unit", group: "СЧЁТ", rank: -990, label: "= " + unit, icon: "\uf1ec", text: unit })
+        var url = sm.urlOf(q)
+        if (url !== "")
+            items.push({ kind: "url", group: "ССЫЛКА", rank: -980, label: url, icon: "\uf0c1", url: url })
         var em = sm.emojiHit(q)
         if (em !== null)
-            out.push({ kind: "emoji", rank: -970, label: em.e + "  " + em.k,
-                       icon: "", text: em.e })
+            items.push({ kind: "emoji", group: "ЭМОДЗИ", rank: -970, label: em.e + "  " + em.k, icon: "", text: em.e })
         for (var i = 0; i < sm.navItems.length; i++) {
-            var r = sm.matchRank(q, sm.navItems[i].name)
-            if (r >= 0)
-                out.push({ kind: "page", rank: r - 1, label: sm.navItems[i].name,
-                           icon: sm.navItems[i].icon, pageIndex: i })
+            var rp = sm.matchRank(q, sm.navItems[i].name)
+            if (rp >= 0)
+                items.push({ kind: "page", group: "СТРАНИЦЫ", rank: rp, label: sm.navItems[i].name, icon: sm.navItems[i].icon, pageIndex: i })
         }
         for (var a = 0; a < sm.searchActions.length; a++) {
-            var ra = sm.matchRank(q, sm.searchActions[a].name)
-            if (ra >= 0)
-                out.push({ kind: "action", rank: ra - 1, label: sm.searchActions[a].name,
-                           icon: sm.searchActions[a].icon, act: a })
+            var rA = sm.matchRank(q, sm.searchActions[a].name)
+            if (rA >= 0)
+                items.push({ kind: "action", group: "ДЕЙСТВИЯ", rank: rA, label: sm.searchActions[a].name, icon: sm.searchActions[a].icon, act: a })
         }
         var apps = AppModel.allApps
         if (sm.appHay.length !== apps.length)
@@ -340,15 +408,14 @@ QtObject {
         for (var j = 0; j < apps.length; j++) {
             var ap = apps[j]
             var r2 = sm.matchRank(q, ap.name)
-            if (r2 < 0) r2 = sm.matchRank(q, sm.appHay[j])
-            if (r2 >= 0) hits.push({ kind: "app", rank: r2, label: ap.name, app: ap,
-                icon: ap.icon || "",
-                image: (ap.icon && Quickshell.hasThemeIcon(ap.icon)) ? Quickshell.iconPath(ap.icon, true) : "" })
+            if (r2 < 0)
+                r2 = sm.matchRank(q, sm.appHay[j])
+            if (r2 >= 0)
+                hits.push(sm.appResult(ap, r2))
         }
         hits.sort(function(x, y) { return x.rank - y.rank })
-        out = out.concat(hits.slice(0, 8))
-        out.sort(function(x, y) { return x.rank - y.rank })
-        return out.slice(0, 12)
+        items = items.concat(hits.slice(0, 8))
+        return sm.grouped(items, ["СЧЁТ", "ССЫЛКА", "ЭМОДЗИ", "ПРИЛОЖЕНИЯ", "СТРАНИЦЫ", "ДЕЙСТВИЯ"])
     }
 
     function openHubPage(i) {
@@ -363,8 +430,10 @@ QtObject {
             sm.openHubPage(r.pageIndex)
         else if (r.kind === "action")
             sm.searchActions[r.act].run()
-        else if (r.kind === "app")
+        else if (r.kind === "app") {
+            sm.recordRecent(r.app.id)
             AppModel.launch(r.app)
+        }
         else if (r.kind === "calc")
             sm.copyText(r.text)
         else if (r.kind === "unit")
