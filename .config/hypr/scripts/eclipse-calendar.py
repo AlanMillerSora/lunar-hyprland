@@ -138,7 +138,14 @@ def cmd_reminders(d, a):
             start = event_start(ev)
         except Exception:
             continue
-        remind = int(ev.get("remind", d["settings"].get("remind", DEFAULT_REMIND)))
+        try:
+            remind = int(ev.get("remind", d["settings"].get("remind", DEFAULT_REMIND)))
+        except (TypeError, ValueError):
+            # одно битое событие не должно глушить все напоминания
+            try:
+                remind = int(d["settings"].get("remind", DEFAULT_REMIND))
+            except (TypeError, ValueError):
+                remind = DEFAULT_REMIND
         when = start - datetime.timedelta(minutes=remind)
         if when <= now <= start + datetime.timedelta(minutes=GRACE_MIN):
             time_txt = start.strftime("%H:%M") if ev.get("time") else "весь день"

@@ -19,18 +19,19 @@ import "../shared"
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: Theme.space3
                     Repeater {
-                        model: [
-                            { label: "CPU", v: SysInfo.cpu, avail: true },
-                            { label: "RAM", v: SysInfo.ram, avail: true },
-                            { label: "GPU", v: SysInfo.gpu, avail: SysInfo.gpu >= 0 }
-                        ]
+                        // фиксированный model: 3 — иначе JS-массив с SysInfo.*
+                        // пересобирался на каждом замере и пересоздавал делегаты
+                        model: 3
                         delegate: Row {
-                            required property var modelData
+                            required property int index
+                            readonly property string label: index === 0 ? "CPU" : (index === 1 ? "RAM" : "GPU")
+                            readonly property int v: index === 0 ? SysInfo.cpu : (index === 1 ? SysInfo.ram : SysInfo.gpu)
+                            readonly property bool avail: index !== 2 || SysInfo.gpu >= 0
                             anchors.verticalCenter: parent.verticalCenter
                             spacing: 5
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
-                                text: modelData.label
+                                text: label
                                 color: Theme.barFaint
                                 font.family: Theme.fontFamily
                                 font.pixelSize: 10
@@ -38,8 +39,8 @@ import "../shared"
                             }
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
-                                text: (modelData.avail && modelData.v >= 0) ? (modelData.v + "%") : "--"
-                                color: (modelData.avail && modelData.v >= 90) ? Theme.danger : Theme.barText
+                                text: (avail && v >= 0) ? (v + "%") : "--"
+                                color: (avail && v >= 90) ? Theme.danger : Theme.barText
                                 font.family: Theme.fontFamily
                                 font.pixelSize: 11
                             }
@@ -47,8 +48,8 @@ import "../shared"
                                 anchors.verticalCenter: parent.verticalCenter
                                 width: 26
                                 height: 4
-                                barColor: modelData.v >= 90 ? Theme.danger : Theme.accent
-                                value: modelData.avail ? modelData.v : -1
+                                barColor: v >= 90 ? Theme.danger : Theme.accent
+                                value: avail ? v : -1
                             }
                         }
                     }

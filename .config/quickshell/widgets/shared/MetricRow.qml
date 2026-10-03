@@ -36,7 +36,7 @@ Row {
         horizontalAlignment: Text.AlignRight
         anchors.verticalCenter: parent.verticalCenter
         text: root.value < 0 ? "--" : (root.value + "%")
-        color: Theme.text
+        color: root.value >= 90 ? Theme.danger : Theme.text
         font.family: Theme.fontFamily
         font.pixelSize: root.valueSize
         font.bold: true
@@ -45,6 +45,7 @@ Row {
         anchors.verticalCenter: parent.verticalCenter
         width: Math.max(10, root.width - root.labelW - root.valueW - root.extraW - root.spacing * 3)
         height: root.barHeight
+        barColor: root.value >= 90 ? Theme.danger : Theme.accent
         value: root.value
     }
     Text {

@@ -42,8 +42,12 @@ QtObject {
                 wx.city = parts[0] || ""
                 if (parts.length > 1 && parts[1].indexOf(",") > 0) {
                     var ll = parts[1].split(",")
-                    wx.lat = ll[0]
-                    wx.lon = ll[1]
+                    // координаты уходят в curl аргументами, но ipinfo — внешние
+                    // данные, поэтому проверяю формат (без shell-подстановки)
+                    if (/^-?\d{1,3}(\.\d+)?$/.test(ll[0]) && /^-?\d{1,3}(\.\d+)?$/.test(ll[1])) {
+                        wx.lat = ll[0]
+                        wx.lon = ll[1]
+                    }
                 }
                 if (wx.city !== "")
                     wx.fetch()
@@ -82,9 +86,13 @@ QtObject {
         wx.cur.running = true
         // прогноз на дни — MET Norway (open-meteo у пользователя блокируется)
         if (wx.lat !== "" && wx.lon !== "") {
+            // числа передаю аргументами и кодирую urlencode — никакой подстановки
+            // в shell-строку, хотя координаты уже провалидированы
             wx.fc.command = ["bash", "-c",
-                "curl -4 -sS --max-time 12 -H \"User-Agent: lunar-rice/1.0\" \"https://api.met.no/weatherapi/locationforecast/2.0/compact?lat="
-                + wx.lat + "&lon=" + wx.lon + "\""]
+                "curl -4 -sS --max-time 12 -H \"User-Agent: lunar-rice/1.0\" --get "
+                + "--data-urlencode \"lat=$1\" --data-urlencode \"lon=$2\" "
+                + "\"https://api.met.no/weatherapi/locationforecast/2.0/compact\"",
+                "--", wx.lat, wx.lon]
             wx.fc.running = false
             wx.fc.running = true
         }
@@ -103,12 +111,12 @@ QtObject {
         running: false
         stdout: StdioCollector {
             onStreamFinished: {
-                var t = text.trim()
-                if (t === "")
+                var body = text.trim()
+                if (body === "")
                     return
                 var j = null
                 try {
-                    j = JSON.parse(t)
+                    j = JSON.parse(body)
                 } catch (e) {
                     return
                 }
@@ -121,13 +129,13 @@ QtObject {
                     var det = (e.data && e.data.instant && e.data.instant.details) ? e.data.instant.details : null
                     if (!det || det.air_temperature === undefined)
                         continue
-                    var t = det.air_temperature
+                    var tempc = det.air_temperature
                     if (byDay[date] === undefined) {
-                        byDay[date] = { min: t, max: t, code: "", mid: 99 }
+                        byDay[date] = { min: tempc, max: tempc, code: "", mid: 99 }
                         order.push(date)
                     }
-                    if (t < byDay[date].min) byDay[date].min = t
-                    if (t > byDay[date].max) byDay[date].max = t
+                    if (tempc < byDay[date].min) byDay[date].min = tempc
+                    if (tempc > byDay[date].max) byDay[date].max = tempc
                     var hour = parseInt(("" + e.time).substring(11, 13))
                     var sym = (e.data && e.data.next_1_hours && e.data.next_1_hours.summary)
                         ? e.data.next_1_hours.summary.symbol_code : ""
@@ -147,11 +155,17 @@ QtObject {
         }
     }
 
+    property int geoAttempts: 0
     function refresh() {
-        if (wx.city === "" || wx.lat === "" || wx.lon === "")
-            wx.geo.running = true
-        else
+        if (wx.city === "" || wx.lat === "" || wx.lon === "") {
+            // не долблю ipinfo каждые 20 минут, если координаты так и не пришли
+            if (wx.geoAttempts < 3) {
+                wx.geoAttempts++
+                wx.geo.running = true
+            }
+        } else {
             wx.fetch()
+        }
     }
 
     // описание → глиф Nerd Font (учу и английские, и русские слова)

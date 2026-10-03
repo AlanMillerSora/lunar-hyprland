@@ -495,6 +495,7 @@ PanelWindow {
         stdout: StdioCollector {
             onStreamFinished: {
                 var rxRaw = -1, txRaw = -1
+                var gotData = false
                 var parts = text.trim().split("\u001f")
                 for (var i = 0; i < parts.length; i++) {
                     var kv = parts[i].split("=")
@@ -520,10 +521,12 @@ PanelWindow {
                         root.recording = (v === "1")
                     } else if (k === "cpu") {
                         SysInfo.cpu = Math.round(parseFloat(v) || 0)
+                        gotData = true
                     } else if (k === "ctemp") {
                         SysInfo.cpuTemp = Math.round(parseFloat(v) || 0)
                     } else if (k === "ram") {
                         SysInfo.ram = Math.round(parseFloat(v) || 0)
+                        gotData = true
                     } else if (k === "rtot") {
                         SysInfo.ramTotal = parseInt(v) || 0
                     } else if (k === "gpu") {
@@ -542,7 +545,10 @@ PanelWindow {
                 // строке статуса — отдельный опрос не нужен)
                 if (rxRaw >= 0)
                     SysInfo.feedNet(rxRaw, txRaw, Date.now())
-                SysInfo.sample()
+                // историю пополняю только по валидному замеру — иначе битый
+                // статус забивал спарклайн «полками»
+                if (gotData)
+                    SysInfo.sample()
             }
         }
     }
@@ -609,12 +615,6 @@ PanelWindow {
     // Раскрытие панели (все режимы): 0 — закрыто, 1 — открыто.
     property real panelOpen: BarState.mode !== "" ? 1 : 0
     Behavior on panelOpen { Anim { type: Anim.DefaultSpatial } }
-    Connections {
-        target: BarState
-        function onModeChanged() {
-            root.morph = (BarState.mode === "control" || BarState.mode === "search") ? 1 : 0
-        }
-    }
     // высота панели по режиму (анимируется при смене режима)
     function panelHeightFor(m) {
         if (m === "control") return Theme.panelHeaderH + ctlBody.implicitHeight + Theme.space4
@@ -687,6 +687,9 @@ PanelWindow {
     Connections {
         target: BarState
         function onModeChanged() {
+            // морф плашки — только для «пульта»; остальные режимы выезжают
+            // карточкой снизу (см. panel)
+            root.morph = (BarState.mode === "control" || BarState.mode === "search") ? 1 : 0
             root.panelContentOpacity = 0
             panelFade.restart()
             if (BarState.mode === "notifs")
@@ -709,13 +712,13 @@ PanelWindow {
     Process { id: hubToggleProc; running: false }
     Process { id: wallpapersProc; running: false }
     // маркер ~/.cache/lunar/tele разрешает eclipse-status.sh читать GPU
-    // (кэш на 10 с); держу его, пока жив бар, и снимаю при завершении
-    Process { id: teleMarkProc; running: false }
+    // (кэш на 30 с). Держу его, пока жив бар, и снимаю при завершении.
+    // execDetached — без Process: в onDestruction очередь процессов может
+    // не успеть, и маркер оставался.
     function setTeleMark(on) {
-        teleMarkProc.command = ["bash", "-c",
-            on ? "mkdir -p \"$HOME/.cache/lunar\" && : > \"$HOME/.cache/lunar/tele\""
-               : "rm -f \"$HOME/.cache/lunar/tele\""]
-        teleMarkProc.running = true
+        Quickshell.execDetached(on
+            ? ["bash", "-c", "mkdir -p \"$HOME/.cache/lunar\" && : > \"$HOME/.cache/lunar/tele\""]
+            : ["rm", "-f", Quickshell.env("HOME") + "/.cache/lunar/tele"])
     }
     // шелл упал/перезапустился в режиме sys — маркер мог остаться:
     // снимаю при завершении, иначе nvidia-smi дёргается вечно в горячем пути

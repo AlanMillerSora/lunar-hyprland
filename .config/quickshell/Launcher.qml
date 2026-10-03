@@ -64,8 +64,12 @@ QtObject {
     }
     // открытие поиска: пустой запрос — показать недавние
     function open() {
+        // заполняю недавними сразу, без 120-мс дебаунса: иначе в момент
+        // открытия виден прошлый список, а поле уже пустое — рассинхрон
         l.query = ""
-        l.setQuery("")
+        l.debounce.stop()
+        l.results = SearchModel.search("")
+        l.index = l.firstSelectable(0)
     }
     function reset() {
         l.query = ""

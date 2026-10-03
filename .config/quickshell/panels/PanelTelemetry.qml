@@ -18,26 +18,29 @@ import "../widgets/shared"
                 width: parent.width
                 spacing: Theme.space2
                 Repeater {
-                    model: [
-                        { label: "CPU", v: SysInfo.cpu, hist: SysInfo.cpuHist,
-                          extra: SysInfo.cpuTemp > 0 ? (SysInfo.cpuTemp + "°C") : "" },
-                        { label: "RAM", v: SysInfo.ram, hist: SysInfo.ramHist,
-                          extra: SysInfo.ramTotal > 0 ? (SysInfo.ramTotal + " МБ") : "" },
-                        { label: "GPU", v: SysInfo.gpu, hist: SysInfo.gpuHist,
-                          extra: SysInfo.gpuTemp >= 0 ? (SysInfo.gpuTemp + "°C") : "" }
-                    ]
+                    // фиксированный model: 3 — JS-массив с SysInfo.* пересобирался
+                    // на каждом замере и пересоздавал Card/Sparkline (Canvas)
+                    model: 3
                     delegate: Card {
-                        required property var modelData
+                        required property int index
+                        readonly property string label: index === 0 ? "CPU" : (index === 1 ? "RAM" : "GPU")
+                        readonly property int v: index === 0 ? SysInfo.cpu : (index === 1 ? SysInfo.ram : SysInfo.gpu)
+                        readonly property var hist: index === 0 ? SysInfo.cpuHist : (index === 1 ? SysInfo.ramHist : SysInfo.gpuHist)
+                        readonly property string extra: index === 0
+                            ? (SysInfo.cpuTemp > 0 ? (SysInfo.cpuTemp + "°C") : "")
+                            : (index === 1
+                                ? (SysInfo.ramTotal > 0 ? (SysInfo.ramTotal + " МБ") : "")
+                                : (SysInfo.gpuTemp >= 0 ? (SysInfo.gpuTemp + "°C") : ""))
                         width: (parent.width - Theme.space2 * 2) / 3
                         contentMargins: 12
                         contentSpacing: 6
-                        SectionLabel { text: modelData.label }
+                        SectionLabel { text: label }
                         RowLayout {
                             width: parent.width
                             spacing: Theme.space1
                             Text {
                                 Layout.alignment: Qt.AlignBottom
-                                text: modelData.v < 0 ? "--" : (modelData.v + "%")
+                                text: v < 0 ? "--" : (v + "%")
                                 color: Theme.text
                                 font.family: Theme.fontFamily
                                 font.pixelSize: Theme.fontBig
@@ -46,7 +49,7 @@ import "../widgets/shared"
                             Item { Layout.fillWidth: true; implicitHeight: 1 }
                             Text {
                                 Layout.alignment: Qt.AlignBottom
-                                text: modelData.extra
+                                text: extra
                                 color: Theme.textDim
                                 font.family: Theme.fontFamily
                                 font.pixelSize: 11
@@ -55,8 +58,8 @@ import "../widgets/shared"
                         Sparkline {
                             width: parent.width
                             height: 26
-                            values: modelData.hist
-                            lineColor: modelData.v >= 90 ? Theme.danger : Theme.accent
+                            values: hist
+                            lineColor: v >= 90 ? Theme.danger : Theme.accent
                         }
                     }
                 }

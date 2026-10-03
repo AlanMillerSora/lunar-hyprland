@@ -27,7 +27,7 @@ import "../shared"
                     }
                 }
                 property Connections trackWatch: Connections {
-                    target: root
+                    target: host
                     // только пульс: медиа-попап сам не раскрываю (мешает)
                     function onTrackChanged() { if (host.pulsePrimed) mediaInline.trackPulse.restart() }
                 }

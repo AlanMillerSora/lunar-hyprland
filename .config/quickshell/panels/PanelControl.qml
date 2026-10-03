@@ -258,20 +258,19 @@ import "../widgets/shared"
                     Card {
                         width: parent.width
                         Repeater {
-                            model: [
-                                { label: "CPU", v: SysInfo.cpu,
-                                  extra: SysInfo.cpuTemp > 0 ? (SysInfo.cpuTemp + "°C") : "" },
-                                { label: "RAM", v: SysInfo.ram,
-                                  extra: SysInfo.ramTotal > 0 ? (SysInfo.ramTotal + " МБ") : "" },
-                                { label: "GPU", v: SysInfo.gpu,
-                                  extra: SysInfo.gpuTemp >= 0 ? (SysInfo.gpuTemp + "°C") : "" }
-                            ]
+                            // фиксированный model: 3 — иначе JS-массив с SysInfo.*
+                            // пересобирался на каждом замере и пересоздавал MetricRow
+                            model: 3
                             delegate: MetricRow {
-                                required property var modelData
+                                required property int index
                                 width: parent.width
-                                label: modelData.label
-                                value: modelData.v
-                                extra: modelData.extra
+                                label: index === 0 ? "CPU" : (index === 1 ? "RAM" : "GPU")
+                                value: index === 0 ? SysInfo.cpu : (index === 1 ? SysInfo.ram : SysInfo.gpu)
+                                extra: index === 0
+                                    ? (SysInfo.cpuTemp > 0 ? (SysInfo.cpuTemp + "°C") : "")
+                                    : (index === 1
+                                        ? (SysInfo.ramTotal > 0 ? (SysInfo.ramTotal + " МБ") : "")
+                                        : (SysInfo.gpuTemp >= 0 ? (SysInfo.gpuTemp + "°C") : ""))
                             }
                         }
                     }

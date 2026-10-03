@@ -1213,10 +1213,12 @@ PanelWindow {
         }
 
         function dismiss(id) {
-            hiddenIds[id] = true
-            if (expandedId === id) expandedId = -1
+            var sid = parseInt(id)
+            if (!isFinite(sid)) return
+            hiddenIds[sid] = true
+            if (expandedId === sid) expandedId = -1
             rebuild()
-            actionProc.command = ["bash", "-c", "makoctl dismiss -n " + id]
+            actionProc.command = ["bash", "-c", "makoctl dismiss -n " + sid]
             actionProc.running = true
         }
 

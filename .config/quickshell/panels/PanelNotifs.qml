@@ -17,6 +17,9 @@ import ".."
                 return out
             }
             visible: BarState.mode === "notifs"
+            // при открытии возвращаю фильтр к «ВСЕ», иначе после прошлого раза
+            // панель молча открывается в «ВАЖНЫЕ»
+            onVisibleChanged: if (visible) root.filter = "all"
             opacity: host.panelContentOpacity
             anchors.fill: parent
             anchors.margins: Theme.barPad
@@ -27,7 +30,8 @@ import ".."
                 anchors.horizontalCenter: parent.horizontalCenter
                 topPadding: 60
                 visible: root.shown.length === 0
-                text: NotifModel.dnd ? "режим «не беспокоить»" : "уведомлений нет"
+                text: NotifModel.dnd ? "режим «не беспокоить»"
+                    : (root.filter === "important" ? "важных нет" : "уведомлений нет")
                 color: Theme.textFaint
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSize(13)

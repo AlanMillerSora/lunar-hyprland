@@ -15,6 +15,10 @@ Item {
 
     function focusInput() { searchInput.forceActiveFocus() }
 
+    // при открытии чищу поле: иначе после запуска приложения в нём остаётся
+    // старый запрос, а список уже показывает «недавние» — Enter бьёт не по тому
+    onVisibleChanged: if (visible) searchInput.text = ""
+
     visible: BarState.mode === "search"
     opacity: host.panelContentOpacity
     anchors.fill: parent
@@ -59,7 +63,7 @@ Item {
             onTextChanged: Launcher.setQuery(text)
             Keys.onEscapePressed: {
                 if (text !== "") { text = ""; Launcher.setQuery("") }
-                else host.closePanel()
+                else BarState.closePanel()
             }
             Keys.onUpPressed: Launcher.move(-1)
             Keys.onDownPressed: Launcher.move(1)
@@ -215,7 +219,7 @@ Item {
                         Text {
                             width: parent.width
                             elide: Text.ElideRight
-                            text: modelData.label
+                            text: modelData.label || ""
                             color: index === Launcher.index ? Theme.text : Theme.barText
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.fontSize(14)

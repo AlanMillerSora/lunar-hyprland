@@ -520,7 +520,7 @@ FloatingWindow {
         // whitelist по argv: hyprctl / qs ipc call <наша цель> / наши скрипты /
         // простые системные утилиты / systemctl --user (ограниченно)
         readonly property var qsTargets: ["hub", "sidebar", "rsidebar", "clipboard",
-            "volume", "tray", "power", "overview"]
+            "tray", "power", "overview"]
         readonly property var simpleTools: ["wpctl", "playerctl",
             "grim", "slurp", "wl-copy", "wl-paste", "notify-send",
             "checkupdates", "df", "free", "uptime", "nvidia-smi", "lscpu",

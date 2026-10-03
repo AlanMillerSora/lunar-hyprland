@@ -22,7 +22,7 @@ defdev="$(ip route show default 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="d
 if [ -z "$defdev" ]; then
   for d in /sys/class/net/*; do
     n="$(basename "$d")"
-    [ "$n" = "lo" ] && continue
+    case "$n" in lo|docker*|veth*|virbr*|br-*) continue ;; esac
     [ "$(cat "$d/operstate" 2>/dev/null)" = "up" ] && { defdev="$n"; break; }
   done
 fi
@@ -102,7 +102,7 @@ ram=0; rtot=0
 if [ -r /proc/meminfo ]; then
   mt=$(awk '/^MemTotal:/{print $2; exit}' /proc/meminfo)
   ma=$(awk '/^MemAvailable:/{print $2; exit}' /proc/meminfo)
-  [ -n "$mt" ] && [ "$mt" -gt 0 ] && { ram=$(( (mt - ma) * 100 / mt )); rtot=$(( mt / 1024 )); }
+  [ -n "$mt" ] && [ -n "$ma" ] && [ "$mt" -gt 0 ] && { ram=$(( (mt - ma) * 100 / mt )); rtot=$(( mt / 1024 )); }
 fi
 
 # сеть: сумма по интерфейсам (u64), QML считает скорость по дельте
@@ -116,10 +116,10 @@ while IFS= read -r l; do
   esac
 done < /proc/net/dev
 
-# ── GPU: только при маркере телеметрии, с кэшем на 10 с ──
+# ── GPU: только при маркере телеметрии, с кэшем на 30 с ──
 # nvidia-smi дорогой (сотни мс), а бар опрашивает статус каждые 3 с.
 # Систем-остров показывает GPU всегда, поэтому читаю замер не чаще раза
-# в 10 с: свежий беру из кэша, устаревший обновляю (nvidia-smi или sysfs).
+# в 30 с: свежий беру из кэша, устаревший обновляю (nvidia-smi или sysfs).
 gpu=""; gput=""
 if [ -f "$HOME/.cache/lunar/tele" ]; then
   gcache="$HOME/.cache/lunar/gpu-last"
@@ -128,7 +128,7 @@ if [ -f "$HOME/.cache/lunar/tele" ]; then
     read -r gts gpu gput < "$gcache" 2>/dev/null
   fi
   case "${gts:-}" in ''|*[!0-9]*) gts=0 ;; esac
-  if [ "$gts" -eq 0 ] || [ $((now_g - gts)) -ge 10 ]; then
+  if [ "$gts" -eq 0 ] || [ $((now_g - gts)) -ge 30 ]; then
     if command -v nvidia-smi >/dev/null 2>&1; then
       read -r gpu gput < <(nvidia-smi --query-gpu=utilization.gpu,temperature.gpu \
         --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ' ' | tr ',' ' ')
