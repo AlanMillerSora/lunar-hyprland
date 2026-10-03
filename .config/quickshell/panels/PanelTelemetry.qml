@@ -19,11 +19,11 @@ import "../widgets/shared"
                 spacing: Theme.space2
                 Repeater {
                     model: [
-                        { label: "CPU", v: SysInfo.cpu,
+                        { label: "CPU", v: SysInfo.cpu, hist: SysInfo.cpuHist,
                           extra: SysInfo.cpuTemp > 0 ? (SysInfo.cpuTemp + "°C") : "" },
-                        { label: "RAM", v: SysInfo.ram,
+                        { label: "RAM", v: SysInfo.ram, hist: SysInfo.ramHist,
                           extra: SysInfo.ramTotal > 0 ? (SysInfo.ramTotal + " МБ") : "" },
-                        { label: "GPU", v: SysInfo.gpu,
+                        { label: "GPU", v: SysInfo.gpu, hist: SysInfo.gpuHist,
                           extra: SysInfo.gpuTemp >= 0 ? (SysInfo.gpuTemp + "°C") : "" }
                     ]
                     delegate: Card {
@@ -52,10 +52,11 @@ import "../widgets/shared"
                                 font.pixelSize: 11
                             }
                         }
-                        MiniBar {
+                        Sparkline {
                             width: parent.width
-                            height: 5
-                            value: modelData.v
+                            height: 26
+                            values: modelData.hist
+                            lineColor: modelData.v >= 90 ? Theme.danger : Theme.accent
                         }
                     }
                 }
