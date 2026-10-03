@@ -347,7 +347,7 @@ Item {
                                     elide: Text.ElideRight
                                     color: Theme.text
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: 12
+                                    font.pixelSize: Theme.fontSmall
                                 }
                                 Text {
                                     text: {
@@ -465,7 +465,7 @@ Item {
                         + "?"
                     color: Theme.text
                     font.family: Theme.fontFamily
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontSmall
                     horizontalAlignment: Text.AlignHCenter
                     wrapMode: Text.Wrap
                 }

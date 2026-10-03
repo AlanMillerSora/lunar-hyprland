@@ -166,7 +166,7 @@ Item {
                         text: "RAM"
                         color: Theme.text
                         font.family: Theme.fontFamily
-                        font.pixelSize: 12
+                        font.pixelSize: Theme.fontSmall
                         font.bold: true
                         font.letterSpacing: 2
                     }
@@ -365,7 +365,7 @@ Item {
                     text: page.running ? "РАБОТАЮ…" : "ОЧИСТИТЬ"
                     color: Theme.text
                     font.family: Theme.fontFamily
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontSmall
                     font.bold: true
                     font.letterSpacing: 2
                 }

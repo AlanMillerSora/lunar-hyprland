@@ -51,7 +51,7 @@ Item {
             color: !enabledBtn ? Theme.textFaint
                  : (btnArea.containsMouse || parent.accent) ? Theme.accent : Theme.textDim
             font.family: Theme.fontFamily
-            font.pixelSize: 11
+            font.pixelSize: Theme.fontTiny
             font.letterSpacing: 1
         }
 
@@ -277,19 +277,19 @@ Item {
                         text: "свежие новости: " + page.newestAge
                         color: Theme.textDim
                         font.family: Theme.fontFamily
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontTiny
                     }
                     Text {
                         text: "буфер: 2 дн."
                         color: Theme.textFaint
                         font.family: Theme.fontFamily
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontTiny
                     }
                     Text {
                         text: "пакетов: " + page.pending
                         color: Theme.textDim
                         font.family: Theme.fontFamily
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontTiny
                     }
                 }
 
@@ -347,7 +347,7 @@ Item {
                 text: "НОВОСТИ ARCH (ПЕРЕВОД)"
                 color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontSmall
                 font.bold: true
                 font.letterSpacing: 2
             }
@@ -375,7 +375,7 @@ Item {
                         text: page.agentBusy ? "АГЕНТ РАЗБИРАЕТ…" : "РАЗБОР ОТ АГЕНТА"
                         color: page.agentBusy ? Theme.textFaint : Theme.accent
                         font.family: Theme.fontFamily
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontTiny
                         font.bold: true
                         font.letterSpacing: 1
                     }
@@ -385,7 +385,7 @@ Item {
                         text: page.agentText
                         color: Theme.text
                         font.family: Theme.fontFamily
-                        font.pixelSize: 12
+                        font.pixelSize: Theme.fontSmall
                         wrapMode: Text.Wrap
                     }
                 }
@@ -422,7 +422,7 @@ Item {
                             text: modelData.ru
                             color: Theme.text
                             font.family: Theme.fontFamily
-                            font.pixelSize: 12
+                            font.pixelSize: Theme.fontSmall
                             wrapMode: Text.Wrap
                         }
                         Text {
@@ -444,7 +444,7 @@ Item {
                     : "новости загружаются…"
                 color: Theme.textFaint
                 font.family: Theme.fontFamily
-                font.pixelSize: 11
+                font.pixelSize: Theme.fontTiny
             }
         }
     }

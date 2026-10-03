@@ -472,7 +472,7 @@ Item {
                                     text: "ZAPRET"
                                     color: Theme.text
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: 12
+                                    font.pixelSize: Theme.fontSmall
                                     font.bold: true
                                     font.letterSpacing: 2
                                     anchors.verticalCenter: parent.verticalCenter
@@ -541,7 +541,7 @@ Item {
                                     text: "ZAPRET-TG"
                                     color: Theme.text
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: 12
+                                    font.pixelSize: Theme.fontSmall
                                     font.bold: true
                                     font.letterSpacing: 2
                                     anchors.verticalCenter: parent.verticalCenter
@@ -606,7 +606,7 @@ Item {
                                     text: "VENCORD"
                                     color: Theme.text
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: 12
+                                    font.pixelSize: Theme.fontSmall
                                     font.bold: true
                                     font.letterSpacing: 2
                                     anchors.verticalCenter: parent.verticalCenter
@@ -654,7 +654,7 @@ Item {
                         text: "Wi-Fi is disabled"
                         color: Theme.textDim
                         font.family: Theme.fontFamily
-                        font.pixelSize: 12
+                        font.pixelSize: Theme.fontSmall
                         horizontalAlignment: Text.AlignHCenter
                     }
 
@@ -665,7 +665,7 @@ Item {
                         text: page.scanning ? "Сканирую сети…" : "Сети не найдены"
                         color: Theme.textDim
                         font.family: Theme.fontFamily
-                        font.pixelSize: 12
+                        font.pixelSize: Theme.fontSmall
                         horizontalAlignment: Text.AlignHCenter
                     }
 
@@ -719,7 +719,7 @@ Item {
                                         text: modelData.ssid
                                         color: Theme.text
                                         font.family: Theme.fontFamily
-                                        font.pixelSize: 12
+                                        font.pixelSize: Theme.fontSmall
                                         elide: Text.ElideRight
                                         width: Math.min(implicitWidth, list.width - 170)
                                     }
@@ -770,7 +770,7 @@ Item {
                                         anchors.margins: Theme.space2
                                         color: Theme.text
                                         font.family: Theme.fontFamily
-                                        font.pixelSize: 12
+                                        font.pixelSize: Theme.fontSmall
                                         echoMode: TextInput.Password
                                         focus: page.pendingSsid === modelData.ssid
                                         Keys.onReturnPressed: page.connectSecured(modelData.ssid, text)

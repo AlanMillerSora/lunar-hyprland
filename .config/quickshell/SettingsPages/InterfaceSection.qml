@@ -202,7 +202,7 @@ Item {
                         text: "󰝴"
                         color: Theme.accent
                         font.family: page.mono
-                        font.pixelSize: 14
+                        font.pixelSize: Theme.fontBody
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
@@ -214,7 +214,7 @@ Item {
                             text: "прозрачность интерфейса"
                             color: Theme.text
                             font.family: Theme.fontFamily
-                            font.pixelSize: 12
+                            font.pixelSize: Theme.fontSmall
                         }
                         Text {
                             text: Math.round(Theme.interfaceOpacity * 100) + "%"
@@ -247,7 +247,7 @@ Item {
                         text: "\uf043"
                         color: Theme.accent
                         font.family: page.mono
-                        font.pixelSize: 14
+                        font.pixelSize: Theme.fontBody
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
@@ -259,7 +259,7 @@ Item {
                             text: "размытие (блюр)"
                             color: Theme.text
                             font.family: Theme.fontFamily
-                            font.pixelSize: 12
+                            font.pixelSize: Theme.fontSmall
                         }
                         Text {
                             text: page.blurValue <= 0.01
@@ -295,7 +295,7 @@ Item {
                         text: "󰬶"
                         color: Theme.accent
                         font.family: page.mono
-                        font.pixelSize: 14
+                        font.pixelSize: Theme.fontBody
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
@@ -307,7 +307,7 @@ Item {
                             text: "размер шрифта"
                             color: Theme.text
                             font.family: Theme.fontFamily
-                            font.pixelSize: 12
+                            font.pixelSize: Theme.fontSmall
                         }
                         Text {
                             text: Math.round(Theme.fontScale * 100) + "%"
@@ -340,7 +340,7 @@ Item {
                         text: "\uf00a"
                         color: Theme.accent
                         font.family: page.mono
-                        font.pixelSize: 14
+                        font.pixelSize: Theme.fontBody
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
@@ -352,7 +352,7 @@ Item {
                             text: "значков трея в панели"
                             color: Theme.text
                             font.family: Theme.fontFamily
-                            font.pixelSize: 12
+                            font.pixelSize: Theme.fontSmall
                         }
                         Text {
                             text: Theme.trayVisible + " видно, остальные — в списке «+N»"
@@ -387,7 +387,7 @@ Item {
                                 text: modelData
                                 color: Theme.trayVisible === modelData ? Theme.accent : Theme.textDim
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 11
+                                font.pixelSize: Theme.fontTiny
                                 font.bold: Theme.trayVisible === modelData
                             }
 
@@ -431,7 +431,7 @@ Item {
                 text: "ПАЛИТРА"
                 color: Theme.text
                 font.family: page.mono
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontSmall
                 font.bold: true
                 font.letterSpacing: 2
             }
@@ -515,7 +515,7 @@ Item {
                 text: "ОБОИ"
                 color: Theme.text
                 font.family: page.mono
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontSmall
                 font.bold: true
                 font.letterSpacing: 2
             }
@@ -625,7 +625,7 @@ Item {
                                 text: index + 1
                                 color: page.shownPhase === ph ? Theme.accent : Theme.textDim
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 11
+                                font.pixelSize: Theme.fontTiny
                             }
 
                             MouseArea {
@@ -793,7 +793,7 @@ Item {
                     text: "\uf03e"
                     color: Theme.accent
                     font.family: page.mono
-                    font.pixelSize: 14
+                    font.pixelSize: Theme.fontBody
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
@@ -805,7 +805,7 @@ Item {
                         text: "live eclipse scene (QML)"
                         color: Theme.text
                         font.family: Theme.fontFamily
-                        font.pixelSize: 12
+                        font.pixelSize: Theme.fontSmall
                     }
                     Text {
                         text: Theme.wallpaperLive

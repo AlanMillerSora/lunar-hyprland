@@ -593,7 +593,7 @@ Item {
                     text: "MONITOR MODE"
                     color: Theme.text
                     font.family: Theme.fontFamily
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontSmall
                     font.bold: true
                     font.letterSpacing: 2
                 }
@@ -746,7 +746,7 @@ Item {
                                     text: modelData.name
                                     color: Theme.text
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: 14
+                                    font.pixelSize: Theme.fontBody
                                     font.bold: true
                                 }
 
@@ -762,7 +762,7 @@ Item {
 
                                     color: Theme.textDim
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: 12
+                                    font.pixelSize: Theme.fontSmall
                                 }
 
                                 Text {
@@ -931,7 +931,7 @@ Item {
                             text: "TEARING"
                             color: Theme.text
                             font.family: Theme.fontFamily
-                            font.pixelSize: 12
+                            font.pixelSize: Theme.fontSmall
                             font.bold: true
                             anchors.verticalCenter: parent.verticalCenter
                         }
@@ -984,7 +984,7 @@ Item {
                     text: "ЗАПИСЬ"
                     color: Theme.text
                     font.family: Theme.fontFamily
-                    font.pixelSize: 14
+                    font.pixelSize: Theme.fontBody
                     font.bold: true
                     font.letterSpacing: 2
                 }
@@ -1083,7 +1083,7 @@ Item {
                         text: page.recBitrate + " Мбит/с"
                         color: Theme.text
                         font.family: Theme.fontFamily
-                        font.pixelSize: 12
+                        font.pixelSize: Theme.fontSmall
                     }
                 }
 

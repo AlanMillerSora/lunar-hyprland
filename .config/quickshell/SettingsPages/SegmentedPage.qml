@@ -56,7 +56,7 @@ Item {
                         text: modelData.label
                         color: page.segment === index ? Theme.accent : Theme.textDim
                         font.family: Theme.fontFamily
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontTiny
                         font.bold: page.segment === index
                     }
 

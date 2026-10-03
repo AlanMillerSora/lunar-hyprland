@@ -230,7 +230,7 @@ Item {
                             ? Theme.accent
                             : Theme.textDim
                         font.family: Theme.fontFamily
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontTiny
                         font.letterSpacing: 1
                     }
 
@@ -301,7 +301,7 @@ Item {
                             text: projectModel.initials(modelData.name)
                             color: Theme.accent
                             font.family: Theme.fontFamily
-                            font.pixelSize: 11
+                            font.pixelSize: Theme.fontTiny
                             font.bold: true
                         }
                     }
@@ -315,7 +315,7 @@ Item {
                             text: modelData.name
                             color: Theme.text
                             font.family: Theme.fontFamily
-                            font.pixelSize: 12
+                            font.pixelSize: Theme.fontSmall
                             elide: Text.ElideRight
                         }
 
@@ -382,7 +382,7 @@ Item {
                     : "ищу проекты…"
                 color: Theme.textFaint
                 font.family: Theme.fontFamily
-                font.pixelSize: 11
+                font.pixelSize: Theme.fontTiny
             }
         }
     }
@@ -417,7 +417,7 @@ Item {
                     text: page.gitProject ? page.gitProject.name : ""
                     color: Theme.text
                     font.family: Theme.fontFamily
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontSmall
                     font.bold: true
                     font.letterSpacing: 2
                 }
@@ -474,7 +474,7 @@ Item {
                 text: "ВЕТКИ"
                 color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontSmall
                 font.bold: true
                 font.letterSpacing: 2
             }
@@ -510,7 +510,7 @@ Item {
                             text: (modelData.current ? "● " : "") + modelData.name
                             color: modelData.current ? Theme.accent : Theme.textDim
                             font.family: Theme.fontFamily
-                            font.pixelSize: 11
+                            font.pixelSize: Theme.fontTiny
                         }
 
                         MouseArea {
@@ -548,7 +548,7 @@ Item {
                         text: "сообщение коммита…"
                         color: Theme.textFaint
                         font.family: Theme.fontFamily
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontTiny
                         visible: msgInput.text === ""
                     }
 
@@ -560,7 +560,7 @@ Item {
                         verticalAlignment: TextInput.AlignVCenter
                         color: Theme.text
                         font.family: Theme.fontFamily
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontTiny
                         clip: true
                         focus: page.gitOpen
                         onTextChanged: page.commitMsg = text
@@ -586,7 +586,7 @@ Item {
                         text: "COMMIT"
                         color: commitMouse.containsMouse ? Theme.accent : Theme.textDim
                         font.family: Theme.fontFamily
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontTiny
                         font.letterSpacing: 1
                     }
 
@@ -634,7 +634,7 @@ Item {
                             text: modelData.label
                             color: actMouse.containsMouse ? Theme.accent : Theme.textDim
                             font.family: Theme.fontFamily
-                            font.pixelSize: 11
+                            font.pixelSize: Theme.fontTiny
                             font.letterSpacing: 1
                         }
 
@@ -664,7 +664,7 @@ Item {
                 text: "ВЫВОД"
                 color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontSmall
                 font.bold: true
                 font.letterSpacing: 2
             }

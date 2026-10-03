@@ -191,7 +191,7 @@ Item {
                     text: page.cropError
                     color: Theme.danger
                     font.family: Theme.fontFamily
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.fontTiny
                     wrapMode: Text.WordWrap
                 }
             }
@@ -205,7 +205,7 @@ Item {
                     text: "ОБРЕЗКА · перетащи мышью, колесо — масштаб"
                     color: Theme.textFaint
                     font.family: Theme.fontFamily
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontSmall
                     font.letterSpacing: 1
                 }
 

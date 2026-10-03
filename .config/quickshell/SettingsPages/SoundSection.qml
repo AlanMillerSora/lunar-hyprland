@@ -142,7 +142,7 @@ Item {
             text: lr.title
             color: lr.isMuted ? Theme.textDim : Theme.text
             font.family: Theme.fontFamily
-            font.pixelSize: 12
+            font.pixelSize: Theme.fontSmall
             elide: Text.ElideRight
         }
 
@@ -154,7 +154,7 @@ Item {
             text: lr.isMuted ? "mute" : Math.round(lr.level * 100) + "%"
             color: lr.isMuted ? Theme.textFaint : Theme.textDim
             font.family: Theme.fontFamily
-            font.pixelSize: 12
+            font.pixelSize: Theme.fontSmall
         }
 
         Slider {
@@ -198,7 +198,7 @@ Item {
             text: page.devName(dr.device).toUpperCase()
             color: dr.active ? Theme.accent : Theme.text
             font.family: Theme.fontFamily
-            font.pixelSize: 11
+            font.pixelSize: Theme.fontTiny
             elide: Text.ElideRight
         }
         MouseArea {
@@ -236,7 +236,7 @@ Item {
             text: "ВЫВОД"
             color: Theme.text
             font.family: Theme.fontFamily
-            font.pixelSize: 12
+            font.pixelSize: Theme.fontSmall
             font.bold: true
             font.letterSpacing: 2
         }
@@ -275,7 +275,7 @@ Item {
             text: "ВХОД"
             color: Theme.text
             font.family: Theme.fontFamily
-            font.pixelSize: 12
+            font.pixelSize: Theme.fontSmall
             font.bold: true
             font.letterSpacing: 2
         }
@@ -297,7 +297,7 @@ Item {
             text: "НЕТ МИКРОФОНА"
             color: Theme.textFaint
             font.family: Theme.fontFamily
-            font.pixelSize: 11
+            font.pixelSize: Theme.fontTiny
         }
         Column {
             width: parent.width
@@ -321,7 +321,7 @@ Item {
             text: "ПРИЛОЖЕНИЯ · " + page.appStreams.length
             color: Theme.text
             font.family: Theme.fontFamily
-            font.pixelSize: 12
+            font.pixelSize: Theme.fontSmall
             font.bold: true
             font.letterSpacing: 2
         }
@@ -351,7 +351,7 @@ Item {
                 text: "НЕТ АКТИВНЫХ ПОТОКОВ"
                 color: Theme.textFaint
                 font.family: Theme.fontFamily
-                font.pixelSize: 11
+                font.pixelSize: Theme.fontTiny
             }
         }
     }

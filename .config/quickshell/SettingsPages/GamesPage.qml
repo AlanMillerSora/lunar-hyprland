@@ -54,7 +54,7 @@ Item {
                 anchors.margins: Theme.space3
                 color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontSmall
                 clip: true
                 focus: true
                 onTextChanged: gameModel.update()
@@ -64,7 +64,7 @@ Item {
                     text: "поиск игры"
                     color: Theme.textFaint
                     font.family: Theme.fontFamily
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontSmall
                     visible: search.text === "" && !search.activeFocus
                 }
             }
@@ -124,7 +124,7 @@ Item {
                         text: modelData.name
                         color: Theme.text
                         font.family: Theme.fontFamily
-                        font.pixelSize: 12
+                        font.pixelSize: Theme.fontSmall
                         elide: Text.ElideRight
                     }
 
@@ -156,7 +156,7 @@ Item {
                     : "ищу игры…"
                 color: gameModel.loadError !== "" ? Theme.danger : Theme.textFaint
                 font.family: Theme.fontFamily
-                font.pixelSize: 11
+                font.pixelSize: Theme.fontTiny
             }
         }
 
