@@ -184,7 +184,7 @@ Item {
                 anchors.right: parent.right
                 // не захожу под кнопку «MPV» справа
                 anchors.rightMargin: watchBtn.width + 10
-                spacing: 4
+                spacing: Theme.space1
 
                 Text {
                     Layout.fillWidth: true

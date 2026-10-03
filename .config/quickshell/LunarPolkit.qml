@@ -106,7 +106,7 @@ PanelWindow {
                 text: root.flow ? (root.flow.message || "") : ""
                 color: Theme.textDim
                 font.family: Theme.fontFamily
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontSmall
                 wrapMode: Text.Wrap
                 textFormat: Text.PlainText
             }
@@ -128,7 +128,7 @@ PanelWindow {
                     verticalAlignment: TextInput.AlignVCenter
                     color: Theme.text
                     font.family: Theme.fontFamily
-                    font.pixelSize: 13
+                    font.pixelSize: Theme.fontSize(13)
                     echoMode: (root.flow && root.flow.responseVisible) ? TextInput.Normal : TextInput.Password
                     clip: true
                     Keys.onEscapePressed: root.cancel()
@@ -142,7 +142,7 @@ PanelWindow {
                     text: root.flow ? (root.flow.inputPrompt || "пароль…") : "пароль…"
                     color: Theme.textFaint
                     font.family: Theme.fontFamily
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontSmall
                     textFormat: Text.PlainText
                 }
             }
@@ -153,14 +153,14 @@ PanelWindow {
                 text: (root.flow && root.flow.supplementaryMessage) ? root.flow.supplementaryMessage : ""
                 color: (root.flow && root.flow.supplementaryIsError) ? Theme.danger : Theme.textDim
                 font.family: Theme.fontFamily
-                font.pixelSize: 11
+                font.pixelSize: Theme.fontTiny
                 wrapMode: Text.Wrap
                 textFormat: Text.PlainText
             }
 
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 8
+                spacing: Theme.space2
                 Item { Layout.fillWidth: true }
 
                 Rectangle {
@@ -175,7 +175,7 @@ PanelWindow {
                         text: "ОТМЕНА"
                         color: Theme.textDim
                         font.family: Theme.fontFamily
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontTiny
                     }
                     MouseArea {
                         id: cancelMouse
@@ -198,7 +198,7 @@ PanelWindow {
                         text: "ОК"
                         color: Theme.accent
                         font.family: Theme.fontFamily
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontTiny
                     }
                     MouseArea {
                         id: okMouse

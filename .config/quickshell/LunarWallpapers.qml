@@ -275,7 +275,7 @@ PanelWindow {
             text: "обоев нет"
             color: Theme.text
             font.family: Theme.fontFamily
-            font.pixelSize: 22
+            font.pixelSize: Theme.fontSize(22)
             font.bold: true
         }
         Text {

@@ -42,7 +42,7 @@ import "../widgets/shared"
                                     text: host.muted ? "\uf026" : (host.vol < 0.34 ? "\uf027" : "\uf028")
                                     color: host.muted ? Theme.danger : Theme.accent
                                     font.family: Theme.iconFont
-                                    font.pixelSize: 15
+                                    font.pixelSize: Theme.fontSize(15)
                                     MouseArea {
                                         anchors.fill: parent
                                         cursorShape: Qt.PointingHandCursor
@@ -54,7 +54,7 @@ import "../widgets/shared"
                                     text: "ВЫВОД"
                                     color: Theme.textDim
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: 11
+                                    font.pixelSize: Theme.fontTiny
                                     font.bold: true
                                     font.letterSpacing: 2
                                 }
@@ -64,7 +64,7 @@ import "../widgets/shared"
                                     text: host.muted ? "mute" : Math.round(host.vol * 100) + "%"
                                     color: host.muted ? Theme.textFaint : Theme.accent
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: 12
+                                    font.pixelSize: Theme.fontSmall
                                 }
                             }
                             Slider {
@@ -96,7 +96,7 @@ import "../widgets/shared"
                                     text: host.micMuted ? "\uf131" : "\uf130"
                                     color: host.micMuted ? Theme.danger : Theme.accent
                                     font.family: Theme.iconFont
-                                    font.pixelSize: 15
+                                    font.pixelSize: Theme.fontSize(15)
                                     MouseArea {
                                         anchors.fill: parent
                                         cursorShape: Qt.PointingHandCursor
@@ -108,7 +108,7 @@ import "../widgets/shared"
                                     text: "МИКРОФОН"
                                     color: Theme.textDim
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: 11
+                                    font.pixelSize: Theme.fontTiny
                                     font.bold: true
                                     font.letterSpacing: 2
                                 }
@@ -118,7 +118,7 @@ import "../widgets/shared"
                                     text: host.micMuted ? "off" : Math.round(host.micVol * 100) + "%"
                                     color: host.micMuted ? Theme.textFaint : Theme.accent
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: 12
+                                    font.pixelSize: Theme.fontSmall
                                 }
                             }
                             Slider {
@@ -167,14 +167,14 @@ import "../widgets/shared"
                                         color: modelData.on ? (modelData.danger ? Theme.danger : Theme.accent)
                                             : (stateMouse.containsMouse ? Theme.text : Theme.textDim)
                                         font.family: Theme.iconFont
-                                        font.pixelSize: 15
+                                        font.pixelSize: Theme.fontSize(15)
                                     }
                                     Text {
                                         Layout.alignment: Qt.AlignVCenter
                                         text: modelData.label
                                         color: modelData.on ? Theme.text : Theme.textDim
                                         font.family: Theme.fontFamily
-                                        font.pixelSize: 11
+                                        font.pixelSize: Theme.fontTiny
                                         font.bold: true
                                         font.letterSpacing: 1
                                     }
@@ -185,7 +185,7 @@ import "../widgets/shared"
                                         text: "\u203a"
                                         color: stateMouse.containsMouse ? Theme.text : Theme.textFaint
                                         font.family: Theme.fontFamily
-                                        font.pixelSize: 14
+                                        font.pixelSize: Theme.fontBody
                                     }
                                     Toggle {
                                         Layout.alignment: Qt.AlignVCenter

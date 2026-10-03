@@ -139,7 +139,7 @@ Item {
                     : "поиск…"
                 color: Theme.textFaint
                 font.family: Theme.fontFamily
-                font.pixelSize: 9
+                font.pixelSize: Theme.fontMicro
                 anchors.verticalCenter: parent.verticalCenter
             }
         }
@@ -283,7 +283,7 @@ Item {
                                 text: "\uf126 " + (modelData.branch || "—")
                                 color: Theme.textDim
                                 font.family: Theme.iconFont
-                                font.pixelSize: 9
+                                font.pixelSize: Theme.fontMicro
                             }
 
                             Text {
@@ -294,7 +294,7 @@ Item {
                                     ? Theme.accent
                                     : Theme.textFaint
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 9
+                                font.pixelSize: Theme.fontMicro
                             }
 
                             Text {
@@ -302,7 +302,7 @@ Item {
                                 text: modelData.last || ""
                                 color: Theme.textFaint
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 9
+                                font.pixelSize: Theme.fontMicro
                                 elide: Text.ElideRight
                             }
                         }
@@ -382,7 +382,7 @@ Item {
                     text: page.gitProject ? page.gitProject.path : ""
                     color: Theme.textFaint
                     font.family: Theme.fontFamily
-                    font.pixelSize: 9
+                    font.pixelSize: Theme.fontMicro
                     elide: Text.ElideMiddle
                 }
 
@@ -405,7 +405,7 @@ Item {
                             ? Theme.danger
                             : Theme.textDim
                         font.family: Theme.iconFont
-                        font.pixelSize: 12
+                        font.pixelSize: Theme.fontSmall
                     }
 
                     MouseArea {
@@ -637,7 +637,7 @@ Item {
                     text: page.gitOut === "" ? "—" : page.gitOut
                     color: Theme.textDim
                     font.family: Theme.fontFamily
-                    font.pixelSize: 10
+                    font.pixelSize: Theme.fontSize(10)
                     wrapMode: Text.NoWrap
                 }
             }

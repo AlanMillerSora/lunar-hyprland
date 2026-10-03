@@ -195,7 +195,7 @@ PanelWindow {
             text: "тяни окно на другой стол · ЛКМ фокус · СКМ закрыть"
             color: Theme.textFaint
             font.family: Theme.fontFamily
-            font.pixelSize: 10
+            font.pixelSize: Theme.fontSize(10)
         }
 
         // карточки столов
@@ -232,7 +232,7 @@ PanelWindow {
                         color: Theme.textFaint
                         opacity: 0.35
                         font.family: Theme.fontFamily
-                        font.pixelSize: 40
+                        font.pixelSize: Theme.fontSize(40)
                         font.bold: true
                     }
 
@@ -325,7 +325,7 @@ PanelWindow {
                             text: winWrap.geo ? (winWrap.geo.title || "") : ""
                             color: Theme.textDim
                             font.family: Theme.fontFamily
-                            font.pixelSize: 10
+                            font.pixelSize: Theme.fontSize(10)
                             wrapMode: Text.Wrap
                             maximumLineCount: 3
                             elide: Text.ElideRight

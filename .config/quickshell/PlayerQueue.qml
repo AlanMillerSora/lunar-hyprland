@@ -17,7 +17,7 @@ Item {
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: 8
+            spacing: Theme.space2
 
             Text {
                 text: "ОЧЕРЕДЬ"

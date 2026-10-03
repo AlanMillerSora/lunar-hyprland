@@ -329,7 +329,7 @@ PanelWindow {
                             delegate: ColumnLayout {
                                 required property var modelData
                                 Layout.fillWidth: true
-                                spacing: 4
+                                spacing: Theme.space1
 
                                 RowLayout {
                                     Layout.fillWidth: true

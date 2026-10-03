@@ -216,12 +216,12 @@ FloatingWindow {
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 16
-            spacing: 16
+            spacing: Theme.space4
 
             RowLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                spacing: 16
+                spacing: Theme.space4
 
                 // ── навигация: отдельный «остров» (язык 43PR) ──
                 Rectangle {
@@ -286,7 +286,7 @@ FloatingWindow {
                                     anchors.verticalCenter: parent.verticalCenter
                                     anchors.left: parent.left
                                     anchors.leftMargin: 16
-                                    spacing: 12
+                                    spacing: Theme.space3
 
                                     Text {
                                         text: modelData.icon

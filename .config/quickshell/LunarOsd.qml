@@ -103,7 +103,7 @@ PanelWindow {
                 text: root.icon
                 color: root.muted ? Theme.textDim : Theme.accent
                 font.family: Theme.iconFont
-                font.pixelSize: 17
+                font.pixelSize: Theme.fontSize(17)
             }
 
             // число
@@ -113,7 +113,7 @@ PanelWindow {
                 text: root.label
                 color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: 13
+                font.pixelSize: Theme.fontSize(13)
                 font.bold: true
             }
 

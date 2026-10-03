@@ -828,7 +828,7 @@ PanelWindow {
             Row {
                 Layout.alignment: Qt.AlignVCenter
                 height: 26
-                spacing: 8
+                spacing: Theme.space2
 
                 Image {
                     anchors.verticalCenter: parent.verticalCenter
@@ -949,14 +949,14 @@ PanelWindow {
                         text: Weather.icon
                         color: Weather.ok ? Theme.barText : Theme.barFaint
                         font.family: Theme.iconFont
-                        font.pixelSize: 14
+                        font.pixelSize: Theme.fontBody
                     }
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: Weather.shortTemp
                         color: Weather.ok ? Theme.barText : Theme.barDim
                         font.family: Theme.fontFamily
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontTiny
                     }
                 }
             }
@@ -978,21 +978,21 @@ PanelWindow {
                             text: root.netKind === "eth" ? "󰈀" : "\uf1eb"
                             color: root.netKind === "off" ? Theme.barFaint : Theme.barText
                             font.family: Theme.iconFont
-                            font.pixelSize: 14
+                            font.pixelSize: Theme.fontBody
                         }
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             text: root.netKind === "off" ? "нет" : (root.netKind === "eth" ? "eth" : "wifi")
                             color: Theme.barDim
                             font.family: Theme.fontFamily
-                            font.pixelSize: 10
+                            font.pixelSize: Theme.fontSize(10)
                         }
                     }
                     Text {
                         text: "↓" + SysInfo.fmtRate(SysInfo.rx) + " ↑" + SysInfo.fmtRate(SysInfo.tx)
                         color: Theme.barFaint
                         font.family: Theme.fontFamily
-                        font.pixelSize: 9
+                        font.pixelSize: Theme.fontMicro
                     }
                 }
             }
@@ -1009,7 +1009,7 @@ PanelWindow {
                     text: "\uf11b"
                     color: root.gameMode ? Theme.danger : Theme.barDim
                     font.family: Theme.iconFont
-                    font.pixelSize: 15
+                    font.pixelSize: Theme.fontSize(15)
                 }
             }
 
@@ -1154,7 +1154,7 @@ PanelWindow {
                 text: "\uf111"
                 color: Theme.danger
                 font.family: Theme.iconFont
-                font.pixelSize: 10
+                font.pixelSize: Theme.fontSize(10)
                 SequentialAnimation on opacity {
                     running: root.recording
                     loops: Animation.Infinite
@@ -1278,7 +1278,7 @@ PanelWindow {
                     text: root.dayText + " " + root.dateText
                     color: Theme.barDim
                     font.family: Theme.fontFamily
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontSmall
                     height: 26
                     verticalAlignment: Text.AlignVCenter
                 }

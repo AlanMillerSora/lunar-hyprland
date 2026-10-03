@@ -216,7 +216,7 @@ Item {
                 + " — сбросить"
             color: Theme.textFaint
             font.family: Theme.fontFamily
-            font.pixelSize: 9
+            font.pixelSize: Theme.fontMicro
             horizontalAlignment: Text.AlignHCenter
             MouseArea {
                 anchors.fill: parent
@@ -261,7 +261,7 @@ Item {
                             text: "\uf294"
                             color: Theme.textDim
                             font.family: Theme.iconFont
-                            font.pixelSize: 24
+                            font.pixelSize: Theme.fontSize(24)
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
@@ -276,7 +276,7 @@ Item {
                             text: "Turn it on to see devices."
                             color: Theme.textFaint
                             font.family: Theme.fontFamily
-                            font.pixelSize: 9
+                            font.pixelSize: Theme.fontMicro
                         }
                     }
                 }
@@ -292,7 +292,7 @@ Item {
                             text: "\uf1eb"
                             color: Theme.textDim
                             font.family: Theme.iconFont
-                            font.pixelSize: 22
+                            font.pixelSize: Theme.fontSize(22)
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
@@ -307,7 +307,7 @@ Item {
                             text: "Keep this open while devices appear."
                             color: Theme.textFaint
                             font.family: Theme.fontFamily
-                            font.pixelSize: 9
+                            font.pixelSize: Theme.fontMicro
                         }
                     }
                 }
@@ -335,7 +335,7 @@ Item {
                                 text: "\uf294"
                                 color: card.isConnected ? Theme.accent : Theme.textDim
                                 font.family: Theme.iconFont
-                                font.pixelSize: 15
+                                font.pixelSize: Theme.fontSize(15)
                                 anchors.verticalCenter: parent.verticalCenter
                             }
                             Column {
@@ -362,7 +362,7 @@ Item {
                                     }
                                     color: card.isConnected ? Theme.accent : Theme.textFaint
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: 9
+                                    font.pixelSize: Theme.fontMicro
                                 }
                             }
                         }
@@ -370,7 +370,7 @@ Item {
                             anchors.right: parent.right
                             anchors.rightMargin: Theme.space4
                             anchors.verticalCenter: parent.verticalCenter
-                            spacing: 12
+                            spacing: Theme.space3
                             Text {
                                 text: page.actionLabel(card.modelData)
                                 color: card.isConnected ? Theme.danger : Theme.accent
@@ -392,7 +392,7 @@ Item {
                                     text: "\uf293"
                                     color: Theme.textDim
                                     font.family: Theme.iconFont
-                                    font.pixelSize: 16
+                                    font.pixelSize: Theme.fontSize(16)
                                 }
                                 MouseArea {
                                     id: unpairMouseArea

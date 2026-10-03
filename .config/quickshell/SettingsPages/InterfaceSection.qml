@@ -185,7 +185,7 @@ Item {
                     text: "\uf071  " + Theme.uiError
                     color: Theme.danger
                     font.family: Theme.iconFont
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.fontTiny
                     wrapMode: Text.WordWrap
                 }
             }
@@ -221,7 +221,7 @@ Item {
                             text: Math.round(Theme.interfaceOpacity * 100) + "%"
                             color: Theme.textDim
                             font.family: Theme.fontFamily
-                            font.pixelSize: 10
+                            font.pixelSize: Theme.fontSize(10)
                         }
                     }
                 }
@@ -268,7 +268,7 @@ Item {
                                 : Math.round(page.blurValue * 100) + "%"
                             color: Theme.textDim
                             font.family: Theme.fontFamily
-                            font.pixelSize: 10
+                            font.pixelSize: Theme.fontSize(10)
                         }
                     }
                 }
@@ -314,7 +314,7 @@ Item {
                             text: Math.round(Theme.fontScale * 100) + "%"
                             color: Theme.textDim
                             font.family: Theme.fontFamily
-                            font.pixelSize: 10
+                            font.pixelSize: Theme.fontSize(10)
                         }
                     }
                 }
@@ -359,7 +359,7 @@ Item {
                             text: Theme.trayVisible + " видно, остальные — в списке «+N»"
                             color: Theme.textDim
                             font.family: Theme.fontFamily
-                            font.pixelSize: 10
+                            font.pixelSize: Theme.fontSize(10)
                         }
                     }
                 }
@@ -491,7 +491,7 @@ Item {
                             : "пресет не выбран — работает палитра по умолчанию")
                     color: Theme.textFaint
                     font.family: page.mono
-                    font.pixelSize: 10
+                    font.pixelSize: Theme.fontSize(10)
                     wrapMode: Text.WordWrap
                 }
             }
@@ -654,7 +654,7 @@ Item {
                         text: "выбери картинку ниже"
                         color: Theme.textFaint
                         font.family: page.mono
-                        font.pixelSize: 10
+                        font.pixelSize: Theme.fontSize(10)
                     }
 
                     Rectangle {
@@ -795,7 +795,7 @@ Item {
                             : "лёгкий режим: без звёзд/метеоров/пыли"
                         color: Theme.textDim
                         font.family: Theme.fontFamily
-                        font.pixelSize: 10
+                        font.pixelSize: Theme.fontSize(10)
                     }
                 }
 

@@ -30,7 +30,7 @@ Item {
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: 8
+            spacing: Theme.space2
 
             Text {
                 text: "ЛОКАЛЬНЫЕ"
@@ -66,7 +66,7 @@ Item {
 
                 Row {
                     anchors.centerIn: parent
-                    spacing: 8
+                    spacing: Theme.space2
                     Text {
                         text: "\uf021"
                         color: PlayerCore.libraryBusy ? Theme.textFaint : Theme.accent

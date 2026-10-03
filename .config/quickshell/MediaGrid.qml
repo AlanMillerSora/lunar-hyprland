@@ -259,7 +259,7 @@ Item {
                         text: "▶"
                         color: Theme.text
                         font.family: Theme.fontFamily
-                        font.pixelSize: 9
+                        font.pixelSize: Theme.fontMicro
                     }
                 }
 

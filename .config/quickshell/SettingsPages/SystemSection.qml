@@ -1019,7 +1019,7 @@ Item {
         text: page.currentTime
         color: Theme.text
         font.family: page.mono
-        font.pixelSize: 18
+        font.pixelSize: Theme.fontSize(18)
         font.letterSpacing: 1
     }
 

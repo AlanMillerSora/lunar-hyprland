@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell.Io
 import "../"
+import "../widgets/shared"
 
 // ════════════════════════════════════════════════════════════════
 //  USER — аватар пользователя: показ, смена и обрезка.
@@ -156,33 +157,12 @@ Item {
                     asynchronous: true
                 }
 
-                Rectangle {
-                    width: Math.max(170, changeText.implicitWidth + 36)
-                    height: Theme.rowH
-                    radius: Theme.radius
-                    color: changeArea.containsMouse ? Theme.active : "transparent"
-                    // кнопка: рамка — аффорданс, оставляю
-                    border.width: 1
-                    border.color: changeArea.containsMouse ? Theme.accent : Theme.border
-                    Behavior on color { ColorAnimation { duration: Theme.animFast } }
-
-                    Text {
-                        id: changeText
-                        anchors.centerIn: parent
-                        text: pPick.running ? "ВЫБИРАЮ…" : "СМЕНИТЬ АВАТАР"
-                        color: changeArea.containsMouse ? Theme.accent : Theme.textDim
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 13
-                        font.letterSpacing: 2
-                    }
-                    MouseArea {
-                        id: changeArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        enabled: !pPick.running
-                        onClicked: pPick.running = true
-                    }
+                ActionButton {
+                    label: pPick.running ? "ВЫБИРАЮ…" : "СМЕНИТЬ АВАТАР"
+                    fontSize: 13
+                    minWidth: 170
+                    enabledBtn: !pPick.running
+                    onClicked: pPick.running = true
                 }
 
                 Text {
@@ -274,53 +254,19 @@ Item {
                 Row {
                     spacing: Theme.space4
 
-                    Rectangle {
+                    ActionButton {
+                        label: pApply.running ? "СОХРАНЯЮ…" : "СОХРАНИТЬ"
+                        fontSize: 13
                         width: 150
-                        height: Theme.rowH
-                        radius: Theme.radius
-                        color: saveArea.containsMouse ? Theme.active : "transparent"
-                        border.width: 1
-                        border.color: saveArea.containsMouse ? Theme.accent : Theme.border
-                        Text {
-                            anchors.centerIn: parent
-                            text: pApply.running ? "СОХРАНЯЮ…" : "СОХРАНИТЬ"
-                            color: saveArea.containsMouse ? Theme.accent : Theme.textDim
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 13
-                            font.letterSpacing: 2
-                        }
-                        MouseArea {
-                            id: saveArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            enabled: !pApply.running
-                            onClicked: page.applyCrop()
-                        }
+                        enabledBtn: !pApply.running
+                        onClicked: page.applyCrop()
                     }
 
-                    Rectangle {
+                    ActionButton {
+                        label: "ОТМЕНА"
+                        fontSize: 13
                         width: 130
-                        height: Theme.rowH
-                        radius: Theme.radius
-                        color: cancelArea.containsMouse ? Theme.active : "transparent"
-                        border.width: 1
-                        border.color: cancelArea.containsMouse ? Theme.accent : Theme.border
-                        Text {
-                            anchors.centerIn: parent
-                            text: "ОТМЕНА"
-                            color: cancelArea.containsMouse ? Theme.accent : Theme.textDim
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 13
-                            font.letterSpacing: 2
-                        }
-                        MouseArea {
-                            id: cancelArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: page.cropping = false
-                        }
+                        onClicked: page.cropping = false
                     }
                 }
             }

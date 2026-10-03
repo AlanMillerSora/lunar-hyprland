@@ -51,12 +51,12 @@ Item {
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 12
-            spacing: 8
+            spacing: Theme.space2
 
             RowLayout {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 40
-                spacing: 12
+                spacing: Theme.space3
 
                 // ── миниатюра ──
                 Item {
@@ -142,7 +142,7 @@ Item {
                 // ── управление ──
                 Row {
                     Layout.alignment: Qt.AlignVCenter
-                    spacing: 16
+                    spacing: Theme.space4
 
                     Text {
                         text: "\uf048"
@@ -235,7 +235,7 @@ Item {
                     // ── громкость: динамик (клик — mute, колесо — шаг) + слайдер ──
                     Row {
                         anchors.verticalCenter: parent.verticalCenter
-                        spacing: 8
+                        spacing: Theme.space2
 
                         Slider {
                             width: 84
@@ -280,7 +280,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: root.showProgress ? 12 : 0
                 visible: root.showProgress
-                spacing: 8
+                spacing: Theme.space2
 
                 Text {
                     text: PlayerCore.fmt(PlayerCore.position || 0)

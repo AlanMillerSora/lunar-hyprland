@@ -35,7 +35,7 @@ Item {
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: 8
+            spacing: Theme.space2
 
             Rectangle {
                 Layout.fillWidth: true
@@ -88,7 +88,7 @@ Item {
 
                 Row {
                     anchors.centerIn: parent
-                    spacing: 8
+                    spacing: Theme.space2
                     Text {
                         text: "\uf002"
                         color: Theme.accent

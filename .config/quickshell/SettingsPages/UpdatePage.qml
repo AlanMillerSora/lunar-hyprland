@@ -298,7 +298,7 @@ Item {
                     text: page.log
                     color: Theme.textFaint
                     font.family: Theme.fontFamily
-                    font.pixelSize: 10
+                    font.pixelSize: Theme.fontSize(10)
                     wrapMode: Text.Wrap
                 }
             }
@@ -370,7 +370,7 @@ Item {
                             text: modelData.date
                             color: Theme.textFaint
                             font.family: Theme.fontFamily
-                            font.pixelSize: 10
+                            font.pixelSize: Theme.fontSize(10)
                             font.letterSpacing: 1
                         }
                         Text {
@@ -386,7 +386,7 @@ Item {
                             text: modelData.en
                             color: Theme.textFaint
                             font.family: Theme.fontFamily
-                            font.pixelSize: 10
+                            font.pixelSize: Theme.fontSize(10)
                             wrapMode: Text.Wrap
                         }
                     }

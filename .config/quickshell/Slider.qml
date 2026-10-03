@@ -60,7 +60,7 @@ Item {
             Text {
                 text: root.icon
                 font.family: Theme.iconFont
-                font.pixelSize: 15
+                font.pixelSize: Theme.fontSize(15)
                 color: root.accentColor
                 width: 22
             }
@@ -69,7 +69,7 @@ Item {
                 text: root.label
                 color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontSmall
                 font.letterSpacing: 1
             }
 

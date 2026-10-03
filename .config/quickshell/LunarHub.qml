@@ -317,7 +317,7 @@ FloatingWindow {
                             Column {
                             id: navColumn
                             width: navFlick.width
-                            spacing: 4
+                            spacing: Theme.space1
 
                             Repeater {
                                 model: root.navItems
@@ -347,12 +347,12 @@ FloatingWindow {
                                         anchors.verticalCenter: parent.verticalCenter
                                         anchors.left: parent.left
                                         anchors.leftMargin: 16
-                                        spacing: 12
+                                        spacing: Theme.space3
 
                                         Text {
                                             text: modelData.icon
                                             font.family: Theme.iconFont
-                                            font.pixelSize: 15
+                                            font.pixelSize: Theme.fontSize(15)
                                             color: root.selectedIndex === index
                                                 ? Theme.accent
                                                 : Theme.textDim
@@ -361,7 +361,7 @@ FloatingWindow {
                                         Text {
                                             text: modelData.name
                                             font.family: Theme.fontFamily
-                                            font.pixelSize: 14
+                                            font.pixelSize: Theme.fontBody
                                             color: root.selectedIndex === index
                                                 ? Theme.text
                                                 : Theme.textDim

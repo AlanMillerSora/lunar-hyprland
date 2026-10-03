@@ -154,7 +154,7 @@ FloatingWindow {
                     text: root.filtered.length + " / " + root.items.length
                     color: Theme.textDim
                     font.family: Theme.fontFamily
-                    font.pixelSize: 10
+                    font.pixelSize: Theme.fontSize(10)
                 }
             }
 
@@ -180,7 +180,7 @@ FloatingWindow {
                     anchors.verticalCenter: parent.verticalCenter
                     text: "\uf002"
                     font.family: Theme.iconFont
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.fontTiny
                     color: Theme.textDim
                 }
 
@@ -193,7 +193,7 @@ FloatingWindow {
                     anchors.verticalCenter: parent.verticalCenter
                     color: Theme.text
                     font.family: Theme.fontFamily
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontSmall
                     selectionColor: Theme.accent
                     selectedTextColor: "#000000"
                     clip: true
@@ -232,7 +232,7 @@ FloatingWindow {
                     text: "поиск по буферу обмена…"
                     color: Theme.textFaint
                     font.family: Theme.fontFamily
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontSmall
                 }
             }
 
@@ -270,7 +270,7 @@ FloatingWindow {
                                 text: String(index + 1).padStart(2, "0")
                                 color: Theme.textFaint
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 10
+                                font.pixelSize: Theme.fontSize(10)
                             }
 
                             Text {
@@ -278,7 +278,7 @@ FloatingWindow {
                                 text: modelData.preview
                                 color: Theme.text
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 11
+                                font.pixelSize: Theme.fontTiny
                                 elide: Text.ElideRight
                                 maximumLineCount: 1
                                 verticalAlignment: Text.AlignVCenter
@@ -304,7 +304,7 @@ FloatingWindow {
                             : "ничего не найдено")
                     color: root.toolError !== "" ? Theme.danger : Theme.textFaint
                     font.family: Theme.fontFamily
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.fontTiny
                 }
             }
 
@@ -314,7 +314,7 @@ FloatingWindow {
                 text: root.toolError
                 color: Theme.danger
                 font.family: Theme.fontFamily
-                font.pixelSize: 10
+                font.pixelSize: Theme.fontSize(10)
                 wrapMode: Text.WordWrap
             }
 
@@ -329,7 +329,7 @@ FloatingWindow {
                 text: "↑↓ выбрать   ENTER копировать   DEL удалить   ESC закрыть"
                 color: Theme.textFaint
                 font.family: Theme.fontFamily
-                font.pixelSize: 9
+                font.pixelSize: Theme.fontMicro
             }
         }
     }

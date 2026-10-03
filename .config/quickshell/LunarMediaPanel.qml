@@ -325,14 +325,14 @@ Item {
                     text: "\uf03d"
                     color: Theme.barDim
                     font.family: Theme.iconFont
-                    font.pixelSize: 13
+                    font.pixelSize: Theme.fontSize(13)
                 }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: "открыть плеер"
                     color: Theme.textDim
                     font.family: Theme.fontFamily
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontSmall
                 }
             }
 

@@ -34,7 +34,7 @@ import "../shared"
                                 text: label
                                 color: Theme.barFaint
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 10
+                                font.pixelSize: Theme.fontSize(10)
                                 font.letterSpacing: 1
                             }
                             Text {
@@ -42,7 +42,7 @@ import "../shared"
                                 text: (avail && v >= 0) ? (v + "%") : "--"
                                 color: (avail && v >= 90) ? Theme.danger : Theme.barText
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 11
+                                font.pixelSize: Theme.fontTiny
                             }
                             MiniBar {
                                 anchors.verticalCenter: parent.verticalCenter

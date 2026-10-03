@@ -518,7 +518,7 @@ Item {
                     text: "󰑐"
                     color: Theme.accent
                     font.family: Theme.fontFamily
-                    font.pixelSize: 22
+                    font.pixelSize: Theme.fontSize(22)
 
                     MouseArea {
                         cursorShape: Qt.PointingHandCursor
@@ -816,7 +816,7 @@ Item {
 
                             // VRR (FreeSync/GSync)
                             Row {
-                                spacing: 8
+                                spacing: Theme.space2
 
                                 Text {
                                     text: "VRR"
@@ -1007,7 +1007,7 @@ Item {
                     }
 
                     Row {
-                        spacing: 8
+                        spacing: Theme.space2
 
                         Repeater {
                             model: [
@@ -1088,7 +1088,7 @@ Item {
                     }
 
                     Row {
-                        spacing: 8
+                        spacing: Theme.space2
 
                         Repeater {
                             model: [

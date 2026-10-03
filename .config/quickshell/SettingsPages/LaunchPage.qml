@@ -71,7 +71,7 @@ Item {
                     text: "\uf021"
                     color: refreshMouse.containsMouse ? Theme.accent : Theme.textDim
                     font.family: Theme.iconFont
-                    font.pixelSize: 14
+                    font.pixelSize: Theme.fontBody
                 }
 
                 MouseArea {
@@ -179,7 +179,7 @@ Item {
                             text: AppModel.initials(modelData.name)
                             color: Theme.textDim
                             font.family: Theme.fontFamily
-                            font.pixelSize: 15
+                            font.pixelSize: Theme.fontSize(15)
                             font.bold: true
                         }
                     }
@@ -222,7 +222,7 @@ Item {
                 text: AppModel.allApps.length === 0 ? "ищу приложения…" : "ничего не найдено"
                 color: Theme.textFaint
                 font.family: Theme.fontFamily
-                font.pixelSize: 13
+                font.pixelSize: Theme.fontSize(13)
             }
         }
     }

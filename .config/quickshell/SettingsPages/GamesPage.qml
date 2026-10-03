@@ -116,7 +116,7 @@ Item {
                         text: "\uf11b"
                         color: Theme.textDim
                         font.family: Theme.iconFont
-                        font.pixelSize: 18
+                        font.pixelSize: Theme.fontSize(18)
                     }
 
                     Text {
@@ -132,7 +132,7 @@ Item {
                         text: "ЗАПУСТИТЬ"
                         color: rowMouse.containsMouse ? Theme.accent : Theme.textFaint
                         font.family: Theme.fontFamily
-                        font.pixelSize: 10
+                        font.pixelSize: Theme.fontSize(10)
                         font.letterSpacing: 1
                     }
                 }
@@ -164,7 +164,7 @@ Item {
             text: gameModel.games.length + " игр"
             color: Theme.textFaint
             font.family: Theme.fontFamily
-            font.pixelSize: 9
+            font.pixelSize: Theme.fontMicro
         }
     }
 

@@ -202,7 +202,7 @@ Item {
                         text: "MEM"
                         color: Theme.textDim
                         font.family: Theme.fontFamily
-                        font.pixelSize: 9
+                        font.pixelSize: Theme.fontMicro
                         font.letterSpacing: 1
                     }
                     Rectangle {
@@ -233,7 +233,7 @@ Item {
                         text: "SWAP"
                         color: Theme.textDim
                         font.family: Theme.fontFamily
-                        font.pixelSize: 9
+                        font.pixelSize: Theme.fontMicro
                         font.letterSpacing: 1
                     }
                     Rectangle {
@@ -255,7 +255,7 @@ Item {
                             : "нет swap"
                         color: Theme.textFaint
                         font.family: Theme.fontFamily
-                        font.pixelSize: 9
+                        font.pixelSize: Theme.fontMicro
                     }
                 }
             }
@@ -462,7 +462,7 @@ Item {
             visible: page.status.length > 0
             color: page.running ? Theme.accent : Theme.textDim
             font.family: Theme.fontFamily
-            font.pixelSize: 9
+            font.pixelSize: Theme.fontMicro
         }
     }
 

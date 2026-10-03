@@ -166,7 +166,7 @@ PanelWindow {
                     text: root.collapsed.length + " свёрнуто"
                     color: Theme.textFaint
                     font.family: Theme.fontFamily
-                    font.pixelSize: 10
+                    font.pixelSize: Theme.fontSize(10)
                     anchors.verticalCenter: parent.verticalCenter
                 }
             }
@@ -179,7 +179,7 @@ PanelWindow {
                 text: "всё помещается в панели"
                 color: Theme.textFaint
                 font.family: Theme.fontFamily
-                font.pixelSize: 11
+                font.pixelSize: Theme.fontTiny
                 horizontalAlignment: Text.AlignHCenter
             }
 
@@ -241,7 +241,7 @@ PanelWindow {
                         text: modelData.tooltipTitle || modelData.title || modelData.id
                         color: Theme.text
                         font.family: Theme.fontFamily
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontTiny
                         elide: Text.ElideRight
                     }
 
@@ -254,7 +254,7 @@ PanelWindow {
                         text: "ПКМ"
                         color: Theme.textFaint
                         font.family: Theme.fontFamily
-                        font.pixelSize: 9
+                        font.pixelSize: Theme.fontMicro
                     }
 
                     MouseArea {

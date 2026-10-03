@@ -52,7 +52,7 @@ import "../widgets/shared"
                                 text: extra
                                 color: Theme.textDim
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 11
+                                font.pixelSize: Theme.fontTiny
                             }
                         }
                         Sparkline {

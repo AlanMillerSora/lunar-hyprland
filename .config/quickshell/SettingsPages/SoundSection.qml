@@ -132,7 +132,7 @@ Item {
             text: lr.isMuted ? page.icMute : lr.icon
             color: lr.isMuted ? Theme.danger : lr.tone
             font.family: Theme.iconFont
-            font.pixelSize: 15
+            font.pixelSize: Theme.fontSize(15)
         }
 
         Text {
@@ -190,7 +190,7 @@ Item {
             text: dr.active ? page.devIcon(dr.device, dr.isInput) : page.icRadioOff
             color: dr.active ? Theme.accent : Theme.textFaint
             font.family: Theme.iconFont
-            font.pixelSize: 12
+            font.pixelSize: Theme.fontSmall
         }
         Text {
             x: Theme.space3 + 24

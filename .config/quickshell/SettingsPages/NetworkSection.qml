@@ -679,7 +679,7 @@ Item {
                                         text: ""
                                         color: modelData.connected ? Theme.accent : Theme.textDim
                                         font.family: Theme.iconFont
-                                        font.pixelSize: 14
+                                        font.pixelSize: Theme.fontBody
                                     }
 
                                     Text {

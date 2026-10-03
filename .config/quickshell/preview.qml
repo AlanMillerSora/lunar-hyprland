@@ -83,7 +83,7 @@ Window {
                     anchors.centerIn: parent
                     text: index + 1
                     color: win.phase === index + 1 ? "#000000" : "#888888"
-                    font.pixelSize: 13
+                    font.pixelSize: Theme.fontSize(13)
                 }
                 MouseArea {
                     anchors.fill: parent
@@ -104,7 +104,7 @@ Window {
                 anchors.centerIn: parent
                 text: win.live ? "живые" : "лёгкий"
                 color: win.live ? "#888888" : "#000000"
-                font.pixelSize: 11
+                font.pixelSize: Theme.fontTiny
             }
             MouseArea {
                 anchors.fill: parent

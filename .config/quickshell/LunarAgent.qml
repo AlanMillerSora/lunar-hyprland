@@ -83,7 +83,7 @@ FloatingWindow {
 
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 8
+                spacing: Theme.space2
                 Text {
                     text: "AGENT"
                     color: Theme.text
@@ -133,7 +133,7 @@ FloatingWindow {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 clip: true
-                spacing: 8
+                spacing: Theme.space2
                 model: agent.messages
                 reuseItems: true
                 cacheBuffer: 400
@@ -178,7 +178,7 @@ FloatingWindow {
                 RowLayout {
                     anchors.fill: parent
                     anchors.margins: Theme.space3
-                    spacing: 8
+                    spacing: Theme.space2
 
                     Text {
                         text: "▸"
