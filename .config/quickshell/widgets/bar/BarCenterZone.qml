@@ -59,6 +59,8 @@ Item {
                 // часы задают центровку строки: запоминаю их Loader, когда он готов
                 onStatusChanged: if (status === Loader.Ready && item
                     && modelData.id === "clock") centerZone.clockItem = centerLoader
+                Component.onDestruction: if (centerZone.clockItem === centerLoader)
+                    centerZone.clockItem = null
             }
         }
     }

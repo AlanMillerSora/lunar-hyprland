@@ -328,10 +328,29 @@ PanelWindow {
     readonly property string track: player
         ? ((player.trackTitle || "") + (player.trackArtist ? "  —  " + player.trackArtist : ""))
         : ""
-    // прогресс трека для тонкой линии в медиа-ячейке; length=0 —
-    // длительность неизвестна, линия не показывается
-    readonly property real trackLength: (player && player.length > 0) ? player.length : 0
-    readonly property real trackPosition: (player && player.position > 0) ? player.position : 0
+    // прогресс трека для тонкой линии в медиа-ячейке. lengthSupported —
+    // чтобы у радио/стримов не показывать залитую на 100% полосу (MPRIS
+    // отдаёт length = position, если длины нет). Позицию MPRIS шлёт редко,
+    // поэтому тикаю сам и синхронизируюсь по positionChanged (как MediaCore).
+    readonly property real trackLength:
+        (player && player.lengthSupported === true && player.length > 0) ? player.length : 0
+    property real shownPos: 0
+    readonly property real trackPosition: shownPos
+    function syncPos() {
+        root.shownPos = (player && player.position > 0) ? player.position : 0
+    }
+    onPlayerChanged: { root.syncPos(); posTimer.restart() }
+    property Timer posTimer: Timer {
+        interval: 500
+        repeat: true
+        running: root.playing && root.trackLength > 0
+        onTriggered: root.shownPos = Math.min(root.trackLength, root.shownPos + 0.5)
+    }
+    property Connections posConn: Connections {
+        target: root.player
+        function onPositionChanged() { root.syncPos() }
+        function onTrackChanged() { root.syncPos() }
+    }
 
 
     // ── cava: спектр для полосы «сейчас играет» ──
@@ -411,7 +430,7 @@ PanelWindow {
     // маркер телеметрии держу всё время, пока жив бар: систем-остров
     // показывает CPU/RAM/GPU, а eclipse-status.sh кэширует GPU-замер на
     // 10 с — nvidia-smi в горячий путь (опрос раз в 3 с) не попадает
-    Component.onCompleted: { root.refreshTray(); root.setTeleMark(true) }
+    Component.onCompleted: { root.syncPos(); root.refreshTray(); root.setTeleMark(true) }
 
     Process { id: trayPanelProc; running: false }
     function openTrayPanel() {

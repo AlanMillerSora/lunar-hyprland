@@ -118,6 +118,9 @@ QtObject {
         return adapter.right
     }
     function setItems(zone, v) {
+        // правка пользователя/нормализация: битый файл больше не держим —
+        // следующая запись восстановит bar.json из текущего состояния
+        writeBlocked = false
         if (zone === "left") adapter.left = v
         else if (zone === "center") adapter.center = v
         else adapter.right = v
@@ -199,6 +202,7 @@ QtObject {
         setItems("center", defaults("center"))
         setItems("right", defaults("right"))
         bar.internal = false
+        bar.trayVisible = 2
     }
 
     onTrayVisibleChanged: if (!internal) adapter.trayVisible = trayVisible
@@ -256,6 +260,7 @@ QtObject {
                 return
             }
             bar.ready = true
+            bar.writeBlocked = false
             bar.adoptAll()
             if (bar.pendingWrite && !bar.writeBlocked) {
                 bar.pendingWrite = false
@@ -285,9 +290,9 @@ QtObject {
 
         JsonAdapter {
             id: adapter
-            property var left: []
-            property var center: []
-            property var right: []
+            property var left: bar.defaults("left")
+            property var center: bar.defaults("center")
+            property var right: bar.defaults("right")
             property int trayVisible: 2
 
             onLeftChanged: bar.adoptZone("left")
