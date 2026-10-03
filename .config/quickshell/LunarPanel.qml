@@ -529,7 +529,7 @@ PanelWindow {
     readonly property bool expanded: panelMode !== ""
     // морф бар↔панель: 0 — бар, 1 — панель (кроссфейд + раскрытие вниз)
     property real morph: 0
-    Behavior on morph { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+    Behavior on morph { NumberAnimation { duration: 220; easing.type: Theme.easeOut } }
     onExpandedChanged: root.morph = root.expanded ? 1 : 0
     // высота панели по режиму (анимируется при смене режима)
     function panelHeightFor(m) {
@@ -542,7 +542,7 @@ PanelWindow {
         return Theme.barH
     }
     property real panelTargetH: root.panelHeightFor(panelMode)
-    Behavior on panelTargetH { NumberAnimation { duration: Theme.animMed; easing.type: Easing.OutCubic } }
+    Behavior on panelTargetH { NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut } }
 
     // ширина панели по режиму: пульт/поиск/уведы — фикс, медиа — по содержимому
     function panelWidthFor(m) {
@@ -580,7 +580,7 @@ PanelWindow {
         property: "panelContentOpacity"
         to: 1
         duration: 180
-        easing.type: Easing.OutCubic
+        easing.type: Theme.easeOut
     }
     property bool panelHovered: false
     property bool barHovered: false
@@ -888,7 +888,7 @@ PanelWindow {
                 implicitWidth: wsRow.implicitWidth
                 implicitHeight: 26
                 scale: wsBg.hovered ? Theme.hoverGrow : 1
-                Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easeOut } }
 
                 HoverBg { id: wsBg }
 
@@ -959,7 +959,7 @@ PanelWindow {
                                         from: 1.0
                                         to: 1.4
                                         duration: 140
-                                        easing.type: Easing.OutCubic
+                                        easing.type: Theme.easeOut
                                     }
                                     NumberAnimation {
                                         target: focusRing
@@ -977,7 +977,7 @@ PanelWindow {
                                         from: 1.0
                                         to: 0.55
                                         duration: 300
-                                        easing.type: Easing.OutCubic
+                                        easing.type: Theme.easeOut
                                     }
                                 }
                             }
@@ -1179,7 +1179,7 @@ PanelWindow {
                 implicitHeight: 26
 
                 scale: trayBg.hovered ? Theme.hoverGrow : 1
-                Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easeOut } }
                 HoverBg { id: trayBg; visible: root.trayCount > 0 }
 
                 Row {
@@ -1304,11 +1304,11 @@ PanelWindow {
                 property SequentialAnimation notifPulse: SequentialAnimation {
                     NumberAnimation {
                         target: notifCell; property: "scale"; to: 1.15
-                        duration: Theme.animMed / 2; easing.type: Easing.OutCubic
+                        duration: Theme.animMed / 2; easing.type: Theme.easeOut
                     }
                     NumberAnimation {
                         target: notifCell; property: "scale"; to: 1.0
-                        duration: Theme.animMed / 2; easing.type: Easing.OutCubic
+                        duration: Theme.animMed / 2; easing.type: Theme.easeOut
                     }
                 }
                 property Connections notifWatch: Connections {
@@ -1351,11 +1351,11 @@ PanelWindow {
                 property SequentialAnimation volPulse: SequentialAnimation {
                     NumberAnimation {
                         target: volCell; property: "scale"; to: 1.15
-                        duration: Theme.animMed / 2; easing.type: Easing.OutCubic
+                        duration: Theme.animMed / 2; easing.type: Theme.easeOut
                     }
                     NumberAnimation {
                         target: volCell; property: "scale"; to: 1.0
-                        duration: Theme.animMed / 2; easing.type: Easing.OutCubic
+                        duration: Theme.animMed / 2; easing.type: Theme.easeOut
                     }
                 }
                 property Connections volWatch: Connections {
@@ -1509,11 +1509,11 @@ PanelWindow {
                 property SequentialAnimation trackPulse: SequentialAnimation {
                     NumberAnimation {
                         target: mediaInline; property: "scale"; to: 1.15
-                        duration: Theme.animMed / 2; easing.type: Easing.OutCubic
+                        duration: Theme.animMed / 2; easing.type: Theme.easeOut
                     }
                     NumberAnimation {
                         target: mediaInline; property: "scale"; to: 1.0
-                        duration: Theme.animMed / 2; easing.type: Easing.OutCubic
+                        duration: Theme.animMed / 2; easing.type: Theme.easeOut
                     }
                 }
                 property Connections trackWatch: Connections {
@@ -1671,7 +1671,7 @@ PanelWindow {
         opacity: root.morph
         scale: 0.97 + 0.03 * root.morph
         transformOrigin: Item.Top
-        Behavior on width { NumberAnimation { duration: Theme.animMed; easing.type: Easing.OutCubic } }
+        Behavior on width { NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut } }
 
         // зерно
         Image {
@@ -2137,7 +2137,7 @@ PanelWindow {
                             height: parent.height
                             radius: parent.radius
                             color: Theme.accent
-                            Behavior on width { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+                            Behavior on width { NumberAnimation { duration: 250; easing.type: Theme.easeOut } }
                         }
                     }
                     Text {

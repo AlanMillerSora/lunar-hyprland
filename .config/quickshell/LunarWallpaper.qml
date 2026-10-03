@@ -111,7 +111,7 @@ PanelWindow {
             from: 0
             to: 1
             duration: Theme.animMed
-            easing.type: Easing.OutCubic
+            easing.type: Theme.easeOut
             onFinished: {
                 wpHost.basePath = wpHost.topPath
                 wpHost.topPath = ""

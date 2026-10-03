@@ -336,7 +336,7 @@ FloatingWindow {
                             visible: opacity > 0.01
                             opacity: root.pageIndex === index ? 1 : 0
                             Behavior on opacity {
-                                NumberAnimation { duration: Theme.animMed; easing.type: Easing.OutCubic }
+                                NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut }
                             }
 
                             Loader {

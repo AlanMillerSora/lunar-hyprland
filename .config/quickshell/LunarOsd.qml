@@ -50,7 +50,7 @@ PanelWindow {
 
     // плавное заполнение делений при показе и при изменении (как в «Памяти»)
     property real shownFrac: 0
-    Behavior on shownFrac { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+    Behavior on shownFrac { NumberAnimation { duration: 250; easing.type: Theme.easeOut } }
     onShowingChanged: shownFrac = showing ? frac : 0
     onFracChanged: if (showing) shownFrac = frac
     readonly property string label: muted ? "mute" : (volume < 0 ? "--" : volume + "%")

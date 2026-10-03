@@ -107,9 +107,9 @@ Item {
             property bool appeared: false
             opacity: appeared ? 1 : 0
             Component.onCompleted: appeared = true
-            Behavior on opacity { NumberAnimation { duration: Theme.animMed; easing.type: Easing.OutCubic } }
+            Behavior on opacity { NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut } }
             Behavior on color { ColorAnimation { duration: Theme.animFast } }
-            Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
+            Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easeOut } }
 
             Column {
                 anchors.verticalCenter: parent.verticalCenter

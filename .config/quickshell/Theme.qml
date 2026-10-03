@@ -258,6 +258,10 @@ QtObject {
     property int animFast: 120
     property int animMed: 220
     property int animSlow: 380
+    // единое движение: одна кривая на весь рис (задаю здесь, чтобы потом
+    // менять характер анимаций в одном месте)
+    readonly property int easeOut: Easing.OutCubic
+    readonly property int easeInOut: Easing.InOutCubic
 
     // активный модальный оверлей ("hub" | "agent"): открытие одного
     // закрывает другой, плавно и в одном процессе (без внешнего qs ipc)

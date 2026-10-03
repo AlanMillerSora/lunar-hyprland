@@ -13,7 +13,7 @@ Item {
     visible: opacity > 0.01
 
     Behavior on opacity {
-        NumberAnimation { duration: Theme.animMed; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut }
     }
 
     transform: [
@@ -24,7 +24,7 @@ Item {
             angle: root.open ? 0 : 20
 
             Behavior on angle {
-                NumberAnimation { duration: Theme.animSlow; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: Theme.animSlow; easing.type: Theme.easeOut }
             }
         },
         Rotation {
@@ -34,7 +34,7 @@ Item {
             angle: root.open ? 0 : -16
 
             Behavior on angle {
-                NumberAnimation { duration: Theme.animSlow; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: Theme.animSlow; easing.type: Theme.easeOut }
             }
         },
         Scale {

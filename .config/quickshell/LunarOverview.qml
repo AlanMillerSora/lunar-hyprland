@@ -174,7 +174,7 @@ PanelWindow {
         scale: root.showing ? 1 : 0.97
         transformOrigin: Item.Center
         Behavior on opacity { NumberAnimation { duration: Theme.animMed } }
-        Behavior on scale { NumberAnimation { duration: Theme.animMed; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut } }
         // клики по промежуткам доски не должны её закрывать
         MouseArea { anchors.fill: parent; onClicked: {} }
 
