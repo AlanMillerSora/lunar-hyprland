@@ -100,6 +100,16 @@ QtObject {
 
     // прогноз на 3 дня: [{label, min, max, icon}]
     property var forecast: []
+    // MET отдаёт время в UTC; группирую и подписываю день по локальной дате,
+    // иначе у полуночи подпись уезжает на день
+    function localDate(iso) {
+        var d = new Date("" + iso)
+        if (isNaN(d.getTime()))
+            return ("" + iso).substring(0, 10)
+        return d.getFullYear() + "-"
+            + ("0" + (d.getMonth() + 1)).slice(-2) + "-"
+            + ("0" + d.getDate()).slice(-2)
+    }
     function weekday(s) {
         var m = ("" + s).match(/(\d{4})-(\d{2})-(\d{2})/)
         if (!m)
@@ -125,7 +135,7 @@ QtObject {
                 var order = []
                 for (var i = 0; i < ts.length; i++) {
                     var e = ts[i]
-                    var date = ("" + e.time).substring(0, 10)
+                    var date = wx.localDate(e.time)
                     var det = (e.data && e.data.instant && e.data.instant.details) ? e.data.instant.details : null
                     if (!det || det.air_temperature === undefined)
                         continue

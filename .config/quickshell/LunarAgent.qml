@@ -519,6 +519,26 @@ FloatingWindow {
 
         // whitelist по argv: hyprctl / qs ipc call <наша цель> / наши скрипты /
         // простые системные утилиты / systemctl --user (ограниченно)
+        // скрипты риса: разрешаю только известные подкоманды, а не любые
+        // аргументы — так поверхность агента не шире, чем реально нужное
+        readonly property var lunarScripts: ({
+            "eclipse-status.sh": [],
+            "eclipse-perf.sh": [],
+            "eclipse-backup.sh": [],
+            "eclipse-cleanup.sh": [],
+            "eclipse-api-limit.sh": [],
+            "eclipse-agent-context.sh": [],
+            "eclipse-transparency.sh": [],
+            "eclipse-mono-icons.sh": [],
+            "eclipse-record.sh": ["toggle", "start", "stop", "status", "probe"],
+            "eclipse-gamemode.sh": ["toggle", "on", "off"],
+            "eclipse-zapret.sh": ["update", "tune", "toggle", "status", "restart"],
+            "eclipse-zapret-tg.sh": ["toggle", "status", "open", "restart", "link"],
+            "eclipse-vencord.sh": ["update", "status", "patch", "unpatch", "repair"],
+            "eclipse-media.sh": ["play", "previous", "next"],
+            "eclipse-avatar.sh": ["pick"],
+            "eclipse-launch.sh": ["firefox"]
+        })
         readonly property var qsTargets: ["hub", "sidebar", "rsidebar", "clipboard",
             "tray", "power", "overview"]
         readonly property var simpleTools: ["wpctl", "playerctl",
@@ -606,9 +626,19 @@ FloatingWindow {
             for (var i = 0; i < simpleTools.length; i++)
                 if (isTool(prog, simpleTools[i])) return true
             var dir = Quickshell.env("HOME") + "/.config/hypr/scripts/"
-            if (prog.indexOf(dir) === 0
-                && /^eclipse-[A-Za-z0-9_-]+\.sh$/.test(prog.substring(dir.length)))
-                return true
+            if (prog.indexOf(dir) === 0) {
+                var f = prog.substring(dir.length)
+                if (!/^eclipse-[A-Za-z0-9_-]+\.sh$/.test(f))
+                    return false
+                var subs = lunarScripts[f]
+                if (subs === undefined)
+                    return false
+                if (argv.length === 1)
+                    return subs.length === 0
+                if (argv.length === 2)
+                    return subs.indexOf(argv[1]) !== -1
+                return false
+            }
             return false
         }
 

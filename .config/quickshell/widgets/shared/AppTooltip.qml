@@ -9,9 +9,9 @@ import "../.."
 ToolTip {
     id: root
 
-    property int cornerRadius: 6
+    property int cornerRadius: Theme.radiusS
 
-    delay: 600
+    delay: Theme.tooltipDelay
     leftPadding: 10
     rightPadding: 10
     topPadding: 6

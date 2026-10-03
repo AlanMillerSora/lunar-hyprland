@@ -267,6 +267,9 @@ QtObject {
     // сколько значков трея видно в панели (остальные — в списке «+N»)
     property int trayVisible: 2
 
+    // задержка появления тултипов (мс) — чтобы не мигали при проходе курсора
+    property int tooltipDelay: 600
+
     // легаси-шкала: теперь это алиасы единого anim (тот же характер и
     // уважение тумблера animationsEnabled). Новые анимации — через Anim.
     property int animFast: theme.anim.fastEffects

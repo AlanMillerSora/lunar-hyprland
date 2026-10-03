@@ -129,21 +129,27 @@ if [ -f "$HOME/.cache/lunar/tele" ]; then
   fi
   case "${gts:-}" in ''|*[!0-9]*) gts=0 ;; esac
   if [ "$gts" -eq 0 ] || [ $((now_g - gts)) -ge 30 ]; then
+    ngpu=""; ngput=""
     if command -v nvidia-smi >/dev/null 2>&1; then
-      read -r gpu gput < <(nvidia-smi --query-gpu=utilization.gpu,temperature.gpu \
+      read -r ngpu ngput < <(nvidia-smi --query-gpu=utilization.gpu,temperature.gpu \
         --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ' ' | tr ',' ' ')
     else
-      gpu=""; gput=""
       for f in /sys/class/drm/card*/device/gpu_busy_percent; do
-        if [ -r "$f" ]; then gpu="$(<"$f")"; break; fi
+        if [ -r "$f" ]; then ngpu="$(<"$f")"; break; fi
       done
       for h in /sys/class/hwmon/hwmon*; do
         if [ -r "$h/name" ] && [ "$(<"$h/name")" = "amdgpu" ] && [ -r "$h/temp1_input" ]; then
-          gput=$(( $(<"$h/temp1_input") / 1000 )); break
+          ngput=$(( $(<"$h/temp1_input") / 1000 )); break
         fi
       done
     fi
-    printf '%s %s %s\n' "$now_g" "${gpu:-}" "${gput:-}" > "$gcache" 2>/dev/null
+    # замер удался — обновляю; нет — не выдаю прошлые значения за свежие
+    if [ -n "$ngpu" ]; then
+      gpu="$ngpu"; gput="$ngput"
+    else
+      gpu=""; gput=""
+    fi
+    printf '%s %s %s\n' "$now_g" "${ngpu:-}" "${ngput:-}" > "$gcache" 2>/dev/null
   fi
 fi
 rec=0
