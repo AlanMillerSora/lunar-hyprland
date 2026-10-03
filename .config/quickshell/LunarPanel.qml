@@ -2220,7 +2220,7 @@ PanelWindow {
             onOpenPlayerRequested: root.openPlayer()
         }
 
-        // ── ТЕЛЕМЕТРИЯ: CPU · RAM · GPU · сеть (только при открытой панели) ──
+        // ── ТЕЛЕМЕТРИЯ: плашки CPU · RAM · GPU + сеть ──
         Column {
             id: sysBody
             visible: root.panelMode === "sys"
@@ -2231,93 +2231,72 @@ PanelWindow {
             width: parent.width - Theme.barPad * 2
             spacing: Theme.space2
 
-            Repeater {
-                model: [
-                    { label: "CPU", v: root.teleCpu,
-                      extra: root.teleCpuTemp > 0 ? (root.teleCpuTemp + "°C") : "" },
-                    { label: "RAM", v: root.teleRam,
-                      extra: root.teleRamTotal > 0 ? (root.teleRamTotal + " МБ") : "" },
-                    { label: "GPU", v: root.teleGpu,
-                      extra: root.teleGpuTemp >= 0 ? (root.teleGpuTemp + "°C") : "" }
-                ]
-                delegate: Row {
-                    required property var modelData
-                    width: parent.width
-                    height: 22
-                    spacing: Theme.space2
-                    Text {
-                        width: 44
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: modelData.label
-                        color: Theme.textFaint
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontTiny
-                        font.letterSpacing: 1
-                    }
-                    Text {
-                        width: 46
-                        horizontalAlignment: Text.AlignRight
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: modelData.v < 0 ? "--" : (modelData.v + "%")
-                        color: Theme.text
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize(13)
-                        font.bold: true
-                    }
-                    MiniBar {
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: parent.width - 44 - 46 - 70 - parent.spacing * 3
-                        value: modelData.v
-                    }
-                    Text {
-                        width: 70
-                        horizontalAlignment: Text.AlignRight
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: modelData.extra
-                        color: Theme.textDim
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize(12)
-                    }
-                }
-            }
-
-            // ── сеть: скорость (КБ/с), без процента — это поток, не загрузка ──
             Row {
                 width: parent.width
-                height: 22
                 spacing: Theme.space2
-                Text {
-                    width: 44
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "СЕТЬ"
-                    color: Theme.textFaint
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontTiny
-                    font.letterSpacing: 1
-                }
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "↓ " + root.fmtRate(root.teleRx)
-                    color: Theme.text
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(13)
-                }
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "↑ " + root.fmtRate(root.teleTx)
-                    color: Theme.textDim
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(13)
+                Repeater {
+                    model: [
+                        { label: "CPU", v: root.teleCpu,
+                          extra: root.teleCpuTemp > 0 ? (root.teleCpuTemp + "°C") : "" },
+                        { label: "RAM", v: root.teleRam,
+                          extra: root.teleRamTotal > 0 ? (root.teleRamTotal + " МБ") : "" },
+                        { label: "GPU", v: root.teleGpu,
+                          extra: root.teleGpuTemp >= 0 ? (root.teleGpuTemp + "°C") : "" }
+                    ]
+                    delegate: Card {
+                        required property var modelData
+                        width: (parent.width - Theme.space2 * 2) / 3
+                        contentMargins: 12
+                        contentSpacing: 6
+                        SectionLabel { text: modelData.label }
+                        RowLayout {
+                            width: parent.width
+                            spacing: Theme.space1
+                            Text {
+                                Layout.alignment: Qt.AlignBottom
+                                text: modelData.v < 0 ? "--" : (modelData.v + "%")
+                                color: Theme.text
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 24
+                                font.bold: true
+                            }
+                            Item { Layout.fillWidth: true; implicitHeight: 1 }
+                            Text {
+                                Layout.alignment: Qt.AlignBottom
+                                text: modelData.extra
+                                color: Theme.textDim
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 11
+                            }
+                        }
+                        MiniBar {
+                            width: parent.width
+                            height: 5
+                            value: modelData.v
+                        }
+                    }
                 }
             }
 
-            Text {
-                visible: root.teleGpu < 0
+            Card {
                 width: parent.width
-                text: "GPU — только в открытой панели (nvidia-smi не в горячем пути)"
-                color: Theme.textFaint
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontTiny
+                SectionLabel { text: "СЕТЬ" }
+                Row {
+                    width: parent.width
+                    spacing: Theme.space4
+                    Text {
+                        text: "↓ " + root.fmtRate(root.teleRx)
+                        color: Theme.text
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontBody
+                    }
+                    Text {
+                        text: "↑ " + root.fmtRate(root.teleTx)
+                        color: Theme.textDim
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontBody
+                    }
+                }
             }
         }
 
