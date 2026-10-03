@@ -6,7 +6,7 @@ import "../.."
 Text {
     color: Theme.textFaint
     font.family: Theme.fontFamily
-    font.pixelSize: 11
+    font.pixelSize: Theme.fontTiny
     font.letterSpacing: 2
     font.bold: true
 }

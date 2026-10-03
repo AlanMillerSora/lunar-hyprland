@@ -2257,7 +2257,7 @@ PanelWindow {
                                 text: modelData.v < 0 ? "--" : (modelData.v + "%")
                                 color: Theme.text
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 24
+                                font.pixelSize: Theme.fontBig
                                 font.bold: true
                             }
                             Item { Layout.fillWidth: true; implicitHeight: 1 }
@@ -2333,7 +2333,7 @@ PanelWindow {
                             text: Weather.ok ? Weather.icon : "\uf185"
                             color: Theme.accent
                             font.family: Theme.iconFont
-                            font.pixelSize: 30
+                            font.pixelSize: Theme.iconXL
                         }
                     }
 
@@ -2344,7 +2344,7 @@ PanelWindow {
                             text: Weather.ok ? Weather.temp : "—"
                             color: Theme.text
                             font.family: Theme.fontFamily
-                            font.pixelSize: 34
+                            font.pixelSize: Theme.fontHero
                             font.bold: true
                         }
                         Text {
@@ -2380,7 +2380,7 @@ PanelWindow {
                         contentSpacing: 2
                         SectionLabel {
                             text: modelData.label
-                            font.pixelSize: 9
+                            font.pixelSize: Theme.fontMicro
                         }
                         Text {
                             text: Weather.ok ? modelData.v : "—"

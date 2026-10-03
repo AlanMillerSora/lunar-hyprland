@@ -234,6 +234,17 @@ QtObject {
     property int fontTitle: 22
     property int fontClock: 16
 
+    // Микро-шкала значений/иконок и поле карточки — чтобы панели не сыпали
+    // «магическими» числами (всё считается от fontScale).
+    property int fontMicro: fontSize(9)
+    property int fontBig: fontSize(24)
+    property int fontHero: fontSize(34)
+    property int iconSm: fontSize(13)
+    property int iconMd: fontSize(15)
+    property int iconLg: fontSize(18)
+    property int iconXL: fontSize(30)
+    property int cardPad: 12
+
     // панель-острова (этап 1): высота плашки, зазоры, поля, отступ внутри
     property int barH: 32
     property int barMargin: 8

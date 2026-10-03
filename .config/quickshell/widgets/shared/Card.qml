@@ -10,7 +10,7 @@ Rectangle {
     id: root
 
     default property alias content: col.children
-    property int contentMargins: 12
+    property int contentMargins: Theme.cardPad
     property int contentSpacing: 8
 
     color: Theme.cardBg
