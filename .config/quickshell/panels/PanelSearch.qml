@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Effects
 import ".."
 
         Column {
@@ -104,12 +105,36 @@ import ".."
                             anchors.leftMargin: Theme.space3
                             anchors.rightMargin: Theme.space3
                             spacing: Theme.space2
-                            Text {
+                            Item {
                                 Layout.alignment: Qt.AlignVCenter
-                                text: modelData.icon || ""
-                                color: index === host.searchIndex ? Theme.accent : Theme.textDim
-                                font.family: Theme.iconFont
-                                font.pixelSize: Theme.fontSize(14)
+                                implicitWidth: 18
+                                implicitHeight: 18
+                                Text {
+                                    anchors.centerIn: parent
+                                    visible: modelData.kind !== "app" || modelData.image === "" || resIcon.status !== Image.Ready
+                                    text: modelData.kind === "app" ? "\uf009" : (modelData.icon || "")
+                                    color: index === host.searchIndex ? Theme.accent : Theme.textDim
+                                    font.family: Theme.iconFont
+                                    font.pixelSize: Theme.fontSize(14)
+                                }
+                                Image {
+                                    id: resIcon
+                                    anchors.fill: parent
+                                    visible: false
+                                    source: (modelData.kind === "app" && modelData.image) ? modelData.image : ""
+                                    sourceSize: Qt.size(36, 36)
+                                    fillMode: Image.PreserveAspectFit
+                                    smooth: true
+                                    asynchronous: true
+                                }
+                                MultiEffect {
+                                    anchors.fill: parent
+                                    source: resIcon
+                                    visible: modelData.kind === "app" && modelData.image !== "" && resIcon.status === Image.Ready
+                                    saturation: -1.0
+                                    brightness: 0.35
+                                    contrast: 0.05
+                                }
                             }
                             Text {
                                 Layout.alignment: Qt.AlignVCenter

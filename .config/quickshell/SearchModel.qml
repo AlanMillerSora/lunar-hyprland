@@ -341,7 +341,9 @@ QtObject {
             var ap = apps[j]
             var r2 = sm.matchRank(q, ap.name)
             if (r2 < 0) r2 = sm.matchRank(q, sm.appHay[j])
-            if (r2 >= 0) hits.push({ kind: "app", rank: r2, label: ap.name, app: ap })
+            if (r2 >= 0) hits.push({ kind: "app", rank: r2, label: ap.name, app: ap,
+                icon: ap.icon || "",
+                image: (ap.icon && Quickshell.hasThemeIcon(ap.icon)) ? Quickshell.iconPath(ap.icon, true) : "" })
         }
         hits.sort(function(x, y) { return x.rank - y.rank })
         out = out.concat(hits.slice(0, 8))
