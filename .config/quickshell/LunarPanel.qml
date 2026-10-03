@@ -2404,9 +2404,9 @@ PanelWindow {
 
             Rectangle {
                 width: parent.width
-                height: 34
-                radius: Theme.radius
-                color: Theme.fill
+                height: 36
+                radius: Theme.cardRadius
+                color: Theme.cardBg
                 border.width: 1
                 border.color: searchInput.activeFocus ? Theme.borderAccent : Theme.border
 
@@ -2483,31 +2483,35 @@ PanelWindow {
                         required property var modelData
                         required property int index
                         width: parent.width
-                        height: 32
-                        radius: Theme.radius
+                        height: 34
+                        radius: Theme.cardRadius
+                        border.width: 1
+                        border.color: index === root.searchIndex ? Theme.alpha(Theme.accent, 0.4) : "transparent"
                         color: index === root.searchIndex ? Theme.active
                             : (resMouse.containsMouse ? Theme.hover : "transparent")
-                        Row {
-                            anchors.left: parent.left
-                            anchors.leftMargin: Theme.space2
-                            anchors.verticalCenter: parent.verticalCenter
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: Theme.space3
+                            anchors.rightMargin: Theme.space3
                             spacing: Theme.space2
                             Text {
-                                anchors.verticalCenter: parent.verticalCenter
+                                Layout.alignment: Qt.AlignVCenter
                                 text: modelData.icon || ""
                                 color: index === root.searchIndex ? Theme.accent : Theme.textDim
                                 font.family: Theme.iconFont
                                 font.pixelSize: Theme.fontSize(14)
                             }
                             Text {
-                                anchors.verticalCenter: parent.verticalCenter
+                                Layout.alignment: Qt.AlignVCenter
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
                                 text: modelData.label
                                 color: index === root.searchIndex ? Theme.text : Theme.barText
                                 font.family: Theme.fontFamily
                                 font.pixelSize: Theme.fontSize(13)
                             }
                             Text {
-                                anchors.verticalCenter: parent.verticalCenter
+                                Layout.alignment: Qt.AlignVCenter
                                 text: modelData.kind === "page" ? "страница"
                                     : (modelData.kind === "action" ? "действие"
                                     : (modelData.kind === "calc" ? "калькулятор · Enter — копирую"
