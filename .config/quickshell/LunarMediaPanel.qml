@@ -137,7 +137,7 @@ Item {
         Item {
             id: seek
             width: parent.width
-            height: 26
+            height: Theme.barCellH
 
             readonly property real frac: MediaCore.progress
             property real dragFrac: 0

@@ -22,7 +22,7 @@ defdev="$(ip route show default 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="d
 if [ -z "$defdev" ]; then
   for d in /sys/class/net/*; do
     n="$(basename "$d")"
-    case "$n" in lo|docker*|veth*|virbr*|br-*) continue ;; esac
+    case "$n" in lo|docker*|veth*|virbr*|br-*|tun*|tailscale*|podman*|bond*|wg*|zt*) continue ;; esac
     [ "$(cat "$d/operstate" 2>/dev/null)" = "up" ] && { defdev="$n"; break; }
   done
 fi
@@ -143,13 +143,14 @@ if [ -f "$HOME/.cache/lunar/tele" ]; then
         fi
       done
     fi
-    # замер удался — обновляю; нет — не выдаю прошлые значения за свежие
     if [ -n "$ngpu" ]; then
       gpu="$ngpu"; gput="$ngput"
+      printf '%s %s %s\n' "$now_g" "$ngpu" "$ngput" > "$gcache" 2>/dev/null
     else
-      gpu=""; gput=""
+      # замер не удался: держу прошлое показание, но не «продлеваю» его как
+      # свежее — метка на 20 с назад, повтор через ~10 с (не каждый опрос)
+      printf '%s %s %s\n' "$((now_g - 20))" "${gpu:-}" "${gput:-}" > "$gcache" 2>/dev/null
     fi
-    printf '%s %s %s\n' "$now_g" "${ngpu:-}" "${ngput:-}" > "$gcache" 2>/dev/null
   fi
 fi
 rec=0

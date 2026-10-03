@@ -443,7 +443,7 @@ PanelWindow {
                             color: "transparent"
                             border.width: 2
                             border.color: (root.confirming && delegateItem.index === root.commitIndex)
-                                ? Theme.accent : Theme.alpha(Theme.accent, 0.6)
+                                ? Theme.accent : Theme.activeBorder
                         }
                     }
 

@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Effects
 import ".."
+import "../widgets/shared"
 
 // ════════════════════════════════════════════════════════════════
 //  PanelSearch — поиск-лаунчер внутри раскрытой плашки бара.
@@ -150,14 +151,9 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     color: Theme.accent
                 }
-                Text {
+                SectionLabel {
                     anchors.verticalCenter: parent.verticalCenter
                     text: modelData.title || ""
-                    color: Theme.textFaint
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontTiny
-                    font.bold: true
-                    font.letterSpacing: 2
                 }
             }
 
@@ -167,7 +163,7 @@ Item {
                 anchors.fill: parent
                 radius: Theme.radiusM
                 border.width: 1
-                border.color: index === Launcher.index ? Theme.alpha(Theme.accent, 0.4) : "transparent"
+                border.color: index === Launcher.index ? Theme.activeBorder : "transparent"
                 color: index === Launcher.index ? Theme.active
                     : (resMouse.containsMouse ? Theme.hover : "transparent")
                 Behavior on color { ColorAnimation { duration: Theme.animFast } }

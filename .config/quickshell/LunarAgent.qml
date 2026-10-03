@@ -530,12 +530,13 @@ FloatingWindow {
             "eclipse-agent-context.sh": [],
             "eclipse-transparency.sh": [],
             "eclipse-mono-icons.sh": [],
+            "eclipse-update.sh": ["--check", "--news"],
             "eclipse-record.sh": ["toggle", "start", "stop", "status", "probe"],
             "eclipse-gamemode.sh": ["toggle", "on", "off"],
-            "eclipse-zapret.sh": ["update", "tune", "toggle", "status", "restart"],
-            "eclipse-zapret-tg.sh": ["toggle", "status", "open", "restart", "link"],
+            "eclipse-zapret.sh": ["update", "tune", "toggle", "status", "restart", "on", "off"],
+            "eclipse-zapret-tg.sh": ["toggle", "status", "open", "restart", "link", "on", "off"],
             "eclipse-vencord.sh": ["update", "status", "patch", "unpatch", "repair"],
-            "eclipse-media.sh": ["play", "previous", "next"],
+            "eclipse-media.sh": ["play-pause", "previous", "next"],
             "eclipse-avatar.sh": ["pick"],
             "eclipse-launch.sh": ["firefox"]
         })

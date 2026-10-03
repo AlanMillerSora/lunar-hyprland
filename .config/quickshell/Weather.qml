@@ -165,17 +165,13 @@ QtObject {
         }
     }
 
-    property int geoAttempts: 0
     function refresh() {
-        if (wx.city === "" || wx.lat === "" || wx.lon === "") {
-            // не долблю ipinfo каждые 20 минут, если координаты так и не пришли
-            if (wx.geoAttempts < 3) {
-                wx.geoAttempts++
-                wx.geo.running = true
-            }
-        } else {
+        // ipinfo зову раз в тик таймера (20 мин) — это не «долбёжка», зато
+        // погода сама оживает, когда сеть вернулась после старта без неё
+        if (wx.city === "" || wx.lat === "" || wx.lon === "")
+            wx.geo.running = true
+        else
             wx.fetch()
-        }
     }
 
     // описание → глиф Nerd Font (учу и английские, и русские слова)

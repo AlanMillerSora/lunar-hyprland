@@ -96,7 +96,7 @@ Item {
                 : (current ? Theme.active
                            : (rowMouse.containsMouse ? Theme.hover : "transparent"))
             border.width: (current || lifting) ? 1 : 0
-            border.color: Theme.alpha(Theme.accent, 0.45)
+            border.color: Theme.activeBorder
 
             // поднятая строка выше остальных и чуть крупнее — «взял в руку»
             z: lifting ? 2 : 0

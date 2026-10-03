@@ -50,7 +50,7 @@ import ".."
                         color: root.filter === modelData.k ? Theme.active
                             : (chipMa.containsMouse ? Theme.hover : Theme.fill)
                         border.width: 1
-                        border.color: root.filter === modelData.k ? Theme.alpha(Theme.accent, 0.5) : "transparent"
+                        border.color: root.filter === modelData.k ? Theme.activeBorder : "transparent"
                         Text {
                             id: chipText
                             anchors.centerIn: parent

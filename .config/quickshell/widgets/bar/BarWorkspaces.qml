@@ -75,7 +75,7 @@ import "../shared"
                                 radius: 12
                                 color: "transparent"
                                 border.width: 1
-                                border.color: Theme.alpha(Theme.accent, 0.55)
+                                border.color: Theme.activeBorder
                                 opacity: 0.55
                                 visible: wsPill.isFocused
                             }

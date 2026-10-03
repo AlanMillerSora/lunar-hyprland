@@ -161,6 +161,8 @@ Item {
                     label: pPick.running ? "ВЫБИРАЮ…" : "СМЕНИТЬ АВАТАР"
                     fontSize: 13
                     minWidth: 170
+                    hPad: 36
+                    letterSpacing: 2
                     enabledBtn: !pPick.running
                     onClicked: pPick.running = true
                 }
@@ -258,6 +260,7 @@ Item {
                         label: pApply.running ? "СОХРАНЯЮ…" : "СОХРАНИТЬ"
                         fontSize: 13
                         width: 150
+                        letterSpacing: 2
                         enabledBtn: !pApply.running
                         onClicked: page.applyCrop()
                     }
@@ -266,6 +269,7 @@ Item {
                         label: "ОТМЕНА"
                         fontSize: 13
                         width: 130
+                        letterSpacing: 2
                         onClicked: page.cropping = false
                     }
                 }

@@ -18,6 +18,7 @@ Rectangle {
     property int fontSize: Theme.fontTiny
     property int minWidth: 120
     property int hPad: 34
+    property int letterSpacing: 1
     signal clicked()
 
     implicitWidth: Math.max(minWidth, btnText.implicitWidth + hPad)
@@ -39,7 +40,7 @@ Rectangle {
              : (btnArea.containsMouse || btn.accent) ? Theme.accent : Theme.textDim
         font.family: Theme.fontFamily
         font.pixelSize: btn.fontSize
-        font.letterSpacing: 1
+        font.letterSpacing: btn.letterSpacing
     }
 
     MouseArea {

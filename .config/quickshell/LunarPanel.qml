@@ -827,7 +827,7 @@ PanelWindow {
             // ── марка LUNAR + фаза активного стола ──
             Row {
                 Layout.alignment: Qt.AlignVCenter
-                height: 26
+                height: Theme.barCellH
                 spacing: Theme.space2
 
                 Image {
@@ -1235,7 +1235,7 @@ PanelWindow {
                 accent: Theme.accent
                 Row {
                     anchors.verticalCenter: parent.verticalCenter
-                    height: 26
+                    height: Theme.barCellH
                     spacing: 0
                     Text {
                         id: clockLabel
@@ -1245,7 +1245,7 @@ PanelWindow {
                         font.pixelSize: Theme.fontSize(Theme.fontClock)
                         font.bold: true
                         font.letterSpacing: 1
-                        height: 26
+                        height: Theme.barCellH
                         verticalAlignment: Text.AlignVCenter
                     }
                     Text {
@@ -1255,7 +1255,7 @@ PanelWindow {
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSize(Theme.fontClock)
                         font.bold: true
-                        height: 26
+                        height: Theme.barCellH
                         verticalAlignment: Text.AlignVCenter
                         opacity: root.colonOn ? 1.0 : 0.15
                         Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.InOutSine } }
@@ -1268,7 +1268,7 @@ PanelWindow {
                         font.pixelSize: Theme.fontSize(Theme.fontClock)
                         font.bold: true
                         font.letterSpacing: 1
-                        height: 26
+                        height: Theme.barCellH
                         verticalAlignment: Text.AlignVCenter
                     }
                 }
@@ -1279,7 +1279,7 @@ PanelWindow {
                     color: Theme.barDim
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSmall
-                    height: 26
+                    height: Theme.barCellH
                     verticalAlignment: Text.AlignVCenter
                 }
             }

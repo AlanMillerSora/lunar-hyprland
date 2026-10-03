@@ -49,14 +49,10 @@ import "../widgets/shared"
                                         onClicked: host.toggleMute()
                                     }
                                 }
-                                Text {
+                                SectionLabel {
                                     Layout.alignment: Qt.AlignVCenter
                                     text: "ВЫВОД"
-                                    color: Theme.textDim
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontTiny
-                                    font.bold: true
-                                    font.letterSpacing: 2
+                                    textColor: Theme.textDim
                                 }
                                 Item { Layout.fillWidth: true; implicitHeight: 1 }
                                 Text {
@@ -103,14 +99,10 @@ import "../widgets/shared"
                                         onClicked: host.toggleMicMute()
                                     }
                                 }
-                                Text {
+                                SectionLabel {
                                     Layout.alignment: Qt.AlignVCenter
                                     text: "МИКРОФОН"
-                                    color: Theme.textDim
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontTiny
-                                    font.bold: true
-                                    font.letterSpacing: 2
+                                    textColor: Theme.textDim
                                 }
                                 Item { Layout.fillWidth: true; implicitHeight: 1 }
                                 Text {

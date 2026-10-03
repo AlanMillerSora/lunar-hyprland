@@ -61,6 +61,7 @@ QtObject {
     property color hover: Qt.rgba(accent.r, accent.g, accent.b, 0.07)        // наведение: строки, карточки
     property color hoverStrong: Qt.rgba(accent.r, accent.g, accent.b, 0.10)  // наведение: кнопки, чипы
     property color active: Qt.rgba(accent.r, accent.g, accent.b, 0.14)       // выбранное/включённое
+    property color activeBorder: Qt.rgba(accent.r, accent.g, accent.b, 0.5)  // рамка выбранного
     property color fill: Qt.rgba(text.r, text.g, text.b, 0.04)               // покой (фон карточек/строк)
 
     // ── карточки панелей: подложка чуть контрастнее строк + рамка ──
@@ -226,12 +227,14 @@ QtObject {
     property int rowHComfy: 48
     property int headerH: 44
 
-    property int fontTiny: 11
-    property int fontSmall: 12
-    property int fontBody: 14
-    property int fontPanelTitle: 16
-    property int fontTitle: 22
-    property int fontClock: 16
+    // Все ступени — через fontSize(): тогда fontScale двигает шкалу целиком,
+    // а не наполовину (раньше семантические токены были константами)
+    property int fontTiny: fontSize(11)
+    property int fontSmall: fontSize(12)
+    property int fontBody: fontSize(14)
+    property int fontPanelTitle: fontSize(16)
+    property int fontTitle: fontSize(22)
+    property int fontClock: fontSize(16)
 
     // Микро-шкала значений/иконок и поле карточки — чтобы панели не сыпали
     // «магическими» числами (всё считается от fontScale).
