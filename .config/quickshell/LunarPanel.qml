@@ -12,11 +12,11 @@ import "widgets/shared"
 
 // ────────────────────────────────────────────────────────────────
 //  Lunar top bar — монохромный HUD
-//    слева  : LUNAR + фазы столов (отдельная плашка)
-//    справа : один компактный бар — PERF · раскладка · систем-остров · часы/медиа/пульт · статус
-//  Панель во всю ширину, но ввод ловят только сами плашки (mask) —
-//  зазоры пропускают клики (важно для fullscreen). exclusiveZone
-//  держит окна вне полосы бара. Морф — по мотивам ArchEclipse.
+//    единая плашка: LUNAR+фазы · PERF/раскладка · часы/медиа/пульт · статус
+//  Ввод ловит только плашка (mask) — зазоры пропускают клики (важно для
+//  fullscreen). exclusiveZone держит окна вне полосы бара. По клику плашка
+//  сама раскрывается вниз и показывает панель режима (морф по мотивам
+//  ArchEclipse: clip + opacity + scale).
 // ────────────────────────────────────────────────────────────────
 PanelWindow {
     id: root
@@ -44,8 +44,7 @@ PanelWindow {
     // по-прежнему пропускают клики (важно для fullscreen).
     mask: Region {
         Region { item: root.expanded ? clickShield : null }
-        Region { item: root.expanded ? null : bar }
-        Region { item: root.expanded ? panel : null }
+        Region { item: bar }
         Region { item: root.recording ? recPill : null }
     }
 
@@ -747,18 +746,21 @@ PanelWindow {
     // ── ЕДИНЫЙ БАР: один фон на весь верх, содержимое внутри ──
     Rectangle {
         id: bar
-        // единый фон: от левого края группы (марка+фазы) до правого края
-        // статуса; часы держу ровно по центру экрана
-        anchors.left: leftBar.left
-        anchors.right: rightBar.right
+        // единый остров: в покое — строка по ширине содержимого и по центру
+        // экрана; в режиме — плашка морфит к размеру панели (ширина/высота/
+        // позиция), а строка бара растворяется. Часы держу по центру экрана.
+        readonly property real collapsedW: (rightBar.x + rightBar.width) - leftBar.x
+        readonly property real expandedW: root.panelWidthFor(root.panelMode) + 2 * Theme.barPad
+        width: collapsedW + (expandedW - collapsedW) * root.morph
+        x: leftBar.x + ((parent.width - width) / 2 - leftBar.x) * root.morph
         anchors.top: parent.top
         anchors.topMargin: Theme.barMargin
-        height: Theme.barH
+        height: Theme.barH + root.morph * (root.panelTargetH - Theme.barH)
         radius: Theme.barRadius
         color: root.pillBg
+        border.width: 1
+        border.color: Theme.border
         clip: true
-        // открыт режим — бар уступает место панели (кроссфейд)
-        opacity: 1 - root.morph
 
         HoverHandler { onHoveredChanged: root.barHovered = hovered }
 
@@ -796,12 +798,14 @@ PanelWindow {
         id: leftBar
         anchors.right: midBar.left
         anchors.rightMargin: Theme.space3
-        anchors.verticalCenter: bar.verticalCenter
+        anchors.top: bar.top
         height: Theme.barH
         radius: Theme.barRadius
         color: "transparent"
         clip: true
-        opacity: 1 - root.morph
+        // строка бара растворяется до начала поджатия плашки
+        opacity: Math.max(0, 1 - root.morph * 8)
+        enabled: !root.expanded
         width: leftLayout.implicitWidth + 2 * Theme.barPad
 
         RowLayout {
@@ -981,11 +985,12 @@ PanelWindow {
     Rectangle {
         id: midBar
         anchors.right: centerPill.left
-        anchors.verticalCenter: bar.verticalCenter
-        opacity: 1 - root.morph
+        anchors.top: bar.top
         height: Theme.barH
         color: "transparent"
         clip: true
+        opacity: Math.max(0, 1 - root.morph * 8)
+        enabled: !root.expanded
         width: midLayout.implicitWidth + 2 * Theme.space2
 
         Row {
@@ -1030,11 +1035,12 @@ PanelWindow {
     Rectangle {
         id: rightBar
         anchors.left: centerPill.right
-        anchors.verticalCenter: bar.verticalCenter
-        opacity: 1 - root.morph
+        anchors.top: bar.top
         height: Theme.barH
         color: "transparent"
         clip: true
+        opacity: Math.max(0, 1 - root.morph * 8)
+        enabled: !root.expanded
         width: rightLayout.implicitWidth + 2 * Theme.space2
 
         // ── статус: сеть · игра · трей · уведомления · звук ──
@@ -1461,11 +1467,12 @@ PanelWindow {
         // тогда ширина midBar/rightBar и рост медиа часы не двигают
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.horizontalCenterOffset: Theme.barPad + clockCell.width / 2 - centerPill.width / 2
-        anchors.verticalCenter: bar.verticalCenter
-        opacity: 1 - root.morph
+        anchors.top: bar.top
         height: Theme.barH
         color: "transparent"
         clip: true
+        opacity: Math.max(0, 1 - root.morph * 8)
+        enabled: !root.expanded
         width: defRow.implicitWidth + 2 * Theme.barPad
 
         // колесо над плашкой — громкость
@@ -1655,53 +1662,25 @@ PanelWindow {
         }
     }
 
-    // ── ПАНЕЛЬ: заменяет бар на его же месте (как раньше, но раскрывается) ──
-    // Встаёт вместо бара: пульт и медиа — в строку (высота бара), поиск и
-    // уведомления — выше и вниз. Один режим за раз.
+    // ── ПАНЕЛЬ: контент режима внутри раскрытой вниз плашки бара ──
+    // Сама плашка растёт вниз; здесь — только контент (шапка + тело),
+    // раскрывается из-под строки бара (clip + opacity + scale). Один режим.
     Rectangle {
         id: panel
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.top: parent.top
-        anchors.topMargin: Theme.barMargin
+        // контент раскрывается внутри плашки бара, из-под его строки
+        // выезжает из-под строки бара и в финале заполняет всю плашку
+        anchors.top: bar.top
+        anchors.topMargin: (1 - root.morph) * Theme.barH
         width: root.panelWidthFor(root.panelMode)
         height: root.morph * root.panelTargetH
-        radius: Theme.barRadius
-        color: root.pillBg
-        border.width: 1
-        border.color: Theme.border
+        color: "transparent"
         clip: true
         visible: root.morph > 0.001
         opacity: root.morph
         scale: 0.97 + 0.03 * root.morph
         transformOrigin: Item.Top
         Behavior on width { NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut } }
-
-        // зерно
-        Image {
-            id: nzP
-            anchors.fill: parent
-            source: Qt.resolvedUrl("assets/noise.png")
-            fillMode: Image.Tile
-            smooth: false
-            cache: true
-            visible: false
-            layer.enabled: true
-        }
-        MultiEffect {
-            anchors.fill: parent
-            source: nzP
-            maskEnabled: true
-            maskSource: nmP
-            opacity: 0.07
-        }
-        Rectangle {
-            id: nmP
-            anchors.fill: parent
-            radius: Theme.barRadius
-            color: "white"
-            visible: false
-            layer.enabled: true
-        }
 
         HoverHandler { onHoveredChanged: root.panelHovered = hovered }
 
