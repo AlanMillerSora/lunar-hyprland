@@ -3,7 +3,19 @@ import QtQuick.Effects
 import ".."
 
         Column {
+            id: root
             property var host
+            property string filter: "all"
+            property var shown: {
+                var out = []
+                var src = NotifModel.items
+                for (var i = 0; i < src.length; i++) {
+                    if (root.filter === "important" && src[i].urgency !== "critical")
+                        continue
+                    out.push(src[i])
+                }
+                return out
+            }
             visible: BarState.mode === "notifs"
             opacity: host.panelContentOpacity
             anchors.fill: parent
@@ -14,11 +26,45 @@ import ".."
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 topPadding: 60
-                visible: NotifModel.items.length === 0
+                visible: root.shown.length === 0
                 text: NotifModel.dnd ? "режим «не беспокоить»" : "уведомлений нет"
                 color: Theme.textFaint
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSize(13)
+            }
+
+            // фильтр: все / важные
+            Row {
+                spacing: Theme.space1
+                Repeater {
+                    model: [ { k: "all", t: "ВСЕ" }, { k: "important", t: "ВАЖНЫЕ" } ]
+                    delegate: Rectangle {
+                        required property var modelData
+                        width: chipText.implicitWidth + 20
+                        height: 22
+                        radius: Theme.radiusS
+                        color: root.filter === modelData.k ? Theme.active
+                            : (chipMa.containsMouse ? Theme.hover : Theme.fill)
+                        border.width: 1
+                        border.color: root.filter === modelData.k ? Theme.alpha(Theme.accent, 0.5) : "transparent"
+                        Text {
+                            id: chipText
+                            anchors.centerIn: parent
+                            text: modelData.t
+                            color: root.filter === modelData.k ? Theme.text : Theme.textDim
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontTiny
+                            font.letterSpacing: 1
+                        }
+                        MouseArea {
+                            id: chipMa
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.filter = modelData.k
+                        }
+                    }
+                }
             }
 
             // список (скроллится)
@@ -28,7 +74,7 @@ import ".."
                 height: parent.height - y
                 clip: true
                 spacing: Theme.space2
-                model: NotifModel.items
+                model: root.shown
 
                 delegate: Rectangle {
                     required property var modelData
