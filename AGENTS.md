@@ -161,7 +161,7 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 │   ├── quickshell/
 │   │   ├── shell.qml грузит: LunarWallpaper, LunarPanel, LunarHub, LunarWallpapers,
 │   │   │   LunarSidebar, LunarSidebarRight, LunarOsd, LunarVolume, LunarMedia, LunarTray,
-│   │   │   LunarTooltip, LunarClipboard, LunarPower, LunarAgent, LunarOverview, LunarPolkit
+│   │   │   LunarClipboard, LunarPower, LunarAgent, LunarOverview, LunarPolkit
 │   │   ├── Lunar*.qml, LunarWallpaperScene.qml, preview.qml, Slider.qml, Theme.qml,
 │   │   │   AppModel.qml, HudCorners.qml, PerspectivePanel.qml
 │   │   ├── SettingsPages/ (8 страниц), assets/ (+moon-phases/, crop-frame.png), pfp3.png,
@@ -256,7 +256,7 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 - `MemoryMax`/`MemoryHigh` и `Restart=always` для quickshell — не ставить (OOM / краш-луп).
 - Уже сделаны, не переделывать без просьбы: hover-подсветка секций; импульс кольца стола;
   плавное двоеточие часов; выбор вывода/входа в звуке; единый поиск в Hub; линия/cava в полосе медиа;
-  гладкая корона; статичное гало; заметный OPTIMIZE; показатели группами с иконками и тултипами.
+  гладкая корона; статичное гало; заметный OPTIMIZE; показатели группами с иконками.
 
 ## 7. Грабли (проверено)
 
@@ -410,7 +410,7 @@ sudo mkinitcpio -P                                                 # сборк�
 
 **Оверлеи — обычные окна.** Hub, буфер, питание, агент и плеер — `FloatingWindow`:
 Hyprland сам двигает/тянет за края/блюрит/скругляет (`window_rule` по заголовку «Lunar …»).
-Слоями остались панель, сайдбары, обзор столов и мелкие попапы (OSD/громкость/медиа/трей/тултип).
+Слоями остались панель, сайдбары, обзор столов и мелкие попапы (OSD/громкость/медиа/трей).
 Клик «мимо» окна больше не закрывает — закрытие Esc/хоткеем/IPC.
 
 **Стекло и зерно.** Блюр — только у мелких поверхностей (панель/сайдбары/окна) плюс всем окнам

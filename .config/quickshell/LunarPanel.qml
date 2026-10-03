@@ -349,18 +349,6 @@ PanelWindow {
         item.display(root, Math.round(pt.x), Math.round(pt.y))
     }
 
-    // Тултипы в баре убрал: подпись под баром только мешала и закрывала
-    // содержимое. Оставляю функцию-заглушку, чтобы вызовы не падали.
-    function showTip(text, area) {
-        return
-    }
-
-    // тултип с названием приложения при наведении на значок трея
-    function showTrayTip(item, area) {
-        if (!item) return
-        root.showTip(item.tooltipTitle || item.title || item.id || "", area)
-    }
-
     // ─────────── сеть / раскладка / уведомления ───────────
     property string netKind: "off"      // eth | wifi | off
     property string kbLayout: "EN"
@@ -704,7 +692,6 @@ PanelWindow {
         default property alias content: cellContent.children
         property color accent: Theme.barFaint
         property bool interactive: false
-        property string tip: ""
         signal clicked()
 
         height: 26
@@ -715,10 +702,6 @@ PanelWindow {
 
         HoverHandler {
             id: cellHover
-            onHoveredChanged: {
-                if (hovered && cell.tip !== "")
-                    root.showTip(cell.tip, cell)
-            }
         }
 
         // короткий штрих-акцент слева (как цветные флажки у ArchEclipse)
@@ -1055,7 +1038,6 @@ PanelWindow {
             Cell {
                 anchors.verticalCenter: parent.verticalCenter
                 interactive: true
-                tip: "раскладка — клик переключить"
                 accent: Theme.barDim
                 onClicked: root.switchLayout()
                 Text {
@@ -1118,7 +1100,6 @@ PanelWindow {
             Cell {
                 anchors.verticalCenter: parent.verticalCenter
                 interactive: true
-                tip: "сеть — открыть в Hub"
                 accent: root.netKind === "off" ? Theme.barFaint : Theme.barDim
                 onClicked: root.openNetwork()
                 Column {
@@ -1154,7 +1135,6 @@ PanelWindow {
             Cell {
                 anchors.verticalCenter: parent.verticalCenter
                 interactive: true
-                tip: "игровой режим"
                 accent: root.gameMode ? Theme.danger : Theme.barFaint
                 onClicked: root.toggleGameMode()
                 Text {
@@ -1237,8 +1217,6 @@ PanelWindow {
                                 hoverEnabled: true
                                 acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
                                 cursorShape: Qt.PointingHandCursor
-                                onEntered: root.showTrayTip(modelData, trayIconMouse)
-                                onExited: Theme.tooltipShown = false
                                 onClicked: function (m) {
                                     if (m.button === Qt.MiddleButton) {
                                         modelData.secondaryActivate()
@@ -1283,8 +1261,6 @@ PanelWindow {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onEntered: root.showTip("свёрнутые приложения", moreMouse)
-                            onExited: Theme.tooltipShown = false
                             onClicked: root.openTrayPanel()
                         }
                     }
@@ -1296,7 +1272,6 @@ PanelWindow {
                 id: notifCell
                 anchors.verticalCenter: parent.verticalCenter
                 interactive: true
-                tip: "уведомления"
                 accent: root.notifCount > 0 ? Theme.accent : Theme.barFaint
                 onClicked: root.togglePanel("notifs")
                 // мягкий пульс на НОВОЕ уведомление (только рост счётчика).
@@ -1344,7 +1319,6 @@ PanelWindow {
                 id: volCell
                 anchors.verticalCenter: parent.verticalCenter
                 interactive: true
-                tip: "звук — клик пульт, колесо шаг, ПКМ микшер"
                 accent: root.muted ? Theme.danger : Theme.barDim
                 onClicked: root.openVolumePanel()
                 // пульс на изменение громкости или mute
@@ -1450,8 +1424,6 @@ PanelWindow {
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
-            onEntered: root.showTip("запись — клик остановить", recPill)
-            onExited: Theme.tooltipShown = false
             onClicked: root.toggleRecording()
         }
     }
@@ -1483,7 +1455,6 @@ PanelWindow {
             Cell {
                 anchors.verticalCenter: parent.verticalCenter
                 interactive: true
-                tip: "пульт: действия, звук и микрофон"
                 accent: root.panelMode === "control" ? Theme.accent : Theme.barDim
                 onClicked: root.togglePanel("control")
                 Text {
