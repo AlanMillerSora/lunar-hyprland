@@ -2279,7 +2279,11 @@ PanelWindow {
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: modelData.kind === "page" ? "страница"
                                     : (modelData.kind === "action" ? "действие"
-                                    : (modelData.kind === "calc" ? "калькулятор · Enter — копирую" : "приложение"))
+                                    : (modelData.kind === "calc" ? "калькулятор · Enter — копирую"
+                                    : (modelData.kind === "unit" ? "конверсия · Enter — копирую"
+                                    : (modelData.kind === "emoji" ? "эмодзи · Enter — копирую"
+                                    : (modelData.kind === "url" ? "ссылка · Enter — открыть"
+                                    : "приложение")))))
                                 color: Theme.textDim
                                 font.family: Theme.fontFamily
                                 font.pixelSize: Theme.fontTiny
