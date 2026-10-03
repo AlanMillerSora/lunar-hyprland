@@ -3,6 +3,7 @@ import Quickshell.Services.Polkit
 import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
+import "widgets/shared"
 
 // ════════════════════════════════════════════════════════════════
 //  LunarPolkit — свой агент polkit (запрос пароля) в стиле риса.
@@ -97,14 +98,7 @@ PanelWindow {
             anchors.margins: Theme.space4
             spacing: Theme.space3
 
-            Text {
-                text: "АУТЕНТИФИКАЦИЯ"
-                color: Theme.text
-                font.family: Theme.fontFamily
-                font.pixelSize: 12
-                font.bold: true
-                font.letterSpacing: 2
-            }
+            SectionLabel { text: "АУТЕНТИФИКАЦИЯ"; textColor: Theme.text; size: Theme.fontSmall }
 
             Text {
                 Layout.fillWidth: true

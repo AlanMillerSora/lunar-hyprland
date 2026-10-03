@@ -306,14 +306,7 @@ Item {
             Rectangle { width: parent.width; height: 1; color: Theme.border }
 
             // ── новости (переведённые) ──
-            Text {
-                text: "НОВОСТИ ARCH (ПЕРЕВОД)"
-                color: Theme.text
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSmall
-                font.bold: true
-                font.letterSpacing: 2
-            }
+            SectionLabel { text: "НОВОСТИ ARCH (ПЕРЕВОД)"; textColor: Theme.text; size: Theme.fontSmall; bold: true }
 
             // ── разбор новостей агентом: перевод и на что обратить внимание ──
             Rectangle {

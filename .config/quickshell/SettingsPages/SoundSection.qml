@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Services.Pipewire
 import "../"
+import "../widgets/shared"
 
 // ════════════════════════════════════════════════════════════════
 //  SoundSection — звук в Hub (Devices → «Звук»).
@@ -232,14 +233,7 @@ Item {
         Rectangle { width: parent.width; height: 1; color: Theme.border }
 
         // ── ВЫВОД ──
-        Text {
-            text: "ВЫВОД"
-            color: Theme.text
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSmall
-            font.bold: true
-            font.letterSpacing: 2
-        }
+        SectionLabel { text: "ВЫВОД"; textColor: Theme.text; size: Theme.fontSmall; bold: true }
         LevelRow {
             title: "ГРОМКОСТЬ"
             icon: page.icSpeaker
@@ -271,14 +265,7 @@ Item {
         Rectangle { width: parent.width; height: 1; color: Theme.border }
 
         // ── ВХОД (микрофон) ──
-        Text {
-            text: "ВХОД"
-            color: Theme.text
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSmall
-            font.bold: true
-            font.letterSpacing: 2
-        }
+        SectionLabel { text: "ВХОД"; textColor: Theme.text; size: Theme.fontSmall; bold: true }
         LevelRow {
             title: "МИКРОФОН"
             icon: page.icMic
@@ -317,14 +304,7 @@ Item {
         Rectangle { width: parent.width; height: 1; color: Theme.border }
 
         // ── ПРИЛОЖЕНИЯ ──
-        Text {
-            text: "ПРИЛОЖЕНИЯ · " + page.appStreams.length
-            color: Theme.text
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSmall
-            font.bold: true
-            font.letterSpacing: 2
-        }
+        SectionLabel { text: "ПРИЛОЖЕНИЯ · " + page.appStreams.length; textColor: Theme.text; size: Theme.fontSmall; bold: true }
         Column {
             width: parent.width
             spacing: page.sectionSpacing

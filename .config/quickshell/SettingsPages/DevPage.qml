@@ -375,14 +375,7 @@ Item {
                 Layout.fillWidth: true
                 spacing: Theme.space3
 
-                Text {
-                    text: page.gitProject ? page.gitProject.name : ""
-                    color: Theme.text
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSmall
-                    font.bold: true
-                    font.letterSpacing: 2
-                }
+                SectionLabel { text: page.gitProject ? page.gitProject.name : ""; textColor: Theme.text; size: Theme.fontSmall; bold: true }
 
                 Text {
                     Layout.fillWidth: true
@@ -432,14 +425,7 @@ Item {
             }
 
             // ветки
-            Text {
-                text: "ВЕТКИ"
-                color: Theme.text
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSmall
-                font.bold: true
-                font.letterSpacing: 2
-            }
+            SectionLabel { text: "ВЕТКИ"; textColor: Theme.text; size: Theme.fontSmall; bold: true }
 
             Flow {
                 id: branchFlow
@@ -622,14 +608,7 @@ Item {
             }
 
             // вывод git
-            Text {
-                text: "ВЫВОД"
-                color: Theme.text
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSmall
-                font.bold: true
-                font.letterSpacing: 2
-            }
+            SectionLabel { text: "ВЫВОД"; textColor: Theme.text; size: Theme.fontSmall; bold: true }
 
             Flickable {
                 id: outScroll

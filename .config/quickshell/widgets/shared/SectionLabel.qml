@@ -2,11 +2,17 @@ import QtQuick
 import "../.."
 
 // Подпись секции панели: мелкий капс с разрядкой (единый ритм).
+// Цвет/кегль/жирность настраиваются, чтобы свести к одному компоненту
+// заголовки оверлеев и Hub без потери текущего вида.
 
 Text {
-    color: Theme.textFaint
+    property color textColor: Theme.textFaint
+    property int size: Theme.fontTiny
+    property bool bold: true
+
+    color: textColor
     font.family: Theme.fontFamily
-    font.pixelSize: Theme.fontTiny
+    font.pixelSize: size
     font.letterSpacing: 2
-    font.bold: true
+    font.bold: bold
 }

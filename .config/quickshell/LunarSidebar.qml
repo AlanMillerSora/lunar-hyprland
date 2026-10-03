@@ -4,6 +4,7 @@ import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import "widgets/shared"
 
 PanelWindow {
     id: root
@@ -234,14 +235,7 @@ PanelWindow {
                         RowLayout {
                             Layout.fillWidth: true
                             spacing: 6
-                            Text {
-                                text: "API-LIMIT"
-                                color: Theme.text
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSize(15)
-                                font.bold: true
-                                font.letterSpacing: 2
-                            }
+                            SectionLabel { text: "API-LIMIT"; textColor: Theme.text; size: Theme.fontSize(15) }
                             Item { Layout.fillWidth: true }
                             Text {
                                 text: api.ok ? (api.lead !== "" ? api.lead : "нет данных") : api.status
@@ -327,14 +321,7 @@ PanelWindow {
                             color: Theme.border
                         }
 
-                        Text {
-                            text: "МОДЕЛИ · локально"
-                            color: Theme.text
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(13)
-                            font.bold: true
-                            font.letterSpacing: 2
-                        }
+                        SectionLabel { text: "МОДЕЛИ · локально"; textColor: Theme.text; size: Theme.fontSize(13) }
 
                         // разбивка по моделям (локальная история): доля в расходе
                         Repeater {

@@ -4,6 +4,7 @@ import Quickshell.Wayland
 import Quickshell.Services.SystemTray
 import QtQuick
 import QtQuick.Layouts
+import "widgets/shared"
 
 // ════════════════════════════════════════════════════════════════
 //  LunarTray — список приложений системного трея. Открывается
@@ -159,13 +160,7 @@ PanelWindow {
                 spacing: Theme.space2
                 width: col.width
 
-                Text {
-                    text: "ТРЕЙ"
-                    color: Theme.text
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 12
-                    font.letterSpacing: 2
-                }
+                SectionLabel { text: "ТРЕЙ"; textColor: Theme.text; size: Theme.fontSmall; bold: false }
 
                 Text {
                     text: root.collapsed.length + " свёрнуто"

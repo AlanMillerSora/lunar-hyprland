@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import "../"
+import "../widgets/shared"
 
 Item {
     id: page
@@ -589,14 +590,7 @@ Item {
                 width: parent.width
                 spacing: 10
 
-                Text {
-                    text: "MONITOR MODE"
-                    color: Theme.text
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSmall
-                    font.bold: true
-                    font.letterSpacing: 2
-                }
+                SectionLabel { text: "MONITOR MODE"; textColor: Theme.text; size: Theme.fontSmall; bold: true }
 
                 Row {
                     width: parent.width
@@ -980,14 +974,7 @@ Item {
             Row {
                 width: parent.width
 
-                Text {
-                    text: "ЗАПИСЬ"
-                    color: Theme.text
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontBody
-                    font.bold: true
-                    font.letterSpacing: 2
-                }
+                SectionLabel { text: "ЗАПИСЬ"; textColor: Theme.text; size: Theme.fontBody; bold: true }
 
                 Item {
                     width: parent.width - 150

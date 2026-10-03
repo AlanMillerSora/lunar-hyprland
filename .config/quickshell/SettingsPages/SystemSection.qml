@@ -576,13 +576,7 @@ Item {
                     Column {
                         spacing: 3
 
-                        Text {
-                            text: "󰒋  HOSTNAME"
-                            color: Theme.accent
-                            font.family: page.mono
-                            font.pixelSize: Theme.fontTiny
-                            font.letterSpacing: 2
-                        }
+                        SectionLabel { text: "󰒋  HOSTNAME"; textColor: Theme.accent; size: Theme.fontTiny; bold: false }
 
                         Text {
                             text: page.hostname
@@ -595,13 +589,7 @@ Item {
                     Column {
                         spacing: 3
 
-                        Text {
-                            text: "󰣇  OS"
-                            color: Theme.accent
-                            font.family: page.mono
-                            font.pixelSize: Theme.fontTiny
-                            font.letterSpacing: 2
-                        }
+                        SectionLabel { text: "󰣇  OS"; textColor: Theme.accent; size: Theme.fontTiny; bold: false }
 
                         Text {
                             text: page.os
@@ -616,13 +604,7 @@ Item {
                     Column {
                         spacing: 3
 
-                        Text {
-                            text: "󰔛  UPTIME"
-                            color: Theme.accent
-                            font.family: page.mono
-                            font.pixelSize: Theme.fontTiny
-                            font.letterSpacing: 2
-                        }
+                        SectionLabel { text: "󰔛  UPTIME"; textColor: Theme.accent; size: Theme.fontTiny; bold: false }
 
                         Text {
                             text: page.uptime

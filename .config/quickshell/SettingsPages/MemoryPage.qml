@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import "../"
+import "../widgets/shared"
 import QtQuick.Layouts
 
 // ════════════════════════════════════════════════════════════════
@@ -162,14 +163,7 @@ Item {
                 RowLayout {
                     Layout.fillWidth: true
 
-                    Text {
-                        text: "RAM"
-                        color: Theme.text
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSmall
-                        font.bold: true
-                        font.letterSpacing: 2
-                    }
+                    SectionLabel { text: "RAM"; textColor: Theme.text; size: Theme.fontSmall; bold: true }
                     Item { Layout.fillWidth: true }
                     Text {
                         text: page.gb(page.memUsed) + " / " + page.gb(page.memTotal) + " GB"

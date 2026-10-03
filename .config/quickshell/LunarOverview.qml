@@ -5,6 +5,7 @@ import Quickshell.Hyprland
 import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
+import "widgets/shared"
 
 // ════════════════════════════════════════════════════════════════
 //  LunarOverview — живой обзор девяти столов (идея как в ArchEclipse).
@@ -178,17 +179,14 @@ PanelWindow {
         // клики по промежуткам доски не должны её закрывать
         MouseArea { anchors.fill: parent; onClicked: {} }
 
-        Text {
+        SectionLabel {
             id: header
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.leftMargin: Theme.space1
             text: "ОБЗОР СТОЛОВ"
-            color: Theme.text
-            font.family: Theme.fontFamily
-            font.pixelSize: 12
-            font.letterSpacing: 2
-            font.bold: true
+            textColor: Theme.text
+            size: Theme.fontSmall
         }
         Text {
             anchors.left: header.right

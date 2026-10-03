@@ -307,13 +307,7 @@ Item {
             color: Theme.border
         }
 
-        Text {
-            text: "ОЧЕРЕДЬ И ПОИСК — В ПОЛНОМ ПЛЕЕРЕ"
-            color: Theme.textFaint
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontTiny
-            font.letterSpacing: 2
-        }
+        SectionLabel { text: "ОЧЕРЕДЬ И ПОИСК — В ПОЛНОМ ПЛЕЕРЕ"; bold: false }
 
         Rectangle {
             width: parent.width

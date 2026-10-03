@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import QtQuick
+import "widgets/shared"
 
 // ════════════════════════════════════════════════════════════════
 //  LunarWallpapers — переключатель обоев «как у 43PR».
@@ -479,15 +480,14 @@ PanelWindow {
         opacity: root.fade
     }
 
-    Text {
+    SectionLabel {
         anchors.left: parent.left
         anchors.bottom: parent.bottom
         anchors.margins: Theme.space5
         text: "СЦЕНА"
-        color: Theme.textDim
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSmall
-        font.letterSpacing: 2
+        textColor: Theme.textDim
+        size: Theme.fontSmall
+        bold: false
         opacity: root.fade
         MouseArea {
             anchors.fill: parent
@@ -500,15 +500,14 @@ PanelWindow {
         }
     }
 
-    Text {
+    SectionLabel {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.margins: Theme.space5
         text: "ФАЙЛ…"
-        color: Theme.textDim
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSmall
-        font.letterSpacing: 2
+        textColor: Theme.textDim
+        size: Theme.fontSmall
+        bold: false
         opacity: root.fade
         MouseArea {
             anchors.fill: parent

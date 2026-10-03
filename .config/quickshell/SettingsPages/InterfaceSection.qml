@@ -3,6 +3,7 @@ import Quickshell.Io
 import Quickshell.Hyprland
 import QtQuick.Layouts
 import "../"
+import "../widgets/shared"
 
 Item {
     id: page
@@ -427,14 +428,7 @@ Item {
                 color: Theme.border
             }
 
-            Text {
-                text: "ПАЛИТРА"
-                color: Theme.text
-                font.family: page.mono
-                font.pixelSize: Theme.fontSmall
-                font.bold: true
-                font.letterSpacing: 2
-            }
+            SectionLabel { text: "ПАЛИТРА"; textColor: Theme.text; size: Theme.fontSmall; bold: true }
 
             Column {
                 width: parent.width
@@ -511,14 +505,7 @@ Item {
                 color: Theme.border
             }
 
-            Text {
-                text: "ОБОИ"
-                color: Theme.text
-                font.family: page.mono
-                font.pixelSize: Theme.fontSmall
-                font.bold: true
-                font.letterSpacing: 2
-            }
+            SectionLabel { text: "ОБОИ"; textColor: Theme.text; size: Theme.fontSmall; bold: true }
 
             // выбор: живая сцена затмения или обычная картинка
             Row {
