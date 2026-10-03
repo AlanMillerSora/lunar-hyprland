@@ -29,8 +29,8 @@ PanelWindow {
 
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.namespace: "lunar-panel"
-    // фокус нужен только пока открыт поиск (ввод)
-    WlrLayershell.keyboardFocus: BarState.mode === "search"
+    // клавиатуру забираю, пока открыт любой режим — чтобы Esc закрывал панель
+    WlrLayershell.keyboardFocus: BarState.expanded
         ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     // окна не заезжают только под полосу бара
     WlrLayershell.exclusiveZone: Theme.barH
@@ -58,6 +58,19 @@ PanelWindow {
             anchors.fill: parent
             onClicked: BarState.closePanel()
         }
+    }
+
+    // Esc закрывает открытый режим (поиск сам обрабатывает Esc — очистка)
+    Shortcut {
+        sequence: "Escape"
+        enabled: BarState.expanded && BarState.mode !== "search"
+        onActivated: BarState.closePanel()
+    }
+    // тот же Esc через Keys — надёжнее на layer-поверхности
+    Item {
+        anchors.fill: parent
+        focus: BarState.expanded && BarState.mode !== "search"
+        Keys.onEscapePressed: BarState.closePanel()
     }
 
     // Палитра из системной темы (Hub / лаунчер / настройки):
