@@ -8,6 +8,7 @@ import Quickshell.Services.SystemTray
 import QtQuick
 import QtQuick.Effects
 import QtQuick.Layouts
+import "widgets/shared"
 
 // ────────────────────────────────────────────────────────────────
 //  Lunar top bar — монохромный HUD
@@ -673,68 +674,6 @@ PanelWindow {
     // ───────────────────────────── layout ─────────────────────────────
     // Слева отдельная плашка LUNAR+фазы. Справа — один компактный бар:
     // PERF · раскладка · часы/медиа/пульт · статус (по ширине содержимого).
-    // Подсветка интерактивной секции при наведении.
-    component HoverBg: Rectangle {
-        id: hb
-        anchors.fill: parent
-        radius: Theme.radius
-        color: Theme.hoverStrong
-        opacity: hh.hovered ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: 150 } }
-        readonly property bool hovered: hh.hovered
-        HoverHandler { id: hh }
-    }
-
-    // Ячейка-сегмент (по мотивам ArchEclipse): плотный фон + короткий
-    // акцентный штрих слева. Внутрь кладу что угодно (текст/иконку/строку).
-    component Cell: Rectangle {
-        id: cell
-        default property alias content: cellContent.children
-        property color accent: Theme.barFaint
-        property bool interactive: false
-        signal clicked()
-
-        height: 26
-        implicitWidth: cellContent.implicitWidth + Theme.space3 * 2 + 8
-        width: implicitWidth
-        radius: Theme.radiusS
-        color: cellHover.hovered && cell.interactive ? Theme.hoverStrong : Theme.fill
-
-        HoverHandler {
-            id: cellHover
-        }
-
-        // короткий штрих-акцент слева (как цветные флажки у ArchEclipse)
-        Rectangle {
-            anchors.left: parent.left
-            anchors.leftMargin: 6
-            anchors.verticalCenter: parent.verticalCenter
-            width: 2
-            height: 14
-            radius: 1
-            color: cell.accent
-        }
-
-        Row {
-            id: cellContent
-            anchors.left: parent.left
-            anchors.leftMargin: 14
-            anchors.right: parent.right
-            anchors.rightMargin: 8
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: Theme.space2
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            enabled: cell.interactive
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: cell.clicked()
-        }
-    }
-
-
     // Метрики моношрифта: по ним считаем ширины числовых полей, чтобы
     // цифры при скачках значений не дёргали раскладку.
     FontMetrics { id: fm11; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSize(11) }

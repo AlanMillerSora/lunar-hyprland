@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import "../"
+import "../widgets/shared"
 import QtQuick.Layouts
 
 // ════════════════════════════════════════════════════════════════
@@ -17,50 +18,6 @@ Item {
     // поэтому репозитории пересканирую сам при возврате. До первой загрузки
     // не дёргаю — её делает Component.onCompleted у projectModel.
     onVisibleChanged: if (visible && projectModel.loaded) projectModel.load()
-
-    // ── кнопка строки проекта ──────────────────────────────────
-    component RowButton: Rectangle {
-        id: btn
-
-        property string label: ""
-        property string action: ""
-        property string projPath: ""
-
-        signal triggered(string act, string path)
-
-        width: 64
-        height: Theme.rowHCompact
-        radius: Theme.radius
-
-        color: btnMouse.containsMouse
-            ? Theme.active
-            : "transparent"
-
-        // кнопка строки: рамка — часть аффорданса, оставляю
-        border.width: 1
-        border.color: btnMouse.containsMouse
-            ? Theme.accent
-            : Theme.border
-
-        Text {
-            anchors.centerIn: parent
-            text: btn.label
-            color: btnMouse.containsMouse
-                ? Theme.accent
-                : Theme.textDim
-            font.family: Theme.fontFamily
-            font.pixelSize: 10
-            font.letterSpacing: 1
-        }
-
-        MouseArea {
-            id: btnMouse
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: btn.triggered(btn.action, btn.projPath)
-        }
-    }
 
     // ── состояние git-панели ───────────────────────────────────
     property var gitProject: null
@@ -351,25 +308,28 @@ Item {
                         }
                     }
 
-                    RowButton {
+                    ActionButton {
                         label: "CODE"
-                        action: "code"
-                        projPath: modelData.path
-                        onTriggered: (act, path) => projectModel.openCode(path)
+                        width: 64
+                        height: Theme.rowHCompact
+                        fontSize: 10
+                        onClicked: projectModel.openCode(modelData.path)
                     }
 
-                    RowButton {
+                    ActionButton {
                         label: "TERM"
-                        action: "term"
-                        projPath: modelData.path
-                        onTriggered: (act, path) => projectModel.openTerm(path)
+                        width: 64
+                        height: Theme.rowHCompact
+                        fontSize: 10
+                        onClicked: projectModel.openTerm(modelData.path)
                     }
 
-                    RowButton {
+                    ActionButton {
                         label: "GIT"
-                        action: "git"
-                        projPath: modelData.path
-                        onTriggered: (act, path) => page.openGit(modelData)
+                        width: 64
+                        height: Theme.rowHCompact
+                        fontSize: 10
+                        onClicked: page.openGit(modelData)
                     }
                 }
             }

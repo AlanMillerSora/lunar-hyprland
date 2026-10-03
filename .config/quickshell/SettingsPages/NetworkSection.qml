@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell.Io
 import "../"
+import "../widgets/shared"
 
 Item {
     id: page
@@ -30,36 +31,6 @@ Item {
     property string vencState: "notinstalled"
     property string vencInstaller: ""
     property string vencApp: "—"
-
-    // кнопка блока ZAPRET
-    component ZapBtn: Rectangle {
-        property string label: ""
-        signal clicked()
-
-        width: 104
-        height: 32
-        radius: Theme.radius
-        color: zbtn.containsMouse ? Theme.active : "transparent"
-        border.width: 1
-        border.color: zbtn.containsMouse ? Theme.accent : Theme.border
-
-        Text {
-            anchors.centerIn: parent
-            text: parent.label
-            color: zbtn.containsMouse ? Theme.accent : Theme.textDim
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontTiny
-            font.letterSpacing: 1
-        }
-
-        MouseArea {
-            id: zbtn
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: parent.clicked()
-        }
-    }
 
     Process {
         id: pRadioGet
@@ -501,18 +472,24 @@ Item {
                             Row {
                                 spacing: Theme.space2
 
-                                ZapBtn {
+                                ActionButton {
                                     label: page.zapActive ? "ВЫКЛЮЧИТЬ" : "ВКЛЮЧИТЬ"
+                                    width: 104
+                                    height: 32
                                     onClicked: page.zapToggle()
                                 }
 
-                                ZapBtn {
+                                ActionButton {
                                     label: "ОБНОВИТЬ"
+                                    width: 104
+                                    height: 32
                                     onClicked: pZapUpdate.running = true
                                 }
 
-                                ZapBtn {
+                                ActionButton {
                                     label: "ПОДОБРАТЬ"
+                                    width: 104
+                                    height: 32
                                     onClicked: pZapTune.running = true
                                 }
                             }
@@ -570,14 +547,17 @@ Item {
                             Row {
                                 spacing: Theme.space2
 
-                                ZapBtn {
+                                ActionButton {
                                     label: page.tgActive ? "ВЫКЛЮЧИТЬ" : "ВКЛЮЧИТЬ"
+                                    width: 104
+                                    height: 32
                                     onClicked: page.tgToggle()
                                 }
 
-                                ZapBtn {
+                                ActionButton {
                                     label: "ОТКРЫТЬ В TG"
                                     width: 132
+                                    height: 32
                                     onClicked: page.tgOpenLink()
                                 }
                             }
@@ -635,13 +615,17 @@ Item {
                             Row {
                                 spacing: Theme.space2
 
-                                ZapBtn {
+                                ActionButton {
                                     label: "ПЕРЕПАТЧИТЬ"
+                                    width: 104
+                                    height: 32
                                     onClicked: pVencPatch.running = true
                                 }
 
-                                ZapBtn {
+                                ActionButton {
                                     label: "ОБНОВИТЬ"
+                                    width: 104
+                                    height: 32
                                     onClicked: pVencUpdate.running = true
                                 }
                             }

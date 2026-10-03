@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import "../"
+import "../widgets/shared"
 
 // ════════════════════════════════════════════════════════════════
 //  UpdatePage — обновление системы с буфером, чтением новостей
@@ -26,44 +27,6 @@ Item {
     property string ctxText: ""
     // идёт проверка (pCheck/pNews) — для отдачи кнопке
     property bool checking: false
-
-    component ActionButton: Rectangle {
-        property string label: ""
-        property bool accent: false
-        property bool enabledBtn: true
-        signal clicked()
-
-        width: Math.max(120, btnText.implicitWidth + 34)
-        height: Theme.rowH
-        radius: Theme.radius
-        color: !enabledBtn ? Theme.fill
-             : btnArea.containsMouse ? Theme.active
-             : "transparent"
-        // кнопка действия: рамка — часть аффорданса, оставляю
-        border.width: 1
-        border.color: !enabledBtn ? Theme.border
-                    : (btnArea.containsMouse || accent) ? Theme.accent : Theme.border
-
-        Text {
-            id: btnText
-            anchors.centerIn: parent
-            text: label
-            color: !enabledBtn ? Theme.textFaint
-                 : (btnArea.containsMouse || parent.accent) ? Theme.accent : Theme.textDim
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontTiny
-            font.letterSpacing: 1
-        }
-
-        MouseArea {
-            id: btnArea
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: enabledBtn ? Qt.PointingHandCursor : Qt.ArrowCursor
-            enabled: enabledBtn
-            onClicked: parent.clicked()
-        }
-    }
 
     // ── проверка состояния ────────────────────────────────────
     Process {

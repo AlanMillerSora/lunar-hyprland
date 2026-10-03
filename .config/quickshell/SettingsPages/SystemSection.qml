@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell.Io
 import "../"
+import "../widgets/shared"
 
 Item {
     id: page
@@ -169,40 +170,6 @@ Item {
 
     function updateClock() {
         page.currentTime = Qt.formatTime(new Date(), "HH:mm:ss")
-    }
-
-    // кнопка раздела «Обновления»
-    component ActionButton: Rectangle {
-        property string label: ""
-        signal clicked()
-
-        width: 142
-        height: Theme.rowHCompact
-        radius: Theme.radius
-
-        color: btnArea.containsMouse
-            ? Theme.active
-            : "transparent"
-
-        border.width: 1
-        border.color: btnArea.containsMouse ? Theme.accent : Theme.border
-
-        Text {
-            anchors.centerIn: parent
-            text: label
-            color: btnArea.containsMouse ? Theme.accent : Theme.textDim
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSmall
-            font.letterSpacing: 1
-        }
-
-        MouseArea {
-            id: btnArea
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: parent.clicked()
-        }
     }
 
     // проверка обновлений (checkupdates из pacman-contrib, иначе pacman -Qu)
@@ -1050,6 +1017,9 @@ Item {
 
                     ActionButton {
                         label: "ПРОВЕРИТЬ"
+                        width: 142
+                        height: Theme.rowHCompact
+                        fontSize: Theme.fontSmall
                         onClicked: pUpdates.running = true
                     }
                 }
