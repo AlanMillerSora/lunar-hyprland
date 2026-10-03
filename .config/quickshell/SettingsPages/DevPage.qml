@@ -308,26 +308,28 @@ Item {
                         }
                     }
 
+                    // в RowLayout ширину задаёт Layout.preferredWidth, а не
+                    // width: иначе implicitWidth кнопки (120) побеждает и она распухает
                     ActionButton {
                         label: "CODE"
-                        width: 64
-                        height: Theme.rowHCompact
+                        Layout.preferredWidth: 64
+                        Layout.preferredHeight: Theme.rowHCompact
                         fontSize: 10
                         onClicked: projectModel.openCode(modelData.path)
                     }
 
                     ActionButton {
                         label: "TERM"
-                        width: 64
-                        height: Theme.rowHCompact
+                        Layout.preferredWidth: 64
+                        Layout.preferredHeight: Theme.rowHCompact
                         fontSize: 10
                         onClicked: projectModel.openTerm(modelData.path)
                     }
 
                     ActionButton {
                         label: "GIT"
-                        width: 64
-                        height: Theme.rowHCompact
+                        Layout.preferredWidth: 64
+                        Layout.preferredHeight: Theme.rowHCompact
                         fontSize: 10
                         onClicked: page.openGit(modelData)
                     }

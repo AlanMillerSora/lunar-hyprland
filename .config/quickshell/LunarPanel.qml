@@ -604,6 +604,10 @@ PanelWindow {
         root.panelIsPulse = true
         root.panelHoldMs = holdMs || 0
         root.panelMode = name
+        // первый показ пульсового острова тоже должен встать на таймер,
+        // иначе при курсоре вне бара/панели (onPanelPinnedChanged не сработает)
+        // остров останется висеть
+        root.restartHold()
     }
     function restartHold() {
         panelHoldTimer.stop()
