@@ -38,13 +38,12 @@ PanelWindow {
     WlrLayershell.anchors.right: true
     exclusionMode: ExclusionMode.Normal
 
-    // клик-сквозь: ввод ловят левая плашка, бар и раскрытая панель.
+    // клик-сквозь: ввод ловит единый бар и раскрытая панель.
     // Пока панель открыта, ловлю ещё и фон вокруг (clickShield) — клик мимо
     // закрывает панель, а не проваливается сквозь окно. В покое зазоры
     // по-прежнему пропускают клики (важно для fullscreen).
     mask: Region {
         Region { item: root.expanded ? clickShield : null }
-        Region { item: leftBar }
         Region { item: root.expanded ? null : bar }
         Region { item: root.expanded ? panel : null }
         Region { item: root.recording ? recPill : null }
@@ -731,8 +730,10 @@ PanelWindow {
     }
 
     // ───────────────────────────── layout ─────────────────────────────
-    // Слева отдельная плашка LUNAR+фазы. Справа — один компактный бар:
-    // PERF · раскладка · часы/медиа/пульт · статус (по ширине содержимого).
+    // Единый бар: слева LUNAR+фазы и PERF·раскладка, в центре
+    // часы/медиа/пульт, справа статус (систем-остров·погода·сеть·трей·звук).
+    // Левую и правую группы держу одной ширины, чтобы часы стояли ровно
+    // по центру экрана, а фон был одной плашкой без разрыва.
     // Метрики моношрифта: по ним считаем ширины числовых полей, чтобы
     // цифры при скачках значений не дёргали раскладку.
     FontMetrics { id: fm11; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSize(11) }
@@ -746,9 +747,9 @@ PanelWindow {
     // ── ЕДИНЫЙ БАР: один фон на весь верх, содержимое внутри ──
     Rectangle {
         id: bar
-        // фон тянется от левого края midBar до правого края rightBar:
-        // часы (centerPill) держу по центру экрана независимо от ширины
-        anchors.left: midBar.left
+        // единый фон: от левого края группы (марка+фазы) до правого края
+        // статуса; часы держу ровно по центру экрана
+        anchors.left: leftBar.left
         anchors.right: rightBar.right
         anchors.top: parent.top
         anchors.topMargin: Theme.barMargin
@@ -789,45 +790,19 @@ PanelWindow {
         }
     }
 
-    // ── ЛЕВО: марка LUNAR + фазы столов (отдельная плашка) ──
+    // ── ЛЕВО: марка LUNAR + фазы столов — внутри единого бара ──
+    // прижимаю группу к центральной, чтобы не было пустого разрыва
     Rectangle {
         id: leftBar
-        anchors.left: parent.left
-        anchors.leftMargin: Theme.barMargin
-        anchors.top: parent.top
-        anchors.topMargin: Theme.barMargin
+        anchors.right: midBar.left
+        anchors.rightMargin: Theme.space3
+        anchors.verticalCenter: bar.verticalCenter
         height: Theme.barH
         radius: Theme.barRadius
-        color: root.pillBg
+        color: "transparent"
         clip: true
+        opacity: 1 - root.morph
         width: leftLayout.implicitWidth + 2 * Theme.barPad
-
-        // зерно на стекле: маска по скруглению — углы плашки остаются чистыми
-        Image {
-            id: nzL
-            anchors.fill: parent
-            source: Qt.resolvedUrl("assets/noise.png")
-            fillMode: Image.Tile
-            smooth: false
-            cache: true
-            visible: false
-            layer.enabled: true
-        }
-        MultiEffect {
-            anchors.fill: parent
-            source: nzL
-            maskEnabled: true
-            maskSource: nmL
-            opacity: 0.07
-        }
-        Rectangle {
-            id: nmL
-            anchors.fill: parent
-            radius: Theme.barRadius
-            color: "white"
-            visible: false
-            layer.enabled: true
-        }
 
         RowLayout {
             id: leftLayout
@@ -1048,10 +1023,31 @@ PanelWindow {
                     font.bold: true
                 }
             }
+        }
+    }
+
+    // ── ПРАВО: статус (сеть · игра/запись · трей · уведомления · звук) ──
+    Rectangle {
+        id: rightBar
+        anchors.left: centerPill.right
+        anchors.verticalCenter: bar.verticalCenter
+        opacity: 1 - root.morph
+        height: Theme.barH
+        color: "transparent"
+        clip: true
+        width: rightLayout.implicitWidth + 2 * Theme.space2
+
+        // ── статус: сеть · игра · трей · уведомления · звук ──
+        Row {
+            id: rightLayout
+            anchors.centerIn: parent
+            height: Theme.barH
+            spacing: Theme.space2
 
             // ── систем-остров: мини-полосы CPU · RAM · GPU ──
             // Источник — eclipse-status.sh (опрос раз в 3 с, GPU из кэша
-            // на 10 с). Клик открывает панель «Телеметрия».
+            // на 10 с). Клик открывает панель «Телеметрия». Перенёс сюда,
+            // чтобы левая и правая группы были одной ширины — бар ровно по центру.
             Cell {
                 id: sysCell
                 anchors.verticalCenter: parent.verticalCenter
@@ -1097,26 +1093,6 @@ PanelWindow {
                     }
                 }
             }
-        }
-    }
-
-    // ── ПРАВО: статус (сеть · игра/запись · трей · уведомления · звук) ──
-    Rectangle {
-        id: rightBar
-        anchors.left: centerPill.right
-        anchors.verticalCenter: bar.verticalCenter
-        opacity: 1 - root.morph
-        height: Theme.barH
-        color: "transparent"
-        clip: true
-        width: rightLayout.implicitWidth + 2 * Theme.space2
-
-        // ── статус: сеть · игра · трей · уведомления · звук ──
-        Row {
-            id: rightLayout
-            anchors.centerIn: parent
-            height: Theme.barH
-            spacing: Theme.space2
 
             // ── погода: иконка + температура, клик обновляет ──
             Cell {

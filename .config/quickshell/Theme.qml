@@ -231,7 +231,7 @@ QtObject {
     property int fontClock: 16
 
     // панель-острова (этап 1): высота плашки, зазоры, поля, отступ внутри
-    property int barH: 36
+    property int barH: 32
     property int barMargin: 8
     property int barPad: 12
     property int barRadius: 8
