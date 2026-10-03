@@ -538,6 +538,7 @@ PanelWindow {
         if (m === "search") return 320
         if (m === "notifs") return 320
         if (m === "sys") return 30 + sysBody.implicitHeight + Theme.space3
+        if (m === "weather") return 30 + wxBody.implicitHeight + Theme.space3
         return Theme.barH
     }
     property real panelTargetH: root.panelHeightFor(panelMode)
@@ -552,12 +553,14 @@ PanelWindow {
     }
     readonly property bool panelHasHeader: panelMode === "control"
         || panelMode === "search" || panelMode === "notifs" || panelMode === "sys"
+        || panelMode === "weather"
     readonly property string panelTitle: {
         if (panelMode === "control") return "ПУЛЬТ"
         if (panelMode === "media") return "МЕДИА"
         if (panelMode === "search") return "ПОИСК"
         if (panelMode === "notifs") return "УВЕДОМЛЕНИЯ"
         if (panelMode === "sys") return "ТЕЛЕМЕТРИЯ"
+        if (panelMode === "weather") return "ПОГОДА"
         return ""
     }
     // действия пульта — на всю ширину равными чипами
@@ -598,6 +601,7 @@ PanelWindow {
         function search() { root.togglePanel("search") }
         function notifs() { root.togglePanel("notifs") }
         function sys() { root.togglePanel("sys") }
+        function weather() { root.togglePanel("weather") }
         function reset() { root.closePanel() }
     }
 
@@ -1083,6 +1087,32 @@ PanelWindow {
             anchors.centerIn: parent
             height: Theme.barH
             spacing: Theme.space2
+
+            // ── погода: иконка + температура, клик обновляет ──
+            Cell {
+                anchors.verticalCenter: parent.verticalCenter
+                interactive: true
+                accent: Theme.barFaint
+                onClicked: root.togglePanel("weather")
+                Row {
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 5
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: Weather.icon
+                        color: Weather.ok ? Theme.barText : Theme.barFaint
+                        font.family: Theme.iconFont
+                        font.pixelSize: 14
+                    }
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: Weather.shortTemp
+                        color: Weather.ok ? Theme.barText : Theme.barDim
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 11
+                    }
+                }
+            }
 
             // ── сеть: ДВУХЭТАЖНАЯ ячейка — иконка сверху, ↓/↑ мелко снизу ──
             Cell {
@@ -2159,6 +2189,111 @@ PanelWindow {
                 color: Theme.textFaint
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontTiny
+            }
+        }
+
+        // ── ПОГОДА: текущие условия из Weather (wttr.in + ipinfo) ──
+        Column {
+            id: wxBody
+            visible: root.panelMode === "weather"
+            opacity: root.panelContentOpacity
+            anchors.top: parent.top
+            anchors.topMargin: Theme.panelHeaderH + Theme.space2
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: parent.width - Theme.barPad * 2
+            spacing: Theme.space2
+
+            Row {
+                width: parent.width
+                spacing: Theme.space4
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: Weather.icon
+                    color: Theme.accent
+                    font.family: Theme.iconFont
+                    font.pixelSize: 40
+                }
+                Column {
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 2
+                    Text {
+                        text: Weather.ok ? Weather.temp : "—"
+                        color: Theme.text
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 28
+                        font.bold: true
+                    }
+                    Text {
+                        text: Weather.city !== "" ? Weather.city : "определяю город…"
+                        color: Theme.textDim
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSmall
+                    }
+                }
+            }
+
+            Text {
+                width: parent.width
+                text: Weather.ok ? Weather.desc : "нет данных — проверь сеть"
+                color: Theme.textDim
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontBody
+                wrapMode: Text.WordWrap
+            }
+
+            Row {
+                spacing: Theme.space5
+                visible: Weather.ok
+
+                Column {
+                    spacing: 2
+                    Text {
+                        text: "ОЩУЩАЕТСЯ"
+                        color: Theme.textFaint
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 9
+                        font.letterSpacing: 2
+                    }
+                    Text {
+                        text: Weather.feels
+                        color: Theme.text
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSmall
+                    }
+                }
+                Column {
+                    spacing: 2
+                    Text {
+                        text: "ВЛАЖНОСТЬ"
+                        color: Theme.textFaint
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 9
+                        font.letterSpacing: 2
+                    }
+                    Text {
+                        text: Weather.hum
+                        color: Theme.text
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSmall
+                    }
+                }
+                Column {
+                    spacing: 2
+                    Text {
+                        text: "ВЕТЕР"
+                        color: Theme.textFaint
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 9
+                        font.letterSpacing: 2
+                    }
+                    Text {
+                        text: Weather.wind
+                        color: Theme.text
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSmall
+                    }
+                }
             }
         }
 
