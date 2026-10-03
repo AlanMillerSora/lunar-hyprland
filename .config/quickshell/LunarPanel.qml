@@ -2562,23 +2562,26 @@ PanelWindow {
                 width: parent.width
                 height: parent.height - y
                 clip: true
-                spacing: Theme.space1
+                spacing: Theme.space2
                 model: NotifModel.items
 
                 delegate: Rectangle {
                     required property var modelData
                     readonly property bool expanded: NotifModel.expandedId === modelData.id
                     width: notifList.width
-                    height: expanded ? Math.min(140, bodyText.implicitHeight + 46) : 40
-                    radius: Theme.radius
-                    color: expanded ? Theme.fill : (notifMouse.containsMouse ? Theme.hover : "transparent")
+                    height: expanded ? Math.min(150, bodyText.implicitHeight + 52) : 44
+                    radius: Theme.cardRadius
+                    border.width: 1
+                    border.color: expanded ? Theme.alpha(Theme.accent, 0.35) : Theme.border
+                    color: expanded ? Theme.active : (notifMouse.containsMouse ? Theme.hoverStrong : Theme.cardBg)
 
                     // важность слева
                     Rectangle {
                         anchors.left: parent.left
+                        anchors.leftMargin: Theme.space2
                         anchors.verticalCenter: parent.verticalCenter
                         width: 3
-                        height: parent.height - 12
+                        height: parent.height - 16
                         radius: 1.5
                         color: modelData.urgency === "critical" ? Theme.danger
                             : (modelData.urgency === "low" ? Theme.borderAccent : Theme.accent)
@@ -2589,7 +2592,7 @@ PanelWindow {
                     Item {
                         id: notifIcon
                         anchors.left: parent.left
-                        anchors.leftMargin: Theme.space3
+                        anchors.leftMargin: Theme.space4
                         anchors.verticalCenter: parent.verticalCenter
                         width: 20
                         height: 20
