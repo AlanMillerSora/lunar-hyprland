@@ -29,19 +29,24 @@ QtObject {
     readonly property string cacheDir: Quickshell.env("HOME") + "/.cache/lunar"
     readonly property string cacheFile: wx.cacheDir + "/weather.txt"
 
-    // город по IP — один раз, координаты не нужны: wttr.in поймёт и имя
+    property string lat: ""
+    property string lon: ""
+    // город и координаты по IP (wttr.in — по имени, open-meteo — по координатам)
     property Process geo: Process {
         running: false
         command: ["bash", "-c",
-            "curl -s --max-time 8 https://ipinfo.io/json | " +
-            "grep -o '\"city\": *\"[^\"]*\"' | head -1 | cut -d'\"' -f4"]
+            "curl -s --max-time 8 https://ipinfo.io/json | jq -r '[.city, .loc] | @tsv'"]
         stdout: StdioCollector {
             onStreamFinished: {
-                var c = text.trim()
-                if (c !== "") {
-                    wx.city = c
-                    wx.fetch()
+                var parts = text.trim().split("\t")
+                wx.city = parts[0] || ""
+                if (parts.length > 1 && parts[1].indexOf(",") > 0) {
+                    var ll = parts[1].split(",")
+                    wx.lat = ll[0]
+                    wx.lon = ll[1]
                 }
+                if (wx.city !== "")
+                    wx.fetch()
             }
         }
     }
@@ -70,14 +75,80 @@ QtObject {
 
     function fetch() {
         var place = wx.city !== "" ? wx.city : "auto"
+        var safe = place.replace(/[^A-Za-zА-Яа-яЁё0-9 _-]/g, "")
         wx.cur.command = ["bash", "-c",
-            "curl -s --max-time 10 \"https://wttr.in/" + place.replace(/[^A-Za-zА-Яа-яЁё0-9 _-]/g, "") + "?format=%C|%t|%f|%h|%w&lang=ru\""]
+            "curl -s --max-time 10 \"https://wttr.in/" + safe + "?format=%C|%t|%f|%h|%w&lang=ru\""]
         wx.cur.running = false
         wx.cur.running = true
+        // прогноз на дни — MET Norway (open-meteo у пользователя блокируется)
+        if (wx.lat !== "" && wx.lon !== "") {
+            wx.fc.command = ["bash", "-c",
+                "curl -4 -sS --max-time 12 -H \"User-Agent: lunar-rice/1.0\" \"https://api.met.no/weatherapi/locationforecast/2.0/compact?lat="
+                + wx.lat + "&lon=" + wx.lon + "\""]
+            wx.fc.running = false
+            wx.fc.running = true
+        }
+    }
+
+    // прогноз на 3 дня: [{label, min, max, icon}]
+    property var forecast: []
+    function weekday(s) {
+        var m = ("" + s).match(/(\d{4})-(\d{2})-(\d{2})/)
+        if (!m)
+            return ""
+        var d = new Date(parseInt(m[1]), parseInt(m[2]) - 1, parseInt(m[3]))
+        return ["вс", "пн", "вт", "ср", "чт", "пт", "сб"][d.getDay()]
+    }
+    property Process fc: Process {
+        running: false
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var t = text.trim()
+                if (t === "")
+                    return
+                var j = null
+                try {
+                    j = JSON.parse(t)
+                } catch (e) {
+                    return
+                }
+                var ts = (j && j.properties && j.properties.timeseries) ? j.properties.timeseries : []
+                var byDay = ({})
+                var order = []
+                for (var i = 0; i < ts.length; i++) {
+                    var e = ts[i]
+                    var date = ("" + e.time).substring(0, 10)
+                    var det = (e.data && e.data.instant && e.data.instant.details) ? e.data.instant.details : null
+                    if (!det || det.air_temperature === undefined)
+                        continue
+                    var t = det.air_temperature
+                    if (byDay[date] === undefined) {
+                        byDay[date] = { min: t, max: t, code: "", mid: 99 }
+                        order.push(date)
+                    }
+                    if (t < byDay[date].min) byDay[date].min = t
+                    if (t > byDay[date].max) byDay[date].max = t
+                    var hour = parseInt(("" + e.time).substring(11, 13))
+                    var sym = (e.data && e.data.next_1_hours && e.data.next_1_hours.summary)
+                        ? e.data.next_1_hours.summary.symbol_code : ""
+                    if (sym !== "" && Math.abs(hour - 12) < byDay[date].mid) {
+                        byDay[date].code = sym
+                        byDay[date].mid = Math.abs(hour - 12)
+                    }
+                }
+                var out = []
+                for (var k = 0; k < Math.min(order.length, 3); k++) {
+                    var day = byDay[order[k]]
+                    out.push({ label: wx.weekday(order[k]), max: Math.round(day.max),
+                               min: Math.round(day.min), icon: wx.symIcon(day.code) })
+                }
+                wx.forecast = out
+            }
+        }
     }
 
     function refresh() {
-        if (wx.city === "")
+        if (wx.city === "" || wx.lat === "" || wx.lon === "")
             wx.geo.running = true
         else
             wx.fetch()
@@ -97,6 +168,18 @@ QtObject {
         if (d.indexOf("cloud") >= 0 || d.indexOf("облач") >= 0) return "\uf0c2"
         if (d.indexOf("clear") >= 0 || d.indexOf("sunny") >= 0
             || d.indexOf("ясно") >= 0 || d.indexOf("солнеч") >= 0) return "\uf185"
+        return "\uf0c2"
+    }
+
+    // символ MET Norway (symbol_code) → глиф
+    function symIcon(s) {
+        s = ("" + s).toLowerCase()
+        if (s.indexOf("thunder") >= 0) return "\uf0e7"
+        if (s.indexOf("snow") >= 0 || s.indexOf("sleet") >= 0) return "\uf2dc"
+        if (s.indexOf("rain") >= 0 || s.indexOf("showers") >= 0 || s.indexOf("drizzle") >= 0) return "\uf043"
+        if (s.indexOf("fog") >= 0) return "\uf014"
+        if (s.indexOf("cloud") >= 0) return "\uf0c2"
+        if (s.indexOf("clearsky") >= 0 || s.indexOf("fair") >= 0) return "\uf185"
         return "\uf0c2"
     }
 

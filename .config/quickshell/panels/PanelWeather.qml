@@ -94,4 +94,45 @@ import "../widgets/shared"
                     }
                 }
             }
+
+            // прогноз на дни
+            Card {
+                width: parent.width
+                visible: Weather.forecast.length > 0
+                SectionLabel { text: "ПРОГНОЗ" }
+                Row {
+                    width: parent.width
+                    spacing: Theme.space2
+                    Repeater {
+                        model: Weather.forecast
+                        delegate: Column {
+                            required property var modelData
+                            width: (parent.width - Theme.space2 * 2) / 3
+                            spacing: 3
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: modelData.label
+                                color: Theme.textDim
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontTiny
+                                font.letterSpacing: 1
+                            }
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: modelData.icon
+                                color: Theme.accent
+                                font.family: Theme.iconFont
+                                font.pixelSize: Theme.fontSize(18)
+                            }
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: modelData.max + "° / " + modelData.min + "°"
+                                color: Theme.text
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSmall
+                            }
+                        }
+                    }
+                }
+            }
         }
