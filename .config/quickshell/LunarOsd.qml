@@ -41,9 +41,15 @@ PanelWindow {
         onTriggered: root.primed = true
     }
 
-    // изменение звука → показать OSD (после прайма и при наличии устройства)
-    onVolumeChanged: if (root.primed && root.volume >= 0) root.showOsd()
-    onMutedChanged: if (root.primed && root.volume >= 0) root.showOsd()
+    // изменение звука → показать OSD (после прайма и при наличии устройства).
+    // Пока открыт бар-остров «пульт» — не показываю: там свой ползунок громкости.
+    onVolumeChanged: if (root.primed && root.volume >= 0 && !Theme.barControlOpen) root.showOsd()
+    onMutedChanged: if (root.primed && root.volume >= 0 && !Theme.barControlOpen) root.showOsd()
+    // если «пульт» открылся, пока OSD виден — прячу без дубля
+    Connections {
+        target: Theme
+        function onBarControlOpenChanged() { if (Theme.barControlOpen) root.showing = false }
+    }
 
     readonly property int segments: 20
     readonly property real frac: (muted || volume <= 0) ? 0 : Math.min(volume / 100, 1)

@@ -579,13 +579,69 @@ PanelWindow {
     }
     property bool panelHovered: false
     property bool barHovered: false
+    // приоритеты острова: кто открыл (ручной клик важнее пульса) и сколько
+    // держать авто-открытый пульсовый остров
+    property bool panelIsPulse: false
+    property int panelHoldMs: 0
+    // пока курсор на баре или панели — остров «пришпилен», таймер не закрывает
+    readonly property bool panelPinned: root.barHovered || root.panelHovered
 
-    function openPanel(name) { panelMode = name }
-    function closePanel() { panelMode = "" }
-    function togglePanel(name) { panelMode = (panelMode === name ? "" : name) }
+    Timer {
+        id: panelHoldTimer
+        repeat: false
+        onTriggered: if (!root.panelPinned) root.deactivate()
+    }
+
+    // Пульсы событий (звук/трек/уведомления) открывают нужный остров сами.
+    // Ручной остров они не перебивают и в Game Mode не всплывают; holdMs>0 —
+    // авто-закрытие (пока курсор не на баре/панели — hover-pin).
+    function activate(name, holdMs) {
+        if (name === "") { root.deactivate(); return }
+        if ((holdMs || 0) > 0 && root.gameMode)
+            return
+        // тот же остров уже открыт: пульсовый продлеваю, ручной — не трогаю
+        if (root.panelMode === name) {
+            if (root.panelIsPulse) {
+                root.panelHoldMs = holdMs || 0
+                root.restartHold()
+            }
+            return
+        }
+        // другой остров открыт вручную — клик пользователя важнее пульса
+        if (root.expanded && !root.panelIsPulse)
+            return
+        root.panelIsPulse = true
+        root.panelHoldMs = holdMs || 0
+        root.panelMode = name
+    }
+    function restartHold() {
+        panelHoldTimer.stop()
+        if (root.panelHoldMs > 0 && !root.panelPinned) {
+            panelHoldTimer.interval = root.panelHoldMs
+            panelHoldTimer.restart()
+        }
+    }
+    function deactivate() {
+        panelHoldTimer.stop()
+        root.panelHoldMs = 0
+        root.panelIsPulse = false
+        root.panelMode = ""
+    }
+    // ручное открытие — высокий приоритет, без авто-закрытия
+    function openPanel(name) { root.panelHoldMs = 0; root.panelIsPulse = false; root.panelMode = name }
+    function closePanel() { root.deactivate() }
+    function togglePanel(name) {
+        if (root.panelMode === name) { root.deactivate(); return }
+        root.openPanel(name)
+    }
+    onPanelPinnedChanged: {
+        if (root.panelPinned)
+            panelHoldTimer.stop()
+        else if (root.panelHoldMs > 0)
+            root.restartHold()
+    }
 
     // панель закрывается кликом по её фону, Esc (поиск) или повторным режимом
-    // (barHovered/panelHovered оставил для будущего) 
 
     // IPC: qs ipc call bar control|media|search|notifs|reset
     IpcHandler {
@@ -641,6 +697,8 @@ PanelWindow {
             Qt.callLater(function() { if (searchInput) searchInput.forceActiveFocus() })
         if (panelMode !== "" && panelMode !== "search")
             statusProc.running = true
+        // «пульт» содержит свой ползунок громкости — OSD при нём не дублирую
+        Theme.barControlOpen = (panelMode === "control")
         if (panelMode !== "search") {
             searchQuery = ""
             searchResults = []
@@ -1283,8 +1341,10 @@ PanelWindow {
                 property Connections notifWatch: Connections {
                     target: root
                     function onNotifCountChanged() {
-                        if (root.notifCount > root.prevNotifCount)
+                        if (root.notifCount > root.prevNotifCount) {
                             notifCell.notifPulse.restart()
+                            root.activate("notifs", 4000)
+                        }
                         root.prevNotifCount = root.notifCount
                     }
                 }
@@ -1328,8 +1388,8 @@ PanelWindow {
                 }
                 property Connections volWatch: Connections {
                     target: root
-                    function onVolChanged() { if (root.pulsePrimed) volCell.volPulse.restart() }
-                    function onMutedChanged() { if (root.pulsePrimed) volCell.volPulse.restart() }
+                    function onVolChanged() { if (root.pulsePrimed) { volCell.volPulse.restart(); root.activate("control", 2500) } }
+                    function onMutedChanged() { if (root.pulsePrimed) { volCell.volPulse.restart(); root.activate("control", 2500) } }
                 }
                 Item {
                     implicitWidth: volContent.implicitWidth
@@ -1483,7 +1543,7 @@ PanelWindow {
                 }
                 property Connections trackWatch: Connections {
                     target: root
-                    function onTrackChanged() { if (root.pulsePrimed) mediaInline.trackPulse.restart() }
+                    function onTrackChanged() { if (root.pulsePrimed) { mediaInline.trackPulse.restart(); root.activate("media", 3000) } }
                 }
 
                 HoverHandler { id: mediaHover }
