@@ -226,6 +226,7 @@ QtObject {
     property int fontTiny: 11
     property int fontSmall: 12
     property int fontBody: 14
+    property int fontPanelTitle: 16
     property int fontTitle: 22
     property int fontClock: 16
 
@@ -241,7 +242,6 @@ QtObject {
     property int panelWControl: 660
     property int panelWSearch: 520
     property int panelWNotifs: 460
-    property int panelWSys: 520
     property int radiusS: 6
 
     // мягкая реакция на наведение — масштаб глифа, без переверстки

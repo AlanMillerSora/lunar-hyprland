@@ -20,11 +20,11 @@ headerbar, .titlebar {
 }
 
 button {
-  border-radius: 6px;
+  border-radius: 8px;
   box-shadow: none;
 }
 
 entry, spinbutton, searchentry {
-  border-radius: 6px;
+  border-radius: 8px;
   box-shadow: none;
 }

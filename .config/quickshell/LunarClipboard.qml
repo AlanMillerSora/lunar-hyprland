@@ -145,7 +145,7 @@ FloatingWindow {
                     text: "CLIPBOARD"
                     color: Theme.text
                     font.family: Theme.fontFamily
-                    font.pixelSize: 14
+                    font.pixelSize: Theme.fontSize(Theme.fontPanelTitle)
                     font.bold: true
                     font.letterSpacing: 4
                 }

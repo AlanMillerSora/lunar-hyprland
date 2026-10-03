@@ -88,7 +88,7 @@ FloatingWindow {
                     text: "AGENT"
                     color: Theme.text
                     font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(17)
+                    font.pixelSize: Theme.fontSize(Theme.fontPanelTitle)
                     font.bold: true
                     font.letterSpacing: 3
                 }

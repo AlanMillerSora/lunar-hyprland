@@ -1522,7 +1522,6 @@ PanelWindow {
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSize(Theme.fontClock)
                         font.bold: true
-                        font.letterSpacing: 1
                         height: 26
                         verticalAlignment: Text.AlignVCenter
                         opacity: root.colonOn ? 1.0 : 0.15

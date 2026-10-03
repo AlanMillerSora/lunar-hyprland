@@ -143,7 +143,7 @@ FloatingWindow {
                     text: "POWER"
                     color: Theme.text
                     font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(14)
+                    font.pixelSize: Theme.fontSize(Theme.fontPanelTitle)
                     font.bold: true
                     font.letterSpacing: 4
                 }
