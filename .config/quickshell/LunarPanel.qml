@@ -1543,7 +1543,8 @@ PanelWindow {
                 }
                 property Connections trackWatch: Connections {
                     target: root
-                    function onTrackChanged() { if (root.pulsePrimed) { mediaInline.trackPulse.restart(); root.activate("media", 3000) } }
+                    // только пульс: медиа-попап сам не раскрываю (мешает)
+                    function onTrackChanged() { if (root.pulsePrimed) mediaInline.trackPulse.restart() }
                 }
 
                 HoverHandler { id: mediaHover }
