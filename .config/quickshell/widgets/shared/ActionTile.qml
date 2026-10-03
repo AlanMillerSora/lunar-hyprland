@@ -14,6 +14,7 @@ Rectangle {
     property color activeColor: Theme.accent
     property int glyphSize: 16
     property int labelSize: 10
+    property string tip: ""
     signal clicked()
 
     radius: Theme.radius
@@ -52,5 +53,10 @@ Rectangle {
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: root.clicked()
+    }
+
+    AppTooltip {
+        visible: root.tip !== "" && ma.containsMouse
+        text: root.tip
     }
 }

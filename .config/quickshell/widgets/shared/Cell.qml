@@ -13,6 +13,7 @@ Rectangle {
     default property alias content: cellContent.children
     property color accent: Theme.barFaint
     property bool interactive: false
+    property string tip: ""
     signal clicked()
 
     height: 26
@@ -52,5 +53,10 @@ Rectangle {
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: cell.clicked()
+    }
+
+    AppTooltip {
+        visible: cell.tip !== "" && cellHover.hovered
+        text: cell.tip
     }
 }

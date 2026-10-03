@@ -1128,6 +1128,7 @@ PanelWindow {
             // PERF: governor; штрих белый на performance, danger — если уехал
             Cell {
                 anchors.verticalCenter: parent.verticalCenter
+                tip: "CPU governor"
                 accent: root.cpuGovernor === "performance" ? Theme.barDim : Theme.danger
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
@@ -1144,6 +1145,7 @@ PanelWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 interactive: true
                 accent: Theme.barDim
+                tip: "Раскладка — переключить"
                 onClicked: root.switchLayout()
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
@@ -1185,6 +1187,7 @@ PanelWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 interactive: true
                 accent: root.teleHot ? Theme.danger : Theme.barDim
+                tip: "Телеметрия"
                 onClicked: BarState.togglePanel("sys")
                 Row {
                     anchors.verticalCenter: parent.verticalCenter
@@ -1231,6 +1234,7 @@ PanelWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 interactive: true
                 accent: Theme.barFaint
+                tip: "Погода"
                 onClicked: BarState.togglePanel("weather")
                 Row {
                     anchors.verticalCenter: parent.verticalCenter
@@ -1257,6 +1261,7 @@ PanelWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 interactive: true
                 accent: root.netKind === "off" ? Theme.barFaint : Theme.barDim
+                tip: "Сеть (Hub)"
                 onClicked: root.openNetwork()
                 Column {
                     anchors.verticalCenter: parent.verticalCenter
@@ -1292,6 +1297,7 @@ PanelWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 interactive: true
                 accent: root.gameMode ? Theme.danger : Theme.barFaint
+                tip: "Game Mode"
                 onClicked: root.toggleGameMode()
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
@@ -1429,6 +1435,7 @@ PanelWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 interactive: true
                 accent: root.notifCount > 0 ? Theme.accent : Theme.barFaint
+                tip: "Уведомления"
                 onClicked: BarState.togglePanel("notifs")
                 // мягкий пульс на НОВОЕ уведомление (только рост счётчика).
                 // Слушаю root через Connections: notifCount живёт на корне.
@@ -1478,6 +1485,7 @@ PanelWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 interactive: true
                 accent: root.muted ? Theme.danger : Theme.barDim
+                tip: "Звук"
                 onClicked: root.openVolumePanel()
                 // пульс на изменение громкости или mute
                 property SequentialAnimation volPulse: SequentialAnimation {
@@ -1619,6 +1627,7 @@ PanelWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 interactive: true
                 accent: BarState.mode === "control" ? Theme.accent : Theme.barDim
+                tip: "Пульт · звук и действия"
                 onClicked: BarState.togglePanel("control")
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
@@ -1657,6 +1666,11 @@ PanelWindow {
                 }
 
                 HoverHandler { id: mediaHover }
+
+                AppTooltip {
+                    visible: mediaHover.hovered
+                    text: "Медиа — открыть панель"
+                }
 
                 // штрих-акцент слева
                 Rectangle {

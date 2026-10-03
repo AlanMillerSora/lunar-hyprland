@@ -238,6 +238,7 @@ import "../widgets/shared"
                                 height: 48
                                 glyph: modelData.g
                                 label: modelData.label
+                                tip: modelData.label
                                 onClicked: {
                                     if (modelData.act === "hub")
                                         host.openHub()
