@@ -356,6 +356,11 @@ PanelWindow {
     property string kbDevice: ""
     property bool dnd: false
     property int notifCount: 0
+    // помню прошлое число, чтобы пульс колокола шёл только на рост
+    property int prevNotifCount: 0
+    // не пульсирую на самые первые значения vol/track при старте шелла
+    property bool pulsePrimed: false
+    Timer { interval: 800; running: true; onTriggered: root.pulsePrimed = true }
     property bool gameMode: false
     property string cpuGovernor: ""
     property bool recording: false
@@ -1247,11 +1252,32 @@ PanelWindow {
 
             // ── уведомления · громкость — ячейками ──
             Cell {
+                id: notifCell
                 anchors.verticalCenter: parent.verticalCenter
                 interactive: true
                 tip: "уведомления"
                 accent: root.notifCount > 0 ? Theme.accent : Theme.barFaint
                 onClicked: root.togglePanel("notifs")
+                // мягкий пульс на НОВОЕ уведомление (только рост счётчика).
+                // Слушаю root через Connections: notifCount живёт на корне.
+                property SequentialAnimation notifPulse: SequentialAnimation {
+                    NumberAnimation {
+                        target: notifCell; property: "scale"; to: 1.15
+                        duration: Theme.animMed / 2; easing.type: Easing.OutCubic
+                    }
+                    NumberAnimation {
+                        target: notifCell; property: "scale"; to: 1.0
+                        duration: Theme.animMed / 2; easing.type: Easing.OutCubic
+                    }
+                }
+                property Connections notifWatch: Connections {
+                    target: root
+                    function onNotifCountChanged() {
+                        if (root.notifCount > root.prevNotifCount)
+                            notifCell.notifPulse.restart()
+                        root.prevNotifCount = root.notifCount
+                    }
+                }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: root.dnd ? "\uf1f6" : "\uf0f3"
@@ -1274,11 +1300,28 @@ PanelWindow {
 
             // volume
             Cell {
+                id: volCell
                 anchors.verticalCenter: parent.verticalCenter
                 interactive: true
                 tip: "звук — клик пульт, колесо шаг, ПКМ микшер"
                 accent: root.muted ? Theme.danger : Theme.barDim
                 onClicked: root.openVolumePanel()
+                // пульс на изменение громкости или mute
+                property SequentialAnimation volPulse: SequentialAnimation {
+                    NumberAnimation {
+                        target: volCell; property: "scale"; to: 1.15
+                        duration: Theme.animMed / 2; easing.type: Easing.OutCubic
+                    }
+                    NumberAnimation {
+                        target: volCell; property: "scale"; to: 1.0
+                        duration: Theme.animMed / 2; easing.type: Easing.OutCubic
+                    }
+                }
+                property Connections volWatch: Connections {
+                    target: root
+                    function onVolChanged() { if (root.pulsePrimed) volCell.volPulse.restart() }
+                    function onMutedChanged() { if (root.pulsePrimed) volCell.volPulse.restart() }
+                }
                 Item {
                     implicitWidth: volContent.implicitWidth
                     implicitHeight: 26
@@ -1421,6 +1464,21 @@ PanelWindow {
                 height: 26
                 radius: Theme.radiusS
                 color: mediaHover.hovered ? Theme.hoverStrong : Theme.fill
+                // мягкий пульс при смене трека
+                property SequentialAnimation trackPulse: SequentialAnimation {
+                    NumberAnimation {
+                        target: mediaInline; property: "scale"; to: 1.15
+                        duration: Theme.animMed / 2; easing.type: Easing.OutCubic
+                    }
+                    NumberAnimation {
+                        target: mediaInline; property: "scale"; to: 1.0
+                        duration: Theme.animMed / 2; easing.type: Easing.OutCubic
+                    }
+                }
+                property Connections trackWatch: Connections {
+                    target: root
+                    function onTrackChanged() { if (root.pulsePrimed) mediaInline.trackPulse.restart() }
+                }
 
                 HoverHandler { id: mediaHover }
 
@@ -2209,7 +2267,8 @@ PanelWindow {
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: modelData.kind === "page" ? "страница"
-                                    : (modelData.kind === "action" ? "действие" : "приложение")
+                                    : (modelData.kind === "action" ? "действие"
+                                    : (modelData.kind === "calc" ? "калькулятор · Enter — копирую" : "приложение"))
                                 color: Theme.textDim
                                 font.family: Theme.fontFamily
                                 font.pixelSize: Theme.fontTiny

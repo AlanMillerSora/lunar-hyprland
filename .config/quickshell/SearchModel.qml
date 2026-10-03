@@ -29,6 +29,92 @@ QtObject {
         sm.p.running = true
     }
 
+    // Копирую текст в буфер: ответ передаю позиционным аргументом ($1),
+    // а не склеиваю в тело команды — иначе выражение с кавычками ломает shell.
+    // Заодно рапортую mako, что ответ ушёл в буфер (панель-то закрывается).
+    property Process cp: Process { running: false }
+    function copyText(t) {
+        t = "" + t
+        sm.cp.command = ["bash", "-c",
+            "printf %s \"$1\" | wl-copy && notify-send -a lunar \"Калькулятор\" \"$2\"",
+            "--", t, "= " + t + " — в буфере"]
+        sm.cp.running = true
+    }
+
+    // Простой калькулятор: разбираю выражение сам (рекурсивный спуск),
+    // без eval — считаю только цифры и операторы + - * / % ^ и скобки.
+    function calcEval(src) {
+        var s = ("" + src).replace(/\s+/g, "")
+        var i = 0
+        function peek() { return s.charAt(i) }
+        function next() { return s.charAt(i++) }
+        // число (целое/дробное, точка) — возвращаю NaN, если числа нет
+        function number() {
+            var start = i
+            while (i < s.length && /[0-9.]/.test(s.charAt(i))) i++
+            if (start === i) return NaN
+            return parseFloat(s.slice(start, i))
+        }
+        // множитель: унарный минус, скобки или число
+        function factor() {
+            if (peek() === "+") { next(); return factor() }
+            if (peek() === "-") { next(); return -factor() }
+            if (peek() === "(") {
+                next()
+                var v = expr()
+                if (next() !== ")") return NaN
+                return v
+            }
+            return number()
+        }
+        // степень (правоассоциативно)
+        function power() {
+            var base = factor()
+            if (peek() === "^") { next(); return Math.pow(base, power()) }
+            return base
+        }
+        // произведение/деление/остаток
+        function term() {
+            var v = power()
+            while (peek() === "*" || peek() === "/" || peek() === "%") {
+                var op = next()
+                var rhs = power()
+                if (op === "*") v = v * rhs
+                else if (op === "/") v = rhs === 0 ? NaN : v / rhs
+                else v = rhs === 0 ? NaN : v % rhs
+            }
+            return v
+        }
+        // сумма/разность
+        function expr() {
+            var v = term()
+            while (peek() === "+" || peek() === "-") {
+                var op = next()
+                var rhs = term()
+                v = op === "+" ? v + rhs : v - rhs
+            }
+            return v
+        }
+        var res = expr()
+        if (i !== s.length) return NaN   // остались лишние символы — не выражение
+        if (!isFinite(res)) return NaN
+        // убираю хвостовые нули у дробных, long-хвост округляю
+        if (Math.abs(res) < 1e15) res = Math.round(res * 1e10) / 1e10
+        return res
+    }
+
+    // Похоже ли на выражение и есть ли что считать
+    function calcAnswer(q) {
+        var s = ("" + q).trim()
+        if (s.length < 2) return null
+        if (!/^[0-9+\-*/(). %^]+$/.test(s)) return null
+        if (!/[0-9]/.test(s)) return null
+        if (!/[+\-*/%^]/.test(s)) return null
+        var v = sm.calcEval(s)
+        if (isNaN(v)) return null
+        return "" + v
+    }
+
     property var searchActions: [
         { name: "Game Mode — вкл/выкл", icon: "\uf11b",
           run: function() { sm.runShell("~/.config/hypr/scripts/eclipse-gamemode.sh toggle") } },
@@ -75,6 +161,11 @@ QtObject {
         q = ("" + q).trim().toLowerCase()
         if (q === "") return []
         var out = []
+        // Калькулятор — первым: если запрос считаю выражением, ставлю его впереди.
+        var ans = sm.calcAnswer(q)
+        if (ans !== null)
+            out.push({ kind: "calc", rank: -1000, label: "= " + ans,
+                       icon: "\uf1ec", text: ans })
         for (var i = 0; i < sm.navItems.length; i++) {
             var r = sm.matchRank(q, sm.navItems[i].name)
             if (r >= 0)
@@ -117,6 +208,8 @@ QtObject {
             sm.searchActions[r.act].run()
         else if (r.kind === "app")
             AppModel.launch(r.app)
+        else if (r.kind === "calc")
+            sm.copyText(r.text)
         if (done)
             done()
     }
