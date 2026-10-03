@@ -71,7 +71,7 @@ QtObject {
     function fetch() {
         var place = wx.city !== "" ? wx.city : "auto"
         wx.cur.command = ["bash", "-c",
-            "curl -s --max-time 10 \"https://wttr.in/" + place.replace(/[^A-Za-zА-Яа-яЁё0-9 _-]/g, "") + "?format=%C|%t|%f|%h|%w\""]
+            "curl -s --max-time 10 \"https://wttr.in/" + place.replace(/[^A-Za-zА-Яа-яЁё0-9 _-]/g, "") + "?format=%C|%t|%f|%h|%w&lang=ru\""]
         wx.cur.running = false
         wx.cur.running = true
     }
@@ -83,16 +83,20 @@ QtObject {
             wx.fetch()
     }
 
-    // описание → глиф Nerd Font
+    // описание → глиф Nerd Font (учу и английские, и русские слова)
     function iconFor(d) {
         d = ("" + d).toLowerCase()
         if (d.indexOf("thunder") >= 0 || d.indexOf("гроза") >= 0) return "\uf0e7"
+        if (d.indexOf("blizzard") >= 0 || d.indexOf("метель") >= 0) return "\uf2dc"
         if (d.indexOf("snow") >= 0 || d.indexOf("снег") >= 0 || d.indexOf("sleet") >= 0) return "\uf2dc"
-        if (d.indexOf("rain") >= 0 || d.indexOf("дожд") >= 0 || d.indexOf("drizzle") >= 0) return "\uf043"
-        if (d.indexOf("fog") >= 0 || d.indexOf("mist") >= 0 || d.indexOf("туман") >= 0) return "\uf014"
-        if (d.indexOf("overcast") >= 0) return "\uf0c2"
+        if (d.indexOf("rain") >= 0 || d.indexOf("дожд") >= 0 || d.indexOf("ливень") >= 0
+            || d.indexOf("морось") >= 0 || d.indexOf("drizzle") >= 0) return "\uf043"
+        if (d.indexOf("fog") >= 0 || d.indexOf("mist") >= 0 || d.indexOf("туман") >= 0
+            || d.indexOf("дымка") >= 0) return "\uf014"
+        if (d.indexOf("overcast") >= 0 || d.indexOf("пасмур") >= 0) return "\uf0c2"
         if (d.indexOf("cloud") >= 0 || d.indexOf("облач") >= 0) return "\uf0c2"
-        if (d.indexOf("clear") >= 0 || d.indexOf("sunny") >= 0 || d.indexOf("ясно") >= 0) return "\uf185"
+        if (d.indexOf("clear") >= 0 || d.indexOf("sunny") >= 0
+            || d.indexOf("ясно") >= 0 || d.indexOf("солнеч") >= 0) return "\uf185"
         return "\uf0c2"
     }
 
@@ -101,6 +105,36 @@ QtObject {
         if (wx.temp === "") return "—"
         var m = wx.temp.match(/[+-]?\d+/)
         return m ? m[0] + "°" : "—"
+    }
+
+    // описание по-русски: wttr.in отдаёт английский, если lang не сработал
+    readonly property var ruDict: ({
+        "sunny": "Солнечно", "clear": "Ясно",
+        "partly cloudy": "Переменная облачность",
+        "cloudy": "Облачно", "overcast": "Пасмурно",
+        "mist": "Дымка", "fog": "Туман", "freezing fog": "Ледяной туман",
+        "patchy rain nearby": "Местами дождь",
+        "patchy rain possible": "Возможен дождь",
+        "light rain": "Небольшой дождь", "light drizzle": "Морось",
+        "freezing drizzle": "Ледяная морось",
+        "light rain shower": "Небольшой ливень",
+        "moderate rain": "Дождь",
+        "moderate or heavy rain shower": "Ливень",
+        "heavy rain": "Сильный дождь", "torrential rain shower": "Сильный ливень",
+        "light snow": "Небольшой снег", "moderate snow": "Снег",
+        "heavy snow": "Сильный снег", "blizzard": "Метель",
+        "sleet": "Мокрый снег", "light sleet": "Мокрый снег",
+        "thundery outbreaks possible": "Возможны грозы",
+        "thunderstorm": "Гроза",
+        "patchy light rain with thunder": "Дождь с грозой",
+        "patchy light snow with thunder": "Снег с грозой"
+    })
+    readonly property string descRu: {
+        var d = ("" + wx.desc).trim()
+        if (d === "") return ""
+        if (/[А-Яа-яЁё]/.test(d)) return d   // уже русский
+        var k = d.toLowerCase()
+        return wx.ruDict[k] !== undefined ? wx.ruDict[k] : d
     }
 
     function saveCache() {

@@ -2321,7 +2321,7 @@ PanelWindow {
             }
         }
 
-        // ── ПОГОДА: текущие условия из Weather (wttr.in + ipinfo) ──
+        // ── ПОГОДА: крупная карточка «сейчас» + три плашки деталей ──
         Column {
             id: wxBody
             visible: root.panelMode === "weather"
@@ -2332,95 +2332,83 @@ PanelWindow {
             width: parent.width - Theme.barPad * 2
             spacing: Theme.space2
 
-            Row {
+            // сейчас
+            Card {
                 width: parent.width
-                spacing: Theme.space4
+                contentMargins: 14
+                Row {
+                    width: parent.width
+                    spacing: Theme.space4
 
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: Weather.icon
-                    color: Theme.accent
-                    font.family: Theme.iconFont
-                    font.pixelSize: 40
-                }
-                Column {
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 2
-                    Text {
-                        text: Weather.ok ? Weather.temp : "—"
-                        color: Theme.text
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 28
-                        font.bold: true
+                    // иконка в подложке
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 56
+                        height: 56
+                        radius: Theme.radius
+                        color: Theme.fill
+                        border.width: 1
+                        border.color: Theme.border
+                        Text {
+                            anchors.centerIn: parent
+                            text: Weather.ok ? Weather.icon : "\uf185"
+                            color: Theme.accent
+                            font.family: Theme.iconFont
+                            font.pixelSize: 30
+                        }
                     }
-                    Text {
-                        text: Weather.city !== "" ? Weather.city : "определяю город…"
-                        color: Theme.textDim
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSmall
+
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 2
+                        Text {
+                            text: Weather.ok ? Weather.temp : "—"
+                            color: Theme.text
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 34
+                            font.bold: true
+                        }
+                        Text {
+                            text: Weather.city !== "" ? Weather.city : "определяю город…"
+                            color: Theme.textDim
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSmall
+                        }
+                        Text {
+                            text: Weather.ok ? Weather.descRu : "нет данных — проверь сеть"
+                            color: Theme.textFaint
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontTiny
+                        }
                     }
                 }
             }
 
-            Text {
-                width: parent.width
-                text: Weather.ok ? Weather.desc : "нет данных — проверь сеть"
-                color: Theme.textDim
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontBody
-                wrapMode: Text.WordWrap
-            }
-
+            // детали
             Row {
-                spacing: Theme.space5
-                visible: Weather.ok
-
-                Column {
-                    spacing: 2
-                    Text {
-                        text: "ОЩУЩАЕТСЯ"
-                        color: Theme.textFaint
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 9
-                        font.letterSpacing: 2
-                    }
-                    Text {
-                        text: Weather.feels
-                        color: Theme.text
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSmall
-                    }
-                }
-                Column {
-                    spacing: 2
-                    Text {
-                        text: "ВЛАЖНОСТЬ"
-                        color: Theme.textFaint
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 9
-                        font.letterSpacing: 2
-                    }
-                    Text {
-                        text: Weather.hum
-                        color: Theme.text
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSmall
-                    }
-                }
-                Column {
-                    spacing: 2
-                    Text {
-                        text: "ВЕТЕР"
-                        color: Theme.textFaint
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 9
-                        font.letterSpacing: 2
-                    }
-                    Text {
-                        text: Weather.wind
-                        color: Theme.text
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSmall
+                width: parent.width
+                spacing: Theme.space2
+                Repeater {
+                    model: [
+                        { label: "ОЩУЩАЕТСЯ", v: Weather.feels },
+                        { label: "ВЛАЖНОСТЬ", v: Weather.hum },
+                        { label: "ВЕТЕР", v: Weather.wind }
+                    ]
+                    delegate: Card {
+                        required property var modelData
+                        width: (parent.width - Theme.space2 * 2) / 3
+                        contentMargins: 10
+                        contentSpacing: 2
+                        SectionLabel {
+                            text: modelData.label
+                            font.pixelSize: 9
+                        }
+                        Text {
+                            text: Weather.ok ? modelData.v : "—"
+                            color: Theme.text
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSmall
+                        }
                     }
                 }
             }
