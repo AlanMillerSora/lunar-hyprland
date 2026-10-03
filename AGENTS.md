@@ -180,8 +180,8 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 ```
 
 - `shell.qml` — корневой `ShellRoot`. Синглтоны (`pragma Singleton`): `Theme`, `AppModel`.
-- Hub-страницы (nav, 8): 0 Launch ·1 System ·2 Devices ·3 Network ·4 Interface ·
-  5 Games ·6 Dev ·7 Update. Обои (сцена или картинки) — внутри Interface и в окне
+- Hub-страницы (nav, 9): 0 Launch ·1 System ·2 Devices ·3 Network ·4 Interface ·
+  5 Games ·6 Dev ·7 Update ·8 Media. Обои (сцена или картинки) — внутри Interface и в окне
   подбора `LunarWallpapers` (IPC `wallpapers`, хоткей `SUPER + B`): оверлей-веер с зумом
   от центра, инерционный глайд, затемнение и подтверждение; картинки — из миниатюр
   `~/.cache/lunar/wall-thumbs`, сами обои — `~/Pictures/Wallpapers` (набор 43PR, 21:9).
@@ -382,7 +382,7 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 ~/.config/hypr/scripts/eclipse-palette.py --preset graphite --apply
 ~/.config/hypr/scripts/eclipse-palette.py --from-image ~/Pictures/wall.jpg --apply
 qs ipc call wallpapers toggle|open|close                       # подбор обоев (SUPER + B)
-qs ipc call hub nav N                                          # 0..7 (см. §4)
+qs ipc call hub nav N                                          # 0..8 (см. §4)
 sddm-greeter --test-mode --theme /usr/share/sddm/themes/lunar      # предпросмотр входа
 ~/.config/hypr/scripts/eclipse-avatar.sh pick|apply <cs> <cx> <cy> [/путь]
 ~/.config/hypr/scripts/eclipse-record.sh probe                     # проверка записи

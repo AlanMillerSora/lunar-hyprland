@@ -561,7 +561,7 @@ mkdir -p "$HOME/.config"
 # этого дефолтный avatar.png из репо затирал мой. Прячу и возвращаю обратно.
 AV_KEEP=""
 if [ -f "$HOME/.config/avatars/avatar.png" ]; then
-  AV_KEEP="$(mktemp --suffix=.png)"
+  AV_KEEP="$(mktemp --suffix=.png)" || AV_KEEP=""
   cp -f "$HOME/.config/avatars/avatar.png" "$AV_KEEP" 2>/dev/null || AV_KEEP=""
 fi
 cp -r "$REPO/.config/." "$HOME/.config/"

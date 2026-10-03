@@ -116,7 +116,7 @@ Item {
     Process {
         id: thumbList
         running: false
-        command: ["bash", "-c", "ls -1 \"" + grid.thumbDir + "\"/*.jpg 2>/dev/null"]
+        command: ["bash", "-c", "ls -1 \"" + grid.thumbDir.replace(/"/g, "\\\"") + "\"/*.jpg 2>/dev/null"]
         stdout: StdioCollector {
             onStreamFinished: {
                 var s = ({})

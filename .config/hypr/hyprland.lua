@@ -327,7 +327,7 @@ hl.bind(M .. " + I",       dsp.exec_cmd("qs ipc call bar sys"))
 hl.bind(M .. " + SHIFT + R", dsp.exec_cmd("~/.config/hypr/scripts/eclipse-record.sh toggle"))  -- запись экрана (start/stop)
 hl.bind(M .. " + SHIFT + G", dsp.exec_cmd("~/.config/hypr/scripts/eclipse-gamemode.sh toggle"))  -- Game Mode (анимации/blur выкл, performance)
 hl.bind(M .. " + SHIFT + P", dsp.window.pin())                             -- закрепить окно поверх всех
-hl.bind(M .. " + SHIFT + D", dsp.exec_cmd("sh -c 'qs ipc call hub nav 9; qs ipc call hub open'"))  -- Hub: раздел «Разработка»
+hl.bind(M .. " + SHIFT + D", dsp.exec_cmd("sh -c 'qs ipc call hub nav 6; qs ipc call hub open'"))  -- Hub: раздел «Разработка»
 hl.bind(M .. " + SLASH",   dsp.exec_cmd("~/.config/hypr/scripts/eclipse-cheatsheet.py"))
 hl.bind(M .. " + Q",       dsp.window.close())
 hl.bind(M .. " + W",       dsp.window.fullscreen({ mode = "maximized" }))
