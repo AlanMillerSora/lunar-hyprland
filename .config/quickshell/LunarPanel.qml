@@ -153,6 +153,18 @@ PanelWindow {
             delete nb[root.focusedWsId]
             root.wsBlink = nb
         }
+        // «пик» на переключение: фаза на пару секунд показывает иконку стола
+        if (root.focusedWsId > 0) {
+            root.wsPeek = root.focusedWsId
+            wsPeekTimer.restart()
+        }
+    }
+    // стол, который сейчас «пикает» иконкой
+    property int wsPeek: -1
+    Timer {
+        id: wsPeekTimer
+        interval: 1400
+        onTriggered: root.wsPeek = -1
     }
     Timer {
         interval: 220
@@ -915,7 +927,9 @@ PanelWindow {
                             readonly property bool isOccupied: ws !== null && ws.toplevels.values.length > 0
                             readonly property bool alerting: root.wsBlink[wsId] !== undefined
                             readonly property string appIcon: root.appIconFor(root.firstClassFor(wsId))
-                            readonly property bool showApp: !alerting && wsMouse.containsMouse && appIcon !== ""
+                            readonly property bool peek: root.wsPeek === wsId
+                            readonly property bool showApp: !alerting && appIcon !== ""
+                                && (wsMouse.containsMouse || peek)
 
                             // импульс кольца при переходе на этот стол
                             onIsFocusedChanged: if (isFocused) focusPulse.restart()
