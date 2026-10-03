@@ -258,6 +258,37 @@ QtObject {
     readonly property int easeOut: Easing.OutCubic
     readonly property int easeInOut: Easing.InOutCubic
 
+    // ── expressive-моушен (порт Material-3 Expressive / Caelestia) ──
+    // spatial — движение и размер (лёгкий перелёт в конце), effects —
+    // прозрачность/цвет. Характер анимаций меняю в одном месте; durations
+    // в мс, кривые — точки для Easing.BezierSpline.
+    property bool animationsEnabled: true
+    property real animScale: 1.0
+    readonly property QtObject anim: QtObject {
+        readonly property real scale: theme.animationsEnabled ? theme.animScale : 0
+        // стандартные
+        readonly property int small: Math.round(150 * scale)
+        readonly property int normal: Math.round(250 * scale)
+        readonly property int large: Math.round(400 * scale)
+        readonly property int extraLarge: Math.round(600 * scale)
+        // expressive: spatial (с перелётом) и effects (без)
+        readonly property int fastSpatial: Math.round(250 * scale)
+        readonly property int defaultSpatial: Math.round(350 * scale)
+        readonly property int slowSpatial: Math.round(500 * scale)
+        readonly property int fastEffects: Math.round(120 * scale)
+        readonly property int defaultEffects: Math.round(180 * scale)
+        readonly property int slowEffects: Math.round(260 * scale)
+        readonly property var standard: [0.2, 0, 0, 1, 1, 1]
+        readonly property var standardDecel: [0, 0, 0, 1, 1, 1]
+        readonly property var emphasized: [0.05, 0, 0.1333, 0.06, 0.1667, 0.4, 0.2083, 0.82, 0.25, 1, 1, 1]
+        readonly property var expressiveFastSpatial: [0.42, 1.67, 0.21, 0.9, 1, 1]
+        readonly property var expressiveDefaultSpatial: [0.38, 1.21, 0.22, 1, 1, 1]
+        readonly property var expressiveSlowSpatial: [0.39, 1.29, 0.35, 0.98, 1, 1]
+        readonly property var expressiveFastEffects: [0.31, 0.94, 0.34, 1, 1, 1]
+        readonly property var expressiveDefaultEffects: [0.34, 0.8, 0.34, 1, 1, 1]
+        readonly property var expressiveSlowEffects: [0.34, 0.88, 0.34, 1, 1, 1]
+    }
+
     // активный модальный оверлей ("hub" | "agent"): открытие одного
     // закрывает другой, плавно и в одном процессе (без внешнего qs ipc)
     property string activeOverlay: ""

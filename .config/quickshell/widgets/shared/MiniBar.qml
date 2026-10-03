@@ -23,6 +23,6 @@ Rectangle {
         height: parent.height
         radius: parent.radius
         color: bar.barColor
-        Behavior on width { NumberAnimation { duration: 250; easing.type: Theme.easeOut } }
+        Behavior on width { Anim { type: Anim.FastSpatial } }
     }
 }

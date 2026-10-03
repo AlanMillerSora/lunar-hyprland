@@ -522,7 +522,7 @@ PanelWindow {
     readonly property bool expanded: panelMode !== ""
     // морф бар↔панель: 0 — бар, 1 — панель (кроссфейд + раскрытие вниз)
     property real morph: 0
-    Behavior on morph { NumberAnimation { duration: 220; easing.type: Theme.easeOut } }
+    Behavior on morph { Anim { type: Anim.DefaultSpatial } }
     onExpandedChanged: root.morph = root.expanded ? 1 : 0
     // высота панели по режиму (анимируется при смене режима)
     function panelHeightFor(m) {
@@ -535,7 +535,7 @@ PanelWindow {
         return Theme.barH
     }
     property real panelTargetH: root.panelHeightFor(panelMode)
-    Behavior on panelTargetH { NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut } }
+    Behavior on panelTargetH { Anim { type: Anim.DefaultSpatial } }
 
     // ширина панели по режиму: пульт/поиск/уведы — фикс, медиа — по содержимому
     function panelWidthFor(m) {
@@ -849,7 +849,7 @@ PanelWindow {
                 implicitWidth: wsRow.implicitWidth
                 implicitHeight: 26
                 scale: wsBg.hovered ? Theme.hoverGrow : 1
-                Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easeOut } }
+                Behavior on scale { Anim { type: Anim.FastSpatial } }
 
                 HoverBg { id: wsBg }
 
@@ -960,8 +960,8 @@ PanelWindow {
                                 scale: wsPill.isFocused
                                     ? 1.15
                                     : (wsMouse.containsMouse ? 1.1 : (wsPill.isOccupied ? 1.07 : 1.0))
-                                Behavior on opacity { NumberAnimation { duration: 120 } }
-                                Behavior on scale { NumberAnimation { duration: 120 } }
+                                Behavior on opacity { Anim { type: Anim.FastEffects } }
+                                Behavior on scale { Anim { type: Anim.FastSpatial } }
                             }
 
                             MouseArea {
@@ -1189,7 +1189,7 @@ PanelWindow {
                 implicitHeight: 26
 
                 scale: trayBg.hovered ? Theme.hoverGrow : 1
-                Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easeOut } }
+                Behavior on scale { Anim { type: Anim.FastSpatial } }
                 HoverBg { id: trayBg; visible: root.trayCount > 0 }
 
                 Row {
@@ -1680,7 +1680,7 @@ PanelWindow {
         opacity: root.morph
         scale: 0.97 + 0.03 * root.morph
         transformOrigin: Item.Top
-        Behavior on width { NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut } }
+        Behavior on width { Anim { type: Anim.DefaultSpatial } }
 
         HoverHandler { onHoveredChanged: root.panelHovered = hovered }
 

@@ -12,7 +12,7 @@ Rectangle {
     radius: Theme.radius
     color: Theme.hoverStrong
     opacity: hh.hovered ? 1 : 0
-    Behavior on opacity { NumberAnimation { duration: 150 } }
+    Behavior on opacity { Anim { type: Anim.FastEffects } }
     readonly property bool hovered: hh.hovered
     HoverHandler { id: hh }
 }
