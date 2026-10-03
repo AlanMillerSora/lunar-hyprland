@@ -89,6 +89,24 @@ Cell {
                     }
                 }
             }
+
+            // тонкая линия прогресса трека; гаснет, если длина неизвестна
+            // (радио/стримы) — тогда не показываю мёртвую полосу
+            Rectangle {
+                width: parent.width
+                height: 2
+                radius: 1
+                color: Theme.trackBg
+                visible: host.trackLength > 0
+                Rectangle {
+                    width: parent.width * Math.max(0, Math.min(1,
+                        host.trackLength > 0 ? host.trackPosition / host.trackLength : 0))
+                    height: parent.height
+                    radius: parent.radius
+                    color: Theme.accent
+                    Behavior on width { Anim { type: Anim.FastEffects } }
+                }
+            }
         }
     }
 }

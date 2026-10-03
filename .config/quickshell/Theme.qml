@@ -274,8 +274,10 @@ QtObject {
     // мягкая реакция на наведение — масштаб глифа, без переверстки
     property real hoverGrow: 1.25
 
-    // сколько значков трея видно в панели (остальные — в списке «+N»)
-    property int trayVisible: 2
+    // сколько значков трея видно в панели (остальные — в списке «+N»).
+    // Это настройка бара — живёт в BarSettings (bar.json), здесь только
+    // чтение, чтобы старый код не менялся.
+    readonly property int trayVisible: BarSettings.trayVisible
 
     // задержка появления тултипов (мс) — чтобы не мигали при проходе курсора
     property int tooltipDelay: 600
@@ -408,7 +410,6 @@ QtObject {
             id: uiAdapter
             property real interfaceOpacity: 1.0
             property real fontScale: 1.0
-            property int trayVisible: 2
             property bool wallpaperLive: true
             property string wallpaperMode: "scene"
             property string wallpaperPath: ""
@@ -419,7 +420,6 @@ QtObject {
             // файл → UI (в uiInternal, чтобы не писать назад прочитанное)
             onInterfaceOpacityChanged: { theme.uiInternal = true; theme.interfaceOpacity = interfaceOpacity; theme.uiInternal = false }
             onFontScaleChanged: { theme.uiInternal = true; theme.fontScale = fontScale; theme.uiInternal = false }
-            onTrayVisibleChanged: { theme.uiInternal = true; theme.trayVisible = trayVisible; theme.uiInternal = false }
             onWallpaperLiveChanged: { theme.uiInternal = true; theme.wallpaperLive = wallpaperLive; theme.uiInternal = false }
             onWallpaperModeChanged: { theme.uiInternal = true; theme.wallpaperMode = wallpaperMode; theme.uiInternal = false }
             onWallpaperPathChanged: { theme.uiInternal = true; theme.wallpaperPath = wallpaperPath; theme.uiInternal = false }
@@ -433,7 +433,6 @@ QtObject {
     // из файла идёт через uiInternal и сюда не попадает (H27, L42).
     onInterfaceOpacityChanged: if (!uiInternal) { markUI(); uiAdapter.interfaceOpacity = interfaceOpacity }
     onFontScaleChanged: if (!uiInternal) { markUI(); uiAdapter.fontScale = fontScale }
-    onTrayVisibleChanged: if (!uiInternal) { markUI(); uiAdapter.trayVisible = trayVisible }
     onWallpaperLiveChanged: if (!uiInternal) { markUI(); uiAdapter.wallpaperLive = wallpaperLive }
     onWallpaperModeChanged: {
         if (!uiInternal) { markUI(); uiAdapter.wallpaperMode = wallpaperMode }

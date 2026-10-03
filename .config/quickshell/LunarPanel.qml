@@ -328,6 +328,10 @@ PanelWindow {
     readonly property string track: player
         ? ((player.trackTitle || "") + (player.trackArtist ? "  —  " + player.trackArtist : ""))
         : ""
+    // прогресс трека для тонкой линии в медиа-ячейке; length=0 —
+    // длительность неизвестна, линия не показывается
+    readonly property real trackLength: (player && player.length > 0) ? player.length : 0
+    readonly property real trackPosition: (player && player.position > 0) ? player.position : 0
 
 
     // ── cava: спектр для полосы «сейчас играет» ──

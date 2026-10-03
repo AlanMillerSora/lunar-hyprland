@@ -3,27 +3,53 @@ import "../.."
 import "../shared"
 
 // ════════════════════════════════════════════════════════════════
-//  BarLeftZone — левая зона бара: марка LUNAR + фазы столов и
-//  PERF/раскладка. Раньше это были две отдельные плашки (leftBar +
-//  midBar), теперь одна зона; host = корень LunarPanel.
+//  BarLeftZone — левая зона бара: марка LUNAR + фазы столов,
+//  PERF и раскладка. Состав, порядок и видимость ячеек беру из
+//  BarSettings (bar.json); ячейки описаны Component'ами и
+//  подставляются через Repeater→Loader. host = корень LunarPanel.
 // ════════════════════════════════════════════════════════════════
 Item {
     id: leftZone
     property var host
 
-    implicitWidth: leftRow.implicitWidth + 2 * Theme.barPad
+    implicitWidth: zoneRow.implicitWidth + 2 * Theme.barPad
     implicitHeight: Theme.barH
     clip: true
 
+    // id ячейки → её компонент
+    function compFor(id) {
+        if (id === "mark") return markComp
+        if (id === "workspaces") return wsComp
+        if (id === "perf") return perfComp
+        if (id === "layout") return layoutComp
+        return null
+    }
+
     Row {
-        id: leftRow
+        id: zoneRow
         anchors.left: parent.left
         anchors.leftMargin: Theme.barPad
         anchors.verticalCenter: parent.verticalCenter
         height: Theme.barH
         spacing: Theme.space3
 
-        // марка LUNAR + фаза активного стола
+        Repeater {
+            model: BarSettings.leftVisible
+
+            delegate: Loader {
+                required property var modelData
+                height: Theme.barH
+                anchors.verticalCenter: parent.verticalCenter
+                // скрытая ячейка (например, медиа без трека) не занимает место
+                visible: item === null ? true : item.visible
+                sourceComponent: leftZone.compFor(modelData.id)
+            }
+        }
+    }
+
+    // ── марка LUNAR + фаза активного стола ──
+    Component {
+        id: markComp
         Row {
             anchors.verticalCenter: parent.verticalCenter
             height: Theme.barCellH
@@ -50,11 +76,17 @@ Item {
                 font.letterSpacing: 1.5
             }
         }
+    }
 
-        // рабочие столы — компонент widgets/bar/BarWorkspaces
+    // ── рабочие столы ──
+    Component {
+        id: wsComp
         BarWorkspaces { anchors.verticalCenter: parent.verticalCenter; host: leftZone.host }
+    }
 
-        // PERF: governor; штрих белый на performance, danger — если уехал
+    // ── PERF: governor; штрих белый на performance, danger — если уехал ──
+    Component {
+        id: perfComp
         Cell {
             anchors.verticalCenter: parent.verticalCenter
             tip: "CPU governor"
@@ -68,8 +100,11 @@ Item {
                 font.bold: leftZone.host.cpuGovernor !== "performance"
             }
         }
+    }
 
-        // раскладка (клик — переключить)
+    // ── раскладка (клик — переключить) ──
+    Component {
+        id: layoutComp
         Cell {
             anchors.verticalCenter: parent.verticalCenter
             interactive: true

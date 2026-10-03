@@ -4,28 +4,58 @@ import "../shared"
 
 // ════════════════════════════════════════════════════════════════
 //  BarRightZone — правая зона бара: систем-остров, погода, сеть,
-//  Game Mode, трей, уведомления и звук. host = корень LunarPanel.
+//  Game Mode, трей, уведомления и звук. Состав/порядок/видимость —
+//  из BarSettings (bar.json). host = корень LunarPanel.
 // ════════════════════════════════════════════════════════════════
 Item {
     id: rightZone
     property var host
 
-    implicitWidth: rightRow.implicitWidth + 2 * Theme.space2
+    implicitWidth: zoneRow.implicitWidth + 2 * Theme.space2
     implicitHeight: Theme.barH
     clip: true
 
+    function compFor(id) {
+        if (id === "system") return sysComp
+        if (id === "weather") return weatherComp
+        if (id === "network") return netComp
+        if (id === "game") return gameComp
+        if (id === "tray") return trayComp
+        if (id === "notifs") return notifComp
+        if (id === "volume") return volComp
+        return null
+    }
+
     Row {
-        id: rightRow
+        id: zoneRow
         anchors.left: parent.left
         anchors.leftMargin: Theme.space2
         anchors.verticalCenter: parent.verticalCenter
         height: Theme.barH
         spacing: Theme.space2
 
-        // систем-остров — компонент widgets/bar/SystemIsland
-        SystemIsland { host: rightZone.host }
+        Repeater {
+            model: BarSettings.rightVisible
 
-        // ── погода: иконка + температура, клик обновляет ──
+            delegate: Loader {
+                required property var modelData
+                height: Theme.barH
+                anchors.verticalCenter: parent.verticalCenter
+                visible: item === null ? true : item.visible
+                sourceComponent: rightZone.compFor(modelData.id)
+            }
+        }
+    }
+
+    // ── систем-остров ──
+    Component {
+        id: sysComp
+        SystemIsland { host: rightZone.host }
+    }
+
+    // ── погода: иконка + температура, клик открывает панель ──
+    Component {
+        id: weatherComp
         Cell {
             anchors.verticalCenter: parent.verticalCenter
             interactive: true
@@ -51,8 +81,11 @@ Item {
                 }
             }
         }
+    }
 
-        // ── сеть: ДВУХЭТАЖНАЯ ячейка — иконка сверху, ↓/↑ мелко снизу ──
+    // ── сеть: ДВУХЭТАЖНАЯ ячейка — иконка сверху, ↓/↑ мелко снизу ──
+    Component {
+        id: netComp
         Cell {
             anchors.verticalCenter: parent.verticalCenter
             interactive: true
@@ -88,8 +121,11 @@ Item {
                 }
             }
         }
+    }
 
-        // ── действия: Game Mode (REC вынесен отдельной пилюлей справа) ──
+    // ── действия: Game Mode ──
+    Component {
+        id: gameComp
         Cell {
             anchors.verticalCenter: parent.verticalCenter
             interactive: true
@@ -104,11 +140,17 @@ Item {
                 font.pixelSize: Theme.fontSize(15)
             }
         }
+    }
 
-        // трей — компонент widgets/bar/BarTray
+    // ── трей ──
+    Component {
+        id: trayComp
         BarTray { host: rightZone.host }
+    }
 
-        // ── уведомления · громкость — ячейками ──
+    // ── уведомления · громкость ──
+    Component {
+        id: notifComp
         Cell {
             id: notifCell
             anchors.verticalCenter: parent.verticalCenter
@@ -116,7 +158,9 @@ Item {
             accent: rightZone.host.notifCount > 0 ? Theme.accent : Theme.barFaint
             tip: "Уведомления"
             onClicked: BarState.togglePanel("notifs")
-            // мягкий пульс на НОВОЕ уведомление (только рост счётчика)
+            // мягкий пульс-подсветка на НОВОЕ уведомление (только рост
+            // счётчика). Панель сама НЕ раскрывается — иначе список
+            // выезжал на каждое уведомление; открытие только по клику.
             property SequentialAnimation notifPulse: SequentialAnimation {
                 NumberAnimation {
                     target: notifCell; property: "scale"; to: 1.15
@@ -130,10 +174,8 @@ Item {
             property Connections notifWatch: Connections {
                 target: rightZone.host
                 function onNotifCountChanged() {
-                    if (rightZone.host.notifCount > rightZone.host.prevNotifCount) {
+                    if (rightZone.host.notifCount > rightZone.host.prevNotifCount)
                         notifCell.notifPulse.restart()
-                        BarState.activate("notifs", 4000)
-                    }
                     rightZone.host.prevNotifCount = rightZone.host.notifCount
                 }
             }
@@ -156,8 +198,10 @@ Item {
                 font.bold: true
             }
         }
+    }
 
-        // volume
+    Component {
+        id: volComp
         Cell {
             id: volCell
             anchors.verticalCenter: parent.verticalCenter

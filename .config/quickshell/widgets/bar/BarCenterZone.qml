@@ -4,20 +4,32 @@ import "../shared"
 
 // ════════════════════════════════════════════════════════════════
 //  BarCenterZone — центр бара: «пульт», медиа-ячейка и часы/дата.
-//  Наружу отдаёт clockCenterFromLeft — по нему корень ставит строку так,
-//  чтобы центр часовой ячейки лёг ровно на центр экрана.
+//  Состав/порядок/видимость — из BarSettings. Наружу отдаёт
+//  clockCenterFromLeft (позиция Loader'а часов): по нему корень
+//  ставит строку так, чтобы центр часов лёг на центр экрана.
 // ════════════════════════════════════════════════════════════════
 Item {
     id: centerZone
     property var host
+    // Loader, в котором живёт ячейка часов — задаёт центровку
+    property Item clockItem: null
 
     // расстояние от левого края зоны до центра ячейки часов
     readonly property real clockCenterFromLeft:
-        Theme.barPad + clockCell.x + clockCell.width / 2
+        clockItem ? (Theme.barPad + clockItem.x
+            + Math.max(clockItem.width, clockItem.implicitWidth) / 2)
+                  : implicitWidth / 2
 
-    implicitWidth: defRow.implicitWidth + 2 * Theme.barPad
+    implicitWidth: zoneRow.implicitWidth + 2 * Theme.barPad
     implicitHeight: Theme.barH
     clip: true
+
+    function compFor(id) {
+        if (id === "control") return controlComp
+        if (id === "media") return mediaComp
+        if (id === "clock") return clockComp
+        return null
+    }
 
     // колесо над плашкой — громкость
     WheelHandler {
@@ -27,14 +39,33 @@ Item {
     }
 
     Row {
-        id: defRow
+        id: zoneRow
         anchors.left: parent.left
         anchors.leftMargin: Theme.barPad
         anchors.verticalCenter: parent.verticalCenter
         height: Theme.barH
         spacing: Theme.space2
 
-        // «пульт» — раскрывает панель управления вниз
+        Repeater {
+            model: BarSettings.centerVisible
+
+            delegate: Loader {
+                id: centerLoader
+                required property var modelData
+                height: Theme.barH
+                anchors.verticalCenter: parent.verticalCenter
+                visible: item === null ? true : item.visible
+                sourceComponent: centerZone.compFor(modelData.id)
+                // часы задают центровку строки: запоминаю их Loader, когда он готов
+                onStatusChanged: if (status === Loader.Ready && item
+                    && modelData.id === "clock") centerZone.clockItem = centerLoader
+            }
+        }
+    }
+
+    // ── «пульт» — раскрывает панель управления вниз ──
+    Component {
+        id: controlComp
         Cell {
             anchors.verticalCenter: parent.verticalCenter
             interactive: true
@@ -49,13 +80,18 @@ Item {
                 font.pixelSize: Theme.fontSize(14)
             }
         }
+    }
 
-        // медиа-ячейка — компонент widgets/bar/MediaCell
+    // ── медиа-ячейка ──
+    Component {
+        id: mediaComp
         MediaCell { host: centerZone.host }
+    }
 
-        // часы + дата — одна ячейка со штрихом-акцентом
+    // ── часы + дата — одна ячейка со штрихом-акцентом ──
+    Component {
+        id: clockComp
         Cell {
-            id: clockCell
             anchors.verticalCenter: parent.verticalCenter
             accent: Theme.accent
             Row {
