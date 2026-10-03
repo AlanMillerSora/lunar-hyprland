@@ -48,7 +48,7 @@ import ".."
                     onTextChanged: host.setSearchQuery(text)
                     Keys.onEscapePressed: {
                         if (text !== "") { text = ""; host.setSearchQuery("") }
-                        else host.closePanel()
+                        else BarState.closePanel()
                     }
                     Keys.onUpPressed: host.moveSearch(-1)
                     Keys.onDownPressed: host.moveSearch(1)

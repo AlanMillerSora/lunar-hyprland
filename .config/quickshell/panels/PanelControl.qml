@@ -148,9 +148,16 @@ import "../widgets/shared"
                                 { g: "\uf011", label: "ПИТАНИЕ", on: false,          danger: false, act: "power" }
                             ]
                             delegate: Item {
+                                id: stateRow
                                 required property var modelData
                                 width: parent.width
-                                height: 30
+                                height: 36
+                                Rectangle {
+                                    anchors.fill: parent
+                                    radius: Theme.radius
+                                    color: stateMouse.containsMouse ? Theme.hover : "transparent"
+                                    Behavior on color { ColorAnimation { duration: Theme.animFast } }
+                                }
                                 RowLayout {
                                     anchors.fill: parent
                                     spacing: Theme.space2
@@ -174,13 +181,17 @@ import "../widgets/shared"
                                     Item { Layout.fillWidth: true; implicitHeight: 1 }
                                     Text {
                                         Layout.alignment: Qt.AlignVCenter
-                                        text: modelData.act === "power" ? "\u203a"
-                                            : (modelData.on ? "ВКЛ" : "ВЫКЛ")
-                                        color: modelData.on ? (modelData.danger ? Theme.danger : Theme.accent)
-                                            : Theme.textFaint
+                                        visible: modelData.act === "power"
+                                        text: "\u203a"
+                                        color: stateMouse.containsMouse ? Theme.text : Theme.textFaint
                                         font.family: Theme.fontFamily
-                                        font.pixelSize: 10
-                                        font.letterSpacing: 1
+                                        font.pixelSize: 14
+                                    }
+                                    Toggle {
+                                        Layout.alignment: Qt.AlignVCenter
+                                        visible: modelData.act !== "power"
+                                        on: modelData.on
+                                        danger: modelData.danger
                                     }
                                 }
                                 MouseArea {
@@ -233,9 +244,9 @@ import "../widgets/shared"
                                     else if (modelData.act === "wall")
                                         host.openWallpapers()
                                     else if (modelData.act === "search")
-                                        host.openPanel("search")
+                                        BarState.openPanel("search")
                                     else if (modelData.act === "sys")
-                                        host.openPanel("sys")
+                                        BarState.openPanel("sys")
                                 }
                             }
                         }

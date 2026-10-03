@@ -24,7 +24,7 @@ PanelWindow {
 
     anchors { top: true; left: true; right: true }
     // окно выше бара — под выезжающую вниз панель (вариант 3)
-    implicitHeight: Theme.barH + 320
+    implicitHeight: Theme.barH + 360
     color: "transparent"
 
     WlrLayershell.layer: WlrLayer.Top
@@ -621,11 +621,17 @@ PanelWindow {
     // ─────────────── панель бара (вариант 3) ───────────────
     // Состояния (режим/пульс/холд) — в BarState; здесь только вид: морф,
     // размеры и геометрия. Всё реагирует на BarState.
+    // Морф бара — только для «пульта»: плашка сама становится панелью.
     property real morph: 0
     Behavior on morph { Anim { type: Anim.DefaultSpatial } }
+    // Раскрытие панели (все режимы): 0 — закрыто, 1 — открыто.
+    property real panelOpen: BarState.mode !== "" ? 1 : 0
+    Behavior on panelOpen { Anim { type: Anim.DefaultSpatial } }
     Connections {
         target: BarState
-        function onExpandedChanged() { root.morph = BarState.expanded ? 1 : 0 }
+        function onModeChanged() {
+            root.morph = (BarState.mode === "control") ? 1 : 0
+        }
     }
     // высота панели по режиму (анимируется при смене режима)
     function panelHeightFor(m) {
@@ -1748,17 +1754,19 @@ PanelWindow {
     Rectangle {
         id: panel
         anchors.horizontalCenter: parent.horizontalCenter
-        // контент раскрывается внутри плашки бара, из-под его строки
-        // выезжает из-под строки бара и в финале заполняет всю плашку
         anchors.top: bar.top
-        anchors.topMargin: (1 - root.morph) * Theme.barH
+        // «пульт» — внутри плашки; прочие режимы — карточкой под строкой бара
+        anchors.topMargin: BarState.mode === "control" ? 0 : (Theme.barH + Theme.space1)
         width: root.panelWidthFor(BarState.mode)
-        height: root.morph * root.panelTargetH
-        color: "transparent"
+        height: root.panelOpen * root.panelTargetH
+        color: BarState.mode === "control" ? "transparent" : root.pillBg
+        border.width: BarState.mode === "control" ? 0 : 1
+        border.color: Theme.border
+        radius: Theme.barRadius
         clip: true
-        visible: root.morph > 0.001
-        opacity: root.morph
-        scale: 0.97 + 0.03 * root.morph
+        visible: root.panelOpen > 0.001
+        opacity: root.panelOpen
+        scale: 0.97 + 0.03 * root.panelOpen
         transformOrigin: Item.Top
         Behavior on width { Anim { type: Anim.DefaultSpatial } }
 
