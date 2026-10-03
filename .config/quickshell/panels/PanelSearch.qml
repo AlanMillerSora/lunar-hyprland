@@ -57,7 +57,7 @@ Item {
             verticalAlignment: TextInput.AlignVCenter
             color: Theme.text
             selectionColor: Theme.accent
-            selectedTextColor: Theme.bg
+            selectedTextColor: Theme.onAccent
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSize(16)
             clip: true

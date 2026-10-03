@@ -36,7 +36,7 @@ import "../shared"
                         delegate: Item {
                             required property var modelData
                             width: 20
-                            height: 26
+                            height: Theme.barCellH
 
                             Image {
                                 id: trayImg

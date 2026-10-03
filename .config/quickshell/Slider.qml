@@ -117,7 +117,7 @@ Item {
                         enabled: !dragArea.pressed
 
                         NumberAnimation {
-                            duration: 200
+                            duration: Theme.animMed
                         }
                     }
 

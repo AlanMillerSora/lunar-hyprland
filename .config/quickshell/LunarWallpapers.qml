@@ -24,7 +24,7 @@ PanelWindow {
     // плавный вход/выход: окно живёт, пока идёт затухание (иначе резко мигает)
     property bool closing: false
     property real fade: 0
-    Behavior on fade { NumberAnimation { duration: 200; easing.type: Theme.easeOut } }
+    Behavior on fade { NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut } }
     // наведение выбирает карточку только после того, как мышь реально двинулась —
     // иначе при открытии курсор «наводится» на случайную карточку и выбор прыгает
     property bool hoverArmed: false
@@ -404,7 +404,7 @@ PanelWindow {
                         scale: delegateItem.scaleFactor
                             * (root.confirming && delegateItem.index === root.commitIndex ? 1.07 : 1)
                         transformOrigin: Item.Center
-                        Behavior on scale { NumberAnimation { duration: 170; easing.type: Theme.easeOut } }
+                        Behavior on scale { NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut } }
 
                         // тень — запечённый PNG, 9-слайс: один квад, без MultiEffect
                         BorderImage {

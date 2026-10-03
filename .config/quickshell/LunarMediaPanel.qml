@@ -158,7 +158,7 @@ Item {
                     color: mp.seekable ? Theme.accent : Theme.textDim
                     Behavior on width {
                         enabled: !seekArea.pressed
-                        NumberAnimation { duration: 200 }
+                        NumberAnimation { duration: Theme.animMed }
                     }
                 }
 

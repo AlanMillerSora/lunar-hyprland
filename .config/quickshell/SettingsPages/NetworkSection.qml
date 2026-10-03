@@ -326,7 +326,7 @@ Item {
         Item {
             id: header
             width: parent.width
-            height: 36
+            height: Theme.panelRowH
 
             Text {
                 id: networkTitle

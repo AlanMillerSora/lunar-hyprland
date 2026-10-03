@@ -12,7 +12,7 @@ Canvas {
     property real maxValue: 100
     property color lineColor: Theme.accent
 
-    height: 26
+    height: Theme.sparkH
     onValuesChanged: requestPaint()
     onWidthChanged: requestPaint()
     onHeightChanged: requestPaint()

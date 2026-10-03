@@ -817,7 +817,7 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         x: Theme.wallpaperLive ? parent.width - width - 3 : 3
                         color: Theme.wallpaperLive ? Theme.bgPanel : Theme.textDim
-                        Behavior on x { NumberAnimation { duration: 120 } }
+                        Behavior on x { NumberAnimation { duration: Theme.animFast } }
                     }
 
                     MouseArea {

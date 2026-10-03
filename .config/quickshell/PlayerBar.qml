@@ -308,7 +308,7 @@ Item {
                         color: PlayerCore.seekable ? Theme.accent : Theme.textDim
                         Behavior on width {
                             enabled: !progMouse.pressed
-                            NumberAnimation { duration: 200 }
+                            NumberAnimation { duration: Theme.animMed }
                         }
                     }
 

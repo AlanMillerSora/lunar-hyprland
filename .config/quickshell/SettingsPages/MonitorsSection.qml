@@ -638,7 +638,7 @@ Item {
                                 }
 
                                 onExited: {
-                                    parent.color = "#00000000"
+                                    parent.color = "transparent"
                                     parent.border.color = Theme.border
                                 }
 

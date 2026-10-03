@@ -18,7 +18,7 @@ Window {
     width: 1280
     height: 720
     visible: true
-    color: Theme.bg
+    color: Qt.rgba(Theme.bg.r, Theme.bg.g, Theme.bg.b, 1)
     title: "Lunar Eclipse — preview (1..9 — фазы, L — лёгкий)"
 
     property int phase: 5
@@ -76,9 +76,9 @@ Window {
                 width: 34
                 height: 30
                 radius: 4
-                color: win.phase === index + 1 ? Theme.text : Qt.rgba(1, 1, 1, 0.08)
+                color: win.phase === index + 1 ? Theme.text : Theme.hover
                 border.width: 1
-                border.color: win.phase === index + 1 ? Theme.text : Qt.rgba(1, 1, 1, 0.18)
+                border.color: win.phase === index + 1 ? Theme.text : Theme.borderAccent
                 Text {
                     anchors.centerIn: parent
                     text: index + 1
@@ -97,9 +97,9 @@ Window {
             width: 96
             height: 30
             radius: 4
-            color: win.live ? Qt.rgba(1, 1, 1, 0.08) : Theme.text
+            color: win.live ? Theme.hover : Theme.text
             border.width: 1
-            border.color: win.live ? Qt.rgba(1, 1, 1, 0.18) : Theme.text
+            border.color: win.live ? Theme.borderAccent : Theme.text
             Text {
                 anchors.centerIn: parent
                 text: win.live ? "живые" : "лёгкий"

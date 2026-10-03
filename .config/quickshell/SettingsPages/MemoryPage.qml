@@ -192,7 +192,7 @@ Item {
                         height: parent.height
                         radius: 5
                         color: page.memPct > 0.9 ? Theme.danger : Theme.accent
-                        Behavior on width { NumberAnimation { duration: 200 } }
+                        Behavior on width { NumberAnimation { duration: Theme.animMed } }
                     }
                 }
 
@@ -215,7 +215,7 @@ Item {
                             height: parent.height
                             radius: Theme.radius
                             color: page.memAllPct > 0.9 ? Theme.danger : Theme.accent2
-                            Behavior on width { NumberAnimation { duration: 200 } }
+                            Behavior on width { NumberAnimation { duration: Theme.animMed } }
                         }
                     }
                     Text {
@@ -246,7 +246,7 @@ Item {
                             height: parent.height
                             radius: Theme.radius
                             color: Theme.textDim
-                            Behavior on width { NumberAnimation { duration: 200 } }
+                            Behavior on width { NumberAnimation { duration: Theme.animMed } }
                         }
                     }
                     Text {

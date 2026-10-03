@@ -137,7 +137,7 @@ PanelWindow {
         }
 
         Behavior on x {
-            NumberAnimation { duration: 200; easing.type: Theme.easeOut }
+            NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut }
         }
 
         HoverHandler {
@@ -408,7 +408,7 @@ PanelWindow {
                                     height: parent.height
                                     radius: 2
                                     color: Theme.accent
-                                    Behavior on width { NumberAnimation { duration: 200 } }
+                                    Behavior on width { NumberAnimation { duration: Theme.animMed } }
                                 }
                             }
                         }

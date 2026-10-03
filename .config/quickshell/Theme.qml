@@ -56,6 +56,9 @@ QtObject {
     property color barDim: hexColor(palette.barDim, "#a6aeb9")
     property color barFaint: hexColor(palette.barFaint, "#7b838d")
     property color barPill: Qt.rgba(_barPillBase.r, _barPillBase.g, _barPillBase.b, 1.0 * interfaceOpacity)
+    // непрозрачный цвет фона — для текста поверх акцента (выделение и т.п.);
+    // Theme.bg полупрозрачен и на плашке выделения читался бы неровно
+    property color onAccent: _bgBase
 
     // ── токены «ритма» интерфейса (Hub и панели) ──
     property color hover: Qt.rgba(accent.r, accent.g, accent.b, 0.07)        // наведение: строки, карточки

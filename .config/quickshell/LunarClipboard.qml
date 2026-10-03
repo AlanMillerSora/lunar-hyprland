@@ -195,7 +195,7 @@ FloatingWindow {
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSmall
                     selectionColor: Theme.accent
-                    selectedTextColor: Theme.bg
+                    selectedTextColor: Theme.onAccent
                     clip: true
                     focus: root.showing
 

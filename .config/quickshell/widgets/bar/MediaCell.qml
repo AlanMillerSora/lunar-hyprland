@@ -48,13 +48,13 @@ Cell {
             Row {
                 width: parent.width
                 height: 12
-                spacing: 4
+                spacing: Theme.space1
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: host.playing ? "\uf04c" : "\uf04b"
                     color: host.playing ? Theme.accent : Theme.barFaint
                     font.family: Theme.iconFont
-                    font.pixelSize: 10
+                    font.pixelSize: Theme.fontSize(10)
                 }
                 Text {
                     width: parent.width - 16
@@ -63,7 +63,7 @@ Cell {
                     text: host.track
                     color: Theme.barText
                     font.family: Theme.fontFamily
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.fontTiny
                 }
             }
 
