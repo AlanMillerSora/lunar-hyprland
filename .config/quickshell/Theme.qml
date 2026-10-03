@@ -63,6 +63,10 @@ QtObject {
     property color active: Qt.rgba(accent.r, accent.g, accent.b, 0.14)       // выбранное/включённое
     property color fill: Qt.rgba(text.r, text.g, text.b, 0.04)               // покой (фон карточек/строк)
 
+    // ── карточки панелей: подложка чуть контрастнее строк + рамка ──
+    property color cardBg: Qt.rgba(text.r, text.g, text.b, 0.055)
+    property int cardRadius: radiusM
+
     // палитру переписывает генератор; watchChanges подхватит на лету
     property FileView paletteFile: FileView {
         path: Quickshell.env("HOME") + "/.cache/lunar/palette.json"
