@@ -106,23 +106,34 @@ while IFS= read -r l; do
   esac
 done < /proc/net/dev
 
-# ── GPU: только в режиме телеметрии ──
-# nvidia-smi дорогой (несколько сотен мс) — не дёргаю из бара каждые 3 с;
-# панель поднимает cache/lunar-tele, пока открыт её режим.
+# ── GPU: только при маркере телеметрии, с кэшем на 10 с ──
+# nvidia-smi дорогой (сотни мс), а бар опрашивает статус каждые 3 с.
+# Систем-остров показывает GPU всегда, поэтому читаю замер не чаще раза
+# в 10 с: свежий беру из кэша, устаревший обновляю (nvidia-smi или sysfs).
 gpu=""; gput=""
 if [ -f "$HOME/.cache/lunar/tele" ]; then
-  if command -v nvidia-smi >/dev/null 2>&1; then
-    read -r gpu gput < <(nvidia-smi --query-gpu=utilization.gpu,temperature.gpu \
-      --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ' ' | tr ',' ' ')
-  else
-    for f in /sys/class/drm/card*/device/gpu_busy_percent; do
-      if [ -r "$f" ]; then gpu="$(<"$f")"; break; fi
-    done
-    for h in /sys/class/hwmon/hwmon*; do
-      if [ -r "$h/name" ] && [ "$(<"$h/name")" = "amdgpu" ] && [ -r "$h/temp1_input" ]; then
-        gput=$(( $(<"$h/temp1_input") / 1000 )); break
-      fi
-    done
+  gcache="$HOME/.cache/lunar/gpu-last"
+  now_g="$(date +%s)"
+  if [ -r "$gcache" ]; then
+    read -r gts gpu gput < "$gcache" 2>/dev/null
+  fi
+  case "${gts:-}" in ''|*[!0-9]*) gts=0 ;; esac
+  if [ "$gts" -eq 0 ] || [ $((now_g - gts)) -ge 10 ]; then
+    if command -v nvidia-smi >/dev/null 2>&1; then
+      read -r gpu gput < <(nvidia-smi --query-gpu=utilization.gpu,temperature.gpu \
+        --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ' ' | tr ',' ' ')
+    else
+      gpu=""; gput=""
+      for f in /sys/class/drm/card*/device/gpu_busy_percent; do
+        if [ -r "$f" ]; then gpu="$(<"$f")"; break; fi
+      done
+      for h in /sys/class/hwmon/hwmon*; do
+        if [ -r "$h/name" ] && [ "$(<"$h/name")" = "amdgpu" ] && [ -r "$h/temp1_input" ]; then
+          gput=$(( $(<"$h/temp1_input") / 1000 )); break
+        fi
+      done
+    fi
+    printf '%s %s %s\n' "$now_g" "${gpu:-}" "${gput:-}" > "$gcache" 2>/dev/null
   fi
 fi
 rec=0

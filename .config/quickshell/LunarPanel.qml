@@ -13,7 +13,7 @@ import "widgets/shared"
 // ────────────────────────────────────────────────────────────────
 //  Lunar top bar — монохромный HUD
 //    слева  : LUNAR + фазы столов (отдельная плашка)
-//    справа : один компактный бар — PERF · раскладка · часы/медиа/пульт · статус
+//    справа : один компактный бар — PERF · раскладка · систем-остров · часы/медиа/пульт · статус
 //  Панель во всю ширину, но ввод ловят только сами плашки (mask) —
 //  зазоры пропускают клики (важно для fullscreen). exclusiveZone
 //  держит окна вне полосы бара. Морф — по мотивам ArchEclipse.
@@ -288,7 +288,10 @@ PanelWindow {
         target: Theme
         function onTrayVisibleChanged() { root.refreshTray() }
     }
-    Component.onCompleted: { root.refreshTray(); root.setTeleMark(false) }
+    // маркер телеметрии держу всё время, пока жив бар: систем-остров
+    // показывает CPU/RAM/GPU, а eclipse-status.sh кэширует GPU-замер на
+    // 10 с — nvidia-smi в горячий путь (опрос раз в 3 с) не попадает
+    Component.onCompleted: { root.refreshTray(); root.setTeleMark(true) }
 
     Process { id: trayPanelProc; running: false }
     function openTrayPanel() {
@@ -374,6 +377,9 @@ PanelWindow {
     property int teleGpuTemp: -1
     property real teleRx: 0      // скорость, КБ/с (дельта счётчиков)
     property real teleTx: 0
+    // «горячо» для систем-острова: показатель у 90% подсвечиваю опасным
+    readonly property bool teleHot: root.teleCpu >= 90 || root.teleRam >= 90
+        || (root.teleGpu >= 90)
     property real rxRaw: -1      // сырые суммарные счётчики /proc/net/dev
     property real txRaw: -1
     property real prevRx: -1     // предыдущий сырой счётчик /proc/net/dev
@@ -635,7 +641,6 @@ PanelWindow {
             Qt.callLater(function() { if (searchInput) searchInput.forceActiveFocus() })
         if (panelMode !== "" && panelMode !== "search")
             statusProc.running = true
-        root.setTeleMark(panelMode === "sys")
         if (panelMode !== "search") {
             searchQuery = ""
             searchResults = []
@@ -646,7 +651,8 @@ PanelWindow {
     Process { id: powerProc; running: false }
     Process { id: hubToggleProc; running: false }
     Process { id: wallpapersProc; running: false }
-    // режим sys просит eclipse-status.sh мерить GPU (nvidia-smi) — маркер-файл
+    // маркер ~/.cache/lunar/tele разрешает eclipse-status.sh читать GPU
+    // (кэш на 10 с); держу его, пока жив бар, и снимаю при завершении
     Process { id: teleMarkProc; running: false }
     function setTeleMark(on) {
         teleMarkProc.command = ["bash", "-c",
@@ -986,6 +992,55 @@ PanelWindow {
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(13)
                     font.bold: true
+                }
+            }
+
+            // ── систем-остров: мини-полосы CPU · RAM · GPU ──
+            // Источник — eclipse-status.sh (опрос раз в 3 с, GPU из кэша
+            // на 10 с). Клик открывает панель «Телеметрия».
+            Cell {
+                id: sysCell
+                anchors.verticalCenter: parent.verticalCenter
+                interactive: true
+                accent: root.teleHot ? Theme.danger : Theme.barDim
+                onClicked: root.togglePanel("sys")
+                Row {
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: Theme.space3
+                    Repeater {
+                        model: [
+                            { label: "CPU", v: root.teleCpu, avail: true },
+                            { label: "RAM", v: root.teleRam, avail: true },
+                            { label: "GPU", v: root.teleGpu, avail: root.teleGpu >= 0 }
+                        ]
+                        delegate: Row {
+                            required property var modelData
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 5
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: modelData.label
+                                color: Theme.barFaint
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 10
+                                font.letterSpacing: 1
+                            }
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: (modelData.avail && modelData.v >= 0) ? (modelData.v + "%") : "--"
+                                color: (modelData.avail && modelData.v >= 90) ? Theme.danger : Theme.barText
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 11
+                            }
+                            MiniBar {
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: 26
+                                height: 4
+                                barColor: modelData.v >= 90 ? Theme.danger : Theme.accent
+                                value: modelData.avail ? modelData.v : -1
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -2036,19 +2091,10 @@ PanelWindow {
                         font.pixelSize: Theme.fontSize(13)
                         font.bold: true
                     }
-                    Rectangle {
+                    MiniBar {
                         anchors.verticalCenter: parent.verticalCenter
                         width: parent.width - 44 - 46 - 70 - parent.spacing * 3
-                        height: 5
-                        radius: 2.5
-                        color: Theme.trackBg
-                        Rectangle {
-                            width: parent.width * Math.max(0, Math.min(1, (modelData.v < 0 ? 0 : modelData.v) / 100))
-                            height: parent.height
-                            radius: parent.radius
-                            color: Theme.accent
-                            Behavior on width { NumberAnimation { duration: 250; easing.type: Theme.easeOut } }
-                        }
+                        value: modelData.v
                     }
                     Text {
                         width: 70
