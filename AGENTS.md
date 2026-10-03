@@ -160,11 +160,12 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 │   │       eclipse-calendar.py, eclipse-cheatsheet.py, eclipse-askpass.py, eclipse-wifi-guard.py
 │   ├── quickshell/
 │   │   ├── shell.qml грузит: LunarWallpaper, LunarPanel, LunarHub, LunarWallpapers,
-│   │   │   LunarSidebar, LunarSidebarRight, LunarOsd, LunarVolume, LunarMedia, LunarTray,
-│   │   │   LunarClipboard, LunarPower, LunarAgent, LunarOverview, LunarPolkit
+│   │   │   LunarClipboard, LunarPower, LunarAgent, LunarOverview, LunarPolkit,
+│   │   │   LunarPlayer, LunarSidebar, LunarSidebarRight, LunarOsd, LunarTray
 │   │   ├── Lunar*.qml, LunarWallpaperScene.qml, preview.qml, Slider.qml, Theme.qml,
 │   │   │   AppModel.qml, HudCorners.qml, PerspectivePanel.qml
-│   │   ├── SettingsPages/ (8 страниц), assets/ (+moon-phases/, crop-frame.png), pfp3.png,
+│   │   ├── widgets/shared/ (ActionButton, Cell, HoverBg, MiniBar — общий слой),
+│   │   │   SettingsPages/ (страницы и секции), assets/ (+moon-phases/, crop-frame.png), pfp3.png,
 │   │   │   cava-lunar.conf, cava-lunar-wide.conf
 │   ├── avatars/avatar.png       ← единый аватар (рис + экран входа)
 │   ├── lunar/{home/firefox-home.html, lunar.bash, gamemode-pause.conf}
