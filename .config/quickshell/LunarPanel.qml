@@ -655,7 +655,7 @@ PanelWindow {
         target: root
         property: "panelContentOpacity"
         to: 1
-        duration: 180
+        duration: Theme.animMed
         easing.type: Theme.easeOut
     }
     // игра — синхронизирую в BarState, чтобы пульсы не всплывали

@@ -610,7 +610,7 @@ Item {
                             width: (parent.width - parent.spacing * 3) / 4
                             height: Theme.rowH
                             radius: Theme.radius
-                            color: "#00000000"
+                            color: "transparent"
                             border.width: 1
                             border.color: Theme.border
 

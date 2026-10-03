@@ -34,52 +34,58 @@ Cell {
         function onTrackChanged() { if (host.pulsePrimed) mediaInline.trackPulse.restart() }
     }
 
-    Column {
-        id: mediaCol
-        anchors.verticalCenter: parent.verticalCenter
+    // обёртка-Item: Column нельзя вешать на якоря прямо в Row-позиционере
+    Item {
         width: 168
-        spacing: 1
+        height: Theme.barCellH
 
-        Row {
+        Column {
+            id: mediaCol
+            anchors.centerIn: parent
             width: parent.width
-            height: 12
-            spacing: Theme.space1
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: host.playing ? "\uf04c" : "\uf04b"
-                color: host.playing ? Theme.accent : Theme.barFaint
-                font.family: Theme.iconFont
-                font.pixelSize: Theme.fontSize(10)
-            }
-            Text {
-                width: parent.width - 16
-                anchors.verticalCenter: parent.verticalCenter
-                elide: Text.ElideRight
-                text: host.track
-                color: Theme.barText
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontTiny
-            }
-        }
+            spacing: 1
 
-        // нижний ряд — мини-спектр cava
-        Row {
-            width: parent.width
-            height: 9
-            spacing: 2
-            Repeater {
-                model: 14
-                delegate: Item {
-                    required property int index
-                    width: 2
-                    height: 9
-                    Rectangle {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.bottom: parent.bottom
-                        width: parent.width
-                        height: 2 + (host.barValues[index] || 0) * 7
-                        radius: 1
-                        color: Theme.alpha(Theme.accent, 0.35 + 0.65 * (host.barValues[index] || 0))
+            Row {
+                width: parent.width
+                height: 12
+                spacing: 4
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: host.playing ? "\uf04c" : "\uf04b"
+                    color: host.playing ? Theme.accent : Theme.barFaint
+                    font.family: Theme.iconFont
+                    font.pixelSize: 10
+                }
+                Text {
+                    width: parent.width - 16
+                    anchors.verticalCenter: parent.verticalCenter
+                    elide: Text.ElideRight
+                    text: host.track
+                    color: Theme.barText
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 11
+                }
+            }
+
+            // нижний ряд — мини-спектр cava
+            Row {
+                width: parent.width
+                height: 9
+                spacing: 2
+                Repeater {
+                    model: 14
+                    delegate: Item {
+                        required property int index
+                        width: 2
+                        height: 9
+                        Rectangle {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.bottom: parent.bottom
+                            width: parent.width
+                            height: 2 + (host.barValues[index] || 0) * 7
+                            radius: 1
+                            color: Theme.alpha(Theme.accent, 0.35 + 0.65 * (host.barValues[index] || 0))
+                        }
                     }
                 }
             }

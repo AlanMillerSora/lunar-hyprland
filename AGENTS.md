@@ -215,7 +215,7 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
   `fontMicro/fontTiny/fontSmall/fontBody/fontPanelTitle/fontTitle/fontClock` 9/11/12/14/16/22/16;
   панель `barH/barMargin/barPad/barRadius` 32/8/12/8, ячейка бара `barCellH` 26;
   `hoverGrow` 1.25 (ховер-рост групп панели); `hover/hoverStrong/active/fill`; `clamp()`.
-- HUD-заголовки секций: 12px, letterSpacing 2, bold. Заголовки страниц Hub: `fontTitle`.
+- HUD-заголовки секций: 11px (`Theme.fontTiny`, `SectionLabel`), letterSpacing 2, bold. Заголовки страниц Hub: `fontTitle`.
 - Ховер: `scale` (визуальный, раскладку не трогает) + фоновая подсветка.
 - Плавные заполнения: анимация 200 мс (`Behavior on width`) и заполнение с нуля
   (старт 0 → `Timer{interval:60}` → целевое; `enabled: !pressed`).

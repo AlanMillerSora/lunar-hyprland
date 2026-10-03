@@ -18,7 +18,7 @@ Window {
     width: 1280
     height: 720
     visible: true
-    color: "#000000"
+    color: Theme.bg
     title: "Lunar Eclipse — preview (1..9 — фазы, L — лёгкий)"
 
     property int phase: 5
@@ -76,13 +76,13 @@ Window {
                 width: 34
                 height: 30
                 radius: 4
-                color: win.phase === index + 1 ? "#ffffff" : Qt.rgba(1, 1, 1, 0.08)
+                color: win.phase === index + 1 ? Theme.text : Qt.rgba(1, 1, 1, 0.08)
                 border.width: 1
-                border.color: win.phase === index + 1 ? "#ffffff" : Qt.rgba(1, 1, 1, 0.18)
+                border.color: win.phase === index + 1 ? Theme.text : Qt.rgba(1, 1, 1, 0.18)
                 Text {
                     anchors.centerIn: parent
                     text: index + 1
-                    color: win.phase === index + 1 ? "#000000" : "#888888"
+                    color: win.phase === index + 1 ? Theme.bg : Theme.textDim
                     font.pixelSize: Theme.fontSize(13)
                 }
                 MouseArea {
@@ -97,13 +97,13 @@ Window {
             width: 96
             height: 30
             radius: 4
-            color: win.live ? Qt.rgba(1, 1, 1, 0.08) : "#ffffff"
+            color: win.live ? Qt.rgba(1, 1, 1, 0.08) : Theme.text
             border.width: 1
-            border.color: win.live ? Qt.rgba(1, 1, 1, 0.18) : "#ffffff"
+            border.color: win.live ? Qt.rgba(1, 1, 1, 0.18) : Theme.text
             Text {
                 anchors.centerIn: parent
                 text: win.live ? "живые" : "лёгкий"
-                color: win.live ? "#888888" : "#000000"
+                color: win.live ? Theme.textDim : Theme.bg
                 font.pixelSize: Theme.fontTiny
             }
             MouseArea {

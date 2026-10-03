@@ -10,7 +10,8 @@ import QtQuick.Layouts
 //  системы (активное окно, стол, Game Mode). Вопрос в историю идёт
 //  без справки. Агент может ПРЕДЛОЖИТЬ действие блоком lunar-action —
 //  оверлей выполняет его только по кнопке, без шелла (argv) и лишь из
-//  whitelist программ: hyprctl / qs ipc call / скрипты eclipse-*.sh.
+//  whitelist программ: hyprctl / qs ipc call / скрипты eclipse-*.sh (только
+//  известные подкоманды — карта lunarScripts).
 //  Обычное окно (FloatingWindow), скругление/блюр — Hyprland. С Hub взаимоисключающий.
 // ════════════════════════════════════════════════════════════════
 FloatingWindow {

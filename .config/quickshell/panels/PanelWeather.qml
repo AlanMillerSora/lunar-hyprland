@@ -83,7 +83,7 @@ import "../widgets/shared"
                         contentSpacing: 2
                         SectionLabel {
                             text: modelData.label
-                            font.pixelSize: Theme.fontMicro
+                            size: Theme.fontMicro
                         }
                         Text {
                             text: Weather.ok ? modelData.v : "—"

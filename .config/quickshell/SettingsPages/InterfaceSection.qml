@@ -555,7 +555,7 @@ Item {
                         ? "ПРЕВЬЮ · фаза " + shownPhase
                         : "ПРЕВЬЮ · фаза " + shownPhase + " (текущий стол)"
                     textColor: Theme.textFaint
-                    size: 10
+                    size: Theme.fontSize(10)
                     bold: false
                 }
 
@@ -808,7 +808,7 @@ Item {
                     color: Theme.wallpaperLive ? Theme.accent : Theme.trackBg
                     border.width: 1
                     border.color: Theme.wallpaperLive ? Theme.accent : Theme.border
-                    Behavior on color { ColorAnimation { duration: 120 } }
+                    Behavior on color { ColorAnimation { duration: Theme.animFast } }
 
                     Rectangle {
                         width: 18

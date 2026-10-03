@@ -143,7 +143,7 @@ import "../widgets/shared"
                                 id: stateRow
                                 required property var modelData
                                 width: parent.width
-                                height: 36
+                                height: Theme.panelRowH
                                 Rectangle {
                                     anchors.fill: parent
                                     radius: Theme.radius
@@ -227,7 +227,7 @@ import "../widgets/shared"
                             delegate: ActionTile {
                                 required property var modelData
                                 width: (parent.width - parent.columnSpacing) / 2
-                                height: 48
+                                height: Theme.rowHComfy
                                 glyph: modelData.g
                                 label: modelData.label
                                 tip: modelData.label

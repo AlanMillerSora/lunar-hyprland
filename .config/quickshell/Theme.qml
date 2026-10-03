@@ -251,6 +251,10 @@ QtObject {
     property int barRadius: 8
     // высота содержимого ячейки бара (иконки/текст внутри плашки)
     property int barCellH: 26
+    // высоты строк панелей: поле поиска и строка «пульта»
+    property int panelFieldH: 46
+    property int panelRowH: 36
+    property int sparkH: 26
 
     // панель-остров (этап 2): шапка, строки, ширины режимов
     property int panelHeaderH: 30

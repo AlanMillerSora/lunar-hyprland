@@ -257,7 +257,7 @@ PanelWindow {
         color: "black"
         opacity: root.fade * (root.confirming ? 0.62 : 0.42)
         visible: opacity > 0
-        Behavior on opacity { NumberAnimation { duration: 180; easing.type: Theme.easeOut } }
+        Behavior on opacity { NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut } }
         MouseArea {
             anchors.fill: parent
             onClicked: root.showing = false

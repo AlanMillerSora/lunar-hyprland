@@ -57,7 +57,7 @@ import "../widgets/shared"
                         }
                         Sparkline {
                             width: parent.width
-                            height: 26
+                            height: Theme.sparkH
                             values: hist
                             lineColor: v >= 90 ? Theme.danger : Theme.accent
                         }

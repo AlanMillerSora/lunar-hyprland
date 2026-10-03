@@ -32,7 +32,7 @@ Item {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        height: 46
+        height: Theme.panelFieldH
         radius: Theme.radiusM
         color: Theme.cardBg
         border.width: 1
@@ -177,8 +177,8 @@ Item {
                     // иконка: картинка для приложений, глиф для прочего
                     Item {
                         Layout.alignment: Qt.AlignVCenter
-                        implicitWidth: 30
-                        implicitHeight: 30
+                        implicitWidth: Theme.iconXL
+                        implicitHeight: Theme.iconXL
                         Text {
                             anchors.centerIn: parent
                             visible: modelData.image === undefined || modelData.image === ""

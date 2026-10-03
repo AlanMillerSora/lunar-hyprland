@@ -56,7 +56,7 @@ PanelWindow {
 
     // плавное заполнение делений при показе и при изменении (как в «Памяти»)
     property real shownFrac: 0
-    Behavior on shownFrac { NumberAnimation { duration: 250; easing.type: Theme.easeOut } }
+    Behavior on shownFrac { NumberAnimation { duration: Theme.anim.normal; easing.type: Theme.easeOut } }
     onShowingChanged: shownFrac = showing ? frac : 0
     onFracChanged: if (showing) shownFrac = frac
     readonly property string label: muted ? "mute" : (volume < 0 ? "--" : volume + "%")
@@ -88,8 +88,8 @@ PanelWindow {
         opacity: root.showing ? 1 : 0
         scale: root.showing ? 1 : 0.95
 
-        Behavior on opacity { NumberAnimation { duration: 120 } }
-        Behavior on scale { NumberAnimation { duration: 120 } }
+        Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
+        Behavior on scale { NumberAnimation { duration: Theme.animFast } }
 
         HudCorners { color: Theme.accent; size: 16; thickness: 1; margin: Theme.space3 }
 
@@ -136,7 +136,7 @@ PanelWindow {
                         color: root.muted ? Theme.alpha(Theme.textDim, 0.45)
                              : on ? Theme.accent
                              : Theme.alpha(Theme.text, 0.10)
-                        Behavior on color { ColorAnimation { duration: 100 } }
+                        Behavior on color { ColorAnimation { duration: Theme.animFast } }
                     }
                 }
             }
