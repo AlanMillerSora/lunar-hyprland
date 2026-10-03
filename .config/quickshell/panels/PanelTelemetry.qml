@@ -6,7 +6,7 @@ import "../widgets/shared"
         Column {
             property var host
             id: sysBody
-            visible: host.panelMode === "sys"
+            visible: BarState.mode === "sys"
             opacity: host.panelContentOpacity
             anchors.top: parent.top
             anchors.topMargin: Theme.panelHeaderH + Theme.space2

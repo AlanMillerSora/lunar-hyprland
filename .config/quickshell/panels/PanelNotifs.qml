@@ -4,7 +4,7 @@ import ".."
 
         Column {
             property var host
-            visible: host.panelMode === "notifs"
+            visible: BarState.mode === "notifs"
             opacity: host.panelContentOpacity
             anchors.fill: parent
             anchors.margins: Theme.barPad

@@ -5,7 +5,7 @@ import ".."
         Column {
             property var host
     function focusInput() { searchInput.forceActiveFocus() }
-            visible: host.panelMode === "search"
+            visible: BarState.mode === "search"
             opacity: host.panelContentOpacity
             anchors.fill: parent
             anchors.margins: Theme.barPad

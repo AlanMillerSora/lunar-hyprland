@@ -6,7 +6,7 @@ import "../widgets/shared"
         Item {
             property var host
             id: ctlBody
-            visible: host.panelMode === "control"
+            visible: BarState.mode === "control"
             opacity: host.panelContentOpacity
             anchors.top: parent.top
             anchors.topMargin: Theme.panelHeaderH

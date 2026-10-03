@@ -30,7 +30,7 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.namespace: "lunar-panel"
     // фокус нужен только пока открыт поиск (ввод)
-    WlrLayershell.keyboardFocus: root.panelMode === "search"
+    WlrLayershell.keyboardFocus: BarState.mode === "search"
         ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     // окна не заезжают только под полосу бара
     WlrLayershell.exclusiveZone: Theme.barH
@@ -44,7 +44,7 @@ PanelWindow {
     // закрывает панель, а не проваливается сквозь окно. В покое зазоры
     // по-прежнему пропускают клики (важно для fullscreen).
     mask: Region {
-        Region { item: root.expanded ? clickShield : null }
+        Region { item: BarState.expanded ? clickShield : null }
         Region { item: bar }
         Region { item: root.recording ? recPill : null }
     }
@@ -53,10 +53,10 @@ PanelWindow {
     Item {
         id: clickShield
         anchors.fill: parent
-        visible: root.expanded
+        visible: BarState.expanded
         MouseArea {
             anchors.fill: parent
-            onClicked: root.closePanel()
+            onClicked: BarState.closePanel()
         }
     }
 
@@ -346,7 +346,7 @@ PanelWindow {
     }
 
     // Значок звука в баре открывает панель-пульт (там инлайн-громкость и мик).
-    function openVolumePanel() { root.togglePanel("control") }
+    function openVolumePanel() { BarState.togglePanel("control") }
 
     // ─────────── системный трей ───────────
     // сколько значков показываем в панели, остальные — в списке (Theme.trayVisible)
@@ -607,15 +607,14 @@ PanelWindow {
     }
 
     // ─────────────── панель бара (вариант 3) ───────────────
-    // Бар в покое — одна строка; по клику вниз выезжает панель одного из
-    // режимов: пульт · медиа · поиск · уведомления. Контент разворачивается
-    // (clip+opacity); повторный клик, Esc или уход курсора — свернуть.
-    property string panelMode: ""   // "" | control | media | search | notifs
-    readonly property bool expanded: panelMode !== ""
-    // морф бар↔панель: 0 — бар, 1 — панель (кроссфейд + раскрытие вниз)
+    // Состояния (режим/пульс/холд) — в BarState; здесь только вид: морф,
+    // размеры и геометрия. Всё реагирует на BarState.
     property real morph: 0
     Behavior on morph { Anim { type: Anim.DefaultSpatial } }
-    onExpandedChanged: root.morph = root.expanded ? 1 : 0
+    Connections {
+        target: BarState
+        function onExpandedChanged() { root.morph = BarState.expanded ? 1 : 0 }
+    }
     // высота панели по режиму (анимируется при смене режима)
     function panelHeightFor(m) {
         if (m === "control") return Theme.panelHeaderH + ctlBody.implicitHeight + Theme.space4
@@ -626,7 +625,7 @@ PanelWindow {
         if (m === "weather") return 30 + wxBody.implicitHeight + Theme.space3
         return Theme.barH
     }
-    property real panelTargetH: root.panelHeightFor(panelMode)
+    property real panelTargetH: root.panelHeightFor(BarState.mode)
     Behavior on panelTargetH { Anim { type: Anim.DefaultSpatial } }
 
     // ширина панели по режиму: пульт/поиск/уведы — фикс, медиа — по содержимому
@@ -636,16 +635,16 @@ PanelWindow {
         if (m === "notifs") return Theme.panelWNotifs
         return Theme.panelWSearch
     }
-    readonly property bool panelHasHeader: panelMode === "control"
-        || panelMode === "search" || panelMode === "notifs" || panelMode === "sys"
-        || panelMode === "weather"
+    readonly property bool panelHasHeader: BarState.mode === "control"
+        || BarState.mode === "search" || BarState.mode === "notifs" || BarState.mode === "sys"
+        || BarState.mode === "weather"
     readonly property string panelTitle: {
-        if (panelMode === "control") return "ПУЛЬТ"
-        if (panelMode === "media") return "МЕДИА"
-        if (panelMode === "search") return "ПОИСК"
-        if (panelMode === "notifs") return "УВЕДОМЛЕНИЯ"
-        if (panelMode === "sys") return "ТЕЛЕМЕТРИЯ"
-        if (panelMode === "weather") return "ПОГОДА"
+        if (BarState.mode === "control") return "ПУЛЬТ"
+        if (BarState.mode === "media") return "МЕДИА"
+        if (BarState.mode === "search") return "ПОИСК"
+        if (BarState.mode === "notifs") return "УВЕДОМЛЕНИЯ"
+        if (BarState.mode === "sys") return "ТЕЛЕМЕТРИЯ"
+        if (BarState.mode === "weather") return "ПОГОДА"
         return ""
     }
     // появление контента режима (морфинг)
@@ -658,72 +657,11 @@ PanelWindow {
         duration: 180
         easing.type: Theme.easeOut
     }
-    property bool panelHovered: false
-    property bool barHovered: false
-    // приоритеты острова: кто открыл (ручной клик важнее пульса) и сколько
-    // держать авто-открытый пульсовый остров
-    property bool panelIsPulse: false
-    property int panelHoldMs: 0
-    // пока курсор на баре или панели — остров «пришпилен», таймер не закрывает
-    readonly property bool panelPinned: root.barHovered || root.panelHovered
-
-    Timer {
-        id: panelHoldTimer
-        repeat: false
-        onTriggered: if (!root.panelPinned) root.deactivate()
-    }
-
-    // Пульсы событий (звук/трек/уведомления) открывают нужный остров сами.
-    // Ручной остров они не перебивают и в Game Mode не всплывают; holdMs>0 —
-    // авто-закрытие (пока курсор не на баре/панели — hover-pin).
-    function activate(name, holdMs) {
-        if (name === "") { root.deactivate(); return }
-        if ((holdMs || 0) > 0 && root.gameMode)
-            return
-        // тот же остров уже открыт: пульсовый продлеваю, ручной — не трогаю
-        if (root.panelMode === name) {
-            if (root.panelIsPulse) {
-                root.panelHoldMs = holdMs || 0
-                root.restartHold()
-            }
-            return
-        }
-        // другой остров открыт вручную — клик пользователя важнее пульса
-        if (root.expanded && !root.panelIsPulse)
-            return
-        root.panelIsPulse = true
-        root.panelHoldMs = holdMs || 0
-        root.panelMode = name
-        // первый показ пульсового острова тоже должен встать на таймер,
-        // иначе при курсоре вне бара/панели (onPanelPinnedChanged не сработает)
-        // остров останется висеть
-        root.restartHold()
-    }
-    function restartHold() {
-        panelHoldTimer.stop()
-        if (root.panelHoldMs > 0 && !root.panelPinned) {
-            panelHoldTimer.interval = root.panelHoldMs
-            panelHoldTimer.restart()
-        }
-    }
-    function deactivate() {
-        panelHoldTimer.stop()
-        root.panelHoldMs = 0
-        root.panelIsPulse = false
-        root.panelMode = ""
-    }
-    // ручное открытие — высокий приоритет, без авто-закрытия
-    function openPanel(name) { root.panelHoldMs = 0; root.panelIsPulse = false; root.panelMode = name }
-    function closePanel() { root.deactivate() }
-    function togglePanel(name) {
-        if (root.panelMode === name) { root.deactivate(); return }
-        root.openPanel(name)
-    }
-    onPanelPinnedChanged: {
-        if (root.panelPinned)
-            panelHoldTimer.stop()
-        else if (root.panelHoldMs > 0)
-            root.restartHold()
+    // игра — синхронизирую в BarState, чтобы пульсы не всплывали
+    Binding {
+        target: BarState
+        property: "gameMode"
+        value: root.gameMode
     }
 
     // панель закрывается кликом по её фону, Esc (поиск) или повторным режимом
@@ -732,13 +670,13 @@ PanelWindow {
     IpcHandler {
         target: "bar"
         function volume() { root.openVolumePanel() }
-        function control() { root.togglePanel("control") }
-        function media() { root.togglePanel("media") }
-        function search() { root.togglePanel("search") }
-        function notifs() { root.togglePanel("notifs") }
-        function sys() { root.togglePanel("sys") }
-        function weather() { root.togglePanel("weather") }
-        function reset() { root.closePanel() }
+        function control() { BarState.togglePanel("control") }
+        function media() { BarState.togglePanel("media") }
+        function search() { BarState.togglePanel("search") }
+        function notifs() { BarState.togglePanel("notifs") }
+        function sys() { BarState.togglePanel("sys") }
+        function weather() { BarState.togglePanel("weather") }
+        function reset() { BarState.closePanel() }
     }
 
     // ── поиск в панели (общий SearchModel) ──
@@ -765,7 +703,7 @@ PanelWindow {
     function runSearch() {
         var r = root.searchResults[root.searchIndex]
         SearchModel.activate(r)
-        root.closePanel()
+        BarState.closePanel()
         root.searchQuery = ""
         root.searchResults = []
         root.searchIndex = 0
@@ -773,20 +711,25 @@ PanelWindow {
 
     // при открытии режима: уведы — обновить, поиск — фокус на поле,
     // прочие — свежий статус (телеметрия в sys)
-    onPanelModeChanged: {
-        root.panelContentOpacity = 0
-        panelFade.restart()
-        if (panelMode === "notifs")
-            NotifModel.load()
-        else if (panelMode === "search")
-            Qt.callLater(function() { if (searchPanel) searchPanel.focusInput() })
-        if (panelMode !== "" && panelMode !== "search")
-            statusProc.running = true
-        // «пульт» содержит свой ползунок громкости — OSD при нём не дублирую
-        Theme.barControlOpen = (panelMode === "control")
-        if (panelMode !== "search") {
-            searchQuery = ""
-            searchResults = []
+    // при открытии режима: уведы — обновить, поиск — фокус на поле,
+    // прочие — свежий статус (телеметрия в sys)
+    Connections {
+        target: BarState
+        function onModeChanged() {
+            root.panelContentOpacity = 0
+            panelFade.restart()
+            if (BarState.mode === "notifs")
+                NotifModel.load()
+            else if (BarState.mode === "search")
+                Qt.callLater(function() { if (searchPanel) searchPanel.focusInput() })
+            if (BarState.mode !== "" && BarState.mode !== "search")
+                statusProc.running = true
+            // «пульт» содержит свой ползунок громкости — OSD при нём не дублирую
+            Theme.barControlOpen = (BarState.mode === "control")
+            if (BarState.mode !== "search") {
+                searchQuery = ""
+                searchResults = []
+            }
         }
     }
 
@@ -842,7 +785,7 @@ PanelWindow {
         // экрана; в режиме — плашка морфит к размеру панели (ширина/высота/
         // позиция), а строка бара растворяется. Часы держу по центру экрана.
         readonly property real collapsedW: (rightBar.x + rightBar.width) - leftBar.x
-        readonly property real expandedW: root.panelWidthFor(root.panelMode) + 2 * Theme.barPad
+        readonly property real expandedW: root.panelWidthFor(BarState.mode) + 2 * Theme.barPad
         width: collapsedW + (expandedW - collapsedW) * root.morph
         x: leftBar.x + ((parent.width - width) / 2 - leftBar.x) * root.morph
         anchors.top: parent.top
@@ -854,7 +797,7 @@ PanelWindow {
         border.color: Theme.border
         clip: true
 
-        HoverHandler { onHoveredChanged: root.barHovered = hovered }
+        HoverHandler { onHoveredChanged: BarState.barHovered = hovered }
 
         // зерно: один тайл на весь бар, маска по скруглению
         Image {
@@ -897,7 +840,7 @@ PanelWindow {
         clip: true
         // строка бара растворяется до начала поджатия плашки
         opacity: Math.max(0, 1 - root.morph * 8)
-        enabled: !root.expanded
+        enabled: !BarState.expanded
         width: leftLayout.implicitWidth + 2 * Theme.barPad
 
         RowLayout {
@@ -1113,7 +1056,7 @@ PanelWindow {
         color: "transparent"
         clip: true
         opacity: Math.max(0, 1 - root.morph * 8)
-        enabled: !root.expanded
+        enabled: !BarState.expanded
         width: midLayout.implicitWidth + 2 * Theme.space2
 
         Row {
@@ -1163,7 +1106,7 @@ PanelWindow {
         color: "transparent"
         clip: true
         opacity: Math.max(0, 1 - root.morph * 8)
-        enabled: !root.expanded
+        enabled: !BarState.expanded
         width: rightLayout.implicitWidth + 2 * Theme.space2
 
         // ── статус: сеть · игра · трей · уведомления · звук ──
@@ -1182,7 +1125,7 @@ PanelWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 interactive: true
                 accent: root.teleHot ? Theme.danger : Theme.barDim
-                onClicked: root.togglePanel("sys")
+                onClicked: BarState.togglePanel("sys")
                 Row {
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: Theme.space3
@@ -1228,7 +1171,7 @@ PanelWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 interactive: true
                 accent: Theme.barFaint
-                onClicked: root.togglePanel("weather")
+                onClicked: BarState.togglePanel("weather")
                 Row {
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 5
@@ -1426,7 +1369,7 @@ PanelWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 interactive: true
                 accent: root.notifCount > 0 ? Theme.accent : Theme.barFaint
-                onClicked: root.togglePanel("notifs")
+                onClicked: BarState.togglePanel("notifs")
                 // мягкий пульс на НОВОЕ уведомление (только рост счётчика).
                 // Слушаю root через Connections: notifCount живёт на корне.
                 property SequentialAnimation notifPulse: SequentialAnimation {
@@ -1444,7 +1387,7 @@ PanelWindow {
                     function onNotifCountChanged() {
                         if (root.notifCount > root.prevNotifCount) {
                             notifCell.notifPulse.restart()
-                            root.activate("notifs", 4000)
+                            BarState.activate("notifs", 4000)
                         }
                         root.prevNotifCount = root.notifCount
                     }
@@ -1452,7 +1395,7 @@ PanelWindow {
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: root.dnd ? "\uf1f6" : "\uf0f3"
-                    color: root.panelMode === "notifs" ? Theme.accent
+                    color: BarState.mode === "notifs" ? Theme.accent
                         : (root.dnd ? Theme.barFaint
                            : (root.notifCount > 0 ? Theme.barText : Theme.barDim))
                     font.family: Theme.iconFont
@@ -1489,8 +1432,8 @@ PanelWindow {
                 }
                 property Connections volWatch: Connections {
                     target: root
-                    function onVolChanged() { if (root.pulsePrimed) { volCell.volPulse.restart(); root.activate("control", 2500) } }
-                    function onMutedChanged() { if (root.pulsePrimed) { volCell.volPulse.restart(); root.activate("control", 2500) } }
+                    function onVolChanged() { if (root.pulsePrimed) { volCell.volPulse.restart(); BarState.activate("control", 2500) } }
+                    function onMutedChanged() { if (root.pulsePrimed) { volCell.volPulse.restart(); BarState.activate("control", 2500) } }
                 }
                 Item {
                     implicitWidth: volContent.implicitWidth
@@ -1595,7 +1538,7 @@ PanelWindow {
         color: "transparent"
         clip: true
         opacity: Math.max(0, 1 - root.morph * 8)
-        enabled: !root.expanded
+        enabled: !BarState.expanded
         width: defRow.implicitWidth + 2 * Theme.barPad
 
         // колесо над плашкой — громкость
@@ -1615,12 +1558,12 @@ PanelWindow {
             Cell {
                 anchors.verticalCenter: parent.verticalCenter
                 interactive: true
-                accent: root.panelMode === "control" ? Theme.accent : Theme.barDim
-                onClicked: root.togglePanel("control")
+                accent: BarState.mode === "control" ? Theme.accent : Theme.barDim
+                onClicked: BarState.togglePanel("control")
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: "\uf013"
-                    color: root.panelMode === "control" ? Theme.accent : Theme.barDim
+                    color: BarState.mode === "control" ? Theme.accent : Theme.barDim
                     font.family: Theme.iconFont
                     font.pixelSize: Theme.fontSize(14)
                 }
@@ -1723,7 +1666,7 @@ PanelWindow {
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.togglePanel("media")
+                    onClicked: BarState.togglePanel("media")
                 }
             }
 
@@ -1795,7 +1738,7 @@ PanelWindow {
         // выезжает из-под строки бара и в финале заполняет всю плашку
         anchors.top: bar.top
         anchors.topMargin: (1 - root.morph) * Theme.barH
-        width: root.panelWidthFor(root.panelMode)
+        width: root.panelWidthFor(BarState.mode)
         height: root.morph * root.panelTargetH
         color: "transparent"
         clip: true
@@ -1805,13 +1748,13 @@ PanelWindow {
         transformOrigin: Item.Top
         Behavior on width { Anim { type: Anim.DefaultSpatial } }
 
-        HoverHandler { onHoveredChanged: root.panelHovered = hovered }
+        HoverHandler { onHoveredChanged: BarState.panelHovered = hovered }
 
         // клик по фону панели — закрыть (по кнопкам не срабатывает: они выше)
         MouseArea {
             anchors.fill: parent
             z: -1
-            onClicked: root.closePanel()
+            onClicked: BarState.closePanel()
         }
 
         // ── ШАПКА ОСТРОВА: имя режима, действия, закрытие ──
@@ -1839,7 +1782,7 @@ PanelWindow {
                 }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    visible: root.panelMode === "notifs" && root.notifCount > 0
+                    visible: BarState.mode === "notifs" && root.notifCount > 0
                     text: root.notifCount
                     color: Theme.accent
                     font.family: Theme.fontFamily
@@ -1857,7 +1800,7 @@ PanelWindow {
                 // DND и «очистить» — только у уведомлений
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    visible: root.panelMode === "notifs"
+                    visible: BarState.mode === "notifs"
                     text: NotifModel.dnd ? "DND ВКЛ" : "DND"
                     color: NotifModel.dnd ? Theme.danger
                         : (dndHeadMouse.containsMouse ? Theme.accent : Theme.textFaint)
@@ -1874,7 +1817,7 @@ PanelWindow {
                 }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    visible: root.panelMode === "notifs"
+                    visible: BarState.mode === "notifs"
                     text: "очистить"
                     color: clearHeadMouse.containsMouse ? Theme.accent : Theme.textFaint
                     font.family: Theme.fontFamily
@@ -1898,7 +1841,7 @@ PanelWindow {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: root.closePanel()
+                        onClicked: BarState.closePanel()
                     }
                 }
             }
@@ -1920,7 +1863,7 @@ PanelWindow {
         // Единый компонент LunarMediaPanel (источник — MediaCore/MPRIS).
         LunarMediaPanel {
             id: mediaPanel
-            visible: root.panelMode === "media"
+            visible: BarState.mode === "media"
             opacity: root.panelContentOpacity
             anchors.top: parent.top
             anchors.topMargin: Theme.space3

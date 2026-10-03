@@ -6,7 +6,7 @@ import "../widgets/shared"
         Column {
             property var host
             id: wxBody
-            visible: host.panelMode === "weather"
+            visible: BarState.mode === "weather"
             opacity: host.panelContentOpacity
             anchors.top: parent.top
             anchors.topMargin: Theme.panelHeaderH + Theme.space2
