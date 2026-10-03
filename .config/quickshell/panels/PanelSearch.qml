@@ -32,7 +32,7 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         height: 46
-        radius: Theme.cardRadius
+        radius: Theme.radiusM
         color: Theme.cardBg
         border.width: 1
         border.color: searchInput.activeFocus ? Theme.borderAccent : Theme.border
@@ -165,7 +165,7 @@ Item {
             Rectangle {
                 visible: modelData.isHeader !== true
                 anchors.fill: parent
-                radius: Theme.cardRadius
+                radius: Theme.radiusM
                 border.width: 1
                 border.color: index === Launcher.index ? Theme.alpha(Theme.accent, 0.4) : "transparent"
                 color: index === Launcher.index ? Theme.active

@@ -14,7 +14,7 @@ Rectangle {
     property int contentSpacing: 8
 
     color: Theme.cardBg
-    radius: Theme.cardRadius
+    radius: Theme.radiusM
     border.width: 1
     border.color: Theme.border
     implicitHeight: col.implicitHeight + contentMargins * 2

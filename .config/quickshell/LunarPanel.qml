@@ -618,11 +618,11 @@ PanelWindow {
     // высота панели по режиму (анимируется при смене режима)
     function panelHeightFor(m) {
         if (m === "control") return Theme.panelHeaderH + ctlBody.implicitHeight + Theme.space4
-        if (m === "media") return 30 + mediaPanel.implicitHeight + Theme.space3
-        if (m === "search") return 430
-        if (m === "notifs") return 320
-        if (m === "sys") return 30 + sysBody.implicitHeight + Theme.space3
-        if (m === "weather") return 30 + wxBody.implicitHeight + Theme.space3
+        if (m === "media") return Theme.panelHeaderH + mediaPanel.implicitHeight + Theme.space3
+        if (m === "search") return Theme.panelHSearch
+        if (m === "notifs") return Theme.panelHNotifs
+        if (m === "sys") return Theme.panelHeaderH + sysBody.implicitHeight + Theme.space3
+        if (m === "weather") return Theme.panelHeaderH + wxBody.implicitHeight + Theme.space3
         return Theme.barH
     }
     property real panelTargetH: root.panelHeightFor(BarState.mode)
@@ -631,7 +631,7 @@ PanelWindow {
     // ширина панели по режиму: пульт/поиск/уведы — фикс, медиа — по содержимому
     function panelWidthFor(m) {
         if (m === "control") return Theme.panelWControl
-        if (m === "search") return 720
+        if (m === "search") return Theme.panelWSearchWide
         if (m === "media") return mediaPanel.implicitWidth + 2 * Theme.space3
         if (m === "notifs") return Theme.panelWNotifs
         return Theme.panelWSearch

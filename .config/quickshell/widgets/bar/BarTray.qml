@@ -17,7 +17,7 @@ import "../shared"
                     return vis * 20 + Math.max(0, vis - 1) * 9
                         + (host.trayCount > host.trayMax ? moreBox.width + 9 : 0)
                 }
-                implicitHeight: 26
+                implicitHeight: Theme.barCellH
 
                 scale: trayBg.hovered ? Theme.hoverGrow : 1
                 Behavior on scale { Anim { type: Anim.FastSpatial } }
@@ -27,7 +27,7 @@ import "../shared"
                     id: trayRow
                     anchors.left: parent.left
                     anchors.verticalCenter: parent.verticalCenter
-                    height: 26
+                    height: Theme.barCellH
                     spacing: 9
 
                     Repeater {

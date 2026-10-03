@@ -167,7 +167,7 @@ def palette_from_image(path: Path) -> dict:
         "bgTrack":      bg(0.70, 0.125),
         "text":         hsl_to_hex(h, 0.08, 0.93),
         "textDim":      hsl_to_hex(h, 0.12, 0.64),
-        "textFaint":    hsl_to_hex(h, 0.14, 0.40),
+        "textFaint":    hsl_to_hex(h, 0.14, 0.55),
         "accent":       hsl_to_hex(h, max(0.35, min(0.62, s * 1.15)), 0.66),
         "accent2":      hsl_to_hex(h, max(0.28, min(0.50, s * 0.90)), 0.80),
         "danger":       "#ff003c",
@@ -176,7 +176,7 @@ def palette_from_image(path: Path) -> dict:
         "borderAccent": hsl_to_hex(h, 0.50, 0.60) + "33",
         "barText":      hsl_to_hex(h, 0.07, 0.88),
         "barDim":       hsl_to_hex(h, 0.12, 0.64),
-        "barFaint":     hsl_to_hex(h, 0.14, 0.40),
+        "barFaint":     hsl_to_hex(h, 0.14, 0.55),
         "barPill":      bg(0.85, 0.055),
         "cursor":       hsl_to_hex(h, 0.08, 0.93),
     }

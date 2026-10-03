@@ -16,7 +16,7 @@ Rectangle {
     property string tip: ""
     signal clicked()
 
-    height: 26
+    height: Theme.barCellH
     implicitWidth: cellContent.implicitWidth + Theme.space3 * 2 + 8
     width: implicitWidth
     radius: Theme.radiusS

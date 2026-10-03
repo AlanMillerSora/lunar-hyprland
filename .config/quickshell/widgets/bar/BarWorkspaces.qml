@@ -12,7 +12,7 @@ import "../shared"
                 id: root
                 property var host
                 implicitWidth: wsRow.implicitWidth
-                implicitHeight: 26
+                implicitHeight: Theme.barCellH
                 scale: wsBg.hovered ? Theme.hoverGrow : 1
                 Behavior on scale { Anim { type: Anim.FastSpatial } }
 
@@ -30,7 +30,7 @@ import "../shared"
                 Row {
                     id: wsRow
                     anchors.centerIn: parent
-                    height: 26
+                    height: Theme.barCellH
                     spacing: 7
 
                     Repeater {
@@ -53,7 +53,7 @@ import "../shared"
                             onIsFocusedChanged: if (isFocused) focusPulse.restart()
 
                             width: 28
-                            height: 26
+                            height: Theme.barCellH
                             color: "transparent"
 
                             // мягкое гало под активной фазой — «стол светится»

@@ -85,7 +85,7 @@ import ".."
                     readonly property bool expanded: NotifModel.expandedId === modelData.id
                     width: notifList.width
                     height: expanded ? Math.min(150, bodyText.implicitHeight + 52) : 44
-                    radius: Theme.cardRadius
+                    radius: Theme.radiusM
                     border.width: 1
                     border.color: expanded ? Theme.alpha(Theme.accent, 0.35) : Theme.border
                     color: expanded ? Theme.active : (notifMouse.containsMouse ? Theme.hoverStrong : Theme.cardBg)

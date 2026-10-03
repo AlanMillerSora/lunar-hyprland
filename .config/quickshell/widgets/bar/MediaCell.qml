@@ -12,7 +12,7 @@ import "../shared"
                 visible: host.mediaActive
                 anchors.verticalCenter: parent.verticalCenter
                 width: mediaCol.width + Theme.space3 * 2 + 8
-                height: 26
+                height: Theme.barCellH
                 radius: Theme.radiusS
                 color: mediaHover.hovered ? Theme.hoverStrong : Theme.fill
                 // мягкий пульс при смене трека

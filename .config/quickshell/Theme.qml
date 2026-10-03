@@ -41,7 +41,7 @@ QtObject {
 
     property color text: hexColor(palette.text, "#e8ecf2")
     property color textDim: hexColor(palette.textDim, "#98a1ac")
-    property color textFaint: hexColor(palette.textFaint, "#5b636d")
+    property color textFaint: hexColor(palette.textFaint, "#7b838d")
 
     property color accent: hexColor(palette.accent, "#e8edf4")
     property color accent2: hexColor(palette.accent2, "#e8edf4")
@@ -54,7 +54,7 @@ QtObject {
     //    чтобы не выцветал текст оверлеев) ──
     property color barText: hexColor(palette.barText, "#d5dce4")
     property color barDim: hexColor(palette.barDim, "#a6aeb9")
-    property color barFaint: hexColor(palette.barFaint, "#5b636d")
+    property color barFaint: hexColor(palette.barFaint, "#7b838d")
     property color barPill: Qt.rgba(_barPillBase.r, _barPillBase.g, _barPillBase.b, 1.0 * interfaceOpacity)
 
     // ── токены «ритма» интерфейса (Hub и панели) ──
@@ -65,7 +65,6 @@ QtObject {
 
     // ── карточки панелей: подложка чуть контрастнее строк + рамка ──
     property color cardBg: Qt.rgba(text.r, text.g, text.b, 0.055)
-    property int cardRadius: radiusM
 
     // палитру переписывает генератор; watchChanges подхватит на лету
     property FileView paletteFile: FileView {
@@ -239,9 +238,6 @@ QtObject {
     property int fontMicro: fontSize(9)
     property int fontBig: fontSize(24)
     property int fontHero: fontSize(34)
-    property int iconSm: fontSize(13)
-    property int iconMd: fontSize(15)
-    property int iconLg: fontSize(18)
     property int iconXL: fontSize(30)
     property int cardPad: 12
 
@@ -250,13 +246,19 @@ QtObject {
     property int barMargin: 8
     property int barPad: 12
     property int barRadius: 8
+    // высота содержимого ячейки бара (иконки/текст внутри плашки)
+    property int barCellH: 26
 
     // панель-остров (этап 2): шапка, строки, ширины режимов
     property int panelHeaderH: 30
-    property int panelRowH: 30
     property int panelWControl: 660
     property int panelWSearch: 520
     property int panelWNotifs: 460
+    // панель поиска раскрывается шире строки — отдельная «широкая» ширина
+    property int panelWSearchWide: 720
+    // высота панелей-модалок (поиск/уведомления) до полного раскрытия
+    property int panelHSearch: 430
+    property int panelHNotifs: 320
     property int radiusS: 6
 
     // мягкая реакция на наведение — масштаб глифа, без переверстки
@@ -271,7 +273,6 @@ QtObject {
     // единое движение: одна кривая на весь рис (задаю здесь, чтобы потом
     // менять характер анимаций в одном месте)
     readonly property int easeOut: Easing.OutCubic
-    readonly property int easeInOut: Easing.InOutCubic
 
     // ── expressive-моушен (порт Material-3 Expressive / Caelestia) ──
     // spatial — движение и размер (лёгкий перелёт в конце), effects —
@@ -294,7 +295,6 @@ QtObject {
         readonly property int defaultEffects: Math.round(180 * scale)
         readonly property int slowEffects: Math.round(260 * scale)
         readonly property var standard: [0.2, 0, 0, 1, 1, 1]
-        readonly property var standardDecel: [0, 0, 0, 1, 1, 1]
         readonly property var emphasized: [0.05, 0, 0.1333, 0.06, 0.1667, 0.4, 0.2083, 0.82, 0.25, 1, 1, 1]
         readonly property var expressiveFastSpatial: [0.42, 1.67, 0.21, 0.9, 1, 1]
         readonly property var expressiveDefaultSpatial: [0.38, 1.21, 0.22, 1, 1, 1]

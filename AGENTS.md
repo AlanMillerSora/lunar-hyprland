@@ -211,8 +211,9 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
   `JetBrainsMono Nerd Font`. Не писать имена семейств, которых нет в системе
   (`"JetBrains Mono"`, `Iosevka NFM` без установки) — Qt молча подставит Noto.
 - Токены `Theme.qml`: отступы `space1..6` 4/8/12/16/24/32; строки `rowHCompact/rowH/rowHComfy`
-  34/42/48, `headerH` 44; радиусы `radius/radiusM/radiusL/radiusXL` 8/10/12/16; текст
-  `fontTiny..fontClock` 11/12/14/22/16; панель `barH/barMargin/barPad/barRadius` 36/8/12/8;
+  34/42/48, `headerH` 44; радиусы `radiusS/radius/radiusM/radiusL` 6/8/10/12; текст
+  `fontMicro/fontTiny/fontSmall/fontBody/fontPanelTitle/fontTitle/fontClock` 9/11/12/14/16/22/16;
+  панель `barH/barMargin/barPad/barRadius` 32/8/12/8, ячейка бара `barCellH` 26;
   `hoverGrow` 1.25 (ховер-рост групп панели); `hover/hoverStrong/active/fill`; `clamp()`.
 - HUD-заголовки секций: 12px, letterSpacing 2, bold. Заголовки страниц Hub: `fontTitle`.
 - Ховер: `scale` (визуальный, раскладку не трогает) + фоновая подсветка.
