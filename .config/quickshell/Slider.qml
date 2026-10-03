@@ -43,8 +43,12 @@ Item {
 
     implicitHeight: root.compact ? Math.max(16, root.handleSize + 6) : 50
 
+    // содержимое центрирую по вертикали: тогда ползунок стоит ровно и при
+    // height = implicitHeight, и когда вызывающий даёт высокую строку —
+    // раньше Column прижимался к верху и в настройках звука уезжал вверх.
     Column {
-        anchors.fill: parent
+        width: parent.width
+        anchors.verticalCenter: parent.verticalCenter
         spacing: root.compact ? 0 : 8
 
         Row {

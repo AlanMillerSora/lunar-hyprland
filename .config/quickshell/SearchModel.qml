@@ -20,7 +20,8 @@ QtObject {
         { name: "Interface",  icon: "\uf085" },
         { name: "Games",      icon: "\uf11b" },
         { name: "Dev",        icon: "\uf121" },
-        { name: "Update",     icon: "\uf021" }
+        { name: "Update",     icon: "\uf021" },
+        { name: "Media",      icon: "\uf302" }
     ]
 
     property Process p: Process { running: false }

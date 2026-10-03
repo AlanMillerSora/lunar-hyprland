@@ -37,12 +37,27 @@ PanelWindow {
     WlrLayershell.anchors.right: true
     exclusionMode: ExclusionMode.Normal
 
-    // клик-сквозь: ввод ловят левая плашка, бар и раскрытая панель
+    // клик-сквозь: ввод ловят левая плашка, бар и раскрытая панель.
+    // Пока панель открыта, ловлю ещё и фон вокруг (clickShield) — клик мимо
+    // закрывает панель, а не проваливается сквозь окно. В покое зазоры
+    // по-прежнему пропускают клики (важно для fullscreen).
     mask: Region {
+        Region { item: root.expanded ? clickShield : null }
         Region { item: leftBar }
         Region { item: root.expanded ? null : bar }
         Region { item: root.expanded ? panel : null }
         Region { item: root.recording ? recPill : null }
+    }
+
+    // фон-ловушка: есть только при открытой панели, самый нижний слой
+    Item {
+        id: clickShield
+        anchors.fill: parent
+        visible: root.expanded
+        MouseArea {
+            anchors.fill: parent
+            onClicked: root.closePanel()
+        }
     }
 
     // Палитра из системной темы (Hub / лаунчер / настройки):
@@ -334,14 +349,10 @@ PanelWindow {
         item.display(root, Math.round(pt.x), Math.round(pt.y))
     }
 
-    // тултип панели: показать текст над элементом
+    // Тултипы в баре убрал: подпись под баром только мешала и закрывала
+    // содержимое. Оставляю функцию-заглушку, чтобы вызовы не падали.
     function showTip(text, area) {
-        if (!text) return
-        var ci = root.contentItem
-        var pt = ci ? area.mapToItem(ci, area.width / 2, 0) : Qt.point(0, 0)
-        Theme.tooltipText = text
-        Theme.tooltipX = Math.round(pt.x)
-        Theme.tooltipShown = true
+        return
     }
 
     // тултип с названием приложения при наведении на значок трея

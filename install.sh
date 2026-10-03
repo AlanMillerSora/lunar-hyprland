@@ -557,7 +557,18 @@ ls -1dt "$HOME"/.config-backup-* 2>/dev/null | tail -n +6 | while IFS= read -r d
 done || true
 
 mkdir -p "$HOME/.config"
+# аватар — пользовательские данные: install копирует .config поверх, и без
+# этого дефолтный avatar.png из репо затирал мой. Прячу и возвращаю обратно.
+AV_KEEP=""
+if [ -f "$HOME/.config/avatars/avatar.png" ]; then
+  AV_KEEP="$(mktemp --suffix=.png)"
+  cp -f "$HOME/.config/avatars/avatar.png" "$AV_KEEP" 2>/dev/null || AV_KEEP=""
+fi
 cp -r "$REPO/.config/." "$HOME/.config/"
+if [ -n "$AV_KEEP" ] && [ -f "$AV_KEEP" ]; then
+  cp -f "$AV_KEEP" "$HOME/.config/avatars/avatar.png" 2>/dev/null || true
+  rm -f -- "$AV_KEEP"
+fi
 chmod +x "$HOME"/.config/hypr/scripts/* 2>/dev/null || true
 
 # ── единая палитра: цвета приложений из palette.toml ───────────
