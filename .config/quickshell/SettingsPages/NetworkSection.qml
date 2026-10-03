@@ -439,13 +439,10 @@ Item {
                             Row {
                                 spacing: 9
 
-                                Text {
+                                SectionLabel {
                                     text: "ZAPRET"
-                                    color: Theme.text
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSmall
-                                    font.bold: true
-                                    font.letterSpacing: 2
+                                    textColor: Theme.text
+                                    size: Theme.fontSmall
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
 
@@ -514,13 +511,10 @@ Item {
                             Row {
                                 spacing: 9
 
-                                Text {
+                                SectionLabel {
                                     text: "ZAPRET-TG"
-                                    color: Theme.text
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSmall
-                                    font.bold: true
-                                    font.letterSpacing: 2
+                                    textColor: Theme.text
+                                    size: Theme.fontSmall
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
 
@@ -582,13 +576,10 @@ Item {
                             Row {
                                 spacing: 9
 
-                                Text {
+                                SectionLabel {
                                     text: "VENCORD"
-                                    color: Theme.text
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSmall
-                                    font.bold: true
-                                    font.letterSpacing: 2
+                                    textColor: Theme.text
+                                    size: Theme.fontSmall
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
 

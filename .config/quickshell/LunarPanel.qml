@@ -1332,13 +1332,11 @@ PanelWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: Theme.space2
 
-                Text {
+                SectionLabel {
                     anchors.verticalCenter: parent.verticalCenter
                     text: root.panelTitle
-                    color: Theme.textDim
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontTiny
-                    font.letterSpacing: 2
+                    textColor: Theme.textDim
+                    bold: false
                 }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter

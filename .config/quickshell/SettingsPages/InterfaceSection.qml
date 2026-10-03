@@ -456,15 +456,13 @@ Item {
                             border.width: cur ? 1 : 0
                             border.color: Theme.accent
 
-                            Text {
+                            SectionLabel {
                                 id: palLabel
                                 anchors.centerIn: parent
                                 text: modelData.name
-                                color: cur ? Theme.accent : Theme.textDim
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSmall
-                                font.bold: cur
-                                font.letterSpacing: 2
+                                textColor: cur ? Theme.accent : Theme.textDim
+                                size: Theme.fontSmall
+                                bold: cur
                             }
 
                             MouseArea {
@@ -527,15 +525,13 @@ Item {
                         border.width: cur ? 1 : 0
                         border.color: Theme.accent
 
-                        Text {
+                        SectionLabel {
                             id: wmLabel
                             anchors.centerIn: parent
                             text: modelData.name
-                            color: cur ? Theme.accent : Theme.textDim
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSmall
-                            font.bold: cur
-                            font.letterSpacing: 2
+                            textColor: cur ? Theme.accent : Theme.textDim
+                            size: Theme.fontSmall
+                            bold: cur
                         }
 
                         MouseArea {
@@ -554,14 +550,13 @@ Item {
                 spacing: Theme.space3
                 visible: Theme.wallpaperMode !== "image"
 
-                Text {
+                SectionLabel {
                     text: previewPhase > 0
                         ? "ПРЕВЬЮ · фаза " + shownPhase
                         : "ПРЕВЬЮ · фаза " + shownPhase + " (текущий стол)"
-                    color: Theme.textFaint
-                    font.family: page.mono
-                    font.pixelSize: 10
-                    font.letterSpacing: 2
+                    textColor: Theme.textFaint
+                    size: 10
+                    bold: false
                 }
 
                 // 16:9 мини-экран. live = страница видима: вкладка (или Hub)

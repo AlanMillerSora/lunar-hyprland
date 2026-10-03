@@ -625,15 +625,12 @@ Item {
                     height: 24
                     spacing: Theme.space5
 
-                    Text {
+                    SectionLabel {
                         id: cpuHeader
-
                         text: "󰍛  CPU"
-                        color: Theme.accent
-                        font.family: page.mono
-                        font.pixelSize: page.hardwareLabelSize
-                        font.letterSpacing: 2
-
+                        textColor: Theme.accent
+                        size: page.hardwareLabelSize
+                        bold: false
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
@@ -737,15 +734,12 @@ Item {
                     height: 24
                     spacing: Theme.space5
 
-                    Text {
+                    SectionLabel {
                         id: gpuHeader
-
                         text: "󰢮  GPU"
-                        color: Theme.accent
-                        font.family: page.mono
-                        font.pixelSize: page.hardwareLabelSize
-                        font.letterSpacing: 2
-
+                        textColor: Theme.accent
+                        size: page.hardwareLabelSize
+                        bold: false
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
@@ -848,15 +842,12 @@ Item {
                     height: 24
                     spacing: Theme.space5
 
-                    Text {
+                    SectionLabel {
                         id: memoryHeader
-
                         text: "󰘚  RAM"
-                        color: Theme.accent
-                        font.family: page.mono
-                        font.pixelSize: page.hardwareLabelSize
-                        font.letterSpacing: 2
-
+                        textColor: Theme.accent
+                        size: page.hardwareLabelSize
+                        bold: false
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
@@ -960,12 +951,11 @@ Item {
                     height: 24
                     spacing: Theme.space5
 
-                    Text {
+                    SectionLabel {
                         text: "󰚰  ОБНОВЛЕНИЯ"
-                        color: Theme.accent
-                        font.family: page.mono
-                        font.pixelSize: page.hardwareLabelSize
-                        font.letterSpacing: 2
+                        textColor: Theme.accent
+                        size: page.hardwareLabelSize
+                        bold: false
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
