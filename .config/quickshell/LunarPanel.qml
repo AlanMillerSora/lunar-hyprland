@@ -78,6 +78,97 @@ PanelWindow {
         return null
     }
 
+    // первый класс окна стола — для иконки приложения
+    function firstClassFor(id) {
+        var ws = root.wsFor(id)
+        if (!ws || ws.toplevels.values.length === 0)
+            return ""
+        var t = ws.toplevels.values[0]
+        var cls = (t.lastIpcObject && t.lastIpcObject.class) ? t.lastIpcObject.class : ""
+        if (!cls && t.wayland)
+            cls = t.wayland.appId || ""
+        return cls
+    }
+    // класс окна → иконка темы (через DesktopEntries, как в лаунчере)
+    function appIconFor(cls) {
+        if (!cls)
+            return ""
+        var entry = null
+        try {
+            entry = DesktopEntries.heuristicLookup(cls)
+        } catch (e) {}
+        var ic = (entry && entry.icon) ? entry.icon : cls
+        if (Quickshell.hasThemeIcon(ic))
+            return Quickshell.iconPath(ic, true)
+        if (cls && Quickshell.hasThemeIcon(cls))
+            return Quickshell.iconPath(cls, true)
+        return ""
+    }
+
+    // ── живые столы: фаза мигает, когда в неактивном столе открылось окно ──
+    property var _wsCounts: ({})
+    property bool _wsCountsInit: false
+    property var wsBlink: ({})
+    property bool wsBlinkPhase: true
+    readonly property int focusedWsId: (root.focusedWs && root.focusedWs.id !== undefined) ? root.focusedWs.id : -1
+    readonly property var wsCounts: {
+        var m = {}
+        for (var i = 1; i <= 9; i++)
+            m[i] = 0
+        var tops = Hyprland.toplevels.values
+        for (var j = 0; j < tops.length; j++) {
+            var id = (tops[j].workspace && tops[j].workspace.id !== undefined) ? tops[j].workspace.id : -1
+            if (id >= 1 && id <= 9)
+                m[id] = (m[id] || 0) + 1
+        }
+        return m
+    }
+    onWsCountsChanged: {
+        var cur = root.wsCounts
+        if (!root._wsCountsInit) {
+            root._wsCounts = cur
+            root._wsCountsInit = true
+            return
+        }
+        var prev = root._wsCounts
+        var nb = Object.assign({}, root.wsBlink)
+        var touch = false
+        for (var i = 1; i <= 9; i++) {
+            if ((cur[i] || 0) > (prev[i] || 0) && i !== root.focusedWsId) {
+                nb[i] = 6
+                touch = true
+            } else if (i === root.focusedWsId && nb[i] !== undefined) {
+                delete nb[i]
+                touch = true
+            }
+        }
+        root._wsCounts = cur
+        if (touch)
+            root.wsBlink = nb
+    }
+    onFocusedWsIdChanged: {
+        if (root.wsBlink[root.focusedWsId] !== undefined) {
+            var nb = Object.assign({}, root.wsBlink)
+            delete nb[root.focusedWsId]
+            root.wsBlink = nb
+        }
+    }
+    Timer {
+        interval: 220
+        repeat: true
+        running: Object.keys(root.wsBlink).length > 0
+        onTriggered: {
+            root.wsBlinkPhase = !root.wsBlinkPhase
+            var nb = {}
+            for (var k in root.wsBlink) {
+                var r = root.wsBlink[k] - 1
+                if (r > 0)
+                    nb[k] = r
+            }
+            root.wsBlink = nb
+        }
+    }
+
     // Hyprland 0.55+ умеет Lua-конфиг: старый "workspace N" там не парсится,
     // нужен Lua-диспетчер hl.dsp.focus({workspace=N}).
     // Hyprland.usingLua в Quickshell 0.3.1 это не определяет, поэтому смотрим
@@ -878,6 +969,9 @@ PanelWindow {
                             readonly property var ws: root.wsFor(wsId)
                             readonly property bool isFocused: root.focusedWs !== null && root.focusedWs.id === wsId
                             readonly property bool isOccupied: ws !== null && ws.toplevels.values.length > 0
+                            readonly property bool alerting: root.wsBlink[wsId] !== undefined
+                            readonly property string appIcon: root.appIconFor(root.firstClassFor(wsId))
+                            readonly property bool showApp: !alerting && wsMouse.containsMouse && appIcon !== ""
 
                             // импульс кольца при переходе на этот стол
                             onIsFocusedChanged: if (isFocused) focusPulse.restart()
@@ -943,7 +1037,7 @@ PanelWindow {
                                 }
                             }
 
-                            // только сама фаза; состояние — яркостью (активный — чистый белый)
+                            // сама фаза; мигает на новое окно, при наведении уступает иконке
                             Image {
                                 anchors.centerIn: parent
                                 width: 16
@@ -954,14 +1048,42 @@ PanelWindow {
                                 fillMode: Image.PreserveAspectFit
                                 smooth: true
                                 mipmap: true
-                                opacity: wsPill.isFocused
-                                    ? 1.0
-                                    : (wsMouse.containsMouse ? 0.85 : (wsPill.isOccupied ? 0.78 : 0.26))
+                                opacity: wsPill.alerting
+                                    ? (root.wsBlinkPhase ? 1.0 : 0.12)
+                                    : (wsPill.showApp ? 0.0
+                                       : (wsPill.isFocused ? 1.0
+                                          : (wsMouse.containsMouse ? 0.85 : (wsPill.isOccupied ? 0.78 : 0.26))))
                                 scale: wsPill.isFocused
                                     ? 1.15
                                     : (wsMouse.containsMouse ? 1.1 : (wsPill.isOccupied ? 1.07 : 1.0))
                                 Behavior on opacity { Anim { type: Anim.FastEffects } }
                                 Behavior on scale { Anim { type: Anim.FastSpatial } }
+                            }
+
+                            // иконка приложения стола — проявляется при наведении
+                            // (монохром, как значки трея), чтобы не пестрить
+                            Image {
+                                id: wsAppImg
+                                anchors.centerIn: parent
+                                width: 17
+                                height: 17
+                                source: wsPill.appIcon
+                                sourceSize: Qt.size(64, 64)
+                                fillMode: Image.PreserveAspectFit
+                                smooth: true
+                                visible: false
+                            }
+                            MultiEffect {
+                                anchors.centerIn: parent
+                                width: 17
+                                height: 17
+                                source: wsAppImg
+                                visible: wsPill.appIcon !== "" && wsAppImg.status === Image.Ready
+                                saturation: -1.0
+                                brightness: 0.45
+                                contrast: 0.05
+                                opacity: wsPill.showApp ? 1 : 0
+                                Behavior on opacity { Anim { type: Anim.FastEffects } }
                             }
 
                             MouseArea {
