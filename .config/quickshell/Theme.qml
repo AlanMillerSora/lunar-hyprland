@@ -267,9 +267,11 @@ QtObject {
     // сколько значков трея видно в панели (остальные — в списке «+N»)
     property int trayVisible: 2
 
-    property int animFast: 120
-    property int animMed: 220
-    property int animSlow: 380
+    // легаси-шкала: теперь это алиасы единого anim (тот же характер и
+    // уважение тумблера animationsEnabled). Новые анимации — через Anim.
+    property int animFast: theme.anim.fastEffects
+    property int animMed: theme.anim.defaultEffects
+    property int animSlow: theme.anim.slowEffects
     // единое движение: одна кривая на весь рис (задаю здесь, чтобы потом
     // менять характер анимаций в одном месте)
     readonly property int easeOut: Easing.OutCubic
