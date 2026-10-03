@@ -12,7 +12,7 @@ import "../shared"
                 id: sysCell
                 anchors.verticalCenter: parent.verticalCenter
                 interactive: true
-                accent: host.teleHot ? Theme.danger : Theme.barDim
+                accent: SysInfo.hot ? Theme.danger : Theme.barDim
                 tip: "Телеметрия"
                 onClicked: BarState.togglePanel("sys")
                 Row {
@@ -20,9 +20,9 @@ import "../shared"
                     spacing: Theme.space3
                     Repeater {
                         model: [
-                            { label: "CPU", v: host.teleCpu, avail: true },
-                            { label: "RAM", v: host.teleRam, avail: true },
-                            { label: "GPU", v: host.teleGpu, avail: host.teleGpu >= 0 }
+                            { label: "CPU", v: SysInfo.cpu, avail: true },
+                            { label: "RAM", v: SysInfo.ram, avail: true },
+                            { label: "GPU", v: SysInfo.gpu, avail: SysInfo.gpu >= 0 }
                         ]
                         delegate: Row {
                             required property var modelData

@@ -259,12 +259,12 @@ import "../widgets/shared"
                         width: parent.width
                         Repeater {
                             model: [
-                                { label: "CPU", v: host.teleCpu,
-                                  extra: host.teleCpuTemp > 0 ? (host.teleCpuTemp + "°C") : "" },
-                                { label: "RAM", v: host.teleRam,
-                                  extra: host.teleRamTotal > 0 ? (host.teleRamTotal + " МБ") : "" },
-                                { label: "GPU", v: host.teleGpu,
-                                  extra: host.teleGpuTemp >= 0 ? (host.teleGpuTemp + "°C") : "" }
+                                { label: "CPU", v: SysInfo.cpu,
+                                  extra: SysInfo.cpuTemp > 0 ? (SysInfo.cpuTemp + "°C") : "" },
+                                { label: "RAM", v: SysInfo.ram,
+                                  extra: SysInfo.ramTotal > 0 ? (SysInfo.ramTotal + " МБ") : "" },
+                                { label: "GPU", v: SysInfo.gpu,
+                                  extra: SysInfo.gpuTemp >= 0 ? (SysInfo.gpuTemp + "°C") : "" }
                             ]
                             delegate: MetricRow {
                                 required property var modelData

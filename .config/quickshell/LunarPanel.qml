@@ -484,41 +484,7 @@ PanelWindow {
     property string cpuGovernor: ""
     property bool recording: false
 
-    // ── телеметрия для режима sys (заполняет eclipse-status.sh) ──
-    property int teleCpu: 0
-    property int teleCpuTemp: 0
-    property int teleRam: 0
-    property int teleRamTotal: 0
-    property int teleGpu: -1
-    property int teleGpuTemp: -1
-    property real teleRx: 0      // скорость, КБ/с (дельта счётчиков)
-    property real teleTx: 0
-    // «горячо» для систем-острова: показатель у 90% подсвечиваю опасным
-    readonly property bool teleHot: root.teleCpu >= 90 || root.teleRam >= 90
-        || (root.teleGpu >= 90)
-    property real rxRaw: -1      // сырые суммарные счётчики /proc/net/dev
-    property real txRaw: -1
-    property real prevRx: -1     // предыдущий сырой счётчик /proc/net/dev
-    property real prevTx: -1
-    property double prevNetTs: 0
-
-    function fmtRate(kb) {
-        if (kb >= 1024)
-            return (kb / 1024).toFixed(1) + " МБ/с"
-        return Math.round(kb) + " КБ/с"
-    }
-
-    // считаю скорость по дельте счётчиков и времени опроса
-    function feedNet(rx, tx, now) {
-        if (root.prevRx >= 0 && now > root.prevNetTs) {
-            var dt = (now - root.prevNetTs) / 1000
-            root.teleRx = Math.max(0, (rx - root.prevRx) / 1024 / dt)
-            root.teleTx = Math.max(0, (tx - root.prevTx) / 1024 / dt)
-        }
-        root.prevRx = rx
-        root.prevTx = tx
-        root.prevNetTs = now
-    }
+    // телеметрия — в сервисе SysInfo (читают бар/панели)
     readonly property int focusedPhase:
         (root.focusedWs && root.focusedWs.id > 0) ? root.focusedWs.id : 0
 
@@ -528,6 +494,7 @@ PanelWindow {
         command: ["bash", "-c", "~/.config/hypr/scripts/eclipse-status.sh"]
         stdout: StdioCollector {
             onStreamFinished: {
+                var rxRaw = -1, txRaw = -1
                 var parts = text.trim().split("\u001f")
                 for (var i = 0; i < parts.length; i++) {
                     var kv = parts[i].split("=")
@@ -552,29 +519,30 @@ PanelWindow {
                     } else if (k === "rec") {
                         root.recording = (v === "1")
                     } else if (k === "cpu") {
-                        root.teleCpu = Math.round(parseFloat(v) || 0)
+                        SysInfo.cpu = Math.round(parseFloat(v) || 0)
                     } else if (k === "ctemp") {
-                        root.teleCpuTemp = Math.round(parseFloat(v) || 0)
+                        SysInfo.cpuTemp = Math.round(parseFloat(v) || 0)
                     } else if (k === "ram") {
-                        root.teleRam = Math.round(parseFloat(v) || 0)
+                        SysInfo.ram = Math.round(parseFloat(v) || 0)
                     } else if (k === "rtot") {
-                        root.teleRamTotal = parseInt(v) || 0
+                        SysInfo.ramTotal = parseInt(v) || 0
                     } else if (k === "gpu") {
                         // есть только в режиме телеметрии (иначе пусто)
-                        root.teleGpu = (v === "") ? -1 : (Math.round(parseFloat(v) || 0))
+                        SysInfo.gpu = (v === "") ? -1 : (Math.round(parseFloat(v) || 0))
                     } else if (k === "gput") {
-                        root.teleGpuTemp = (v === "") ? -1 : (Math.round(parseFloat(v) || 0))
+                        SysInfo.gpuTemp = (v === "") ? -1 : (Math.round(parseFloat(v) || 0))
                     } else if (k === "rx") {
-                        root.rxRaw = parseFloat(v) || 0
+                        rxRaw = parseFloat(v) || 0
                     } else if (k === "tx") {
-                        root.txRaw = parseFloat(v) || 0
+                        txRaw = parseFloat(v) || 0
                     }
                 }
 
                 // скорость сети: дельта сырых счётчиков (получаю их в одной
                 // строке статуса — отдельный опрос не нужен)
-                if (root.rxRaw >= 0)
-                    root.feedNet(root.rxRaw, root.txRaw, Date.now())
+                if (rxRaw >= 0)
+                    SysInfo.feedNet(rxRaw, txRaw, Date.now())
+                SysInfo.sample()
             }
         }
     }
@@ -1074,7 +1042,7 @@ PanelWindow {
                         }
                     }
                     Text {
-                        text: "↓" + root.fmtRate(root.teleRx) + " ↑" + root.fmtRate(root.teleTx)
+                        text: "↓" + SysInfo.fmtRate(SysInfo.rx) + " ↑" + SysInfo.fmtRate(SysInfo.tx)
                         color: Theme.barFaint
                         font.family: Theme.fontFamily
                         font.pixelSize: 9
