@@ -93,6 +93,18 @@ Item {
         visible: centerZone.rightCells.length > 0
     }
 
+    // ── «рельса» плеера: пока ничего не играет, на месте медиа-полосы —
+    //    тонкая линия в тон орбите столов, чтобы центр не пустовал ──
+    Rectangle {
+        anchors.right: clockLoader.left
+        anchors.rightMargin: Theme.space3
+        anchors.verticalCenter: parent.verticalCenter
+        width: 640
+        height: 1
+        color: Theme.active
+        visible: !centerZone.mediaActive
+    }
+
     // ── ячейки слева от часов: прижаты к их левому краю ──
     Row {
         id: leftRow
