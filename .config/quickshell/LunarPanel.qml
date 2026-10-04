@@ -802,11 +802,11 @@ PanelWindow {
     // ── ЕДИНЫЙ БАР: один фон на весь верх, содержимое внутри ──
     Rectangle {
         id: bar
-        // в покое плашка облегает строку; в режиме морфит к размеру панели.
-        // композиция — на всю ширину: левая зона у края, правая у другого,
-        // пилюля по центру экрана (как arch). ──
-        readonly property real collapsedX: leftZone.x - Theme.barPad
-        readonly property real collapsedW: rightZone.x + rightZone.width - leftZone.x + 2 * Theme.barPad
+        // единая плашка на всю ширину экрана (с отступом barMargin): левая
+        // зона у края, правая у другого, часы — ровно по центру. В режиме
+        // плашка морфит к размеру панели. ──
+        readonly property real collapsedX: Theme.barMargin
+        readonly property real collapsedW: parent.width - 2 * Theme.barMargin
         readonly property real expandedW: root.panelWidthFor(BarState.mode) + 2 * Theme.barPad
         width: collapsedW + (expandedW - collapsedW) * root.morph
         x: collapsedX + ((parent.width - width) / 2 - collapsedX) * root.morph
@@ -815,11 +815,10 @@ PanelWindow {
         // в морфе плашка = строка + контент режима (panelTargetH — только контент)
         height: Theme.barH + root.morph * root.panelTargetH
         radius: Theme.barRadius
-        // arch: в покое у бара НЕТ своей подложки — фон даёт только
-        // центральная пилюля (BarCenterZone); при раскрытии режима плашка
-        // проявляется и становится фоном панели.
-        color: root.morph > 0.001 ? root.pillBg : "transparent"
-        border.width: root.morph > 0.001 ? 1 : 0
+        // единая плашка всю дорогу: и в покое, и в раскрытом режиме это одна
+        // и та же подложка-«рельса» на всю ширину.
+        color: root.pillBg
+        border.width: 1
         border.color: Theme.border
         clip: true
 
@@ -841,8 +840,8 @@ PanelWindow {
             source: nzBar
             maskEnabled: true
             maskSource: nmBar
-            // зерно только у раскрытой плашки (в покое бара-подложки нет)
-            opacity: root.morph > 0.001 ? 0.07 : 0
+            // зерно есть всегда — плашка теперь постоянная
+            opacity: 0.07
         }
         Rectangle {
             id: nmBar
@@ -1012,8 +1011,8 @@ PanelWindow {
         }
     }
 
-    // ── СТРОКА БАРА: три зоны на всю ширину. Левая прижата к краю,
-    // правая — к другому, пилюля центрирована по экрану (как arch). ──
+    // ── СТРОКА БАРА: три зоны на всю ширину. Левая прижата к краю, правая —
+    // к другому, ЧАСЫ стоят ровно по центру экрана и служат осью композиции. ──
     BarLeftZone {
         id: leftZone
         host: root

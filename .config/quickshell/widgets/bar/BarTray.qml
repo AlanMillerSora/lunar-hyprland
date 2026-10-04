@@ -12,11 +12,13 @@ import "../shared"
                 property var host
                 anchors.verticalCenter: parent.verticalCenter
                 // место ровно под видимые значки (не под весь лимит); при
-                // переполнении добавляю ещё и ширину плашки «+N»
+                // переполнении добавляю ещё и ширину плашки «+N». По бокам —
+                // тот же отступ, что у соседних ячеек: иначе ритм зазоров сбит.
                 implicitWidth: {
                     var vis = Math.min(host.trayCount, host.trayMax)
                     return vis * 20 + Math.max(0, vis - 1) * 6
                         + (host.trayCount > host.trayMax ? moreBox.width + 8 : 0)
+                        + 2 * Theme.space3
                 }
                 implicitHeight: Theme.barCellH
 
@@ -26,7 +28,7 @@ import "../shared"
 
                 Row {
                     id: trayRow
-                    anchors.left: parent.left
+                    anchors.horizontalCenter: parent.horizontalCenter
                     anchors.verticalCenter: parent.verticalCenter
                     height: Theme.barCellH
                     spacing: 6

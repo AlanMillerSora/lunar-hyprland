@@ -73,7 +73,7 @@ FloatingWindow {
         { name: "Games",      icon: "\uf11b", page: "GamesPage" },
         { name: "Dev",        icon: "\uf121", page: "DevPage" },
         { name: "Update",     icon: "\uf021", page: "UpdatePage" },
-        { name: "Media",      icon: "\uf302", page: "MediaPage" }
+        { name: "Media",      icon: "\uf008", page: "MediaPage" }
     ]
 
     property int selectedIndex: 0

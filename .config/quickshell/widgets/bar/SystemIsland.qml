@@ -36,7 +36,8 @@ Cell {
                 width: 56
                 height: 4
                 radius: height / 2
-                color: Theme.trackBg
+                // дорожка видна на плашке (раньше trackBg почти сливался с фоном)
+                color: Theme.alpha(Theme.barText, 0.15)
 
                 Rectangle {
                     width: parent.width * Math.max(0, Math.min(1,

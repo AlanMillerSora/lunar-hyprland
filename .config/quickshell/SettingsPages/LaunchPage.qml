@@ -53,6 +53,10 @@ Item {
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSmall
                 Layout.alignment: Qt.AlignVCenter
+                // «30 из 30» при пустом фильтре — шум: показываю только
+                // когда выдача реально урезана (идёт поиск)
+                visible: AppModel.allApps.length === 0
+                    || AppModel.apps.length !== AppModel.allApps.length
             }
 
             Item { Layout.fillWidth: true }
@@ -94,7 +98,9 @@ Item {
             readonly property int cols: Math.max(4, Math.min(8, Math.floor((width - 12) / 150)))
             readonly property real cw: Math.floor((width - 12) / cols)
             cellWidth: cw
-            cellHeight: cw + 10
+            // высота ячейки — от контента (иконка + две строки подписи), а не
+            // от ширины: иначе на широком окне между рядами зияли пустоты
+            cellHeight: Math.round(Theme.rowHComfy * 2.5)
             clip: true
             model: AppModel.apps
             currentIndex: 0
@@ -128,8 +134,10 @@ Item {
                 }
 
                 Column {
-                    anchors.centerIn: parent
-                    spacing: 6
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    anchors.topMargin: 10
+                    spacing: 8
 
                     Item {
                         width: 46
@@ -141,9 +149,9 @@ Item {
                         Rectangle {
                             anchors.fill: parent
                             radius: Theme.radiusM
-                            color: Theme.fill
-                            border.width: hover.containsMouse ? 1 : 0
-                            border.color: Theme.borderAccent
+                            color: Theme.cardBg
+                            border.width: 1
+                            border.color: hover.containsMouse ? Theme.borderAccent : Theme.border
                         }
 
                         Image {
@@ -161,16 +169,16 @@ Item {
                             visible: false
                         }
 
-                        // монохром: гашу насыщенность и лишь чуть поднимаю
-                        // яркость. Сильная яркость+контраст выбеливали иконки —
-                        // у Telegram пропадал самолётик, у Lutris — росчерк
+                        // монохром: только гашу насыщенность, яркость не поднимаю —
+                        // иначе заливные иконки (Telegram, Lutris) выбеливались
+                        // в безликий диск, теряя внутренний рисунок
                         MultiEffect {
                             anchors.fill: appIcon
                             source: appIcon
                             visible: appIcon.status === Image.Ready
                             saturation: -1.0
-                            brightness: 0.18
-                            contrast: 0.10
+                            brightness: 0.04
+                            contrast: 0.0
                         }
 
                         Text {
@@ -184,16 +192,25 @@ Item {
                         }
                     }
 
-                    Text {
-                        text: modelData.name
-                        color: Theme.text
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontBody
+                    // подпись в боксе фиксированной высоты: однострочные и
+                    // двухстрочные имена не сдвигают иконки по вертикали
+                    Item {
                         width: Math.max(80, grid.cellWidth - 24)
-                        horizontalAlignment: Text.AlignHCenter
-                        wrapMode: Text.WordWrap
-                        maximumLineCount: 2
-                        elide: Text.ElideRight
+                        height: Math.round(Theme.fontBody * 2.6)
+
+                        Text {
+                            anchors.top: parent.top
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            text: modelData.name
+                            color: Theme.text
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontBody
+                            horizontalAlignment: Text.AlignHCenter
+                            wrapMode: Text.WordWrap
+                            maximumLineCount: 2
+                            elide: Text.ElideRight
+                        }
                     }
                 }
 

@@ -3,11 +3,10 @@ import "../.."
 import "../shared"
 
 // ════════════════════════════════════════════════════════════════
-//  BarCenterZone — центр бара в arch-стиле: одна пилюля (accent-подложка),
-//  внутри — сеть ↓↑ · пульт · часы. Боковые ячейки равной ширины, поэтому
-//  кнопка пульта стоит ровно по центру экрана. Состав/порядок — из
-//  BarSettings. Наружу отдаю pillCenterFromLeft: по нему корень центрует
-//  строку так, чтобы центр пилюли лёг на центр экрана.
+//  BarCenterZone — центр бара: ЧАСЫ — ось композиции, стоят ровно по
+//  центру экрана. Всё, что в списке до часов, уходит влево, что после —
+//  вправо. Своей пилюли больше нет: единую подложку даёт плашка бара.
+//  Состав/порядок — из BarSettings (bar.json). host = корень LunarPanel.
 // ════════════════════════════════════════════════════════════════
 Item {
     id: centerZone
@@ -20,12 +19,24 @@ Item {
             weatherCellRef.openBubbleFromHere()
     }
 
-    // равная ширина боковых ячеек — для симметрии пульта по центру
-    readonly property real sideW: 104
+    // ── ячейки центра и ось ──
+    readonly property var cells: BarSettings.centerVisible
+    // индекс часов: они всегда есть (locked) и служат осью композиции
+    readonly property int clockIndex: {
+        for (var i = 0; i < cells.length; i++)
+            if (cells[i].id === "clock")
+                return i
+        return -1
+    }
+    readonly property var leftCells: clockIndex > 0 ? cells.slice(0, clockIndex) : []
+    readonly property var rightCells: clockIndex >= 0 ? cells.slice(clockIndex + 1) : []
 
-    implicitWidth: pill.width + 2 * Theme.space2
+    // ширина симметрична часам, поэтому центр зоны = центр часов = центр
+    // экрана, а ячейки слева/справа заведомо влезают в свои половины
+    implicitWidth: clockLoader.implicitWidth
+        + 2 * Math.max(leftRow.implicitWidth, rightRow.implicitWidth)
+        + 4 * Theme.space3
     implicitHeight: Theme.barH
-    clip: true
 
     // id ячейки → её компонент
     function compFor(id) {
@@ -36,53 +47,66 @@ Item {
         return null
     }
 
-    // центр пилюли от левого края зоны — по нему корень центрует строку
-    readonly property real pillCenterFromLeft: Theme.space2 + pill.width / 2
-
-    // колесо над пилюлей — громкость
+    // колесо над центром — громкость
     WheelHandler {
         onWheel: function (ev) {
             centerZone.host.bumpVol(ev.angleDelta.y > 0 ? 0.05 : -0.05)
         }
     }
 
-    // ── пилюля режимов: мягкая accent-подложка (arch surfaceActive) ──
-    Rectangle {
-        id: pill
+    // ── часы: ось, прибита к центру зоны, а зона — к центру экрана ──
+    Loader {
+        id: clockLoader
         anchors.centerIn: parent
-        width: centerRow.implicitWidth + Theme.space3 * 2
-        height: Theme.barCellH + 4
-        radius: Theme.radius
-        color: Theme.surface
-        border.width: 1
-        border.color: Theme.border2
-        Behavior on width { NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut } }
+        height: parent.height
+        sourceComponent: centerZone.compFor("clock")
+    }
 
-        Row {
-            id: centerRow
-            anchors.centerIn: parent
-            height: parent.height
-            spacing: Theme.space1
+    // ── ячейки слева от часов: прижаты к их левому краю ──
+    Row {
+        id: leftRow
+        anchors.right: clockLoader.left
+        anchors.rightMargin: Theme.space3
+        anchors.verticalCenter: parent.verticalCenter
+        height: Theme.barH
+        spacing: Theme.space2
 
-            Repeater {
-                id: centerRep
-                model: BarSettings.centerVisible
+        Repeater {
+            model: centerZone.leftCells
 
-                delegate: Loader {
-                    required property var modelData
-                    id: centerLoader
-                    // боковые ячейки равной ширины, центральная — по содержимому
-                    width: (modelData.id === "network" || modelData.id === "clock")
-                        ? centerZone.sideW : (item ? item.implicitWidth : 0)
-                    height: parent.height
-                    anchors.verticalCenter: parent.verticalCenter
-                    sourceComponent: centerZone.compFor(modelData.id)
-                }
+            delegate: Loader {
+                required property var modelData
+                width: item ? item.implicitWidth : 0
+                height: parent.height
+                anchors.verticalCenter: parent.verticalCenter
+                sourceComponent: centerZone.compFor(modelData.id)
             }
         }
     }
 
-    // ── сеть ↓↑: клик открывает сеть в Hub ──
+    // ── ячейки справа от часов: прижаты к их правому краю ──
+    Row {
+        id: rightRow
+        anchors.left: clockLoader.right
+        anchors.leftMargin: Theme.space3
+        anchors.verticalCenter: parent.verticalCenter
+        height: Theme.barH
+        spacing: Theme.space2
+
+        Repeater {
+            model: centerZone.rightCells
+
+            delegate: Loader {
+                required property var modelData
+                width: item ? item.implicitWidth : 0
+                height: parent.height
+                anchors.verticalCenter: parent.verticalCenter
+                sourceComponent: centerZone.compFor(modelData.id)
+            }
+        }
+    }
+
+    // ── сеть ↓: клик открывает сеть в Hub ──
     Component {
         id: netComp
         Cell {
@@ -181,32 +205,29 @@ Item {
     }
 
     // ── часы + дата ──
+    //    два Text прямо в ячейке: без вложенного Row с anchors — иначе
+    //    неявная ширина ячейки не учитывала дату и правый сосед наезжал.
     Component {
         id: clockComp
         Cell {
             anchors.verticalCenter: parent.verticalCenter
             accent: Theme.accent
             tip: centerZone.host.dayText + " " + centerZone.host.dateText
-            Row {
-                anchors.centerIn: parent
-                height: Theme.barCellH
-                spacing: centerZone.host.clockText.length > 0 ? 8 : 0
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: centerZone.host.clockText
-                    color: Theme.barText
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(17)
-                    font.bold: true
-                    font.letterSpacing: 1
-                }
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: centerZone.host.dayText + " " + centerZone.host.dateText
-                    color: Theme.barFaint
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSmall
-                }
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: centerZone.host.clockText
+                color: Theme.barText
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize(17)
+                font.bold: true
+                font.letterSpacing: 1
+            }
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: centerZone.host.dayText + " " + centerZone.host.dateText
+                color: Theme.barFaint
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSmall
             }
         }
     }

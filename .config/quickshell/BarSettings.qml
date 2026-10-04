@@ -22,15 +22,15 @@ QtObject {
         { id: "perf",       zone: "left",   name: "PERF" },
         { id: "network",    zone: "center", name: "Сеть ↓" },
         { id: "weather",    zone: "center", name: "Погода" },
-        { id: "control",    zone: "center", name: "Пульт" },
         { id: "clock",      zone: "center", name: "Часы и дата", locked: true },
-        { id: "system",     zone: "right",  name: "Ресурсы CPU·RAM·GPU" },
+        { id: "control",    zone: "center", name: "Пульт" },
         { id: "media",      zone: "right",  name: "Медиа" },
         { id: "game",       zone: "right",  name: "Game Mode" },
         { id: "layout",     zone: "right",  name: "Раскладка" },
         { id: "tray",       zone: "right",  name: "Трей" },
         { id: "notifs",     zone: "right",  name: "Уведомления" },
-        { id: "volume",     zone: "right",  name: "Звук" }
+        { id: "volume",     zone: "right",  name: "Звук" },
+        { id: "system",     zone: "right",  name: "Ресурсы CPU·RAM·GPU" }
     ]
 
     // ── флаги состояния файла: как в Theme.uiState — не затираем
