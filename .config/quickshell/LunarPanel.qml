@@ -14,11 +14,11 @@ import "widgets/bar"
 
 // ────────────────────────────────────────────────────────────────
 //  Lunar top bar — монохромный HUD
-//    единая плашка: LUNAR+фазы · PERF/раскладка · часы/медиа/пульт · статус
-//  Ввод ловит только плашка (mask) — зазоры пропускают клики (важно для
-//  fullscreen). exclusiveZone держит окна вне полосы бара. По клику плашка
-//  сама раскрывается вниз и показывает панель режима (морф по мотивам
-//  ArchEclipse: clip + opacity + scale).
+//    единая плашка: фазы столов · PERF · часы/сеть/погода · статус
+//  Ввод ловит только плашка и открытая карточка (mask) — зазоры
+//  пропускают клики (важно для fullscreen). exclusiveZone держит окна
+//  вне полосы бара. Клик по ячейке открывает карточку-«пузырь» ПОД ней
+//  (в тон Hub: surface + рамка + зерно + шапка), бар при этом не сжимается.
 // ────────────────────────────────────────────────────────────────
 PanelWindow {
     id: root
@@ -47,6 +47,7 @@ PanelWindow {
     mask: Region {
         Region { item: BarState.expanded ? clickShield : null }
         Region { item: bar }
+        Region { item: BarState.expanded ? bubble : null }
         Region { item: BarSettings.hotZone ? hotZoneLeft : null }
         Region { item: BarSettings.hotZone ? hotZoneRight : null }
         Region { item: root.recording ? recPill : null }
@@ -647,17 +648,14 @@ PanelWindow {
         recordProc.running = true
     }
 
-    // ─────────────── панель бара (вариант 3) ───────────────
-    // Состояния (режим/пульс/холд) — в BarState; здесь только вид: морф,
-    // размеры и геометрия. Всё реагирует на BarState.
-    // Морф бара — для ВСЕХ режимов: плашка сама становится панелью
-    // (пульт/поиск/медиа/погода/телеметрия/уведомления), а не карточкой снизу.
-    property real morph: 0
-    Behavior on morph { Anim { type: Anim.DefaultSpatial } }
-    // Раскрытие панели (все режимы): 0 — закрыто, 1 — открыто.
-    property real panelOpen: BarState.mode !== "" ? 1 : 0
-    Behavior on panelOpen { Anim { type: Anim.DefaultSpatial } }
-    // высота панели по режиму (анимируется при смене режима)
+    // ─────────────── панель бара: карточка-«пузырь» под ячейкой ───────────────
+    // Бар всегда остаётся на всю ширину; режим открывается отдельной карточкой
+    // ПОД кликнутой ячейкой (в тон Hub), а не «сворачивает» бар в одну плашку.
+    // Появление — opacity + scale от верхней кромки, раскладка per-frame не дёргается.
+    // reveal: 0 — закрыто, 1 — открыто.
+    property real reveal: BarState.mode !== "" ? 1 : 0
+    Behavior on reveal { Anim { type: Anim.DefaultSpatial } }
+    // высота карточки по режиму (анимируется при смене режима)
     function panelHeightFor(m) {
         if (m === "media") return Theme.panelHeaderH + mediaPanel.implicitHeight + Theme.space3
         if (m === "search") return Theme.panelHSearch
@@ -678,9 +676,9 @@ PanelWindow {
         return Theme.panelWSearch
     }
 
-    // ── привязка морфа к ячейке: где кликнули, оттуда и раскрывается.
-    //    x ячейки беру в координатах контента плашки (contentItem), клампинг
-    //    в `bar.expandedX` не даёт панели вылезти за края экрана. ──
+    // ── привязка карточки к ячейке: где кликнули, под тем и всплывает.
+    //    x ячейки беру в координатах контента (contentItem), клампинг в
+    //    `bubbleX` не даёт карточке вылезти за края экрана. ──
     function cellOriginX(item) {
         if (!item)
             return root.width / 2
@@ -693,7 +691,20 @@ PanelWindow {
         if (m === "sys") return cellOriginX(rightZone.sysCellRef)
         return root.width / 2
     }
-    readonly property bool panelHasHeader: BarState.mode === "notifs"
+    property real panelTargetW: root.panelWidthFor(BarState.mode)
+    Behavior on panelTargetW { Anim { type: Anim.DefaultSpatial } }
+
+    // геометрия карточки-пузыря: центр под ячейкой, зажат в края экрана
+    readonly property real bubbleY: Theme.barMargin + Theme.barH + Theme.space2
+    readonly property real bubbleX: {
+        var w = root.panelTargetW
+        var c = BarState.originX >= 0 ? BarState.originX : root.width / 2
+        var min = Theme.barMargin
+        var max = Math.max(min, root.width - w - Theme.barMargin)
+        return Math.max(min, Math.min(max, c - w / 2))
+    }
+    readonly property bool panelHasHeader: BarState.mode === "media"
+        || BarState.mode === "notifs"
         || BarState.mode === "sys"
         || BarState.mode === "weather"
     readonly property string panelTitle: {
@@ -749,7 +760,6 @@ PanelWindow {
             // плавно возвращается на своё место.
             if (BarState.mode !== "")
                 BarState.originX = root.originForMode(BarState.mode)
-            root.morph = (BarState.mode !== "") ? 1 : 0
             root.panelContentOpacity = 0
             panelFade.restart()
             if (BarState.mode === "notifs")
@@ -813,29 +823,14 @@ PanelWindow {
     // ── ЕДИНЫЙ БАР: один фон на весь верх, содержимое внутри ──
     Rectangle {
         id: bar
-        // единая плашка на всю ширину экрана (с отступом barMargin): левая
-        // зона у края, правая у другого, часы — ровно по центру. В режиме
-        // плашка морфит к размеру панели. ──
-        readonly property real collapsedX: Theme.barMargin
-        readonly property real collapsedW: parent.width - 2 * Theme.barMargin
-        readonly property real expandedW: root.panelWidthFor(BarState.mode) + 2 * Theme.barPad
-        // цель по X: центр кликнутой ячейки, зажатый в границы экрана.
-        // без клика (хоткей/IPC) originX = -1 → раскрытие от центра экрана.
-        readonly property real expandedX: {
-            var c = BarState.originX >= 0 ? BarState.originX : parent.width / 2
-            var min = Theme.barMargin
-            var max = Math.max(min, parent.width - expandedW - Theme.barMargin)
-            return Math.max(min, Math.min(max, c - expandedW / 2))
-        }
-        width: collapsedW + (expandedW - collapsedW) * root.morph
-        x: collapsedX + (expandedX - collapsedX) * root.morph
+        // плашка бара — всегда на всю ширину и только высотой строки.
+        // Раскрытый режим живёт отдельной карточкой ниже (bubble), бар не сжимается.
+        x: Theme.barMargin
+        width: parent.width - 2 * Theme.barMargin
         anchors.top: parent.top
         anchors.topMargin: Theme.barMargin
-        // в морфе плашка = строка + контент режима (panelTargetH — только контент)
-        height: Theme.barH + root.morph * root.panelTargetH
+        height: Theme.barH
         radius: Theme.barRadius
-        // единая плашка всю дорогу: и в покое, и в раскрытом режиме это одна
-        // и та же подложка-«рельса» на всю ширину.
         color: root.pillBg
         border.width: 1
         border.color: Theme.border
@@ -871,33 +866,80 @@ PanelWindow {
             layer.enabled: true
         }
 
-        // ── ПАНЕЛЬ: контент режима внутри раскрытой вниз плашки ──
-        // Живёт ребёнком `bar`, чтобы расти и обрезаться вместе с фоном
-        // (без рассинхрона двух отдельных прямоугольников).
+    }
+
+    // ── КАРТОЧКА-«ПУЗЫРЬ»: режим открывается под ячейкой, бар остаётся ──
+    // Бар не сворачиваю: под кликнутой ячейкой всплывает отдельная карточка
+    // в тон Hub — тот же surface, рамка, зерно и шапка.
+    Rectangle {
+        id: bubble
+        visible: root.reveal > 0.001
+        opacity: root.reveal
+        x: root.bubbleX
+        y: root.bubbleY - (1 - root.reveal) * 8
+        width: root.panelTargetW
+        height: root.panelTargetH
+        radius: Theme.radiusM
+        color: Theme.alpha(Theme.surfaceSolid, 0.92)
+        border.width: 1
+        border.color: Theme.border
+        clip: true
+        transformOrigin: Item.Top
+        scale: 0.98 + 0.02 * root.reveal
+
+        HoverHandler { onHoveredChanged: BarState.panelHovered = hovered }
+
+        // зерно в тон бару
+        Image {
+            id: nzPop
+            anchors.fill: parent
+            source: Qt.resolvedUrl("assets/noise.png")
+            fillMode: Image.Tile
+            smooth: false
+            cache: true
+            visible: false
+            layer.enabled: true
+        }
+        MultiEffect {
+            anchors.fill: parent
+            source: nzPop
+            maskEnabled: true
+            maskSource: nmPop
+            opacity: 0.05
+        }
         Rectangle {
-            id: panel
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: parent.top
-            anchors.topMargin: Theme.barH
-            width: root.panelWidthFor(BarState.mode)
-            // высота = весь фон минус строка бара: контент всегда точно
-            // в границах плашки, без рассинхрона с анимацией фона.
-            height: Math.max(0, parent.height - Theme.barH)
-            color: "transparent"
-            border.width: 0
-            clip: true
-            visible: root.panelOpen > 0.001
-            opacity: 1
-            Behavior on width { Anim { type: Anim.DefaultSpatial } }
+            id: nmPop
+            anchors.fill: parent
+            radius: Theme.radiusM
+            color: "white"
+            visible: false
+            layer.enabled: true
+        }
 
-            HoverHandler { onHoveredChanged: BarState.panelHovered = hovered }
+        // HUD-скобки — тот же почерк, что у Hub (верх-лево / низ-право)
+        Rectangle {
+            width: 16; height: 1.5; color: Theme.alpha(Theme.accent, 0.30)
+            anchors { top: parent.top; left: parent.left; margins: Theme.space2 }
+        }
+        Rectangle {
+            width: 1.5; height: 16; color: Theme.alpha(Theme.accent, 0.30)
+            anchors { top: parent.top; left: parent.left; margins: Theme.space2 }
+        }
+        Rectangle {
+            width: 16; height: 1.5; color: Theme.alpha(Theme.accent, 0.30)
+            anchors { bottom: parent.bottom; right: parent.right; margins: Theme.space2 }
+        }
+        Rectangle {
+            width: 1.5; height: 16; color: Theme.alpha(Theme.accent, 0.30)
+            anchors { bottom: parent.bottom; right: parent.right; margins: Theme.space2 }
+        }
 
-            // клик по фону панели — закрыть (по кнопкам не срабатывает: они выше)
-            MouseArea {
-                anchors.fill: parent
-                z: -1
-                onClicked: BarState.closePanel()
-            }
+        // клик по фону карточки — закрыть (по кнопкам не срабатывает: они выше)
+        MouseArea {
+            anchors.fill: parent
+            z: -1
+            onClicked: BarState.closePanel()
+        }
 
             // ── ШАПКА ОСТРОВА: имя режима, действия, закрытие ──
             Item {
@@ -1025,7 +1067,6 @@ PanelWindow {
             // ── УВЕДОМЛЕНИЯ ──
             PanelNotifs { host: root }
         }
-    }
 
     // ── СТРОКА БАРА: три зоны на всю ширину. Левая прижата к краю, правая —
     // к другому, ЧАСЫ стоят ровно по центру экрана и служат осью композиции. ──
@@ -1035,8 +1076,6 @@ PanelWindow {
         anchors.top: parent.top
         anchors.topMargin: Theme.barMargin
         anchors.left: parent.left
-        opacity: Math.max(0, 1 - root.morph * 8)
-        enabled: !BarState.expanded
     }
 
     BarCenterZone {
@@ -1045,8 +1084,6 @@ PanelWindow {
         anchors.top: parent.top
         anchors.topMargin: Theme.barMargin
         anchors.horizontalCenter: parent.horizontalCenter
-        opacity: Math.max(0, 1 - root.morph * 8)
-        enabled: !BarState.expanded
     }
 
     BarRightZone {
@@ -1055,8 +1092,6 @@ PanelWindow {
         anchors.top: parent.top
         anchors.topMargin: Theme.barMargin
         anchors.right: parent.right
-        opacity: Math.max(0, 1 - root.morph * 8)
-        enabled: !BarState.expanded
     }
 
     // ── ГОРЯЧИЕ ЗОНЫ у краёв бара: ховер раскрывает сайдбар ──
@@ -1131,7 +1166,7 @@ PanelWindow {
         border.width: 1
         border.color: Theme.alpha(Theme.danger, 0.5)
         width: recPillRow.implicitWidth + 2 * Theme.barPad
-        opacity: (1 - root.morph) * (root.recording ? 1 : 0)
+        opacity: root.recording ? 1 : 0
 
         Row {
             id: recPillRow
