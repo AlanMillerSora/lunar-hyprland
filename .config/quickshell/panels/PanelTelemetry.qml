@@ -9,7 +9,7 @@ import "../widgets/shared"
             visible: BarState.mode === "sys"
             opacity: host.panelContentOpacity
             anchors.top: parent.top
-            anchors.topMargin: Theme.space3
+            anchors.topMargin: Theme.panelHeaderH + Theme.space1
             anchors.horizontalCenter: parent.horizontalCenter
             width: parent.width - Theme.barPad * 2
             spacing: Theme.space2
