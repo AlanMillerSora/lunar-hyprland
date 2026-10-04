@@ -63,7 +63,7 @@ QtObject {
         expandedId = -1
         rebuild()
         nm.actionProc.command = ["bash", "-c",
-            "pkill -x mako; sleep 0.3; setsid mako >/dev/null 2>&1 &"]
+            "systemctl --user reset-failed mako.service 2>/dev/null; systemctl --user restart mako.service"]
         nm.actionProc.running = true
     }
 

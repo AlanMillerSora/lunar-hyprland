@@ -25,7 +25,7 @@ PanelWindow {
 
     anchors { top: true; left: true; right: true }
     // окно выше бара — под выезжающую вниз панель (вариант 3)
-    implicitHeight: Theme.barH + 500
+    implicitHeight: Theme.barH + 660
     color: "transparent"
 
     WlrLayershell.layer: WlrLayer.Top
@@ -34,7 +34,7 @@ PanelWindow {
     WlrLayershell.keyboardFocus: BarState.expanded
         ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     // окна не заезжают под полосу бара (плюс небольшой зазор снизу)
-    WlrLayershell.exclusiveZone: Theme.barMargin + Theme.barH + Theme.space1
+    WlrLayershell.exclusiveZone: Theme.barTop + Theme.barH + Theme.space1
     WlrLayershell.anchors.top: true
     WlrLayershell.anchors.left: true
     WlrLayershell.anchors.right: true
@@ -614,7 +614,7 @@ PanelWindow {
     // Появление — opacity + scale от верхней кромки, раскладка per-frame не дёргается.
     // reveal: 0 — закрыто, 1 — открыто.
     property real reveal: BarState.mode !== "" ? 1 : 0
-    Behavior on reveal { Anim { type: Anim.DefaultSpatial } }
+    Behavior on reveal { Anim { type: Anim.Standard } }
     // высота карточки по режиму (анимируется при смене режима)
     function panelHeightFor(m) {
         if (m === "audio") return Theme.panelHeaderH + audioBody.implicitHeight + Theme.space3
@@ -622,11 +622,11 @@ PanelWindow {
         if (m === "search") return Theme.panelHSearch
         if (m === "notifs") return Theme.panelHNotifs
         if (m === "sys") return Theme.panelHeaderH + sysBody.implicitHeight + Theme.space3
-        if (m === "weather") return Theme.panelHeaderH + wxBody.implicitHeight + Theme.space3
+        if (m === "weather") return Theme.panelHeaderH + wxBody.implicitHeight + Theme.space5
         return Theme.barH
     }
     property real panelTargetH: root.panelHeightFor(BarState.mode)
-    Behavior on panelTargetH { Anim { type: Anim.DefaultSpatial } }
+    Behavior on panelTargetH { Anim { type: Anim.Standard } }
 
     // ширина панели по режиму: пульт/поиск — фикс, медиа/погода — по содержимому
     function panelWidthFor(m) {
@@ -635,7 +635,7 @@ PanelWindow {
         if (m === "media") return Theme.panelWMedia
         if (m === "notifs") return Theme.panelWNotifs
         if (m === "sys") return Theme.panelWSys
-        if (m === "weather") return wxBody.implicitWidth + 2 * Theme.space4
+        if (m === "weather") return wxBody.implicitWidth + 2 * Theme.space5
         return Theme.panelWSearch
     }
 
@@ -659,10 +659,10 @@ PanelWindow {
         return -1
     }
     property real panelTargetW: root.panelWidthFor(BarState.mode)
-    Behavior on panelTargetW { Anim { type: Anim.DefaultSpatial } }
+    Behavior on panelTargetW { Anim { type: Anim.Standard } }
 
     // геометрия карточки-пузыря: центр под ячейкой, зажат в края экрана
-    readonly property real bubbleY: Theme.barMargin + Theme.barH + Theme.space2
+    readonly property real bubbleY: Theme.barTop + Theme.barH + Theme.space2
     readonly property real bubbleX: {
         var w = root.panelTargetW
         var c = BarState.originX >= 0 ? BarState.originX : root.width / 2
@@ -684,16 +684,8 @@ PanelWindow {
         if (BarState.mode === "weather") return "ПОГОДА"
         return ""
     }
-    // появление контента режима (морфинг)
-    property real panelContentOpacity: 1
-    NumberAnimation {
-        id: panelFade
-        target: root
-        property: "panelContentOpacity"
-        to: 1
-        duration: Theme.animMed
-        easing.type: Theme.easeOut
-    }
+    // Контент появляется вместе с выпадением — отдельного «всплытия» нет.
+    readonly property real panelContentOpacity: root.reveal
     // игра — синхронизирую в BarState, чтобы пульсы не всплывали
     Binding {
         target: BarState
@@ -730,8 +722,6 @@ PanelWindow {
             // плавно возвращается на своё место.
             if (BarState.mode !== "")
                 BarState.originX = root.originForMode(BarState.mode)
-            root.panelContentOpacity = 0
-            panelFade.restart()
             if (BarState.mode === "notifs")
                 NotifModel.load()
             else if (BarState.mode === "search") {
@@ -798,15 +788,61 @@ PanelWindow {
         x: Theme.barMargin
         width: parent.width - 2 * Theme.barMargin
         anchors.top: parent.top
-        anchors.topMargin: Theme.barMargin
+        anchors.topMargin: Theme.barTop
         height: Theme.barH
-        radius: Theme.barRadius
+        radius: Theme.arch ? 0 : Theme.barRadius
         color: root.pillBg
-        border.width: 1
+        border.width: Theme.arch ? 0 : 1
         border.color: Theme.border
         clip: true
 
         HoverHandler { onHoveredChanged: BarState.barHovered = hovered }
+
+        // architect: верхняя кромка бара — как нижняя (акцент + рельса + узел)
+        Rectangle {
+            visible: Theme.arch
+            anchors { left: parent.left; right: parent.right; top: parent.top }
+            height: Theme.line
+            color: Theme.accent
+        }
+        Rectangle {
+            visible: Theme.arch
+            anchors { left: parent.left; right: parent.right; top: parent.top }
+            anchors.topMargin: 3
+            height: Theme.line
+            color: Theme.hair
+        }
+        Rectangle {
+            visible: Theme.arch
+            anchors { horizontalCenter: parent.horizontalCenter; top: parent.top }
+            anchors.topMargin: 1
+            width: 5
+            height: 5
+            color: Theme.hairAccent
+        }
+        // architect: линия по нижней кромке бара + скобки по углам
+        Rectangle {
+            visible: Theme.arch
+            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+            height: Theme.line
+            color: Theme.accent
+        }
+        // парная тонкая линия — «рельса»
+        Rectangle {
+            visible: Theme.arch
+            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+            anchors.bottomMargin: 3
+            height: Theme.line
+            color: Theme.hair
+        }
+        // центральный узел на линии
+        Rectangle {
+            visible: Theme.arch
+            anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom }
+            anchors.bottomMargin: 1
+            width: 5; height: 5
+            color: Theme.hairAccent
+        }
 
         // зерно: один тайл на весь бар, маска по скруглению
         Image {
@@ -849,29 +885,50 @@ PanelWindow {
         radius: 1
         color: Theme.accent
         x: (BarState.originX >= 0 ? BarState.originX : root.width / 2) - width / 2
-        y: Theme.barMargin + Theme.barH - 2
+        y: Theme.barTop + Theme.barH - 2
     }
 
-    // ── КАРТОЧКА-«ПУЗЫРЬ»: режим открывается под ячейкой, бар остаётся ──
-    // Бар не сворачиваю: под кликнутой ячейкой всплывает отдельная карточка
-    // в тон Hub — тот же surface, рамка, зерно и шапка.
+    // ── КАРТОЧКА-«ПУЗЫРЬ»: режим выпадает под ячейкой, бар остаётся. ──
+    // Поверхность — та же, что у плашки бара (palette.barPill из мутагена):
+    // меняются обои → обновляется palette.json → пузырь меняет тон вместе
+    // с баром. Из анимации — только мягкое выпадение (без масштаба/пружины).
     Rectangle {
         id: bubble
         visible: root.reveal > 0.001
         opacity: root.reveal
         x: root.bubbleX
-        y: root.bubbleY - (1 - root.reveal) * 8
+        y: root.bubbleY - (1 - root.reveal) * 10
         width: root.panelTargetW
         height: root.panelTargetH
-        radius: Theme.radiusM
-        color: Theme.alpha(Theme.surfaceSolid, 0.92)
+        radius: Theme.barRadius
+        color: Theme.barPill
         border.width: 1
         border.color: Theme.border
         clip: true
         transformOrigin: Item.Top
-        scale: 0.98 + 0.02 * root.reveal
 
         HoverHandler { onHoveredChanged: BarState.panelHovered = hovered }
+
+        // architect: линия по всей длине верхней кромки
+        Rectangle {
+            visible: Theme.arch
+            anchors { left: parent.left; right: parent.right; top: parent.top }
+            height: Theme.lineThick
+            color: Theme.hairAccent
+        }
+        // architect: линия по нижней кромке
+        Rectangle {
+            visible: Theme.arch
+            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+            height: Theme.line
+            color: Theme.hairAccent
+        }
+
+        // architect: визиры в полях
+        HudCrosshairs { inset: 10; arm: 5 }
+        HudNodes { inset: 5; size: 4 }
+        HudInnerFrame { variant: 0 }
+        HudDiagonals {}
 
         // зерно в тон бару
         Image {
@@ -894,7 +951,7 @@ PanelWindow {
         Rectangle {
             id: nmPop
             anchors.fill: parent
-            radius: Theme.radiusM
+            radius: Theme.barRadius
             color: "white"
             visible: false
             layer.enabled: true
@@ -940,7 +997,7 @@ PanelWindow {
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: Theme.space2
 
-                    SectionLabel {
+                    SectionHeader {
                         anchors.verticalCenter: parent.verticalCenter
                         text: root.panelTitle
                         textColor: Theme.textDim
@@ -1013,11 +1070,33 @@ PanelWindow {
                 }
 
                 Rectangle {
+                    visible: !Theme.arch
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.bottom: parent.bottom
                     height: 1
                     color: Theme.border
+                }
+
+                // architect: штриховая линия под шапкой + засечка-акцент
+                DashedLine {
+                    visible: Theme.arch
+                    anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+                    anchors.leftMargin: Theme.barPad
+                    anchors.rightMargin: Theme.barPad
+                    height: 1
+                    dash: 5
+                    gap: 5
+                    lineColor: Theme.hairAccent
+                }
+                Rectangle {
+                    visible: Theme.arch
+                    anchors.left: parent.left
+                    anchors.bottom: parent.bottom
+                    anchors.leftMargin: Theme.barPad
+                    width: 42
+                    height: Theme.lineThick
+                    color: Theme.hairAccent
                 }
             }
 
@@ -1062,7 +1141,7 @@ PanelWindow {
         id: leftZone
         host: root
         anchors.top: parent.top
-        anchors.topMargin: Theme.barMargin
+        anchors.topMargin: Theme.barTop
         anchors.left: parent.left
     }
 
@@ -1070,7 +1149,7 @@ PanelWindow {
         id: centerZone
         host: root
         anchors.top: parent.top
-        anchors.topMargin: Theme.barMargin
+        anchors.topMargin: Theme.barTop
         anchors.horizontalCenter: parent.horizontalCenter
     }
 
@@ -1078,7 +1157,7 @@ PanelWindow {
         id: rightZone
         host: root
         anchors.top: parent.top
-        anchors.topMargin: Theme.barMargin
+        anchors.topMargin: Theme.barTop
         anchors.right: parent.right
     }
 
@@ -1147,7 +1226,7 @@ PanelWindow {
         anchors.right: parent.right
         anchors.rightMargin: Theme.barMargin
         anchors.top: parent.top
-        anchors.topMargin: Theme.barMargin
+        anchors.topMargin: Theme.barTop
         height: Theme.barH
         radius: Theme.barRadius
         color: Theme.alpha(Theme.danger, 0.16)

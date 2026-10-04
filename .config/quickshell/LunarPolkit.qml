@@ -98,7 +98,7 @@ PanelWindow {
             anchors.margins: Theme.space4
             spacing: Theme.space3
 
-            SectionLabel { text: "АУТЕНТИФИКАЦИЯ"; textColor: Theme.text; size: Theme.fontSmall }
+            SectionHeader { text: "АУТЕНТИФИКАЦИЯ"; textColor: Theme.text; size: Theme.fontSmall }
 
             Text {
                 Layout.fillWidth: true

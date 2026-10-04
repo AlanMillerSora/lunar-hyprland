@@ -33,8 +33,6 @@ PanelWindow {
 
     onCollapsedChanged: {
         if (!collapsed) {
-            sysStats.running = true
-            sysStatsTimer.restart()
             if (tabIndex === 0) api.refresh()
             if (!pinned && !stripHover.hovered && !contentHover.hovered && !topHover.hovered) hideTimer.restart()
         }
@@ -112,12 +110,35 @@ PanelWindow {
         x: collapsed ? -(width + 4) : 0
         // arch: sidebar — тот же surface-остров, что и панель бара; в покое
         // полупрозрачный, в hover плотнее (панель и так «парит» над окнами)
-        color: collapsed ? Theme.surfaceSolid : (contentHover.hovered ? Theme.surfaceHover : Theme.surface)
-        radius: Theme.radiusM
-        border.color: Theme.border2
+        // поверхность — та же, что у бара (palette.barPill): тон следует за
+        // мутагеном. В покое — бар, в наведении — чуть светлее.
+        color: contentHover.hovered ? Theme.barPillHover : Theme.barPill
+        radius: Theme.barRadius
+        border.color: Theme.border
         border.width: collapsed ? 0 : 1
 
         // острые HUD-скобки по углам — единый стиль с Hub
+        // architect: линия по всей длине верхней кромки
+        Rectangle {
+            anchors { left: parent.left; right: parent.right; top: parent.top }
+            height: Theme.lineThick
+            color: Theme.hairAccent
+            visible: Theme.arch
+        }
+        // architect: линия по нижней кромке
+        Rectangle {
+            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+            height: Theme.line
+            color: Theme.hairAccent
+            visible: Theme.arch
+        }
+
+        // architect: визиры в полях
+        HudCrosshairs { inset: 10; arm: 5 }
+        HudNodes { inset: 5; size: 4 }
+        HudInnerFrame { variant: 1 }
+        HudDiagonals {}
+
         HudCorners {
             color: Theme.accent
             size: 16
@@ -183,7 +204,7 @@ PanelWindow {
             Rectangle {
                 Layout.fillWidth: true
                 height: 1
-                color: Theme.border
+                color: Theme.arch ? Theme.hairAccent : Theme.border
             }
 
             Item {
@@ -265,7 +286,7 @@ PanelWindow {
                         RowLayout {
                             Layout.fillWidth: true
                             spacing: 6
-                            SectionLabel { text: "API-LIMIT"; textColor: Theme.text; size: Theme.fontSize(15) }
+                            SectionHeader { text: "API-LIMIT"; textColor: Theme.text; size: Theme.fontSize(15) }
                             Item { Layout.fillWidth: true }
                             Text {
                                 text: api.ok ? (api.lead !== "" ? api.lead : "нет данных") : api.status
@@ -351,7 +372,7 @@ PanelWindow {
                             color: Theme.border
                         }
 
-                        SectionLabel { text: "МОДЕЛИ · локально"; textColor: Theme.text; size: Theme.fontSize(13) }
+                        SectionHeader { text: "МОДЕЛИ · локально"; textColor: Theme.text; size: Theme.fontSize(13) }
 
                         // разбивка по моделям (локальная история): доля в расходе
                         Repeater {
@@ -504,11 +525,13 @@ PanelWindow {
             Rectangle {
                 Layout.fillWidth: true
                 height: 1
-                color: Theme.border
+                color: Theme.arch ? Theme.hairAccent : Theme.border
             }
 
             Text {
-                text: sysStats.text
+                text: Theme.arch
+                    ? "[ CPU " + SysInfo.cpu + "%  RAM " + SysInfo.ram + "% ]"
+                    : "CPU " + SysInfo.cpu + "%  RAM " + SysInfo.ram + "%"
                 color: Theme.textDim
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSize(13)
@@ -659,25 +682,8 @@ PanelWindow {
         }
     }
 
-    Process {
-        id: sysStats
-        // interval>0 обязателен: в новом процессе cpu_percent() иначе всегда 0
-        command: ["python3", "-c", "import psutil; print(f'CPU {int(psutil.cpu_percent(interval=0.3))}%  RAM {int(psutil.virtual_memory().percent)}%')"]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: if (text.trim() !== "") sysStats.text = text.trim()
-        }
-        stderr: StdioCollector {}
-        property string text: "CPU --%  RAM --%"
-    }
-    Timer {
-        id: sysStatsTimer
-        interval: 3000
-        running: !root.collapsed
-        repeat: true
-        onTriggered: sysStats.running = true
-    }
-
+    // CPU/RAM берём из общего SysInfo (заполняет eclipse-status.sh) —
+    // вместо отдельного python3/psutil в каждом сайдбаре.
     Component.onCompleted: {
         notesFile.reload()
         api.refresh()

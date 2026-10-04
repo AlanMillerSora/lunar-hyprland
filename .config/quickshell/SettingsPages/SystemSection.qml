@@ -576,7 +576,7 @@ Item {
                     Column {
                         spacing: 3
 
-                        SectionLabel { text: "󰒋  HOSTNAME"; textColor: Theme.accent; size: Theme.fontTiny; bold: false }
+                        SectionHeader { text: "󰒋  HOSTNAME"; textColor: Theme.accent; size: Theme.fontTiny; bold: false }
 
                         Text {
                             text: page.hostname
@@ -589,7 +589,7 @@ Item {
                     Column {
                         spacing: 3
 
-                        SectionLabel { text: "󰣇  OS"; textColor: Theme.accent; size: Theme.fontTiny; bold: false }
+                        SectionHeader { text: "󰣇  OS"; textColor: Theme.accent; size: Theme.fontTiny; bold: false }
 
                         Text {
                             text: page.os
@@ -604,7 +604,7 @@ Item {
                     Column {
                         spacing: 3
 
-                        SectionLabel { text: "󰔛  UPTIME"; textColor: Theme.accent; size: Theme.fontTiny; bold: false }
+                        SectionHeader { text: "󰔛  UPTIME"; textColor: Theme.accent; size: Theme.fontTiny; bold: false }
 
                         Text {
                             text: page.uptime
@@ -625,7 +625,7 @@ Item {
                     height: 24
                     spacing: Theme.space5
 
-                    SectionLabel {
+                    SectionHeader {
                         id: cpuHeader
                         text: "󰍛  CPU"
                         textColor: Theme.accent
@@ -734,7 +734,7 @@ Item {
                     height: 24
                     spacing: Theme.space5
 
-                    SectionLabel {
+                    SectionHeader {
                         id: gpuHeader
                         text: "󰢮  GPU"
                         textColor: Theme.accent
@@ -842,7 +842,7 @@ Item {
                     height: 24
                     spacing: Theme.space5
 
-                    SectionLabel {
+                    SectionHeader {
                         id: memoryHeader
                         text: "󰘚  RAM"
                         textColor: Theme.accent
@@ -951,7 +951,7 @@ Item {
                     height: 24
                     spacing: Theme.space5
 
-                    SectionLabel {
+                    SectionHeader {
                         text: "󰚰  ОБНОВЛЕНИЯ"
                         textColor: Theme.accent
                         size: page.hardwareLabelSize

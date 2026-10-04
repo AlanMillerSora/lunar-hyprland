@@ -233,7 +233,7 @@ Item {
         Rectangle { width: parent.width; height: 1; color: Theme.border }
 
         // ── ВЫВОД ──
-        SectionLabel { text: "ВЫВОД"; textColor: Theme.text; size: Theme.fontSmall; bold: true }
+        SectionHeader { text: "ВЫВОД"; textColor: Theme.text; size: Theme.fontSmall; bold: true }
         LevelRow {
             title: "ГРОМКОСТЬ"
             icon: page.icSpeaker
@@ -265,7 +265,7 @@ Item {
         Rectangle { width: parent.width; height: 1; color: Theme.border }
 
         // ── ВХОД (микрофон) ──
-        SectionLabel { text: "ВХОД"; textColor: Theme.text; size: Theme.fontSmall; bold: true }
+        SectionHeader { text: "ВХОД"; textColor: Theme.text; size: Theme.fontSmall; bold: true }
         LevelRow {
             title: "МИКРОФОН"
             icon: page.icMic
@@ -304,7 +304,7 @@ Item {
         Rectangle { width: parent.width; height: 1; color: Theme.border }
 
         // ── ПРИЛОЖЕНИЯ ──
-        SectionLabel { text: "ПРИЛОЖЕНИЯ · " + page.appStreams.length; textColor: Theme.text; size: Theme.fontSmall; bold: true }
+        SectionHeader { text: "ПРИЛОЖЕНИЯ · " + page.appStreams.length; textColor: Theme.text; size: Theme.fontSmall; bold: true }
         Column {
             width: parent.width
             spacing: page.sectionSpacing

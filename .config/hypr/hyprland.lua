@@ -412,7 +412,11 @@ hl.on("hyprland.start", function()
   -- reset-failed перед restart: после серии падений юнит ловит start-limit-hit,
   -- и без сброса restart из hyprland.start блокируется — стол остаётся без панели.
   hl.exec_cmd("sh -c 'systemctl --user import-environment DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE HYPRLAND_INSTANCE_SIGNATURE __GLX_VENDOR_LIBRARY_NAME GBM_BACKEND NVD_BACKEND LIBVA_DRIVER_NAME VK_ICD_FILENAMES 2>/dev/null; systemctl --user reset-failed lunar-quickshell.service 2>/dev/null; systemctl --user --no-block restart lunar-quickshell.service'")
-  hl.exec_cmd("mako")
+  -- уведомления: mako принадлежит systemd (mako.service, Type=dbus).
+  -- Раньше тут был `hl.exec_cmd("mako")` — ручной процесс дрался с юнитом
+  -- за D-Bus имя org.freedesktop.Notifications, и mako.service падал.
+  -- Один владелец: поднимаю юнит (env уже импортирован строкой выше).
+  hl.exec_cmd("sh -c 'systemctl --user reset-failed mako.service 2>/dev/null; systemctl --user start mako.service'")
   hl.exec_cmd("hypridle")
   -- история буфера обмена (клипборд Quickshell, SUPER+V).
   -- sh -c '… || true': падение wl-paste не оставляет автозапуск «тихо мёртвым»

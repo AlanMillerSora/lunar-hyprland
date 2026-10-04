@@ -69,29 +69,12 @@ Item {
         id: clockLoader
         anchors.centerIn: parent
         height: parent.height
+        width: implicitWidth
         sourceComponent: centerZone.compFor("clock")
     }
 
-    // ── тихие разделители вокруг часов: часы читаются отдельным «островом».
-    //    Высота — доля ячейки, цвет — едва заметный штрих текста. ──
-    Rectangle {
-        width: 1
-        height: Math.round(Theme.barCellH * 0.55)
-        anchors.right: clockLoader.left
-        anchors.rightMargin: Theme.space2
-        anchors.verticalCenter: parent.verticalCenter
-        color: Theme.alpha(Theme.barText, 0.12)
-        visible: centerZone.mediaActive
-    }
-    Rectangle {
-        width: 1
-        height: Math.round(Theme.barCellH * 0.55)
-        anchors.left: clockLoader.right
-        anchors.leftMargin: Theme.space2
-        anchors.verticalCenter: parent.verticalCenter
-        color: Theme.alpha(Theme.barText, 0.12)
-        visible: centerZone.rightCells.length > 0
-    }
+    // (отладочный лог убран)
+    // разделители вокруг часов убраны — оставлены только отступы
 
     // ── «рельса» плеера: пока ничего не играет, на месте медиа-полосы —
     //    тонкая линия в тон орбите столов, чтобы центр не пустовал ──
@@ -105,11 +88,53 @@ Item {
         visible: !centerZone.mediaActive
     }
 
+    // architect: риски вдоль медиа-рельсы
+    Row {
+        visible: !centerZone.mediaActive && Theme.arch
+        anchors.right: clockLoader.left
+        anchors.rightMargin: Theme.space3
+        anchors.verticalCenter: parent.verticalCenter
+        spacing: 26
+        Repeater {
+            model: 25
+            delegate: Rectangle {
+                required property int index
+                width: 1
+                height: index % 5 === 0 ? 9 : 4
+                color: Theme.hairAccent
+            }
+        }
+    }
+
+    // architect: размерная скобка под часами (технический мотив)
+    Item {
+        visible: Theme.arch
+        anchors.horizontalCenter: clockLoader.horizontalCenter
+        anchors.bottom: parent.bottom
+        width: clockLoader.width
+        height: 5
+        Rectangle {
+            anchors { left: parent.left; right: parent.right; top: parent.top }
+            height: 1
+            color: Theme.hair
+        }
+        Rectangle {
+            anchors { left: parent.left; top: parent.top }
+            width: 1; height: 5
+            color: Theme.hairAccent
+        }
+        Rectangle {
+            anchors { right: parent.right; top: parent.top }
+            width: 1; height: 5
+            color: Theme.hairAccent
+        }
+    }
+
     // ── ячейки слева от часов: прижаты к их левому краю ──
     Row {
         id: leftRow
         anchors.right: clockLoader.left
-        anchors.rightMargin: Theme.space3
+        anchors.rightMargin: Theme.space6
         anchors.verticalCenter: parent.verticalCenter
         height: Theme.barH
         spacing: 6
@@ -133,10 +158,10 @@ Item {
     Row {
         id: rightRow
         anchors.left: clockLoader.right
-        anchors.leftMargin: Theme.space3
+        anchors.leftMargin: Theme.space6
         anchors.verticalCenter: parent.verticalCenter
         height: Theme.barH
-        spacing: 6
+        spacing: Theme.space4
 
         Repeater {
             model: centerZone.rightCells
@@ -173,7 +198,7 @@ Item {
             }
             Row {
                 anchors.centerIn: parent
-                spacing: 6
+                spacing: Theme.space3
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: centerZone.host.netKind === "eth" ? "󰈀" : "\uf1eb"
@@ -183,8 +208,16 @@ Item {
                 }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    // arch: только «вниз» (входящий поток) — компактно
+                    // входящий поток
                     text: "↓" + netCell.cs(SysInfo.rx)
+                    color: Theme.barDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(10)
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    // исходящий поток
+                    text: "↑" + netCell.cs(SysInfo.tx)
                     color: Theme.barDim
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(10)
@@ -212,7 +245,7 @@ Item {
             onClicked: openBubbleFromHere()
             Row {
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 5
+                spacing: Theme.space2
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: Weather.icon
@@ -222,7 +255,7 @@ Item {
                 }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: Weather.shortTemp
+                    text: Theme.arch ? "[ " + Weather.shortTemp + " ]" : Weather.shortTemp
                     color: Weather.ok ? Theme.barText : Theme.barDim
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(12)
@@ -260,7 +293,7 @@ Item {
             tip: centerZone.host.dayText + " " + centerZone.host.dateText
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-                text: centerZone.host.clockText
+                text: Theme.arch ? "[ " + centerZone.host.clockText + " ]" : centerZone.host.clockText
                 color: Theme.barText
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSize(17)

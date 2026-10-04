@@ -151,7 +151,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     color: Theme.accent
                 }
-                SectionLabel {
+                SectionHeader {
                     anchors.verticalCenter: parent.verticalCenter
                     text: modelData.title || ""
                 }

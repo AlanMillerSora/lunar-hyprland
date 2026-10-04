@@ -590,7 +590,7 @@ Item {
                 width: parent.width
                 spacing: 10
 
-                SectionLabel { text: "MONITOR MODE"; textColor: Theme.text; size: Theme.fontSmall; bold: true }
+                SectionHeader { text: "MONITOR MODE"; textColor: Theme.text; size: Theme.fontSmall; bold: true }
 
                 Row {
                     width: parent.width
@@ -974,7 +974,7 @@ Item {
             Row {
                 width: parent.width
 
-                SectionLabel { text: "ЗАПИСЬ"; textColor: Theme.text; size: Theme.fontBody; bold: true }
+                SectionHeader { text: "ЗАПИСЬ"; textColor: Theme.text; size: Theme.fontBody; bold: true }
 
                 Item {
                     width: parent.width - 150

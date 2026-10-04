@@ -439,7 +439,7 @@ Item {
                             Row {
                                 spacing: 9
 
-                                SectionLabel {
+                                SectionHeader {
                                     text: "ZAPRET"
                                     textColor: Theme.text
                                     size: Theme.fontSmall
@@ -511,7 +511,7 @@ Item {
                             Row {
                                 spacing: 9
 
-                                SectionLabel {
+                                SectionHeader {
                                     text: "ZAPRET-TG"
                                     textColor: Theme.text
                                     size: Theme.fontSmall
@@ -576,7 +576,7 @@ Item {
                             Row {
                                 spacing: 9
 
-                                SectionLabel {
+                                SectionHeader {
                                     text: "VENCORD"
                                     textColor: Theme.text
                                     size: Theme.fontSmall

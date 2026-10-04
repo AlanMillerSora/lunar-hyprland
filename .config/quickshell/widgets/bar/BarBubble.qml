@@ -30,7 +30,7 @@ Item {
         // ПОГОДА: иконка + температура/город/описание + детали
         Item {
             visible: root.kind === "weather"
-            width: 320
+            width: 380
             height: wxCol.height
             Column {
                 id: wxCol
@@ -83,7 +83,7 @@ Item {
                     delegate: Column {
                         required property var modelData
                         spacing: 1
-                        SectionLabel { text: modelData.label; size: Theme.fontMicro; textColor: Theme.textFaint }
+                        SectionHeader { text: modelData.label; size: Theme.fontMicro; textColor: Theme.textFaint }
                         Text {
                             text: Weather.ok ? modelData.v : "—"
                             color: Theme.text

@@ -22,7 +22,7 @@ QtObject {
     property string desc: ""
     property string wind: ""
     property string hum: ""
-    property string icon: "\uf185"      // солнце по умолчанию
+    property string icon: "\ue30d"      // солнце по умолчанию (Nerd weather)
     property bool ok: false
     property double updated: 0
 
@@ -177,30 +177,30 @@ QtObject {
     // описание → глиф Nerd Font (учу и английские, и русские слова)
     function iconFor(d) {
         d = ("" + d).toLowerCase()
-        if (d.indexOf("thunder") >= 0 || d.indexOf("гроза") >= 0) return "\uf0e7"
-        if (d.indexOf("blizzard") >= 0 || d.indexOf("метель") >= 0) return "\uf2dc"
-        if (d.indexOf("snow") >= 0 || d.indexOf("снег") >= 0 || d.indexOf("sleet") >= 0) return "\uf2dc"
+        if (d.indexOf("thunder") >= 0 || d.indexOf("гроза") >= 0) return "\ue31d"
+        if (d.indexOf("blizzard") >= 0 || d.indexOf("метель") >= 0) return "\ue31a"
+        if (d.indexOf("snow") >= 0 || d.indexOf("снег") >= 0 || d.indexOf("sleet") >= 0) return "\ue31a"
         if (d.indexOf("rain") >= 0 || d.indexOf("дожд") >= 0 || d.indexOf("ливень") >= 0
-            || d.indexOf("морось") >= 0 || d.indexOf("drizzle") >= 0) return "\uf043"
+            || d.indexOf("морось") >= 0 || d.indexOf("drizzle") >= 0) return "\ue318"
         if (d.indexOf("fog") >= 0 || d.indexOf("mist") >= 0 || d.indexOf("туман") >= 0
-            || d.indexOf("дымка") >= 0) return "\uf014"
-        if (d.indexOf("overcast") >= 0 || d.indexOf("пасмур") >= 0) return "\uf0c2"
-        if (d.indexOf("cloud") >= 0 || d.indexOf("облач") >= 0) return "\uf0c2"
+            || d.indexOf("дымка") >= 0) return "\ue313"
+        if (d.indexOf("overcast") >= 0 || d.indexOf("пасмур") >= 0) return "\ue312"
+        if (d.indexOf("cloud") >= 0 || d.indexOf("облач") >= 0) return "\ue312"
         if (d.indexOf("clear") >= 0 || d.indexOf("sunny") >= 0
-            || d.indexOf("ясно") >= 0 || d.indexOf("солнеч") >= 0) return "\uf185"
-        return "\uf0c2"
+            || d.indexOf("ясно") >= 0 || d.indexOf("солнеч") >= 0) return "\ue30d"
+        return "\ue312"
     }
 
     // символ MET Norway (symbol_code) → глиф
     function symIcon(s) {
         s = ("" + s).toLowerCase()
-        if (s.indexOf("thunder") >= 0) return "\uf0e7"
-        if (s.indexOf("snow") >= 0 || s.indexOf("sleet") >= 0) return "\uf2dc"
-        if (s.indexOf("rain") >= 0 || s.indexOf("showers") >= 0 || s.indexOf("drizzle") >= 0) return "\uf043"
-        if (s.indexOf("fog") >= 0) return "\uf014"
-        if (s.indexOf("cloud") >= 0) return "\uf0c2"
-        if (s.indexOf("clearsky") >= 0 || s.indexOf("fair") >= 0) return "\uf185"
-        return "\uf0c2"
+        if (s.indexOf("thunder") >= 0) return "\ue31d"
+        if (s.indexOf("snow") >= 0 || s.indexOf("sleet") >= 0) return "\ue31a"
+        if (s.indexOf("rain") >= 0 || s.indexOf("showers") >= 0 || s.indexOf("drizzle") >= 0) return "\ue318"
+        if (s.indexOf("fog") >= 0) return "\ue313"
+        if (s.indexOf("cloud") >= 0) return "\ue312"
+        if (s.indexOf("clearsky") >= 0 || s.indexOf("fair") >= 0) return "\ue30d"
+        return "\ue312"
     }
 
     // короткая подпись для бара: +9°

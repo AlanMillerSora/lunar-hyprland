@@ -307,7 +307,7 @@ Item {
             color: Theme.border
         }
 
-        SectionLabel { text: "ОЧЕРЕДЬ И ПОИСК — В ПОЛНОМ ПЛЕЕРЕ"; bold: false }
+        SectionHeader { text: "ОЧЕРЕДЬ И ПОИСК — В ПОЛНОМ ПЛЕЕРЕ"; bold: false }
 
         Rectangle {
             width: parent.width

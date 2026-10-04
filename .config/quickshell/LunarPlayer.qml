@@ -3,6 +3,7 @@ import Quickshell.Io
 import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
+import "widgets/shared"
 
 // ════════════════════════════════════════════════════════════════
 //  LunarPlayer — плеер обычным окном (FloatingWindow). Hyprland сам
@@ -211,6 +212,9 @@ FloatingWindow {
             else if (e.key === Qt.Key_P) { PlayerCore.prev(); e.accepted = true }
         }
 
+        HudNodes { inset: 6; size: 4 }
+        HudInnerFrame { variant: 0 }
+        HudDiagonals {}
         HudCorners { color: Theme.accent; size: 16; thickness: 1; margin: 10 }
 
         ColumnLayout {

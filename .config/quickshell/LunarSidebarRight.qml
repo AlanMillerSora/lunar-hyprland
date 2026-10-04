@@ -3,6 +3,7 @@ import Quickshell.Io
 import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
+import "widgets/shared"
 
 // ════════════════════════════════════════════════════════════════
 //  LunarSidebarRight — правая панель: календарь и запись экрана.
@@ -119,10 +120,33 @@ PanelWindow {
         // уезжает за правый край целиком
         x: root.collapsed ? (root.width + 4) : (root.width - width)
         // arch: правый sidebar — тот же surface-остров, что и панель бара
-        color: root.collapsed ? Theme.surfaceSolid : (contentHover.hovered ? Theme.surfaceHover : Theme.surface)
-        radius: Theme.radiusM
-        border.color: Theme.border2
+        // поверхность — та же, что у бара (palette.barPill): тон следует за
+        // мутагеном. В покое — бар, в наведении — чуть светлее.
+        color: contentHover.hovered ? Theme.barPillHover : Theme.barPill
+        radius: Theme.barRadius
+        border.color: Theme.border
         border.width: collapsed ? 0 : 1
+
+        // architect: линия по всей длине верхней кромки
+        Rectangle {
+            anchors { left: parent.left; right: parent.right; top: parent.top }
+            height: Theme.lineThick
+            color: Theme.hairAccent
+            visible: Theme.arch
+        }
+        // architect: линия по нижней кромке
+        Rectangle {
+            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+            height: Theme.line
+            color: Theme.hairAccent
+            visible: Theme.arch
+        }
+
+        // architect: визиры в полях
+        HudCrosshairs { inset: 10; arm: 5 }
+        HudNodes { inset: 5; size: 4 }
+        HudInnerFrame { variant: 2 }
+        HudDiagonals {}
 
         HudCorners {
             color: Theme.accent
@@ -211,7 +235,7 @@ PanelWindow {
             Rectangle {
                 Layout.fillWidth: true
                 height: 1
-                color: Theme.border
+                color: Theme.arch ? Theme.hairAccent : Theme.border
             }
 
             // ── вкладки ──
@@ -808,11 +832,13 @@ PanelWindow {
             Rectangle {
                 Layout.fillWidth: true
                 height: 1
-                color: Theme.border
+                color: Theme.arch ? Theme.hairAccent : Theme.border
             }
 
             Text {
-                text: sysStats.text
+                text: Theme.arch
+                    ? "[ CPU " + SysInfo.cpu + "%  RAM " + SysInfo.ram + "% ]"
+                    : "CPU " + SysInfo.cpu + "%  RAM " + SysInfo.ram + "%"
                 color: Theme.textDim
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSize(13)
@@ -1051,7 +1077,7 @@ PanelWindow {
             expandedId = -1
             rebuild()
             actionProc.command = ["bash", "-c",
-                "pkill -x mako; sleep 0.3; setsid mako >/dev/null 2>&1 &"]
+                "systemctl --user reset-failed mako.service 2>/dev/null; systemctl --user restart mako.service"]
             actionProc.running = true
         }
 
@@ -1103,19 +1129,7 @@ PanelWindow {
         onTriggered: notif.load()
     }
 
-    Process {
-        id: sysStats
-        command: ["python3", "-c", "import psutil; print(f'CPU {int(psutil.cpu_percent())}%  RAM {int(psutil.virtual_memory().percent)}%')"]
-        running: true
-        stdout: StdioCollector { onStreamFinished: sysStats.text = text.trim() }
-        property string text: "CPU --%  RAM --%"
-    }
-    Timer {
-        interval: 3000
-        running: true
-        repeat: true
-        onTriggered: sysStats.running = true
-    }
+    // CPU/RAM — из общего SysInfo (см. LunarSidebar), без python3/psutil.
 
     // ─────────────────── запись экрана ───────────────────
     property bool recording: false

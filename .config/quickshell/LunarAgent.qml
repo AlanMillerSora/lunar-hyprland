@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
+import "widgets/shared"
 
 // ════════════════════════════════════════════════════════════════
 //  LunarAgent — оверлей-агент OpenCode по SUPER+A (как Spotlight).
@@ -70,6 +71,9 @@ FloatingWindow {
         focus: true
         Keys.onEscapePressed: root.closePanel()
 
+        HudNodes { inset: 6; size: 4 }
+        HudInnerFrame { variant: 3 }
+        HudDiagonals {}
         HudCorners {
             color: Theme.accent
             size: 18

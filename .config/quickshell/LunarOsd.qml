@@ -3,6 +3,7 @@ import Quickshell.Wayland
 import Quickshell.Services.Pipewire
 import QtQuick
 import QtQuick.Layouts
+import "widgets/shared"
 
 // ════════════════════════════════════════════════════════════════
 //  LunarOsd — индикатор громкости: иконка + число + деления
@@ -86,6 +87,10 @@ PanelWindow {
         Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
         Behavior on scale { NumberAnimation { duration: Theme.animFast } }
 
+        HudCrosshairs { inset: 10; arm: 5 }
+        HudNodes { inset: 5; size: 4 }
+        HudInnerFrame { variant: 0 }
+        HudDiagonals {}
         HudCorners { color: Theme.accent; size: 16; thickness: 1; margin: Theme.space3 }
 
         RowLayout {

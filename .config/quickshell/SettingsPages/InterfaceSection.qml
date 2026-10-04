@@ -352,7 +352,7 @@ Item {
                 color: Theme.border
             }
 
-            SectionLabel { text: "ПАЛИТРА"; textColor: Theme.text; size: Theme.fontSmall; bold: true }
+            SectionHeader { text: "ПАЛИТРА"; textColor: Theme.text; size: Theme.fontSmall; bold: true }
 
             Column {
                 width: parent.width
@@ -380,7 +380,7 @@ Item {
                             border.width: cur ? 1 : 0
                             border.color: Theme.accent
 
-                            SectionLabel {
+                            SectionHeader {
                                 id: palLabel
                                 anchors.centerIn: parent
                                 text: modelData.name
@@ -420,6 +420,71 @@ Item {
                 }
             }
 
+            // ── стиль-профиль: форма/мотив (ортогонален палитре) ──
+            Rectangle {
+                width: parent.width
+                height: 1
+                color: Theme.border
+            }
+
+            SectionHeader { text: "СТИЛЬ"; textColor: Theme.text; size: Theme.fontSmall; bold: true }
+
+            Column {
+                width: parent.width
+                spacing: Theme.space2
+
+                Row {
+                    spacing: Theme.space2
+
+                    Repeater {
+                        model: [
+                            { id: "classic",   name: "КЛАССИК" },
+                            { id: "architect", name: "АРХИТЕКТ" }
+                        ]
+
+                        delegate: Rectangle {
+                            required property var modelData
+                            readonly property bool cur: Theme.style === modelData.id
+                            width: stLabel.implicitWidth + 28
+                            height: Theme.rowHCompact
+                            radius: Theme.radiusM
+                            color: cur ? Theme.active
+                                : (stMouse.containsMouse ? Theme.hoverStrong : Theme.fill)
+                            border.width: cur ? 1 : 0
+                            border.color: Theme.accent
+
+                            SectionHeader {
+                                id: stLabel
+                                anchors.centerIn: parent
+                                text: modelData.name
+                                textColor: cur ? Theme.accent : Theme.textDim
+                                size: Theme.fontSmall
+                                bold: cur
+                            }
+
+                            MouseArea {
+                                id: stMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: Theme.style = modelData.id
+                            }
+                        }
+                    }
+                }
+
+                Text {
+                    width: parent.width
+                    text: Theme.style === "architect"
+                        ? "острые углы · HUD-скобки · технические линии"
+                        : "текущий вид: мягкие углы и заливки"
+                    color: Theme.textFaint
+                    font.family: page.mono
+                    font.pixelSize: Theme.fontSize(10)
+                    wrapMode: Text.WordWrap
+                }
+            }
+
             // ── обои: живая сцена затмения (перенесено со страницы WALLPAPERS) ──
             Rectangle {
                 width: parent.width
@@ -427,7 +492,7 @@ Item {
                 color: Theme.border
             }
 
-            SectionLabel { text: "ОБОИ"; textColor: Theme.text; size: Theme.fontSmall; bold: true }
+            SectionHeader { text: "ОБОИ"; textColor: Theme.text; size: Theme.fontSmall; bold: true }
 
             // выбор: живая сцена затмения или обычная картинка
             Row {
@@ -449,7 +514,7 @@ Item {
                         border.width: cur ? 1 : 0
                         border.color: Theme.accent
 
-                        SectionLabel {
+                        SectionHeader {
                             id: wmLabel
                             anchors.centerIn: parent
                             text: modelData.name
@@ -474,7 +539,7 @@ Item {
                 spacing: Theme.space3
                 visible: Theme.wallpaperMode !== "image"
 
-                SectionLabel {
+                SectionHeader {
                     text: previewPhase > 0
                         ? "ПРЕВЬЮ · фаза " + shownPhase
                         : "ПРЕВЬЮ · фаза " + shownPhase + " (текущий стол)"

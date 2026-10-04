@@ -179,7 +179,7 @@ PanelWindow {
         // клики по промежуткам доски не должны её закрывать
         MouseArea { anchors.fill: parent; onClicked: {} }
 
-        SectionLabel {
+        SectionHeader {
             id: header
             anchors.top: parent.top
             anchors.left: parent.left

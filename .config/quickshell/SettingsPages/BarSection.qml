@@ -64,7 +64,7 @@ Item {
                 width: parent.width
                 height: Theme.rowHCompact
 
-                SectionLabel {
+                SectionHeader {
                     anchors.left: parent.left
                     anchors.verticalCenter: parent.verticalCenter
                     text: "ЗНАЧКОВ ТРЕЯ"
@@ -123,7 +123,7 @@ Item {
                 width: parent.width
                 height: Theme.rowHCompact
 
-                SectionLabel {
+                SectionHeader {
                     anchors.left: parent.left
                     anchors.verticalCenter: parent.verticalCenter
                     text: "ГОРЯЧИЕ ЗОНЫ"
@@ -249,7 +249,7 @@ Item {
                 width: parent.width
                 height: Theme.rowHCompact
 
-                SectionLabel {
+                SectionHeader {
                     anchors.left: parent.left
                     anchors.verticalCenter: parent.verticalCenter
                     text: "ТОН РАСКРЫТИЯ"
@@ -287,7 +287,7 @@ Item {
                         border.width: sel ? 1 : 0
                         border.color: Theme.accent
 
-                        SectionLabel {
+                        SectionHeader {
                             id: isLabel
                             anchors.centerIn: parent
                             text: modelData.name
@@ -339,7 +339,7 @@ Item {
             width: parent.width
             height: Theme.rowHCompact
 
-            SectionLabel {
+            SectionHeader {
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
                 text: zb.zoneName

@@ -36,18 +36,33 @@ Item {
         anchors.leftMargin: Theme.barPad
         anchors.verticalCenter: parent.verticalCenter
         height: Theme.barH
-        spacing: Theme.space4
+        spacing: Theme.space3
 
         Repeater {
             model: BarSettings.rightVisible
 
-            delegate: Loader {
+            // ячейка + разделитель справа: черта встаёт ровно между
+            // соседями и не рисуется после последней ячейки
+            delegate: Row {
+                id: cellWrap
                 required property var modelData
-                width: item ? item.implicitWidth : 0
+                required property int index
                 height: Theme.barH
-                anchors.verticalCenter: parent.verticalCenter
-                visible: item === null ? true : item.visible
-                sourceComponent: rightZone.compFor(modelData.id)
+                spacing: Theme.space3
+
+                Loader {
+                    id: cellLoad
+                    width: item ? item.implicitWidth : 0
+                    height: parent.height
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: item === null ? true : item.visible
+                    sourceComponent: rightZone.compFor(modelData.id)
+                }
+                BarDivider {
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: index < BarSettings.rightVisible.length - 1
+                        && cellLoad.item !== null && cellLoad.item.visible
+                }
             }
         }
     }

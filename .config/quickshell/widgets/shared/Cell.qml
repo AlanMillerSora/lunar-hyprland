@@ -20,14 +20,25 @@ Rectangle {
     signal clicked()
 
     height: Theme.barCellH
-    implicitWidth: cellContent.implicitWidth + Theme.space3 * 2
+    implicitWidth: cellContent.implicitWidth + Theme.space4 * 2
     width: implicitWidth
     radius: Theme.radius
     // arch: в покое ничего не рисуем; hover — слабый surface, active — сильнее
     color: cell.active ? Theme.active
-         : cellHover.hovered && cell.interactive ? Theme.hoverStrong
+         : (cellHover.hovered && cell.interactive && !Theme.arch) ? Theme.hoverStrong
          : "transparent"
     Behavior on color { ColorAnimation { duration: Theme.animFast } }
+
+    // architect: техническое подчёркивание активной/наведённой ячейки
+    Rectangle {
+        anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+        anchors.leftMargin: Theme.space2
+        anchors.rightMargin: Theme.space2
+        anchors.bottomMargin: 1
+        height: Theme.lineThick
+        color: cell.active ? Theme.hairAccent : Theme.hair
+        visible: Theme.arch && (cell.active || (cellHover.hovered && cell.interactive))
+    }
 
     HoverHandler {
         id: cellHover
@@ -37,8 +48,8 @@ Rectangle {
         id: cellContent
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.leftMargin: Theme.space3
-        anchors.rightMargin: Theme.space3
+        anchors.leftMargin: Theme.space4
+        anchors.rightMargin: Theme.space4
         anchors.verticalCenter: parent.verticalCenter
         spacing: Theme.space2
     }

@@ -163,7 +163,7 @@ Item {
                 RowLayout {
                     Layout.fillWidth: true
 
-                    SectionLabel { text: "RAM"; textColor: Theme.text; size: Theme.fontSmall; bold: true }
+                    SectionHeader { text: "RAM"; textColor: Theme.text; size: Theme.fontSmall; bold: true }
                     Item { Layout.fillWidth: true }
                     Text {
                         text: page.gb(page.memUsed) + " / " + page.gb(page.memTotal) + " GB"

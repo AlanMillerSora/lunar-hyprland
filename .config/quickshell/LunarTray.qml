@@ -139,6 +139,9 @@ PanelWindow {
             onClicked: {}
         }
 
+        HudNodes { inset: 6; size: 4 }
+        HudInnerFrame { variant: 1 }
+        HudDiagonals {}
         HudCorners {
             color: Theme.accent
             size: 14
@@ -160,7 +163,7 @@ PanelWindow {
                 spacing: Theme.space2
                 width: col.width
 
-                SectionLabel { text: "ТРЕЙ"; textColor: Theme.text; size: Theme.fontSmall; bold: false }
+                SectionHeader { text: "ТРЕЙ"; textColor: Theme.text; size: Theme.fontSmall; bold: false }
 
                 Text {
                     text: root.collapsed.length + " свёрнуто"

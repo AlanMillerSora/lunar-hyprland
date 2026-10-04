@@ -22,6 +22,38 @@ Rectangle {
     border.color: Theme.border2
     implicitHeight: col.implicitHeight + contentMargins * 2
 
+    // architect: тонкая линия по верхней кромке карточки (технический кант)
+    Rectangle {
+        visible: Theme.arch
+        anchors { left: parent.left; right: parent.right; top: parent.top }
+        anchors.leftMargin: root.radius
+        anchors.rightMargin: root.radius
+        height: Theme.line
+        color: Theme.hair
+    }
+    // architect: и по нижней кромке
+    Rectangle {
+        visible: Theme.arch
+        anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+        anchors.leftMargin: root.radius
+        anchors.rightMargin: root.radius
+        height: Theme.line
+        color: Theme.hair
+    }
+    // architect: узлы-маркеры по углам
+    Rectangle {
+        visible: Theme.arch
+        width: 3; height: 3
+        color: Theme.hairAccent
+        anchors { left: parent.left; top: parent.top; leftMargin: root.radius }
+    }
+    Rectangle {
+        visible: Theme.arch
+        width: 3; height: 3
+        color: Theme.hairAccent
+        anchors { right: parent.right; bottom: parent.bottom; rightMargin: root.radius }
+    }
+
     Column {
         id: col
         x: root.contentMargins

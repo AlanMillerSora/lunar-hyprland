@@ -57,7 +57,14 @@ QtObject {
     readonly property color barFaint: hexColor(palette.barFaint, "#7b838d")
     // тон как у окна Hub (Theme.alpha(surfaceSolid, 0.85)); альфу бара держу
     // на уровне Hub, чтобы стекло читалось одинаково
-    readonly property color barPill: Qt.rgba(_barPillBase.r, _barPillBase.g, _barPillBase.b, 0.85 * interfaceOpacity)
+    readonly property color barPill: Qt.rgba(_barPillBase.r, _barPillBase.g, _barPillBase.b, (arch ? 0.95 : 0.85) * interfaceOpacity)
+    // наведённое состояние поверхности (сайдбары/Hub): тот же тон, чуть светлее.
+    // Производная от палитры — меняются обои, меняется и он.
+    readonly property color barPillHover: Qt.rgba(
+        Math.min(1, _barPillBase.r + 0.045),
+        Math.min(1, _barPillBase.g + 0.045),
+        Math.min(1, _barPillBase.b + 0.045),
+        (arch ? 0.97 : 0.92) * interfaceOpacity)
 
     // ── arch-слой «островов»: подложки в НЕЙТРАЛИ (тон обоев/окна ~#171A1B),
     //    чтобы бар читался единым тоном с системой, а не «стальным» тёмным.
@@ -108,6 +115,27 @@ QtObject {
 
     property real interfaceOpacity: 1.0
     property real fontScale: 1.0
+
+    // ── стиль-профиль (форма/мотив), ортогонален палитре ──
+    // classic   — текущий вид риса;
+    // architect — острее углы, технические линии, HUD-рамка.
+    property string style: "classic"
+    readonly property bool arch: style === "architect"
+
+    // технические волосяные линии
+    readonly property int line: 1
+    readonly property int lineThick: 2
+    readonly property color hair: Qt.rgba(text.r, text.g, text.b, 0.20)
+    readonly property color hairFaint: Qt.rgba(text.r, text.g, text.b, 0.10)
+    readonly property color hairAccent: Qt.rgba(accent.r, accent.g, accent.b, 0.62)
+
+    // HUD-рамка (скобки/насечки)
+    readonly property int hudCornerSize: 14
+    readonly property int hudCornerThickness: 1
+    readonly property int hudCornerInset: 8
+    readonly property real hudCornerOpacity: 0.35
+    readonly property int hudTickGap: 6
+    readonly property int hudTickH: 4
 
     // живые обои (QML-сцена): false — «лёгкий режим» без звёзд/метеоров/пыли
     property bool wallpaperLive: true
@@ -221,9 +249,9 @@ QtObject {
     property int playerPage: 0
 
     // Радиусы: мелкое — 8, среднее — 10, крупные поверхности (Hub, сайдбары) — 12
-    property int radius: 8
-    property int radiusM: 10
-    property int radiusL: 12
+    property int radius: arch ? 2 : 8
+    property int radiusM: arch ? 3 : 10
+    property int radiusL: arch ? 4 : 12
 
     // ── ритм интерфейса ──────────────────────────────────────────
     // Всё, что раньше было «магическими числами» по файлам, свожу сюда:
@@ -232,11 +260,11 @@ QtObject {
     property int space1: 4
     property int space2: 8
     property int space3: 12
-    property int space4: 16
-    property int space5: 24
+    property int space4: 20
+    property int space5: 28
     property int space6: 32
 
-    property int rowHCompact: 34
+    property int rowHCompact: 38
     property int rowH: 42
     property int rowHComfy: 48
     property int headerH: 44
@@ -256,14 +284,16 @@ QtObject {
     property int fontBig: fontSize(24)
     property int fontHero: fontSize(34)
     property int iconXL: fontSize(30)
-    property int cardPad: 12
+    property int cardPad: 16
 
     // панель-острова (этап 1): высота плашки, зазоры, поля, отступ внутри.
     // arch-стиль: тонкая полоса, контент без «плашек».
-    property int barH: 34
-    property int barMargin: 5
-    property int barPad: 12
-    property int barRadius: 9
+    property int barH: arch ? 38 : 34
+    property int barMargin: arch ? 0 : 5
+    // верхний отступ бара (воздух сверху), отдельно от бокового
+    property int barTop: arch ? 8 : 5
+    property int barPad: 16
+    property int barRadius: arch ? 3 : 9
     // высота содержимого ячейки бара (иконки/текст внутри плашки)
     property int barCellH: 30
     // высоты строк панелей: поле поиска и строка «пульта»
@@ -272,19 +302,19 @@ QtObject {
     property int sparkH: 26
 
     // панель-остров (этап 2): шапка, строки, ширины режимов
-    property int panelHeaderH: 30
-    property int panelWSearch: 520
-    property int panelWNotifs: 480
+    property int panelHeaderH: 44
+    property int panelWSearch: 620
+    property int panelWNotifs: 580
     // «подгонка под режим»: у каждого пузыря своя ширина
-    property int panelWMedia: 520
-    property int panelWSys: 560
-    property int panelWAudio: 420
+    property int panelWMedia: 640
+    property int panelWSys: 700
+    property int panelWAudio: 520
     // панель поиска раскрывается шире строки — отдельная «широкая» ширина
-    property int panelWSearchWide: 760
+    property int panelWSearchWide: 900
     // высота панелей-модалок (поиск/уведомления) до полного раскрытия
-    property int panelHSearch: 440
-    property int panelHNotifs: 340
-    property int radiusS: 6
+    property int panelHSearch: 520
+    property int panelHNotifs: 420
+    property int radiusS: arch ? 0 : 6
 
     // мягкая реакция на наведение — масштаб глифа, без переверстки
     property real hoverGrow: 1.25
@@ -447,6 +477,7 @@ QtObject {
             property int blurSize: -1
             property int blurPasses: 3
             property string islandStyle: "expressive"
+            property string style: "classic"
 
             // файл → UI (в uiInternal, чтобы не писать назад прочитанное)
             onInterfaceOpacityChanged: { theme.uiInternal = true; theme.interfaceOpacity = interfaceOpacity; theme.uiInternal = false }
@@ -458,6 +489,7 @@ QtObject {
             onBlurSizeChanged: { theme.uiInternal = true; theme.blurSize = blurSize; theme.uiInternal = false }
             onBlurPassesChanged: { theme.uiInternal = true; theme.blurPasses = blurPasses; theme.uiInternal = false }
             onIslandStyleChanged: { theme.uiInternal = true; theme.islandStyle = islandStyle; theme.uiInternal = false }
+            onStyleChanged: { theme.uiInternal = true; theme.style = style; theme.uiInternal = false }
         }
     }
 
@@ -483,6 +515,7 @@ QtObject {
         blurApply.restart()
     }
     onIslandStyleChanged: if (!uiInternal) { markUI(); uiAdapter.islandStyle = islandStyle }
+    onStyleChanged: if (!uiInternal) { markUI(); uiAdapter.style = style }
 
     // Ползунок блюра: применяем с задержкой — size и passes могут прийти
     // по очереди (загрузка сохранённого состояния, перетаскивание).

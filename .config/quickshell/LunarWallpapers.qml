@@ -480,7 +480,7 @@ PanelWindow {
         opacity: root.fade
     }
 
-    SectionLabel {
+    SectionHeader {
         anchors.left: parent.left
         anchors.bottom: parent.bottom
         anchors.margins: Theme.space5
@@ -500,7 +500,7 @@ PanelWindow {
         }
     }
 
-    SectionLabel {
+    SectionHeader {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.margins: Theme.space5

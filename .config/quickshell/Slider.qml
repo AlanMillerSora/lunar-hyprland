@@ -1,4 +1,5 @@
 import QtQuick
+import "widgets/shared"
 
 // ════════════════════════════════════════════════════════════════
 //  Slider — универсальный ползунок 0..1 в стиле Lunar Eclipse.
@@ -170,6 +171,17 @@ Item {
                 }
             }
 
+            // architect: технические насечки под дорожкой
+            TickScale {
+                visible: Theme.arch && !root.compact
+                anchors.top: track.bottom
+                anchors.topMargin: 3
+                anchors.horizontalCenter: parent.horizontalCenter
+                count: 24
+                value: root.displayValue
+                tickH: 4
+            }
+
             MouseArea {
                 id: dragArea
 
@@ -179,7 +191,6 @@ Item {
                 preventStealing: true
 
                 cursorShape: Qt.PointingHandCursor
-
                 function setFromX(px) {
                     if (track.width <= 0) return
                     // mouse.x считается от dragArea, а он шире дорожки на 6px

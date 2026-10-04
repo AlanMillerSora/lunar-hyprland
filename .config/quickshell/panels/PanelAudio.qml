@@ -141,7 +141,7 @@ Item {
             width: parent.width
             height: 18
 
-            SectionLabel {
+            SectionHeader {
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
                 text: sec.title

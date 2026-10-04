@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
+import "widgets/shared"
 
 // ════════════════════════════════════════════════════════════════
 //  LunarPower — меню питания в стиле системы (Quickshell).
@@ -121,6 +122,9 @@ FloatingWindow {
             }
         }
 
+        HudNodes { inset: 6; size: 4 }
+        HudInnerFrame { variant: 2 }
+        HudDiagonals {}
         HudCorners {
             color: Theme.accent
             size: 18

@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
+import "widgets/shared"
 
 // ════════════════════════════════════════════════════════════════
 //  LunarClipboard — модальное окно истории буфера (cliphist).
@@ -124,6 +125,9 @@ FloatingWindow {
         focus: true
         Keys.onEscapePressed: root.closePanel()
 
+        HudNodes { inset: 6; size: 4 }
+        HudInnerFrame { variant: 1 }
+        HudDiagonals {}
         HudCorners {
             color: Theme.accent
             size: 18

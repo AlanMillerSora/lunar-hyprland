@@ -4,6 +4,7 @@ import Quickshell.Io
 import Quickshell.Services.Pipewire
 import QtQuick
 import "SettingsPages"
+import "widgets/shared"
 
 // ════════════════════════════════════════════════════════════════
 //  LunarHub — настройки/лаунчер обычным окном (FloatingWindow).
@@ -17,9 +18,10 @@ FloatingWindow {
     id: root
 
     title: "Lunar Hub"
-    // arch: фон окна — тот же surface-тон, что и острова (чуть плотнее,
-    // окно и так блюрится Hyprland'ом)
-    color: Theme.alpha(Theme.surfaceSolid, 0.85)
+    // arch: фон окна — тот же тон, что у плашки бара (palette.barPill):
+    // меняются обои → Hub меняет цвет вместе с баром. Окно и так блюрится
+    // и скругляется Hyprland'ом.
+    color: Theme.barPill
     visible: root.showing
     implicitWidth: 1320
     implicitHeight: 820
@@ -245,25 +247,35 @@ FloatingWindow {
         // клавиатура обычного окна: Esc закрывает
         Keys.onEscapePressed: root.closePanel()
 
-        // приглушённые HUD-скобки: намёк на кибер-рамку, не спорящий с контентом
+        // architect: линия по всей длине верхней кромки
         Rectangle {
-            width: 40; height: 2; color: Theme.alpha(Theme.accent, 0.35)
-            anchors { top: parent.top; left: parent.left; margins: 14 }
+            visible: Theme.arch
+            anchors { left: parent.left; right: parent.right; top: parent.top }
+            height: Theme.lineThick
+            color: Theme.hairAccent
+        }
+        // architect: линия по нижней кромке
+        Rectangle {
+            visible: Theme.arch
+            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+            height: Theme.line
+            color: Theme.hairAccent
         }
 
-        Rectangle {
-            width: 2; height: 40; color: Theme.alpha(Theme.accent, 0.35)
-            anchors { top: parent.top; left: parent.left; margins: 14 }
-        }
+        // architect: визиры в полях
+        HudCrosshairs { inset: 14; arm: 7 }
+        HudNodes { inset: 7; size: 5 }
+        HudInnerFrame { variant: 3 }
+        HudDiagonals {}
 
-        Rectangle {
-            width: 40; height: 2; color: Theme.alpha(Theme.accent, 0.35)
-            anchors { bottom: parent.bottom; right: parent.right; margins: 14 }
-        }
-
-        Rectangle {
-            width: 2; height: 40; color: Theme.alpha(Theme.accent, 0.35)
-            anchors { bottom: parent.bottom; right: parent.right; margins: 14 }
+        // HUD-скобки (единый компонент; раньше были инлайном)
+        HudFrame {
+            always: true
+            color: Theme.accent
+            size: 40
+            thickness: 2
+            inset: 14
+            strength: 0.35
         }
 
         Row {
@@ -291,6 +303,13 @@ FloatingWindow {
                             font.pixelSize: Theme.fontTitle
                             font.bold: true
                             font.letterSpacing: 4
+                        }
+
+                        Rectangle {
+                            visible: Theme.arch
+                            width: 30
+                            height: Theme.lineThick
+                            color: Theme.hairAccent
                         }
 
                         // ---------------- Nav buttons ----------------
@@ -389,6 +408,15 @@ FloatingWindow {
                     width: parent.width - sidebar.width - Theme.space6
                     height: parent.height
                     clip: true
+
+                    // architect: разделитель между навигацией и контентом
+                    Rectangle {
+                        visible: Theme.arch
+                        anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
+                        anchors.leftMargin: -Theme.space3
+                        width: Theme.line
+                        color: Theme.hair
+                    }
 
                     // H: страницы в кэше. Каждая создаётся один раз (при первом
                     // заходе) и живёт до конца сессии — поэтому переходы мгновенные,

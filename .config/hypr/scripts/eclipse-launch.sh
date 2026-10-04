@@ -15,6 +15,7 @@ case "$app" in
   thunar)   cmd="thunar" ;;
   telegram) cmd="telegram-desktop" ;;
   discord)  cmd="discord" ;;
+  vesktop)  cmd="vesktop" ;;
   steam)    cmd="steam" ;;
   lutris)   cmd="lutris" ;;
   code)     cmd="code" ;;
