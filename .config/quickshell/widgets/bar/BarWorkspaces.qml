@@ -4,172 +4,152 @@ import "../.."
 import "../shared"
 
 // ════════════════════════════════════════════════════════════════
-//  BarWorkspaces — ряд лунных фаз столов: фокус, занятость, мигание
-//  на новое окно, иконка приложения на наведении/«пике». Вынесено из
-//  LunarPanel; корень передаёт себя как host.
+//  BarWorkspaces — рабочие столы тонкой полосой (идея ArchEclipse
+//  Workspaces): в покое — ряд тонких сегментов, где видно занятость
+//  и активный стол; при наведении на ряд или при переключении/новом
+//  окне ряд «раскрывается» и показывает иконки приложений каждого стола.
+//
+//  Фаза-луна как смысл обоев сохранена: активный стол подсвечивается
+//  акцентом, столы с окнами — ярче, пустые — приглушены. Мигание на
+//  новое окно — как было. host = корень LunarPanel.
 // ════════════════════════════════════════════════════════════════
-            Item {
-                id: root
-                property var host
-                implicitWidth: wsRow.implicitWidth
-                implicitHeight: Theme.barCellH
-                scale: wsBg.hovered ? Theme.hoverGrow : 1
-                Behavior on scale { Anim { type: Anim.FastSpatial } }
+Item {
+    id: root
+    property var host
 
-                HoverBg { id: wsBg }
+    readonly property int wsCount: 9
+    // раскрыт ли ряд в иконки (ховер по ряду или «пик» после переключения)
+    readonly property bool expanded: wsBg.hovered || host.wsPeek > 0
 
-                // тонкая «орбита» за фазами — связывает индикаторы в цикл
+    implicitWidth: wsRow.width
+    implicitHeight: Theme.barCellH
+    height: Theme.barCellH
+
+    HoverBg { id: wsBg }
+
+    // ряд: сегменты-полоски; при раскрытии над полосой проявляется иконка
+    Row {
+        id: wsRow
+        anchors.centerIn: parent
+        height: Theme.barCellH
+        spacing: 3
+
+        Repeater {
+            model: root.wsCount
+
+            delegate: Item {
+                id: wsSlot
+                required property int index
+                readonly property int wsId: index + 1
+                readonly property var ws: host.wsFor(wsId)
+                readonly property bool isFocused: host.focusedWs !== null && host.focusedWs.id === wsId
+                readonly property bool isOccupied: ws !== null && ws.toplevels.values.length > 0
+                readonly property bool alerting: host.wsBlink[wsId] !== undefined
+                readonly property string appIcon: host.appIconFor(host.firstClassFor(wsId))
+                readonly property bool peek: host.wsPeek === wsId
+
+                width: 14
+                height: Theme.barCellH
+
+                // импульс полоски при переходе на этот стол
+                onIsFocusedChanged: if (isFocused) focusPulse.restart()
+
+                // ── полоска-сегмент: занятость/активность/мигание ──
+                // при раскрытии ряда прячу полоску — пусть читается иконка
                 Rectangle {
+                    id: wsBar
+                    anchors.horizontalCenter: parent.horizontalCenter
                     anchors.verticalCenter: parent.verticalCenter
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    height: 1
-                    color: Theme.active
+                    width: parent.width
+                    height: 4
+                    radius: height / 2
+                    color: root.rwColor(wsSlot)
+                    opacity: root.expanded && wsSlot.appIcon !== "" ? 0.0 : 1.0
+                    Behavior on opacity { Anim { type: Anim.FastEffects } }
+                    Behavior on color { ColorAnimation { duration: Theme.animFast } }
+                    Behavior on height { Anim { type: Anim.FastSpatial } }
                 }
 
-                Row {
-                    id: wsRow
-                    anchors.centerIn: parent
-                    height: Theme.barCellH
-                    spacing: 7
-
-                    Repeater {
-                        model: 9
-
-                        delegate: Rectangle {
-                            id: wsPill
-                            required property int index
-                            readonly property int wsId: index + 1
-                            readonly property var ws: host.wsFor(wsId)
-                            readonly property bool isFocused: host.focusedWs !== null && host.focusedWs.id === wsId
-                            readonly property bool isOccupied: ws !== null && ws.toplevels.values.length > 0
-                            readonly property bool alerting: host.wsBlink[wsId] !== undefined
-                            readonly property string appIcon: host.appIconFor(host.firstClassFor(wsId))
-                            readonly property bool peek: host.wsPeek === wsId
-                            readonly property bool showApp: !alerting && appIcon !== ""
-                                && (wsMouse.containsMouse || peek)
-
-                            // импульс кольца при переходе на этот стол
-                            onIsFocusedChanged: if (isFocused) focusPulse.restart()
-
-                            width: 32
-                            height: Theme.barCellH
-                            color: "transparent"
-
-                            // мягкое гало под активной фазой — «стол светится»
-                            Rectangle {
-                                anchors.centerIn: parent
-                                width: 32
-                                height: 32
-                                radius: 16
-                                color: Theme.alpha(Theme.accent, wsPill.isFocused ? 0.10 : 0)
-                                Behavior on color { ColorAnimation { duration: Theme.animMed } }
-                            }
-
-                            // тонкое кольцо-выделение активного стола
-                            Rectangle {
-                                id: focusRing
-                                anchors.centerIn: parent
-                                width: 28
-                                height: 28
-                                radius: 14
-                                color: "transparent"
-                                border.width: 1
-                                border.color: Theme.activeBorder
-                                opacity: 0.55
-                                visible: wsPill.isFocused
-                            }
-
-                            // короткий импульс: вспышка + лёгкое расширение
-                            ParallelAnimation {
-                                id: focusPulse
-                                SequentialAnimation {
-                                    NumberAnimation {
-                                        target: focusRing
-                                        property: "scale"
-                                        from: 1.0
-                                        to: 1.4
-                                        duration: 140
-                                        easing.type: Theme.easeOut
-                                    }
-                                    NumberAnimation {
-                                        target: focusRing
-                                        property: "scale"
-                                        from: 1.4
-                                        to: 1.0
-                                        duration: 160
-                                        easing.type: Easing.InCubic
-                                    }
-                                }
-                                SequentialAnimation {
-                                    NumberAnimation {
-                                        target: focusRing
-                                        property: "opacity"
-                                        from: 1.0
-                                        to: 0.55
-                                        duration: 300
-                                        easing.type: Theme.easeOut
-                                    }
-                                }
-                            }
-
-                            // сама фаза; мигает на новое окно, при наведении уступает иконке
-                            Image {
-                                anchors.centerIn: parent
-                                width: 20
-                                height: 20
-                                source: Qt.resolvedUrl("../../assets/moon-phases/phase_"
-                                    + ("0" + (index + 1)).slice(-2) + ".svg")
-                                sourceSize: Qt.size(64, 64)
-                                fillMode: Image.PreserveAspectFit
-                                smooth: true
-                                mipmap: true
-                                opacity: wsPill.alerting
-                                    ? (host.wsBlinkPhase ? 1.0 : 0.12)
-                                    : (wsPill.showApp ? 0.0
-                                       : (wsPill.isFocused ? 1.0
-                                          : (wsMouse.containsMouse ? 0.85 : (wsPill.isOccupied ? 0.78 : 0.26))))
-                                scale: wsPill.isFocused
-                                    ? 1.15
-                                    : (wsMouse.containsMouse ? 1.1 : (wsPill.isOccupied ? 1.07 : 1.0))
-                                Behavior on opacity { Anim { type: Anim.FastEffects } }
-                                Behavior on scale { Anim { type: Anim.FastSpatial } }
-                            }
-
-                            // иконка приложения стола — проявляется при наведении
-                            // (монохром, как значки трея), чтобы не пестрить
-                            Image {
-                                id: wsAppImg
-                                anchors.centerIn: parent
-                                width: 20
-                                height: 20
-                                source: wsPill.appIcon
-                                sourceSize: Qt.size(64, 64)
-                                fillMode: Image.PreserveAspectFit
-                                smooth: true
-                                visible: false
-                            }
-                            MultiEffect {
-                                anchors.centerIn: parent
-                                width: 20
-                                height: 20
-                                source: wsAppImg
-                                visible: wsPill.appIcon !== "" && wsAppImg.status === Image.Ready
-                                saturation: -1.0
-                                brightness: 0.45
-                                contrast: 0.05
-                                opacity: wsPill.showApp ? 1 : 0
-                                Behavior on opacity { Anim { type: Anim.FastEffects } }
-                            }
-
-                            MouseArea {
-                                id: wsMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                acceptedButtons: Qt.LeftButton
-                                onClicked: host.focusWs(wsPill.wsId)
-                            }
-                        }
+                // короткий импульс: вспышка + лёгкое расширение сегмента
+                SequentialAnimation {
+                    id: focusPulse
+                    NumberAnimation {
+                        target: wsBar
+                        property: "scale"
+                        from: 1.0
+                        to: 1.6
+                        duration: 140
+                        easing.type: Theme.easeOut
+                    }
+                    NumberAnimation {
+                        target: wsBar
+                        property: "scale"
+                        from: 1.6
+                        to: 1.0
+                        duration: 160
+                        easing.type: Easing.InCubic
                     }
                 }
+
+                // ── иконка приложения: проявляется при раскрытии ряда ──
+                Item {
+                    anchors.centerIn: parent
+                    width: 18
+                    height: 18
+                    visible: root.expanded && wsSlot.appIcon !== ""
+                    opacity: visible ? 1 : 0
+                    Behavior on opacity { Anim { type: Anim.FastEffects } }
+
+                    Image {
+                        id: wsAppImg
+                        anchors.fill: parent
+                        source: wsSlot.appIcon
+                        sourceSize: Qt.size(64, 64)
+                        fillMode: Image.PreserveAspectFit
+                        smooth: true
+                        visible: false
+                    }
+                    MultiEffect {
+                        anchors.fill: parent
+                        source: wsAppImg
+                        visible: wsAppImg.status === Image.Ready
+                        saturation: -1.0
+                        brightness: 0.45
+                        contrast: 0.05
+                    }
+                    // фолбэк — маленькая точка, если иконка не нашлась
+                    Text {
+                        anchors.centerIn: parent
+                        visible: wsAppImg.status !== Image.Ready
+                        text: "\uf111"
+                        color: root.rwColor(wsSlot)
+                        font.family: Theme.iconFont
+                        font.pixelSize: 7
+                    }
+                }
+
+                // при раскрытии саму полоску прячет wsBar.opacity; слот не гашу
+
+                MouseArea {
+                    id: wsMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    acceptedButtons: Qt.LeftButton
+                    onClicked: host.focusWs(wsSlot.wsId)
+                }
             }
+        }
+    }
+
+    // цвет сегмента: активный — акцент, занятый — светлый, пустой — приглушён;
+    // мигание новых окон — как было, двумя фазами.
+    function rwColor(slot) {
+        if (slot.alerting)
+            return host.wsBlinkPhase ? Theme.accent : Theme.alpha(Theme.accent, 0.12)
+        if (slot.isFocused)
+            return Theme.accent
+        if (slot.isOccupied)
+            return Theme.barText
+        return Theme.barFaint
+    }
+}
