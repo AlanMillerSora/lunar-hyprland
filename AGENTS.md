@@ -443,7 +443,7 @@ Hyprland сам двигает/тянет за края/блюрит/скруг�
 
 **Палитра.** Выровнена по всей системе: kitty, GTK3/4, qt6ct/меню, kdeglobals, btop, mako, yazi,
 fastfetch/bat, схема `LunarEclipse.colors`. Бар использует отдельные токены
-`Theme.barText/barDim/barFaint/barPill` (текст `#c9d2db`, пилюли `#0c0e13`). Живой kitty
+`Theme.barText/barDim/barFaint/barPill` (текст `#d5dce4`, пилюли `#0c0e13`). Живой kitty
 перечитывает конфиг без перезапуска: `kill -USR1 $(pgrep -x kitty)`.
 
 **Предохранитель OpenCode.** Сессию в scratchpad (`SUPER+S`) держат сутками, и она может
