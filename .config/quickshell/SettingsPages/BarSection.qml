@@ -244,6 +244,69 @@ Item {
                 }
             }
 
+            // ── тон раскрытия островов (клик по ячейке раскрывает плашку) ──
+            Item {
+                width: parent.width
+                height: Theme.rowHCompact
+
+                SectionLabel {
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "ТОН РАСКРЫТИЯ"
+                    textColor: Theme.text
+                    size: Theme.fontSmall
+                    bold: true
+                }
+                Text {
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "кривая раскрытия плашки"
+                    color: Theme.textDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(10)
+                }
+            }
+
+            Row {
+                spacing: Theme.space2
+
+                Repeater {
+                    model: [
+                        { id: "standard",   name: "СТАНДАРТ" },
+                        { id: "expressive", name: "ВЫРАЗИТЕЛЬНЫЙ" },
+                        { id: "emphasized", name: "ПЛАВНЫЙ" }
+                    ]
+
+                    delegate: Rectangle {
+                        required property var modelData
+                        readonly property bool sel: Theme.islandStyle === modelData.id
+                        width: isLabel.implicitWidth + 28
+                        height: Theme.rowHCompact
+                        radius: Theme.radiusM
+                        color: sel ? Theme.active : (isMa.containsMouse ? Theme.hoverStrong : Theme.fill)
+                        border.width: sel ? 1 : 0
+                        border.color: Theme.accent
+
+                        SectionLabel {
+                            id: isLabel
+                            anchors.centerIn: parent
+                            text: modelData.name
+                            textColor: sel ? Theme.accent : Theme.textDim
+                            size: Theme.fontSmall
+                            bold: sel
+                        }
+
+                        MouseArea {
+                            id: isMa
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: Theme.islandStyle = modelData.id
+                        }
+                    }
+                }
+            }
+
             ActionButton {
                 label: "СБРОСИТЬ ВСЁ"
                 minWidth: 150

@@ -133,9 +133,8 @@ Item {
             progressLength: centerZone.trackLength
             progressPosition: centerZone.trackPosition
             function openBubbleFromHere() {
-                // в координаты окна (barBubble живёт в том же окне)
-                var c = mapToItem(null, width / 2, 0)
-                BarState.toggleBubble("media", c.x, c.y)
+                // клик раскрывает саму плашку вниз (морф)
+                BarState.togglePanel("media")
             }
             Component.onCompleted: centerZone.mediaCellRef = mediaCellItem
             Component.onDestruction: if (centerZone.mediaCellRef === mediaCellItem)

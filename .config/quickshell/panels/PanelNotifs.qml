@@ -24,6 +24,7 @@ import ".."
             anchors.fill: parent
             anchors.margins: Theme.barPad
             anchors.topMargin: Theme.panelHeaderH + Theme.space1
+            anchors.bottomMargin: Theme.space1
             spacing: Theme.space2
 
             Text {

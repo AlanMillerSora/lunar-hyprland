@@ -21,22 +21,23 @@ QtObject {
     // игра: пульсовые острова не всплывают (синхронизируется из LunarPanel)
     property bool gameMode: false
 
-    // ── пузырь в полосе бара: какая ячейка раскрыта (стержнем вбок) ──
-    // "" | weather | media. Живёт поверх бара, не мешает панели вниз.
+    // ── пузырь в полосе бара: погода/медиа.
+    // Клик по ячейке теперь раскрывает САМУ плашку вниз (режимы
+    // weather/media), поэтому отдельного «пузыря в полке» больше нет.
+    // Оставляю эти имена как алиасы на режим — чтобы хоткеи/IPC и старые
+    // вызовы работали как раньше, но вели к морфу, а не к боковому пузырю.
     property string bubble: ""
-    // экранные координаты ячейки-источника (задаёт сама ячейка при клике)
+    // экранные координаты ячейки-источника — исторические, больше не нужны
     property real bubbleX: 0
     property real bubbleY: 0
+    // legacy: открыть погоду/медиа как режим-морф плашки
     function openBubble(name, x, y) {
-        bar.bubble = name
-        bar.bubbleX = x
-        bar.bubbleY = y
+        bar.openPanel(name)
     }
     function toggleBubble(name, x, y) {
-        if (bar.bubble === name) { bar.bubble = ""; return }
-        bar.openBubble(name, x, y)
+        bar.togglePanel(name)
     }
-    function closeBubble() { bar.bubble = "" }
+    function closeBubble() {}
 
     property Timer holdTimer: Timer {
         repeat: false

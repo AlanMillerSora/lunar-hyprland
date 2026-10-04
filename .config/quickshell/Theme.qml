@@ -298,6 +298,25 @@ QtObject {
     // в мс, кривые — точки для Easing.BezierSpline.
     property bool animationsEnabled: true
     property real animScale: 1.0
+    // Тон раскрытия барных островов (по мотивам ArchEclipse): одна настройка
+    // решает, какой кривой раскрывается плашка. Имена — для UI, значения —
+    // токены Anim. "expressive" — наш текущий характер (перелёт), "standard"
+    // — сдержанный, "emphasized" — долгий выразительный.
+    property string islandStyle: "expressive"
+    // Индекс типа в Anim.Type (0..13). Theme — синглтон без QML-контекста,
+    // поэтому Anim тут не виден; задаю числом: Standard=1,
+    // Emphasized=5, DefaultSpatial=9 (см. enum в widgets/shared/Anim.qml).
+    readonly property int islandAnimType: {
+        if (theme.islandStyle === "standard")
+            return 1
+        if (theme.islandStyle === "emphasized")
+            return 5
+        return 9
+    }
+    // токены острова: та же плашка, что бар, но чуть мягче под раскрытие
+    readonly property int islandRadius: theme.barRadius
+    readonly property color islandSurface: theme.barPill
+    readonly property color islandSurfaceHover: theme.hoverStrong
     readonly property QtObject anim: QtObject {
         readonly property real scale: theme.animationsEnabled ? theme.animScale : 0
         // стандартные
@@ -417,6 +436,7 @@ QtObject {
             property bool wallpaperAuto: true
             property int blurSize: -1
             property int blurPasses: 3
+            property string islandStyle: "expressive"
 
             // файл → UI (в uiInternal, чтобы не писать назад прочитанное)
             onInterfaceOpacityChanged: { theme.uiInternal = true; theme.interfaceOpacity = interfaceOpacity; theme.uiInternal = false }
@@ -427,6 +447,7 @@ QtObject {
             onWallpaperAutoChanged: { theme.uiInternal = true; theme.wallpaperAuto = wallpaperAuto; theme.uiInternal = false }
             onBlurSizeChanged: { theme.uiInternal = true; theme.blurSize = blurSize; theme.uiInternal = false }
             onBlurPassesChanged: { theme.uiInternal = true; theme.blurPasses = blurPasses; theme.uiInternal = false }
+            onIslandStyleChanged: { theme.uiInternal = true; theme.islandStyle = islandStyle; theme.uiInternal = false }
         }
     }
 
@@ -451,6 +472,7 @@ QtObject {
         if (!uiInternal) { markUI(); uiAdapter.blurPasses = blurPasses }
         blurApply.restart()
     }
+    onIslandStyleChanged: if (!uiInternal) { markUI(); uiAdapter.islandStyle = islandStyle }
 
     // Ползунок блюра: применяем с задержкой — size и passes могут прийти
     // по очереди (загрузка сохранённого состояния, перетаскивание).

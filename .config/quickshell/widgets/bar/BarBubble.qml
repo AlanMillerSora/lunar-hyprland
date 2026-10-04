@@ -4,74 +4,21 @@ import "../.."
 import "../shared"
 
 // ════════════════════════════════════════════════════════════════
-//  BarBubble — пузырь в полосе бара: компактное содержимое ячейки,
-//  которое раскрывается вбок поверх плашки по клику (не выезжающая
-//  вниз карточка). Источник и координаты задаёт ячейка через
-//  BarState.openBubble/toggleBubble; что рисовать — решает `kind`.
-//  Вынесен из LunarPanel, чтобы не пух сам бар.
+//  BarBubble — компактное превью погоды/медиа для морф-плашки бара.
+//  Раньше это был отдельный «пузырь в полке» со своим фоном и
+//  позиционированием по ячейке; теперь клик по ячейке раскрывает
+//  саму плашку вниз (см. LunarPanel), а это содержимое встраивается
+//  в раскрытую плашку. Что рисовать — решает `kind`.
+//  Историческое имя оставил, чтобы не плодить сущности.
 // ════════════════════════════════════════════════════════════════
 Item {
     id: root
-    property var host                 // корень LunarPanel
     property string kind: BarState.bubble
+    property var host                 // корень LunarPanel (на будущее)
 
+    implicitWidth: inner.width
+    implicitHeight: inner.height
     visible: kind !== ""
-    opacity: kind !== "" ? 1 : 0
-    Behavior on opacity { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easeOut } }
-
-    implicitWidth: inner.width + Theme.barPad * 2
-    implicitHeight: inner.height + Theme.space3 * 2
-    width: implicitWidth
-    height: implicitHeight
-
-    // позиция: под ячейкой-источником, прижата к её правому/левому краю
-    // так, чтобы не уезжать за экран
-    x: Math.max(Theme.barMargin,
-        Math.min(BarState.bubbleX - width / 2, host.width - width - Theme.barMargin))
-    y: Theme.barMargin + Theme.barH + Theme.space1
-
-    Rectangle {
-        anchors.fill: parent
-        radius: Theme.barRadius
-        color: host.pillBg
-        border.width: 1
-        border.color: Theme.border
-        clip: true
-
-        // зерно — тот же тил, что у бара
-        Image {
-            id: nzBub
-            anchors.fill: parent
-            source: Qt.resolvedUrl("../../assets/noise.png")
-            fillMode: Image.Tile
-            smooth: false
-            cache: true
-            visible: false
-            layer.enabled: true
-        }
-        MultiEffect {
-            anchors.fill: parent
-            source: nzBub
-            maskEnabled: true
-            maskSource: nmBub
-            opacity: 0.07
-        }
-        Rectangle {
-            id: nmBub
-            anchors.fill: parent
-            radius: Theme.barRadius
-            color: "white"
-            visible: false
-            layer.enabled: true
-        }
-    }
-
-    // клик по фону пузыря закрывает его (по кнопкам не срабатывает)
-    MouseArea {
-        anchors.fill: parent
-        z: -1
-        onClicked: BarState.closeBubble()
-    }
 
     // ── содержимое по виду ──
     Item {
@@ -83,7 +30,7 @@ Item {
         // ПОГОДА: иконка + температура/город/описание + детали
         Item {
             visible: root.kind === "weather"
-            width: 260
+            width: 300
             height: wxCol.height
             Column {
                 id: wxCol

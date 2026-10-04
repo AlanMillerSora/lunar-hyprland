@@ -60,7 +60,7 @@ Item {
         SystemIsland { host: rightZone.host }
     }
 
-    // ── погода: иконка + температура, клик раскрывает пузырь в полосе ──
+    // ── погода: иконка + температура; клик раскрывает плашку вниз ──
     Component {
         id: weatherComp
         Cell {
@@ -69,10 +69,9 @@ Item {
             interactive: true
             accent: Theme.barFaint
             tip: "Погода"
+            // клик по ячейке раскрывает саму плашку вниз (морф), как у ArchEclipse
             function openBubbleFromHere() {
-                // координаты ячейки в окне (barBubble живёт в том же окне)
-                var c = mapToItem(null, width / 2, 0)
-                BarState.toggleBubble("weather", c.x, c.y)
+                BarState.togglePanel("weather")
             }
             Component.onCompleted: rightZone.weatherCellRef = weatherCell
             Component.onDestruction: if (rightZone.weatherCellRef === weatherCell)

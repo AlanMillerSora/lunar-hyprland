@@ -30,8 +30,8 @@ PanelWindow {
 
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.namespace: "lunar-panel"
-    // клавиатуру забираю, пока открыт режим или пузырь — чтобы Esc закрывал
-    WlrLayershell.keyboardFocus: (BarState.expanded || BarState.bubble !== "")
+    // клавиатуру забираю, пока открыт режим — чтобы Esc закрывал
+    WlrLayershell.keyboardFocus: BarState.expanded
         ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     // окна не заезжают только под полосу бара
     WlrLayershell.exclusiveZone: Theme.barH
@@ -45,36 +45,35 @@ PanelWindow {
     // закрывает панель, а не проваливается сквозь окно. В покое зазоры
     // по-прежнему пропускают клики (важно для fullscreen).
     mask: Region {
-        Region { item: (BarState.expanded || BarState.bubble !== "") ? clickShield : null }
+        Region { item: BarState.expanded ? clickShield : null }
         Region { item: bar }
         Region { item: BarSettings.hotZone ? hotZoneLeft : null }
         Region { item: BarSettings.hotZone ? hotZoneRight : null }
-        Region { item: BarState.bubble !== "" ? barBubble : null }
         Region { item: root.recording ? recPill : null }
     }
 
-    // фон-ловушка: есть при открытой панели или пузыре, самый нижний слой
+    // фон-ловушка: есть при открытой панели, самый нижний слой
     Item {
         id: clickShield
         anchors.fill: parent
-        visible: BarState.expanded || BarState.bubble !== ""
+        visible: BarState.expanded
         MouseArea {
             anchors.fill: parent
             onClicked: { BarState.closePanel(); BarState.closeBubble() }
         }
     }
 
-    // Esc закрывает открытый режим или пузырь (поиск сам обрабатывает Esc)
+    // Esc закрывает открытый режим (поиск сам обрабатывает Esc)
     Shortcut {
         sequence: "Escape"
-        enabled: (BarState.expanded || BarState.bubble !== "") && BarState.mode !== "search"
-        onActivated: { BarState.closePanel(); BarState.closeBubble() }
+        enabled: BarState.expanded && BarState.mode !== "search"
+        onActivated: { BarState.closePanel() }
     }
     // тот же Esc через Keys — надёжнее на layer-поверхности
     Item {
         anchors.fill: parent
-        focus: (BarState.expanded || BarState.bubble !== "") && BarState.mode !== "search"
-        Keys.onEscapePressed: { BarState.closePanel(); BarState.closeBubble() }
+        focus: BarState.expanded && BarState.mode !== "search"
+        Keys.onEscapePressed: { BarState.closePanel() }
     }
 
     // Палитра из системной темы (Hub / лаунчер / настройки):
@@ -650,7 +649,8 @@ PanelWindow {
     // ─────────────── панель бара (вариант 3) ───────────────
     // Состояния (режим/пульс/холд) — в BarState; здесь только вид: морф,
     // размеры и геометрия. Всё реагирует на BarState.
-    // Морф бара — только для «пульта»: плашка сама становится панелью.
+    // Морф бара — для ВСЕХ режимов: плашка сама становится панелью
+    // (пульт/поиск/медиа/погода/телеметрия/уведомления), а не карточкой снизу.
     property real morph: 0
     Behavior on morph { Anim { type: Anim.DefaultSpatial } }
     // Раскрытие панели (все режимы): 0 — закрыто, 1 — открыто.
@@ -669,12 +669,13 @@ PanelWindow {
     property real panelTargetH: root.panelHeightFor(BarState.mode)
     Behavior on panelTargetH { Anim { type: Anim.DefaultSpatial } }
 
-    // ширина панели по режиму: пульт/поиск/уведы — фикс, медиа — по содержимому
+    // ширина панели по режиму: пульт/поиск — фикс, медиа/погода — по содержимому
     function panelWidthFor(m) {
         if (m === "control") return Theme.panelWControl
         if (m === "search") return Theme.panelWSearchWide
         if (m === "media") return mediaPanel.implicitWidth + 2 * Theme.space3
         if (m === "notifs") return Theme.panelWNotifs
+        if (m === "weather") return wxBody.implicitWidth + 2 * Theme.space4
         return Theme.panelWSearch
     }
     readonly property bool panelHasHeader: BarState.mode === "control"
@@ -731,11 +732,11 @@ PanelWindow {
     Connections {
         target: BarState
         function onModeChanged() {
-            // морф плашки — только для «пульта»; остальные режимы выезжают
-            // карточкой снизу (см. panel). Пузырь и панель вместе не живут.
+            // морф плашки — теперь для ВСЕХ режимов: плашка сама
+            // раскрывается вниз и становится панелью.
             if (BarState.mode !== "")
                 BarState.closeBubble()
-            root.morph = (BarState.mode === "control" || BarState.mode === "search") ? 1 : 0
+            root.morph = (BarState.mode !== "") ? 1 : 0
             root.panelContentOpacity = 0
             panelFade.restart()
             if (BarState.mode === "notifs")
@@ -811,7 +812,8 @@ PanelWindow {
         x: collapsedX + ((parent.width - width) / 2 - collapsedX) * root.morph
         anchors.top: parent.top
         anchors.topMargin: Theme.barMargin
-        height: Theme.barH + root.morph * (root.panelTargetH - Theme.barH)
+        // в морфе плашка = строка + контент режима (panelTargetH — только контент)
+        height: Theme.barH + root.morph * root.panelTargetH
         radius: Theme.barRadius
         color: root.pillBg
         border.width: 1
@@ -845,6 +847,164 @@ PanelWindow {
             color: "white"
             visible: false
             layer.enabled: true
+        }
+
+        // ── ПАНЕЛЬ: контент режима внутри раскрытой вниз плашки ──
+        // Живёт ребёнком `bar`, чтобы расти и обрезаться вместе с фоном
+        // (без рассинхрона двух отдельных прямоугольников).
+        Rectangle {
+            id: panel
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.top
+            anchors.topMargin: Theme.barH
+            width: root.panelWidthFor(BarState.mode)
+            // высота = весь фон минус строка бара: контент всегда точно
+            // в границах плашки, без рассинхрона с анимацией фона.
+            height: Math.max(0, parent.height - Theme.barH)
+            color: "transparent"
+            border.width: 0
+            clip: true
+            visible: root.panelOpen > 0.001
+            opacity: 1
+            Behavior on width { Anim { type: Anim.DefaultSpatial } }
+
+            HoverHandler { onHoveredChanged: BarState.panelHovered = hovered }
+
+            // клик по фону панели — закрыть (по кнопкам не срабатывает: они выше)
+            MouseArea {
+                anchors.fill: parent
+                z: -1
+                onClicked: BarState.closePanel()
+            }
+
+            // ── ШАПКА ОСТРОВА: имя режима, действия, закрытие ──
+            Item {
+                id: panelHeader
+                visible: root.panelHasHeader
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: Theme.panelHeaderH
+
+                Row {
+                    anchors.left: parent.left
+                    anchors.leftMargin: Theme.barPad
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: Theme.space2
+
+                    SectionLabel {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: root.panelTitle
+                        textColor: Theme.textDim
+                        bold: false
+                    }
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: BarState.mode === "notifs" && root.notifCount > 0
+                        text: root.notifCount
+                        color: Theme.accent
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontTiny
+                        font.bold: true
+                    }
+                }
+
+                Row {
+                    anchors.right: parent.right
+                    anchors.rightMargin: Theme.barPad
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: Theme.space3
+
+                    // DND и «очистить» — только у уведомлений
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: BarState.mode === "notifs"
+                        text: NotifModel.dnd ? "DND ВКЛ" : "DND"
+                        color: NotifModel.dnd ? Theme.danger
+                            : (dndHeadMouse.containsMouse ? Theme.accent : Theme.textFaint)
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontTiny
+                        font.letterSpacing: 1
+                        MouseArea {
+                            id: dndHeadMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: NotifModel.toggleDnd()
+                        }
+                    }
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: BarState.mode === "notifs"
+                        text: "очистить"
+                        color: clearHeadMouse.containsMouse ? Theme.accent : Theme.textFaint
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontTiny
+                        MouseArea {
+                            id: clearHeadMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: NotifModel.clear()
+                        }
+                    }
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "\uf00d"
+                        color: headCloseMouse.containsMouse ? Theme.danger : Theme.textFaint
+                        font.family: Theme.iconFont
+                        font.pixelSize: Theme.fontSize(13)
+                        MouseArea {
+                            id: headCloseMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: BarState.closePanel()
+                        }
+                    }
+                }
+
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    height: 1
+                    color: Theme.border
+                }
+            }
+
+            // ── ПУЛЬТ: три яруса — состояния, звук, действия ──
+            PanelControl { host: root; id: ctlBody }
+
+            // ── МЕДИА: обложка, seek, транспорт, shuffle/repeat, очередь ──
+            LunarMediaPanel {
+                id: mediaPanel
+                visible: BarState.mode === "media"
+                opacity: root.panelContentOpacity
+                anchors.top: parent.top
+                anchors.topMargin: Theme.panelHeaderH + Theme.space2
+                anchors.horizontalCenter: parent.horizontalCenter
+                onOpenPlayerRequested: root.openPlayer()
+            }
+
+            // ── ТЕЛЕМЕТРИЯ: плашки CPU · RAM · GPU + сеть ──
+            PanelTelemetry { host: root; id: sysBody }
+
+            // ── ПОГОДА: карточка «сейчас» + детали, компактным превью ──
+            BarBubble {
+                id: wxBody
+                kind: "weather"
+                visible: BarState.mode === "weather"
+                anchors.top: parent.top
+                anchors.topMargin: Theme.panelHeaderH + Theme.space2
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+
+            // ── ПОИСК ──
+            PanelSearch { host: root; id: searchPanel }
+
+            // ── УВЕДОМЛЕНИЯ ──
+            PanelNotifs { host: root }
         }
     }
 
@@ -888,7 +1048,7 @@ PanelWindow {
         anchors.top: parent.top
         width: 5
         height: Theme.barH
-        visible: BarSettings.hotZone && !BarState.expanded && BarState.bubble === ""
+        visible: BarSettings.hotZone && !BarState.expanded
         HoverHandler {
             onHoveredChanged: {
                 if (hovered) hotZoneLeftTimer.restart()
@@ -909,7 +1069,7 @@ PanelWindow {
         anchors.top: parent.top
         width: 5
         height: Theme.barH
-        visible: BarSettings.hotZone && !BarState.expanded && BarState.bubble === ""
+        visible: BarSettings.hotZone && !BarState.expanded
         HoverHandler {
             onHoveredChanged: {
                 if (hovered) hotZoneRightTimer.restart()
@@ -977,168 +1137,5 @@ PanelWindow {
         }
     }
 
-    // ── ПАНЕЛЬ: контент режима внутри раскрытой вниз плашки бара ──
-    // Сама плашка растёт вниз; здесь — только контент (шапка + тело),
-    // раскрывается из-под строки бара (clip + opacity + scale). Один режим.
-    Rectangle {
-        id: panel
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.top: bar.top
-        // «пульт» — внутри плашки; прочие режимы — карточкой под строкой бара
-        anchors.topMargin: (BarState.mode === "control" || BarState.mode === "search") ? 0 : (Theme.barH + Theme.space1)
-        width: root.panelWidthFor(BarState.mode)
-        height: root.panelOpen * root.panelTargetH
-        color: (BarState.mode === "control" || BarState.mode === "search") ? "transparent" : root.pillBg
-        border.width: (BarState.mode === "control" || BarState.mode === "search") ? 0 : 1
-        border.color: Theme.border
-        radius: Theme.barRadius
-        clip: true
-        visible: root.panelOpen > 0.001
-        opacity: root.panelOpen
-        scale: 0.97 + 0.03 * root.panelOpen
-        transformOrigin: Item.Top
-        Behavior on width { Anim { type: Anim.DefaultSpatial } }
-
-        HoverHandler { onHoveredChanged: BarState.panelHovered = hovered }
-
-        // клик по фону панели — закрыть (по кнопкам не срабатывает: они выше)
-        MouseArea {
-            anchors.fill: parent
-            z: -1
-            onClicked: BarState.closePanel()
-        }
-
-        // ── ШАПКА ОСТРОВА: имя режима, действия, закрытие ──
-        Item {
-            id: panelHeader
-            visible: root.panelHasHeader
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            height: Theme.panelHeaderH
-
-            Row {
-                anchors.left: parent.left
-                anchors.leftMargin: Theme.barPad
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: Theme.space2
-
-                SectionLabel {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root.panelTitle
-                    textColor: Theme.textDim
-                    bold: false
-                }
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    visible: BarState.mode === "notifs" && root.notifCount > 0
-                    text: root.notifCount
-                    color: Theme.accent
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontTiny
-                    font.bold: true
-                }
-            }
-
-            Row {
-                anchors.right: parent.right
-                anchors.rightMargin: Theme.barPad
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: Theme.space3
-
-                // DND и «очистить» — только у уведомлений
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    visible: BarState.mode === "notifs"
-                    text: NotifModel.dnd ? "DND ВКЛ" : "DND"
-                    color: NotifModel.dnd ? Theme.danger
-                        : (dndHeadMouse.containsMouse ? Theme.accent : Theme.textFaint)
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontTiny
-                    font.letterSpacing: 1
-                    MouseArea {
-                        id: dndHeadMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: NotifModel.toggleDnd()
-                    }
-                }
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    visible: BarState.mode === "notifs"
-                    text: "очистить"
-                    color: clearHeadMouse.containsMouse ? Theme.accent : Theme.textFaint
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontTiny
-                    MouseArea {
-                        id: clearHeadMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: NotifModel.clear()
-                    }
-                }
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "\uf00d"
-                    color: headCloseMouse.containsMouse ? Theme.danger : Theme.textFaint
-                    font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSize(13)
-                    MouseArea {
-                        id: headCloseMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: BarState.closePanel()
-                    }
-                }
-            }
-
-            Rectangle {
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                height: 1
-                color: Theme.border
-            }
-        }
-
-        // ── ПУЛЬТ: две колонки — слева звук и состояние, справа действия
-        // и телеметрия. Ровный ритм: подписи секций + карточки.
-        PanelControl { host: root; id: ctlBody }
-
-        // ── МЕДИА: обложка, seek, транспорт, shuffle/repeat, очередь ──
-        // Единый компонент LunarMediaPanel (источник — MediaCore/MPRIS).
-        LunarMediaPanel {
-            id: mediaPanel
-            visible: BarState.mode === "media"
-            opacity: root.panelContentOpacity
-            anchors.top: parent.top
-            anchors.topMargin: Theme.space3
-            anchors.horizontalCenter: parent.horizontalCenter
-            onOpenPlayerRequested: root.openPlayer()
-        }
-
-        // ── ТЕЛЕМЕТРИЯ: плашки CPU · RAM · GPU + сеть ──
-        PanelTelemetry { host: root; id: sysBody }
-
-        // ── ПОГОДА: крупная карточка «сейчас» + три плашки деталей ──
-        PanelWeather { host: root; id: wxBody }
-
-        // ── ПОИСК ──
-        PanelSearch { host: root; id: searchPanel }
-
-        // ── УВЕДОМЛЕНИЯ ──
-        PanelNotifs { host: root }
-    }
-
-    // ── ПУЗЫРЬ В ПОЛОСЕ: поверх бара, раскрывается вбок под ячейкой ──
-    // Отдельный слой, чтобы не обрезался clip'ом плашки бара.
-    BarBubble {
-        id: barBubble
-        host: root
-        visible: BarState.bubble !== ""
-    }
 
 }
