@@ -14,19 +14,30 @@ Item {
     // Loader, в котором живёт ячейка часов — задаёт центровку
     property Item clockItem: null
 
-    // Играет ли что-то: держу локально и обновляю по сигналу корня.
-    // Напрямую host.mediaActive в делегатах читать нельзя — host это
-    // property var, и через Loader такая зависимость не пересчитывается.
+    // Играет ли что-то и прогресс трека: держу локально и обновляю по
+    // сигналам корня. Напрямую host.mediaActive/trackLength в делегатах
+    // читать нельзя — host это property var, и через Loader такая
+    // зависимость не пересчитывается.
     property bool mediaActive: false
+    property real trackLength: 0
+    property real trackPosition: 0
     function syncMedia() {
         if (host)
             mediaActive = host.mediaActive
     }
+    function syncProgress() {
+        if (!host)
+            return
+        trackLength = host.trackLength
+        trackPosition = host.trackPosition
+    }
     Connections {
         target: centerZone.host
         function onMediaActiveChanged() { centerZone.syncMedia() }
+        function onTrackLengthChanged() { centerZone.syncProgress() }
+        function onTrackPositionChanged() { centerZone.trackPosition = host.trackPosition }
     }
-    Component.onCompleted: syncMedia()
+    Component.onCompleted: { syncMedia(); syncProgress() }
 
     // расстояние от левого края зоны до центра ячейки часов. Между
     // уничтожением старого делегата часов и готовностью нового clockItem
@@ -110,7 +121,11 @@ Item {
     // ── медиа-ячейка ──
     Component {
         id: mediaComp
-        MediaCell { host: centerZone.host }
+        MediaCell {
+            host: centerZone.host
+            progressLength: centerZone.trackLength
+            progressPosition: centerZone.trackPosition
+        }
     }
 
     // ── часы + дата — одна ячейка со штрихом-акцентом ──

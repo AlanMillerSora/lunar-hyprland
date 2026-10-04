@@ -337,7 +337,14 @@ PanelWindow {
     property real shownPos: 0
     readonly property real trackPosition: shownPos
     function syncPos() {
-        root.shownPos = (player && player.position > 0) ? player.position : 0
+        var p = (player && player.position > 0) ? player.position : 0
+        // MPRIS шлёт позицию редко и «догоняющими» значениями: после seek
+        // прилетают 92.7 → 90.0 → 32.0 → 30.0. Назад на доли секунды не
+        // откатываю (это догон, а не перемотка), но большой скачок принимаю
+        // как реальную перемотку. Вперёд двигаю всегда.
+        if (p + 1.5 < root.shownPos && Math.abs(p - root.shownPos) < 3)
+            return
+        root.shownPos = p
     }
     onPlayerChanged: {
         root.syncPos()
@@ -356,6 +363,8 @@ PanelWindow {
         target: root.player
         function onPositionChanged() { root.syncPos() }
         function onTrackChanged() { root.syncPos() }
+        function onLengthChanged() { root.syncPos() }
+        function onLengthSupportedChanged() { root.syncPos() }
     }
 
 

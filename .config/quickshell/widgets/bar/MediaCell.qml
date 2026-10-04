@@ -9,6 +9,10 @@ import "../shared"
 // ════════════════════════════════════════════════════════════════
 Cell {
     property var host
+    // прогресс задаёт зона (BarCenterZone): через var-хост эти значения не
+    // пересчитываются в Loader'е, поэтому приходят типизированными свойствами
+    property real progressLength: 0
+    property real progressPosition: 0
     id: mediaInline
     // видимостью медиа-ячейки рулит зона (BarCenterZone): она знает и про
     // настройки состава, и про «играет ли что-то». Свой биндинг на
@@ -99,10 +103,11 @@ Cell {
                 height: 2
                 radius: 1
                 color: Theme.trackBg
-                visible: host.trackLength > 0
+                visible: mediaInline.progressLength > 0
                 Rectangle {
                     width: parent.width * Math.max(0, Math.min(1,
-                        host.trackLength > 0 ? host.trackPosition / host.trackLength : 0))
+                        mediaInline.progressLength > 0
+                            ? mediaInline.progressPosition / mediaInline.progressLength : 0))
                     height: parent.height
                     radius: parent.radius
                     color: Theme.accent
