@@ -680,16 +680,19 @@ PanelWindow {
     //    x ячейки беру в координатах контента (contentItem), клампинг в
     //    `bubbleX` не даёт карточке вылезти за края экрана. ──
     function cellOriginX(item) {
-        if (!item)
-            return root.width / 2
+        // невидимая/неразложенная ячейка (напр. медиа без трека) координаты
+        // не имеет — тогда карточка идёт по центру, а маркер ячейки не рисуем.
+        if (!item || !item.visible || item.width <= 0)
+            return -1
         return item.mapToItem(root.contentItem, item.width / 2, 0).x
     }
     function originForMode(m) {
         if (m === "weather") return cellOriginX(centerZone.weatherCellRef)
-        if (m === "media") return cellOriginX(rightZone.mediaCellRef)
+        if (m === "media") return rightZone.mediaActive
+            ? cellOriginX(rightZone.mediaCellRef) : -1
         if (m === "notifs") return cellOriginX(rightZone.notifCellRef)
         if (m === "sys") return cellOriginX(rightZone.sysCellRef)
-        return root.width / 2
+        return -1
     }
     property real panelTargetW: root.panelWidthFor(BarState.mode)
     Behavior on panelTargetW { Anim { type: Anim.DefaultSpatial } }
@@ -866,6 +869,20 @@ PanelWindow {
             layer.enabled: true
         }
 
+    }
+
+    // ── маркер ячейки: короткое accent-подчёркивание внизу бара под открытой
+    //    ячейкой — сразу видно, чей это пузырь (и куда вернётся после закрытия).
+    Rectangle {
+        id: cellMark
+        visible: root.reveal > 0.001 && BarState.originX >= 0
+        opacity: root.reveal
+        width: 18
+        height: 2
+        radius: 1
+        color: Theme.accent
+        x: (BarState.originX >= 0 ? BarState.originX : root.width / 2) - width / 2
+        y: Theme.barMargin + Theme.barH - 2
     }
 
     // ── КАРТОЧКА-«ПУЗЫРЬ»: режим открывается под ячейкой, бар остаётся ──

@@ -11,7 +11,7 @@ Item {
     id: rightZone
     property var host
 
-    implicitWidth: zoneRow.implicitWidth + 2 * Theme.space2
+    implicitWidth: zoneRow.implicitWidth + 2 * Theme.barPad
     implicitHeight: Theme.barH
     clip: true
 
@@ -56,7 +56,7 @@ Item {
     Row {
         id: zoneRow
         anchors.left: parent.left
-        anchors.leftMargin: Theme.space2
+        anchors.leftMargin: Theme.barPad
         anchors.verticalCenter: parent.verticalCenter
         height: Theme.barH
         spacing: Theme.space4

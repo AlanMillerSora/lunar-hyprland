@@ -30,7 +30,7 @@ Item {
         // ПОГОДА: иконка + температура/город/описание + детали
         Item {
             visible: root.kind === "weather"
-            width: 300
+            width: 320
             height: wxCol.height
             Column {
                 id: wxCol
@@ -73,7 +73,7 @@ Item {
             Rectangle { width: parent.width; height: 1; color: Theme.border2 }
             Row {
                 width: parent.width
-                spacing: Theme.space4
+                spacing: Theme.space3
                 Repeater {
                     model: [
                         { label: "ОЩУЩ", v: Weather.feels },
