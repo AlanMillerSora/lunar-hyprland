@@ -41,8 +41,8 @@
 - После тестов UI **закрывай за собой**: `qs ipc call hub close` / `sidebar close` / `rsidebar close`;
   не оставляй лишних окон и процессов (firefox, sddm-greeter, запись).
 - **Только ПК.** Яркость удалена (см. §6).
-- BIOS/загрузка: BIOS **заблокирован**, систему не переустановить. GRUB, initramfs, EFI —
-  только с бэкапом и крайней осторожностью. GRUB-тему не делать.
+- BIOS/загрузка: GRUB, initramfs, EFI — только с бэкапом и крайней осторожностью.
+  GRUB-тему не делать.
 - В конце задачи — коротко: что сделал, что проверено, что осталось.
 
 - **Агент риса (`LunarAgent`).** Действия сам не запускает: предлагает блок
@@ -91,7 +91,7 @@ sleep 6; systemctl --user is-active lunar-quickshell.service
 L=$(ls -t /run/user/1000/quickshell/by-id/*/log.qslog | head -1)
 strings "$L" | grep -iE "error|not a type|TypeError|ReferenceError|SyntaxError|Cannot assign|upper case" | grep -vi blackholed
 # 5) IPC:
-qs ipc call hub toggle|open|close|nav N          # nav 0..12 (см. §4)
+qs ipc call hub toggle|open|close|nav N          # nav 0..8 (см. §4)
 qs ipc call sidebar|rsidebar|clipboard|volume|media|power|tray toggle|open|close
 # 6) скриншот (по минимуму): mkdir -p /tmp/shots; grim -o DP-2 /tmp/shots/x.png
 #    сначала уйди на ПУСТОЙ стол:
@@ -130,11 +130,15 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 - cava: два конфига — `cava-lunar.conf` (20 полос, бар), `cava-lunar-wide.conf` (56 полос, сайдбар). Читать `SplitParser`.
 - **GPU-зависимые настройки — только условно.** Переменные NVIDIA (`hyprland.lua`) включаются по
   `/sys/class/drm/*/device/vendor` (`0x10de`), иначе ломается рендер на AMD/Intel.
-  Драйвер NVIDIA в Arch 615 — `nvidia-open-dkms` (проприетарного `nvidia-dkms` больше нет).
-- systemd-user: `lunar-wifi-guard`, `lunar-homepage`, `lunar-quickshell`.
-  systemd system: `zapret.service`, `cronie.service`, `fwupd`.
-- Пакеты, которые **не трогать**: chromium, noto-fonts-cjk, nodejs/npm, inter-font, qt5-wayland,
-  vim/nano, openssh, wget, smartmontools, socat, lsof, pipewire-jack.
+  Драйвер NVIDIA в Arch 615 — `nvidia-open` (`nvidia-open-dkms` — для нештатных ядер;
+  проприетарного `nvidia-dkms` больше нет).
+- systemd-user: `lunar-quickshell` (+`lunar-quickshell-failure`), `lunar-wifi-guard`,
+  `lunar-homepage`, `lunar-player`, `lunar-tgproxy`.
+  systemd system: `zapret.service`, `cronie.service`, `lunar-cpu-performance*.service`;
+  `fwupd.service` (static).
+- Пакеты, которые **не трогать** (стоят, не удалять): `noto-fonts-cjk`, `qt5-wayland`,
+  `vim/nano`, `openssh`, `wget`, `smartmontools`, `lsof`, `pipewire-jack`.
+  **Не ставить** без нужды: `chromium`, `nodejs`/`npm`, `inter-font`, `socat`.
 - Рабочая машина: RTX 5070 + Ryzen 7 7700 + 32 ГБ, монитор DP-2 3440×1440@165.
   Работаем на ПК; скриншоты — `grim -o DP-2`.
 - **polkit:** свой агент `LunarPolkit.qml` (`Quickshell.Services.Polkit`) вместо
@@ -162,8 +166,8 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 /home/sora/rice/
 ├── .config/
 │   ├── hypr/{hyprland.lua, hypridle.conf, scripts/}
-│   │   └── scripts/eclipse-{status,gamemode,record,cleanup,transparency,zapret,vencord,backup,update,perf,avatar,launch,agent-context}.sh,
-│   │       eclipse-calendar.py, eclipse-cheatsheet.py, eclipse-askpass.py, eclipse-wifi-guard.py
+│   │   └── scripts/eclipse-{status,gamemode,record,cleanup,transparency,zapret,zapret-tg,vencord,backup,update,perf,avatar,launch,agent-context,api-limit,media,mono-icons}.sh,
+│   │       eclipse-palette.py, eclipse-calendar.py, eclipse-cheatsheet.py, eclipse-askpass.py, eclipse-wifi-guard.py
 │   ├── quickshell/
 │   │   ├── shell.qml грузит: LunarWallpaper, LunarPanel, LunarHub, LunarWallpapers,
 │   │   │   LunarClipboard, LunarPower, LunarAgent, LunarOverview, LunarPolkit,
@@ -210,17 +214,20 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
   холодом — чистый нейтрал на тёплых матрицах читается коричневым), **steel** (серо-синий
   с акцентом), **photo** (`--from-image`: цвет считается с обоев). В `Theme.qml` цвета
   читаются через `hexColor()`: палитра пишет `#RRGGBBAA`, а Qt ждёт `#AARRGGBB`.
-- Флэт, без глянца: плашки панели плотные (`barPill` альфа 1.0), радиус плашек и окон 8,
+- Флэт, без глянца: плашки панели плотные (`barPill` альфа `arch?0.95:0.85`),
+  радиус плашек `arch?3:9`, окон 8,
   зазоры окон 5/10, тень короткая (`range 8`, `render_power 3`), зерно тихое (0.07).
   Градиент-блик сверху («стекло») не добавлять — это читается глянцем из нулевых.
 - Шрифт интерфейса — `Roboto Mono` (моно, полная кириллица, все веса), иконки —
   `JetBrainsMono Nerd Font`. Не писать имена семейств, которых нет в системе
   (`"JetBrains Mono"`, `Iosevka NFM` без установки) — Qt молча подставит Noto.
-- Токены `Theme.qml`: отступы `space1..6` 4/8/12/16/24/32; строки `rowHCompact/rowH/rowHComfy`
-  34/42/48, `headerH` 44; радиусы `radiusS/radius/radiusM/radiusL` 6/8/10/12; текст
+- Токены `Theme.qml`: отступы `space1..6` 4/8/12/20/28/32; строки `rowHCompact/rowH/rowHComfy`
+  38/42/48, `headerH` 44; радиусы classic `radiusS/radius/radiusM/radiusL` 6/8/10/12
+  (arch 0/2/3/4); текст
   `fontMicro/fontTiny/fontSmall/fontBody/fontPanelTitle/fontTitle/fontClock` 9/11/12/14/16/22/16;
-  панель `barH/barMargin/barPad/barRadius` 34/5/12/9, ячейка бара `barCellH` 30,
-  строки панелей `panelFieldH/panelRowH/sparkH` 46/36/26; `iconXL/cardPad` 30/12;
+  панель `barH/barMargin/barTop/barPad/barRadius` classic 34/5/5/16/9 (arch 38/0/8/16/3),
+  ячейка бара `barCellH` 30,
+  строки панелей `panelFieldH/panelRowH/sparkH` 46/36/26; `iconXL/cardPad` 30/16;
   `hoverGrow` 1.25 (ховер-рост групп панели); `hover/hoverStrong/active/activeBorder/fill/onAccent`;
   `tooltipDelay` 600; `clamp()`.
 - HUD-заголовки секций: `SectionLabel` (дефолт 11px `fontTiny`, letterSpacing 2, bold; на
@@ -251,7 +258,8 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 - «Discord падает на слабом GPU» — не баг риса.
 - `LunarLauncher.qml`/`LunarSettings.qml` — мусор, удалены; лаунчер = Hub.
 - Автогашение экрана и автолок — выключены намеренно.
-- Wi-Fi powersave-off и `mt7921e` ASPM — не трогать.
+- Wi-Fi: адаптер Qualcomm WCN785x (`ath12k_wifi7_pci`), стек — `systemd-networkd`
+  (не NetworkManager). Powersave держим выключенным. `mt7921e`/ASPM неактуален (не MediaTek).
 - Параллакс обоев к курсору — не нужен.
 - `ShaderEffect`/`.qsb` для короны (Quickshell, Qt6) — не подключать.
 - Полноэкранный блюр layer-оверлеев (`layer_rule … blur` на fullscreen-слой) — НЕ включать:
@@ -261,7 +269,7 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
   «massively increase GPU utilization». Зерно делаем тайлами (`blur:noise` + PNG-шум), не шейдером.
 - Обёртку `opencode` в scope с `MemoryHigh/Max` (функция в `~/.zshrc`) — не убирать: она держит
   OOM сессии внутри scope, чтобы не ронять всю систему.
-- GRUB-тема — не делать (BIOS заблокирован).
+- GRUB-тема — не делать.
 - «Экономный» пресет — уже есть тумблер **OPTIMIZE** (Hub → Interface), по умолчанию включён.
 - Отдельные установщики sddm/plymouth/zapret — не возвращать, всё в `install.sh`.
 - `MemoryMax`/`MemoryHigh` и `Restart=always` для quickshell — не ставить (OOM / краш-луп).

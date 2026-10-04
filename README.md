@@ -202,7 +202,7 @@ palette.toml ──> eclipse-palette.py ──┬──> ~/.cache/lunar/palette.
 ~/.config/hypr/scripts/eclipse-palette.py --from-image ~/pic.jpg --apply  # цвет с картинки
 ```
 
-Ритм интерфейса — токены в `quickshell/Theme.qml`: отступы `space1..6` (4/8/12/16/24/32), высоты строк `rowHCompact/rowH/rowHComfy` (34/42/48), радиусы `radiusS/radius/radiusM/radiusL` (6/8/10/12), шкала шрифтов `fontMicro…fontTitle` (9…22), геометрия панели (`barH` 34, `barMargin` 5, `barPad` 12, `barRadius` 9), подложка карточек `cardBg`/`cardPad` и движение `anim` (spatial/effects, expressive-кривые, стили `expressive/standard/emphasized`). Меняешь токен — меняется весь рис.
+Ритм интерфейса — токены в `quickshell/Theme.qml`: отступы `space1..6` (4/8/12/20/28/32), высоты строк `rowHCompact/rowH/rowHComfy` (38/42/48), радиусы `radiusS/radius/radiusM/radiusL` (6/8/10/12, arch 0/2/3/4), шкала шрифтов `fontMicro…fontTitle` (9…22), геометрия панели (`barH` 34/38, `barMargin` 5/0, `barPad` 16, `barRadius` 9/3 — classic/arch), подложка карточек `cardBg`/`cardPad` и движение `anim` (spatial/effects, expressive-кривые, стили `expressive/standard/emphasized`). Меняешь токен — меняется весь рис.
 
 **Hub → Interface** хранит: прозрачность, размытие, размер шрифта, тумблер **OPTIMIZE** (лёгкий профиль blur/тени), пресеты палитры, стиль островов, курсор `Bibata-Modern-Ice`. Настройки переживают `hyprctl reload` (файл `lunar-ui.json`).
 
@@ -454,19 +454,19 @@ sudo ./install.sh --disable-sddm  # вернуть штатную тему
 
 </div>
 
-Переменные включаются, только если карта найдена — один конфиг для NVIDIA и AMD/Intel. Замена проприетарного модуля — **`nvidia-open-dkms`** (user-space — `nvidia-utils`), `get-deps.sh` ставит сам. Turing и новее — `nvidia-open-dkms`; Pascal и старше — legacy `nvidia-580xx-dkms` (AUR).
+Переменные включаются, только если карта найдена — один конфиг для NVIDIA и AMD/Intel. Открытый модуль — **`nvidia-open`** (на стоковом ядре `linux`; `nvidia-open-dkms` — для нештатных ядер), user-space — `nvidia-utils`. Turing и новее — `nvidia-open*`; Pascal и старше — legacy `nvidia-580xx-dkms` (AUR).
 
 <details>
 <summary>Пакеты, KMS и гибридная графика</summary>
 
 ```
-nvidia-open-dkms  <ядро>-headers  nvidia-utils  nvidia-settings  libva-nvidia-driver  libva-utils
+nvidia-open  (или nvidia-open-dkms)  <ядро>-headers  nvidia-utils  nvidia-settings  libva-nvidia-driver  libva-utils
 lib32-nvidia-utils
 ```
 
 `libva-nvidia-driver` — VAAPI поверх NVENC (аппаратная запись экрана), проверка: `vainfo | grep -i Encoder`. `lib32-nvidia-utils` — те же библиотеки для 32-битных игр Steam/Proton.
 
-**KMS.** С nvidia-utils 560.35.03 DRM включён по умолчанию (`modeset`/`fbdev` = `Y`), иначе нужен `nvidia_drm.modeset=1`. Нужен драйвер **555+**.
+**KMS.** С `nvidia-utils` 615 DRM включён по умолчанию (`modeset`/`fbdev` = `Y`), иначе нужен `nvidia_drm.modeset=1`. Нужен драйвер **555+** (для Blackwell/RTX 50xx — 570+).
 
 **Гибридная графика** автоматически не настраивается: если вывод идёт через iGPU, переменные NVIDIA не включаются. Для принудительного вывода — `AQ_DRM_DEVICES` (Hyprland Wiki → Nvidia).
 

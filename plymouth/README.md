@@ -73,8 +73,8 @@ sudo grub-mkconfig -o /boot/grub/grub.cfg
 ## Заметки для основного ПК (RTX 5070)
 
 - Требуется KMS у NVIDIA: `nvidia_drm.modeset=1` (и модули `nvidia nvidia_modeset
-  nvidia_uvm nvidia_drm` в initramfs), иначе Plymouth уйдёт в текст. На AMD
-  (дев-ноут) хватает штатного хука `kms`. **`install.sh --plymouth` теперь делает
+  nvidia_uvm nvidia_drm` в initramfs), иначе Plymouth уйдёт в текст. На AMD/Intel
+  хватает штатного хука `kms`. **`install.sh --plymouth` теперь делает
   это сам** (`ply_nvidia_kms`: добавляет MODULES и `nvidia_drm.modeset=1`, если
   видит GPU по вендору 0x10de); после — пересборка UKI.
 - Разрешение 3440×1440: скрипт темы масштабирует логотип и надпись под высоту
