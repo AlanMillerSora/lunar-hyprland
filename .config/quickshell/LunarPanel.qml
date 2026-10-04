@@ -339,7 +339,13 @@ PanelWindow {
     function syncPos() {
         root.shownPos = (player && player.position > 0) ? player.position : 0
     }
-    onPlayerChanged: { root.syncPos(); posTimer.restart() }
+    onPlayerChanged: {
+        root.syncPos()
+        // перезапускаю тик только когда он и так должен идти — иначе
+        // restart() задирал running мимо декларативного условия
+        if (root.playing && root.trackLength > 0)
+            posTimer.restart()
+    }
     property Timer posTimer: Timer {
         interval: 500
         repeat: true

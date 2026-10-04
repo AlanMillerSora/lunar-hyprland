@@ -14,11 +14,19 @@ Item {
     // Loader, в котором живёт ячейка часов — задаёт центровку
     property Item clockItem: null
 
-    // расстояние от левого края зоны до центра ячейки часов
-    readonly property real clockCenterFromLeft:
+    // расстояние от левого края зоны до центра ячейки часов. Между
+    // уничтожением старого делегата часов и готовностью нового clockItem
+    // на миг null — тогда держу последнее посчитанное значение, чтобы
+    // строка не дёргалась на кадр при реордере ячеек.
+    property real liveClockCenter:
         clockItem ? (Theme.barPad + clockItem.x
-            + Math.max(clockItem.width, clockItem.implicitWidth) / 2)
-                  : implicitWidth / 2
+            + Math.max(clockItem.width, clockItem.implicitWidth) / 2) : NaN
+    property real lastClockCenter: 0
+    onLiveClockCenterChanged: if (!isNaN(liveClockCenter))
+        lastClockCenter = liveClockCenter
+    readonly property real clockCenterFromLeft:
+        !isNaN(liveClockCenter) ? liveClockCenter
+            : (lastClockCenter > 0 ? lastClockCenter : implicitWidth / 2)
 
     implicitWidth: zoneRow.implicitWidth + 2 * Theme.barPad
     implicitHeight: Theme.barH
