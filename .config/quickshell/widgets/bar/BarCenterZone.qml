@@ -21,6 +21,12 @@ Item {
     property bool mediaActive: false
     property real trackLength: 0
     property real trackPosition: 0
+    // ссылка на медиа-ячейку — чтобы открыть пузырь как при клике (IPC)
+    property var mediaCellRef: null
+    function openMediaBubble() {
+        if (mediaCellRef)
+            mediaCellRef.openBubbleFromHere()
+    }
     function syncMedia() {
         if (host)
             mediaActive = host.mediaActive
@@ -126,10 +132,15 @@ Item {
             host: centerZone.host
             progressLength: centerZone.trackLength
             progressPosition: centerZone.trackPosition
-            onClickedBubble: {
-                var c = mediaCellItem.mapToItem(centerZone.host, mediaCellItem.width / 2, 0)
+            function openBubbleFromHere() {
+                // в координаты окна (barBubble живёт в том же окне)
+                var c = mapToItem(null, width / 2, 0)
                 BarState.toggleBubble("media", c.x, c.y)
             }
+            Component.onCompleted: centerZone.mediaCellRef = mediaCellItem
+            Component.onDestruction: if (centerZone.mediaCellRef === mediaCellItem)
+                centerZone.mediaCellRef = null
+            onClickedBubble: openBubbleFromHere()
         }
     }
 

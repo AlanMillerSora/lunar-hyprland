@@ -26,6 +26,13 @@ Item {
         return null
     }
 
+    // открыть пузырь погоды как при клике (для IPC/хоткея)
+    function openWeatherBubble() {
+        if (weatherCellRef)
+            weatherCellRef.openBubbleFromHere()
+    }
+    property var weatherCellRef: null
+
     Row {
         id: zoneRow
         anchors.left: parent.left
@@ -62,10 +69,15 @@ Item {
             interactive: true
             accent: Theme.barFaint
             tip: "Погода"
-            onClicked: {
-                var c = weatherCell.mapToItem(rightZone.host, weatherCell.width / 2, 0)
+            function openBubbleFromHere() {
+                // координаты ячейки в окне (barBubble живёт в том же окне)
+                var c = mapToItem(null, width / 2, 0)
                 BarState.toggleBubble("weather", c.x, c.y)
             }
+            Component.onCompleted: rightZone.weatherCellRef = weatherCell
+            Component.onDestruction: if (rightZone.weatherCellRef === weatherCell)
+                rightZone.weatherCellRef = null
+            onClicked: openBubbleFromHere()
             Row {
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 5

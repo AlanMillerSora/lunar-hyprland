@@ -717,13 +717,9 @@ PanelWindow {
         function sys() { BarState.togglePanel("sys") }
         function weather() { BarState.togglePanel("weather") }
         function reset() { BarState.closePanel(); BarState.closeBubble() }
-        // пузыри в полосе (для хоткеев/теста): центр экрана как источник
-        function bubbleWeather() {
-            BarState.toggleBubble("weather", root.width / 2, Theme.barH / 2)
-        }
-        function bubbleMedia() {
-            BarState.toggleBubble("media", root.width / 2, Theme.barH / 2)
-        }
+        // пузыри в полосе (для хоткеев/теста): как по клику по ячейке
+        function bubbleWeather() { rightZone.openWeatherBubble() }
+        function bubbleMedia() { centerZone.openMediaBubble() }
     }
 
     // поиск — в сервисе Launcher (панель биндится к нему)
