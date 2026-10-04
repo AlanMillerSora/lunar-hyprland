@@ -55,7 +55,9 @@ QtObject {
     readonly property color barText: hexColor(palette.barText, "#d5dce4")
     readonly property color barDim: hexColor(palette.barDim, "#a6aeb9")
     readonly property color barFaint: hexColor(palette.barFaint, "#7b838d")
-    readonly property color barPill: Qt.rgba(_barPillBase.r, _barPillBase.g, _barPillBase.b, 0.74 * interfaceOpacity)
+    // тон как у окна Hub (Theme.alpha(surfaceSolid, 0.85)); альфу бара держу
+    // на уровне Hub, чтобы стекло читалось одинаково
+    readonly property color barPill: Qt.rgba(_barPillBase.r, _barPillBase.g, _barPillBase.b, 0.85 * interfaceOpacity)
 
     // ── arch-слой «островов»: подложки в НЕЙТРАЛИ (тон обоев/окна ~#171A1B),
     //    чтобы бар читался единым тоном с системой, а не «стальным» тёмным.
