@@ -21,6 +21,23 @@ QtObject {
     // игра: пульсовые острова не всплывают (синхронизируется из LunarPanel)
     property bool gameMode: false
 
+    // ── пузырь в полосе бара: какая ячейка раскрыта (стержнем вбок) ──
+    // "" | weather | media. Живёт поверх бара, не мешает панели вниз.
+    property string bubble: ""
+    // экранные координаты ячейки-источника (задаёт сама ячейка при клике)
+    property real bubbleX: 0
+    property real bubbleY: 0
+    function openBubble(name, x, y) {
+        bar.bubble = name
+        bar.bubbleX = x
+        bar.bubbleY = y
+    }
+    function toggleBubble(name, x, y) {
+        if (bar.bubble === name) { bar.bubble = ""; return }
+        bar.openBubble(name, x, y)
+    }
+    function closeBubble() { bar.bubble = "" }
+
     property Timer holdTimer: Timer {
         repeat: false
         onTriggered: if (!bar.pinned) bar.deactivate()

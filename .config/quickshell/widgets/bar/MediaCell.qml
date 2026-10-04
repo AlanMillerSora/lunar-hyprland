@@ -13,6 +13,7 @@ Cell {
     // пересчитываются в Loader'е, поэтому приходят типизированными свойствами
     property real progressLength: 0
     property real progressPosition: 0
+    signal clickedBubble()
     id: mediaInline
     // видимостью медиа-ячейки рулит зона (BarCenterZone): она знает и про
     // настройки состава, и про «играет ли что-то». Свой биндинг на
@@ -20,8 +21,8 @@ Cell {
     anchors.verticalCenter: parent.verticalCenter
     interactive: true
     accent: host.playing ? Theme.accent : Theme.barFaint
-    tip: "Медиа — открыть панель"
-    onClicked: BarState.togglePanel("media")
+    tip: "Медиа — раскрыть в баре"
+    onClicked: clickedBubble()
 
     // мягкий пульс при смене трека
     property SequentialAnimation trackPulse: SequentialAnimation {

@@ -122,9 +122,14 @@ Item {
     Component {
         id: mediaComp
         MediaCell {
+            id: mediaCellItem
             host: centerZone.host
             progressLength: centerZone.trackLength
             progressPosition: centerZone.trackPosition
+            onClickedBubble: {
+                var c = mediaCellItem.mapToItem(centerZone.host, mediaCellItem.width / 2, 0)
+                BarState.toggleBubble("media", c.x, c.y)
+            }
         }
     }
 

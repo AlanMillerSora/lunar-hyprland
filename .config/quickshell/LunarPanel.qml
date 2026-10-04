@@ -30,8 +30,8 @@ PanelWindow {
 
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.namespace: "lunar-panel"
-    // клавиатуру забираю, пока открыт любой режим — чтобы Esc закрывал панель
-    WlrLayershell.keyboardFocus: BarState.expanded
+    // клавиатуру забираю, пока открыт режим или пузырь — чтобы Esc закрывал
+    WlrLayershell.keyboardFocus: (BarState.expanded || BarState.bubble !== "")
         ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     // окна не заезжают только под полосу бара
     WlrLayershell.exclusiveZone: Theme.barH
@@ -45,33 +45,34 @@ PanelWindow {
     // закрывает панель, а не проваливается сквозь окно. В покое зазоры
     // по-прежнему пропускают клики (важно для fullscreen).
     mask: Region {
-        Region { item: BarState.expanded ? clickShield : null }
+        Region { item: (BarState.expanded || BarState.bubble !== "") ? clickShield : null }
         Region { item: bar }
+        Region { item: BarState.bubble !== "" ? barBubble : null }
         Region { item: root.recording ? recPill : null }
     }
 
-    // фон-ловушка: есть только при открытой панели, самый нижний слой
+    // фон-ловушка: есть при открытой панели или пузыре, самый нижний слой
     Item {
         id: clickShield
         anchors.fill: parent
-        visible: BarState.expanded
+        visible: BarState.expanded || BarState.bubble !== ""
         MouseArea {
             anchors.fill: parent
-            onClicked: BarState.closePanel()
+            onClicked: { BarState.closePanel(); BarState.closeBubble() }
         }
     }
 
-    // Esc закрывает открытый режим (поиск сам обрабатывает Esc — очистка)
+    // Esc закрывает открытый режим или пузырь (поиск сам обрабатывает Esc)
     Shortcut {
         sequence: "Escape"
-        enabled: BarState.expanded && BarState.mode !== "search"
-        onActivated: BarState.closePanel()
+        enabled: (BarState.expanded || BarState.bubble !== "") && BarState.mode !== "search"
+        onActivated: { BarState.closePanel(); BarState.closeBubble() }
     }
     // тот же Esc через Keys — надёжнее на layer-поверхности
     Item {
         anchors.fill: parent
-        focus: BarState.expanded && BarState.mode !== "search"
-        Keys.onEscapePressed: BarState.closePanel()
+        focus: (BarState.expanded || BarState.bubble !== "") && BarState.mode !== "search"
+        Keys.onEscapePressed: { BarState.closePanel(); BarState.closeBubble() }
     }
 
     // Палитра из системной темы (Hub / лаунчер / настройки):
@@ -715,7 +716,14 @@ PanelWindow {
         function notifs() { BarState.togglePanel("notifs") }
         function sys() { BarState.togglePanel("sys") }
         function weather() { BarState.togglePanel("weather") }
-        function reset() { BarState.closePanel() }
+        function reset() { BarState.closePanel(); BarState.closeBubble() }
+        // пузыри в полосе (для хоткеев/теста): центр экрана как источник
+        function bubbleWeather() {
+            BarState.toggleBubble("weather", root.width / 2, Theme.barH / 2)
+        }
+        function bubbleMedia() {
+            BarState.toggleBubble("media", root.width / 2, Theme.barH / 2)
+        }
     }
 
     // поиск — в сервисе Launcher (панель биндится к нему)
@@ -726,7 +734,9 @@ PanelWindow {
         target: BarState
         function onModeChanged() {
             // морф плашки — только для «пульта»; остальные режимы выезжают
-            // карточкой снизу (см. panel)
+            // карточкой снизу (см. panel). Пузырь и панель вместе не живут.
+            if (BarState.mode !== "")
+                BarState.closeBubble()
             root.morph = (BarState.mode === "control" || BarState.mode === "search") ? 1 : 0
             root.panelContentOpacity = 0
             panelFade.restart()
@@ -1065,6 +1075,14 @@ PanelWindow {
 
         // ── УВЕДОМЛЕНИЯ ──
         PanelNotifs { host: root }
+    }
+
+    // ── ПУЗЫРЬ В ПОЛОСЕ: поверх бара, раскрывается вбок под ячейкой ──
+    // Отдельный слой, чтобы не обрезался clip'ом плашки бара.
+    BarBubble {
+        id: barBubble
+        host: root
+        visible: BarState.bubble !== ""
     }
 
 }

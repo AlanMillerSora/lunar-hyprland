@@ -53,15 +53,19 @@ Item {
         SystemIsland { host: rightZone.host }
     }
 
-    // ── погода: иконка + температура, клик открывает панель ──
+    // ── погода: иконка + температура, клик раскрывает пузырь в полосе ──
     Component {
         id: weatherComp
         Cell {
+            id: weatherCell
             anchors.verticalCenter: parent.verticalCenter
             interactive: true
             accent: Theme.barFaint
             tip: "Погода"
-            onClicked: BarState.togglePanel("weather")
+            onClicked: {
+                var c = weatherCell.mapToItem(rightZone.host, weatherCell.width / 2, 0)
+                BarState.toggleBubble("weather", c.x, c.y)
+            }
             Row {
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 5
