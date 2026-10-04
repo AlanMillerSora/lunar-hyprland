@@ -173,7 +173,7 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 │   │   │   LunarClipboard, LunarPower, LunarAgent, LunarOverview, LunarPolkit,
 │   │   │   LunarPlayer, LunarSidebar, LunarSidebarRight, LunarOsd, LunarTray
 │   │   ├── Lunar*.qml, LunarWallpaperScene.qml, preview.qml, Slider.qml, Theme.qml,
-│   │   │   AppModel.qml, HudCorners.qml, PerspectivePanel.qml
+│   │   │   AppModel.qml, HudCorners.qml
 │   │   ├── widgets/shared/ (ActionButton, Cell, HoverBg, MiniBar — общий слой),
 │   │   │   SettingsPages/ (страницы и секции), assets/ (+moon-phases/, crop-frame.png), pfp3.png,
 │   │   │   cava-lunar.conf, cava-lunar-wide.conf
@@ -230,8 +230,9 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
   строки панелей `panelFieldH/panelRowH/sparkH` 46/36/26; `iconXL/cardPad` 30/16;
   `hoverGrow` 1.25 (ховер-рост групп панели); `hover/hoverStrong/active/activeBorder/fill/onAccent`;
   `tooltipDelay` 600; `clamp()`.
-- HUD-заголовки секций: `SectionLabel` (дефолт 11px `fontTiny`, letterSpacing 2, bold; на
-  страницах Hub и в сайдбарах `size` задаётся явно — 11/12/14/15). Заголовки страниц Hub: `fontTitle`.
+- HUD-заголовки секций: `SectionHeader` (`[ ПОДПИСЬ ]` + линия + узел; дефолт 11px `fontTiny`,
+  letterSpacing 2, bold; на страницах Hub и в сайдбарах `size` задаётся явно — 11/12/14/15).
+  Заголовки страниц Hub: `fontTitle`. (`SectionLabel` удалён.)
 - Ховер: `scale` (визуальный, раскладку не трогает) + фоновая подсветка.
 - Плавные заполнения: анимация по токену движения (`Theme.animMed`) и заполнение с нуля
   (старт 0 → `Timer{interval:60}` → целевое; `enabled: !pressed`).

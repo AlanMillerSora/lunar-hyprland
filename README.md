@@ -522,7 +522,7 @@ lib32-nvidia-utils
 | **polkit** | `quickshell/LunarPolkit.qml` | Свой агент polkit (вместо polkit-kde) |
 | **Палитра** | `.config/lunar/palette.toml`, `hypr/scripts/eclipse-palette.py` | Один источник цвета → шелл, kitty, GTK3/4, qt6ct, mako, btop, yazi, fastfetch + KDE-схема |
 | **Тема** | `quickshell/Theme.qml` | Токены ритма и палитра; движение `anim`; настройки интерфейса (`lunar-ui.json`) |
-| **Общий слой** | `quickshell/widgets/shared/` | Единые компоненты: `Card`, `SectionLabel`, `ActionTile`, `MetricRow`, `Toggle`, `MiniBar`, `Cell`, `HoverBg`, `Anim` |
+| **Общий слой** | `quickshell/widgets/shared/` | Единые компоненты: `Card`, `SectionHeader`, `ActionTile`, `MetricRow`, `Toggle`, `MiniBar`, `Cell`, `HoverBg`, `Anim` |
 | **Скрипты** | `hypr/scripts/eclipse-*.{sh,py}` | Палитра, обновление, бэкап, запись, Game Mode, очистка, статус, аватар, запуск, календарь, шпаргалка, лимиты, Zapret, Vencord, Wi-Fi-гвард |
 | **Юниты** | `systemd/` | `lunar-quickshell`, `lunar-player`, `lunar-wifi-guard`, `lunar-homepage`, `lunar-tgproxy`, `lunar-cpu-performance` |
 

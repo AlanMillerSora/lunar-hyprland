@@ -93,9 +93,7 @@
 | `Cell` | ячейка бара (+ подчёркивание в arch) | оба |
 | `MiniBar` / `Sparkline` | полоса 0..100 / мини-график | оба |
 | `Slider` | ползунок (+ tick-шкала в arch) | оба |
-| `Toggle`, `ActionTile`, `ActionButton`, `MetricRow`, `HoverBg`, `IslandClip`, `Anim` | базовые контролы/движение | оба |
-
-Легаси: `SectionLabel.qml` больше не используется (заменён `SectionHeader`). Удалить при чистке.
+| `Toggle`, `ActionTile`, `ActionButton`, `MetricRow`, `HoverBg`, `Anim` | базовые контролы/движение | оба |
 
 ---
 
@@ -155,7 +153,7 @@
       вне `Theme` → палитровые токены (`surfacePanel`/`surfaceCard`). Чинит цвет везде.
 - [ ] **Токенизация радиусов/шрифтов**: сырые `radius: N` и `font.pixelSize: N` → токены.
 - [ ] **Перф**: замер CPU cgroup после Canvas-элементов (скобки/тики/оси); при нужде `layer.enabled` лениво.
-- [ ] **Аудит мёртвого кода**: неиспользуемые компоненты/токены (`SectionLabel`, `PerspectivePanel`, `IslandClip`, `BarBubble` — проверить).
+- [ ] **Аудит мёртвого кода**: неиспользуемые компоненты/токены.
 - [ ] **Моушен**: «прорисовка» линий при открытии панели (draw-in, expressive).
 
 ---
