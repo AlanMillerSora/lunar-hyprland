@@ -57,13 +57,13 @@ QtObject {
     readonly property color barFaint: hexColor(palette.barFaint, "#7b838d")
     readonly property color barPill: Qt.rgba(_barPillBase.r, _barPillBase.g, _barPillBase.b, 1.0 * interfaceOpacity)
 
-    // ── arch-слой «островов»: подложки/рамки в тоне палитры (не от текста),
-    //    как surface/surfaceHover/surfaceActive/border у ArchEclipse ──
-    //    в покое подложка полупрозрачна (бары/сайдбары парят), в hover — плотней
-    readonly property color surface: Qt.rgba(_barPillBase.r, _barPillBase.g, _barPillBase.b, 0.85)
-    readonly property color surfaceSolid: _barPillBase
-    readonly property color surfaceHover: Qt.rgba(_barPillBase.r, _barPillBase.g, _barPillBase.b, 0.96)
-    readonly property color surfaceActive: Qt.rgba(accent.r, accent.g, accent.b, 0.16)
+    // ── arch-слой «островов»: подложки в НЕЙТРАЛИ (тон обоев/окна ~#171A1B),
+    //    чтобы бар читался единым тоном с системой, а не «стальным» тёмным.
+    //    Акцент здесь только у активного состояния (surfaceActive).
+    readonly property color surface: Qt.rgba(23 / 255, 26 / 255, 27 / 255, 0.80)
+    readonly property color surfaceSolid: Qt.rgba(23 / 255, 26 / 255, 27 / 255, 1)
+    readonly property color surfaceHover: Qt.rgba(30 / 255, 34 / 255, 35 / 255, 0.94)
+    readonly property color surfaceActive: Qt.rgba(text.r, text.g, text.b, 0.10)
     readonly property color border2: Qt.rgba(text.r, text.g, text.b, 0.10)
     // непрозрачный цвет фона — для текста поверх акцента (выделение и т.п.);
     // Theme.bg полупрозрачен и на плашке выделения читался бы неровно

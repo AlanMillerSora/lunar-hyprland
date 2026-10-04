@@ -72,7 +72,7 @@ Item {
                     radius: 14
                     color: "transparent"
                     border.width: 1
-                    border.color: Theme.activeBorder
+                    border.color: Theme.barText
                     opacity: 0.55
                     visible: wsPill.isFocused
                 }

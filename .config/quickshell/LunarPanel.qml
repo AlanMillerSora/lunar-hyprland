@@ -721,7 +721,7 @@ PanelWindow {
         function weather() { BarState.togglePanel("weather") }
         function reset() { BarState.closePanel(); BarState.closeBubble() }
         // пузыри в полосе (для хоткеев/теста): как по клику по ячейке
-        function bubbleWeather() { leftZone.openWeatherBubble() }
+        function bubbleWeather() { centerZone.openWeatherBubble() }
         function bubbleMedia() { rightZone.openMediaBubble() }
     }
 
@@ -803,10 +803,10 @@ PanelWindow {
     Rectangle {
         id: bar
         // в покое плашка облегает строку; в режиме морфит к размеру панели.
-        // Позицию беру от zonesRow: строка сдвинута так, что центр часов лёг
-        // на центр экрана, а bar подложен под неё с равными полями.
-        readonly property real collapsedX: zonesRow.x - Theme.barPad
-        readonly property real collapsedW: zonesRow.width + 2 * Theme.barPad
+        // композиция — на всю ширину: левая зона у края, правая у другого,
+        // пилюля по центру экрана (как arch). ──
+        readonly property real collapsedX: leftZone.x - Theme.barPad
+        readonly property real collapsedW: rightZone.x + rightZone.width - leftZone.x + 2 * Theme.barPad
         readonly property real expandedW: root.panelWidthFor(BarState.mode) + 2 * Theme.barPad
         width: collapsedW + (expandedW - collapsedW) * root.morph
         x: collapsedX + ((parent.width - width) / 2 - collapsedX) * root.morph
@@ -1012,22 +1012,36 @@ PanelWindow {
         }
     }
 
-    // ── СТРОКА БАРА: три зоны одной Row. x подобран так, чтобы центр
-    // часовой ячейки лёг ровно на центр экрана (боковые зоны на это не
-    // влияют): от края экрана отступаю на левую зону и положение часов ──
-    Row {
-        id: zonesRow
+    // ── СТРОКА БАРА: три зоны на всю ширину. Левая прижата к краю,
+    // правая — к другому, пилюля центрирована по экрану (как arch). ──
+    BarLeftZone {
+        id: leftZone
+        host: root
         anchors.top: parent.top
         anchors.topMargin: Theme.barMargin
-        height: Theme.barH
-        spacing: 0
-        x: root.width / 2 - (leftZone.width + centerZone.pillCenterFromLeft)
+        anchors.left: parent.left
         opacity: Math.max(0, 1 - root.morph * 8)
         enabled: !BarState.expanded
+    }
 
-        BarLeftZone { id: leftZone; host: root }
-        BarCenterZone { id: centerZone; host: root }
-        BarRightZone { id: rightZone; host: root }
+    BarCenterZone {
+        id: centerZone
+        host: root
+        anchors.top: parent.top
+        anchors.topMargin: Theme.barMargin
+        anchors.horizontalCenter: parent.horizontalCenter
+        opacity: Math.max(0, 1 - root.morph * 8)
+        enabled: !BarState.expanded
+    }
+
+    BarRightZone {
+        id: rightZone
+        host: root
+        anchors.top: parent.top
+        anchors.topMargin: Theme.barMargin
+        anchors.right: parent.right
+        opacity: Math.max(0, 1 - root.morph * 8)
+        enabled: !BarState.expanded
     }
 
     // ── ГОРЯЧИЕ ЗОНЫ у краёв бара: ховер раскрывает сайдбар ──

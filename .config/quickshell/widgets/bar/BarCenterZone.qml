@@ -13,6 +13,13 @@ Item {
     id: centerZone
     property var host
 
+    // ссылка на погодную ячейку — открыть пузырь как при клике (IPC)
+    property var weatherCellRef: null
+    function openWeatherBubble() {
+        if (weatherCellRef)
+            weatherCellRef.openBubbleFromHere()
+    }
+
     // равная ширина боковых ячеек — для симметрии пульта по центру
     readonly property real sideW: 104
 
@@ -20,8 +27,10 @@ Item {
     implicitHeight: Theme.barH
     clip: true
 
+    // id ячейки → её компонент
     function compFor(id) {
         if (id === "network") return netComp
+        if (id === "weather") return weatherComp
         if (id === "control") return controlComp
         if (id === "clock") return clockComp
         return null
@@ -44,9 +53,9 @@ Item {
         width: centerRow.implicitWidth + Theme.space3 * 2
         height: Theme.barCellH + 4
         radius: Theme.radius
-        color: Theme.active
+        color: Theme.surface
         border.width: 1
-        border.color: Theme.activeBorder
+        border.color: Theme.border2
         Behavior on width { NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut } }
 
         Row {
@@ -62,7 +71,7 @@ Item {
                 delegate: Loader {
                     required property var modelData
                     id: centerLoader
-                    // боковые ячейки равной ширины, пульт — по содержимому
+                    // боковые ячейки равной ширины, центральная — по содержимому
                     width: (modelData.id === "network" || modelData.id === "clock")
                         ? centerZone.sideW : (item ? item.implicitWidth : 0)
                     height: parent.height
@@ -129,6 +138,44 @@ Item {
                 color: BarState.mode === "control" ? Theme.accent : Theme.barText
                 font.family: Theme.iconFont
                 font.pixelSize: Theme.fontSize(16)
+            }
+        }
+    }
+
+    // ── погода: иконка + температура; клик раскрывает плашку вниз ──
+    Component {
+        id: weatherComp
+        Cell {
+            id: weatherCell
+            anchors.verticalCenter: parent.verticalCenter
+            interactive: true
+            active: BarState.mode === "weather"
+            accent: Theme.barFaint
+            tip: "Погода"
+            function openBubbleFromHere() {
+                BarState.togglePanel("weather")
+            }
+            Component.onCompleted: centerZone.weatherCellRef = weatherCell
+            Component.onDestruction: if (centerZone.weatherCellRef === weatherCell)
+                centerZone.weatherCellRef = null
+            onClicked: openBubbleFromHere()
+            Row {
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 5
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: Weather.icon
+                    color: Weather.ok ? Theme.barText : Theme.barFaint
+                    font.family: Theme.iconFont
+                    font.pixelSize: Theme.fontSize(15)
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: Weather.shortTemp
+                    color: Weather.ok ? Theme.barText : Theme.barDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(12)
+                }
             }
         }
     }

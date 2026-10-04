@@ -16,19 +16,10 @@ Item {
     implicitHeight: Theme.barH
     clip: true
 
-    // открыть пузырь погоды как при клике (для IPC/хоткея)
-    function openWeatherBubble() {
-        if (weatherCellRef)
-            weatherCellRef.openBubbleFromHere()
-    }
-    property var weatherCellRef: null
-
     // id ячейки → её компонент
     function compFor(id) {
         if (id === "workspaces") return wsComp
         if (id === "perf") return perfComp
-        if (id === "system") return sysComp
-        if (id === "weather") return weatherComp
         return null
     }
 
@@ -77,50 +68,6 @@ Item {
                 font.pixelSize: Theme.fontSize(11)
                 font.letterSpacing: 1
                 font.bold: leftZone.host.cpuGovernor !== "performance"
-            }
-        }
-    }
-
-    // ── ресурсы: три тонкие полоски CPU · RAM · GPU ──
-    Component {
-        id: sysComp
-        SystemIsland { host: leftZone.host }
-    }
-
-    // ── погода: иконка + температура; клик раскрывает плашку вниз ──
-    Component {
-        id: weatherComp
-        Cell {
-            id: weatherCell
-            anchors.verticalCenter: parent.verticalCenter
-            interactive: true
-            active: BarState.mode === "weather"
-            accent: Theme.barFaint
-            tip: "Погода"
-            function openBubbleFromHere() {
-                BarState.togglePanel("weather")
-            }
-            Component.onCompleted: leftZone.weatherCellRef = weatherCell
-            Component.onDestruction: if (leftZone.weatherCellRef === weatherCell)
-                leftZone.weatherCellRef = null
-            onClicked: openBubbleFromHere()
-            Row {
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 5
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: Weather.icon
-                    color: Weather.ok ? Theme.barText : Theme.barFaint
-                    font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSize(15)
-                }
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: Weather.shortTemp
-                    color: Weather.ok ? Theme.barText : Theme.barDim
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(12)
-                }
             }
         }
     }

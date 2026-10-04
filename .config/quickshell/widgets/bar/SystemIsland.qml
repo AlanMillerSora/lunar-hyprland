@@ -43,7 +43,8 @@ Cell {
                         (avail && v >= 0 ? v : 0) / 100))
                     height: parent.height
                     radius: parent.radius
-                    color: (avail && v >= 90) ? Theme.danger : Theme.accent
+                    // в покое — нейтраль (тон текста), danger только при перегрузе
+                    color: (avail && v >= 90) ? Theme.danger : Theme.barDim
                     Behavior on width { Anim { type: Anim.FastSpatial } }
                 }
             }

@@ -41,6 +41,7 @@ Item {
     Component.onCompleted: { syncMedia(); syncProgress() }
 
     function compFor(id) {
+        if (id === "system") return sysComp
         if (id === "media") return mediaComp
         if (id === "game") return gameComp
         if (id === "layout") return layoutComp
@@ -71,6 +72,12 @@ Item {
                 sourceComponent: rightZone.compFor(modelData.id)
             }
         }
+    }
+
+    // ── ресурсы: три тонкие полоски CPU · RAM · GPU ──
+    Component {
+        id: sysComp
+        SystemIsland { host: rightZone.host }
     }
 
     // ── медиа-ячейка: трек, play/pause, мини-спектр; клик — плашка вниз ──
