@@ -110,9 +110,11 @@ PanelWindow {
         width: 540
         // при скрытии уводим панель целиком за край (раньше оставалась видимая полоска)
         x: collapsed ? -(width + 4) : 0
-        color: Theme.bg
+        // arch: sidebar — тот же surface-остров, что и панель бара; в покое
+        // полупрозрачный, в hover плотнее (панель и так «парит» над окнами)
+        color: collapsed ? Theme.surfaceSolid : (contentHover.hovered ? Theme.surfaceHover : Theme.surface)
         radius: Theme.radiusM
-        border.color: Theme.border
+        border.color: Theme.border2
         border.width: collapsed ? 0 : 1
 
         // острые HUD-скобки по углам — единый стиль с Hub

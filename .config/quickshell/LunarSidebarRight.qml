@@ -150,9 +150,10 @@ PanelWindow {
         width: 530
         // уезжает за правый край целиком
         x: root.collapsed ? (root.width + 4) : (root.width - width)
-        color: Theme.bg
+        // arch: правый sidebar — тот же surface-остров, что и панель бара
+        color: root.collapsed ? Theme.surfaceSolid : (contentHover.hovered ? Theme.surfaceHover : Theme.surface)
         radius: Theme.radiusM
-        border.color: Theme.border
+        border.color: Theme.border2
         border.width: collapsed ? 0 : 1
 
         HudCorners {

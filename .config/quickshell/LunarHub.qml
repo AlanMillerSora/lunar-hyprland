@@ -17,7 +17,9 @@ FloatingWindow {
     id: root
 
     title: "Lunar Hub"
-    color: Theme.bgPanel          // полупрозрачный фон — его и блюрит Hyprland
+    // arch: фон окна — тот же surface-тон, что и острова (чуть плотнее,
+    // окно и так блюрится Hyprland'ом)
+    color: Theme.alpha(Theme.surfaceSolid, 0.85)
     visible: root.showing
     implicitWidth: 1320
     implicitHeight: 820
