@@ -14,7 +14,7 @@ Item {
     property var host
 
     // равная ширина боковых ячеек — для симметрии пульта по центру
-    readonly property real sideW: 128
+    readonly property real sideW: 104
 
     implicitWidth: pill.width + 2 * Theme.space2
     implicitHeight: Theme.barH
@@ -103,7 +103,8 @@ Item {
                 }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "↓" + netCell.cs(SysInfo.rx) + " ↑" + netCell.cs(SysInfo.tx)
+                    // arch: только «вниз» (входящий поток) — компактно
+                    text: "↓" + netCell.cs(SysInfo.rx)
                     color: Theme.barDim
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(10)

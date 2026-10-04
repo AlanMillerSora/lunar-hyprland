@@ -5,7 +5,8 @@ import "../shared"
 
 // ════════════════════════════════════════════════════════════════
 //  BarTray — значки трея в баре (монохром), лишние — плашкой «+N».
-//  Вынесено из LunarPanel (host = корень).
+//  Вынесено из LunarPanel (host = корень). Размер иконок один, без
+//  разнобоя — в ряд на Theme.barCellH.
 // ════════════════════════════════════════════════════════════════
             Item {
                 property var host
@@ -14,8 +15,8 @@ import "../shared"
                 // переполнении добавляю ещё и ширину плашки «+N»
                 implicitWidth: {
                     var vis = Math.min(host.trayCount, host.trayMax)
-                    return vis * 24 + Math.max(0, vis - 1) * 10
-                        + (host.trayCount > host.trayMax ? moreBox.width + 9 : 0)
+                    return vis * 20 + Math.max(0, vis - 1) * 6
+                        + (host.trayCount > host.trayMax ? moreBox.width + 8 : 0)
                 }
                 implicitHeight: Theme.barCellH
 
@@ -28,22 +29,22 @@ import "../shared"
                     anchors.left: parent.left
                     anchors.verticalCenter: parent.verticalCenter
                     height: Theme.barCellH
-                    spacing: 9
+                    spacing: 6
 
                     Repeater {
                         model: host.trayItems
 
                         delegate: Item {
                             required property var modelData
-                            width: 24
+                            width: 20
                             height: Theme.barCellH
 
                             Image {
                                 id: trayImg
                                 anchors.centerIn: parent
                                 source: host.trayIconSource(modelData)
-                                sourceSize.width: 22
-                                sourceSize.height: 22
+                                sourceSize.width: 16
+                                sourceSize.height: 16
                                 smooth: true
                                 fillMode: Image.PreserveAspectFit
                                 visible: false
@@ -53,8 +54,8 @@ import "../shared"
                             // чтобы цветные логи приложений не пестрили в баре
                             MultiEffect {
                                 anchors.centerIn: parent
-                                width: 22
-                                height: 22
+                                width: 16
+                                height: 16
                                 source: trayImg
                                 visible: trayImg.source != "" && trayImg.status !== Image.Error
                                 saturation: -1.0
@@ -69,7 +70,7 @@ import "../shared"
                                 text: "\uf111"
                                 color: Theme.barFaint
                                 font.family: Theme.iconFont
-                                font.pixelSize: Theme.fontSize(8)
+                                font.pixelSize: Theme.fontSize(7)
                             }
 
                             MouseArea {
@@ -96,17 +97,13 @@ import "../shared"
                     }
 
                     // сколько значков не влезло — открыть список
-                    Rectangle {
+                    Text {
                         id: moreBox
                         visible: host.trayCount > host.trayMax
-                        width: moreText.implicitWidth + 22
-                        height: 30
-                        radius: Theme.radius
                         anchors.verticalCenter: parent.verticalCenter
-                        color: moreMouse.containsMouse ? Theme.active : "transparent"
-                        border.width: 1
-                        border.color: moreMouse.containsMouse ? Theme.accent : Theme.borderAccent
-
+                        width: moreText.implicitWidth + 6
+                        height: Theme.barCellH
+                        text: ""
                         Text {
                             id: moreText
                             anchors.centerIn: parent
@@ -116,7 +113,6 @@ import "../shared"
                             font.pixelSize: Theme.fontSize(10)
                             font.bold: true
                         }
-
                         MouseArea {
                             id: moreMouse
                             anchors.fill: parent

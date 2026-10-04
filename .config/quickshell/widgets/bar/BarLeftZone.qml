@@ -38,7 +38,7 @@ Item {
         anchors.leftMargin: Theme.barPad
         anchors.verticalCenter: parent.verticalCenter
         height: Theme.barH
-        spacing: Theme.space3
+        spacing: Theme.space4
 
         Repeater {
             model: BarSettings.leftVisible

@@ -56,13 +56,14 @@ Item {
         anchors.leftMargin: Theme.space2
         anchors.verticalCenter: parent.verticalCenter
         height: Theme.barH
-        spacing: Theme.space2
+        spacing: Theme.space4
 
         Repeater {
             model: BarSettings.rightVisible
 
             delegate: Loader {
                 required property var modelData
+                width: item ? item.implicitWidth : 0
                 height: Theme.barH
                 anchors.verticalCenter: parent.verticalCenter
                 visible: modelData.id === "media" ? rightZone.mediaActive
