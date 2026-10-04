@@ -14,7 +14,7 @@ import "../shared"
                 // переполнении добавляю ещё и ширину плашки «+N»
                 implicitWidth: {
                     var vis = Math.min(host.trayCount, host.trayMax)
-                    return vis * 20 + Math.max(0, vis - 1) * 9
+                    return vis * 24 + Math.max(0, vis - 1) * 10
                         + (host.trayCount > host.trayMax ? moreBox.width + 9 : 0)
                 }
                 implicitHeight: Theme.barCellH
@@ -35,15 +35,15 @@ import "../shared"
 
                         delegate: Item {
                             required property var modelData
-                            width: 20
+                            width: 24
                             height: Theme.barCellH
 
                             Image {
                                 id: trayImg
                                 anchors.centerIn: parent
                                 source: host.trayIconSource(modelData)
-                                sourceSize.width: 18
-                                sourceSize.height: 18
+                                sourceSize.width: 22
+                                sourceSize.height: 22
                                 smooth: true
                                 fillMode: Image.PreserveAspectFit
                                 visible: false
@@ -53,8 +53,8 @@ import "../shared"
                             // чтобы цветные логи приложений не пестрили в баре
                             MultiEffect {
                                 anchors.centerIn: parent
-                                width: 18
-                                height: 18
+                                width: 22
+                                height: 22
                                 source: trayImg
                                 visible: trayImg.source != "" && trayImg.status !== Image.Error
                                 saturation: -1.0
@@ -99,8 +99,8 @@ import "../shared"
                     Rectangle {
                         id: moreBox
                         visible: host.trayCount > host.trayMax
-                        width: moreText.implicitWidth + 20
-                        height: 24
+                        width: moreText.implicitWidth + 22
+                        height: 30
                         radius: Theme.radius
                         anchors.verticalCenter: parent.verticalCenter
                         color: moreMouse.containsMouse ? Theme.active : "transparent"

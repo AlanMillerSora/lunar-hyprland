@@ -19,7 +19,7 @@ Rectangle {
     height: Theme.barCellH
     implicitWidth: cellContent.implicitWidth + Theme.space3 * 2 + 8
     width: implicitWidth
-    radius: Theme.radiusS
+    radius: Theme.radius
     color: cellHover.hovered && cell.interactive ? Theme.hoverStrong : Theme.fill
 
     HoverHandler {
@@ -29,10 +29,10 @@ Rectangle {
     // короткий штрих-акцент слева (как цветные флажки у ArchEclipse)
     Rectangle {
         anchors.left: parent.left
-        anchors.leftMargin: 6
+        anchors.leftMargin: 7
         anchors.verticalCenter: parent.verticalCenter
         width: 2
-        height: 14
+        height: 18
         radius: 1
         color: cell.accent
     }
@@ -40,9 +40,9 @@ Rectangle {
     Row {
         id: cellContent
         anchors.left: parent.left
-        anchors.leftMargin: 14
+        anchors.leftMargin: 15
         anchors.right: parent.right
-        anchors.rightMargin: 8
+        anchors.rightMargin: 9
         anchors.verticalCenter: parent.verticalCenter
         spacing: Theme.space2
     }

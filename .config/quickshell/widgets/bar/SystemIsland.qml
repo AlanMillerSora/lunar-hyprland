@@ -42,12 +42,12 @@ import "../shared"
                                 text: (avail && v >= 0) ? (v + "%") : "--"
                                 color: (avail && v >= 90) ? Theme.danger : Theme.barText
                                 font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontTiny
+                                font.pixelSize: Theme.fontSmall
                             }
                             MiniBar {
                                 anchors.verticalCenter: parent.verticalCenter
-                                width: 26
-                                height: 4
+                                width: 30
+                                height: 5
                                 barColor: v >= 90 ? Theme.danger : Theme.accent
                                 value: avail ? v : -1
                             }

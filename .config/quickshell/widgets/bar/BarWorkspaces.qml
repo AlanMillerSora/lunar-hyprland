@@ -52,16 +52,16 @@ import "../shared"
                             // импульс кольца при переходе на этот стол
                             onIsFocusedChanged: if (isFocused) focusPulse.restart()
 
-                            width: 28
+                            width: 32
                             height: Theme.barCellH
                             color: "transparent"
 
                             // мягкое гало под активной фазой — «стол светится»
                             Rectangle {
                                 anchors.centerIn: parent
-                                width: 28
-                                height: 28
-                                radius: 14
+                                width: 32
+                                height: 32
+                                radius: 16
                                 color: Theme.alpha(Theme.accent, wsPill.isFocused ? 0.10 : 0)
                                 Behavior on color { ColorAnimation { duration: Theme.animMed } }
                             }
@@ -70,9 +70,9 @@ import "../shared"
                             Rectangle {
                                 id: focusRing
                                 anchors.centerIn: parent
-                                width: 24
-                                height: 24
-                                radius: 12
+                                width: 28
+                                height: 28
+                                radius: 14
                                 color: "transparent"
                                 border.width: 1
                                 border.color: Theme.activeBorder
@@ -116,8 +116,8 @@ import "../shared"
                             // сама фаза; мигает на новое окно, при наведении уступает иконке
                             Image {
                                 anchors.centerIn: parent
-                                width: 16
-                                height: 16
+                                width: 20
+                                height: 20
                                 source: Qt.resolvedUrl("../../assets/moon-phases/phase_"
                                     + ("0" + (index + 1)).slice(-2) + ".svg")
                                 sourceSize: Qt.size(64, 64)
@@ -141,8 +141,8 @@ import "../shared"
                             Image {
                                 id: wsAppImg
                                 anchors.centerIn: parent
-                                width: 17
-                                height: 17
+                                width: 20
+                                height: 20
                                 source: wsPill.appIcon
                                 sourceSize: Qt.size(64, 64)
                                 fillMode: Image.PreserveAspectFit
@@ -151,8 +151,8 @@ import "../shared"
                             }
                             MultiEffect {
                                 anchors.centerIn: parent
-                                width: 17
-                                height: 17
+                                width: 20
+                                height: 20
                                 source: wsAppImg
                                 visible: wsPill.appIcon !== "" && wsAppImg.status === Image.Ready
                                 saturation: -1.0

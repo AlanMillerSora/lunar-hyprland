@@ -113,7 +113,7 @@ Item {
                 text: "\uf013"
                 color: BarState.mode === "control" ? Theme.accent : Theme.barDim
                 font.family: Theme.iconFont
-                font.pixelSize: Theme.fontSize(14)
+                font.pixelSize: Theme.fontSize(16)
             }
         }
     }
@@ -143,7 +143,7 @@ Item {
                     text: centerZone.host.clockText.substring(0, 2)
                     color: Theme.barText
                     font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(Theme.fontClock)
+                    font.pixelSize: Theme.fontSize(19)
                     font.bold: true
                     font.letterSpacing: 1
                     height: Theme.barCellH
@@ -154,7 +154,7 @@ Item {
                     text: ":"
                     color: Theme.barText
                     font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(Theme.fontClock)
+                    font.pixelSize: Theme.fontSize(19)
                     font.bold: true
                     height: Theme.barCellH
                     verticalAlignment: Text.AlignVCenter
@@ -166,7 +166,7 @@ Item {
                     text: centerZone.host.clockText.substring(3)
                     color: Theme.barText
                     font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(Theme.fontClock)
+                    font.pixelSize: Theme.fontSize(19)
                     font.bold: true
                     font.letterSpacing: 1
                     height: Theme.barCellH

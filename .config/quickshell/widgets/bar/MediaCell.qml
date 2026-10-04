@@ -53,42 +53,42 @@ Cell {
 
             Row {
                 width: parent.width
-                height: 12
+                height: 15
                 spacing: Theme.space1
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: host.playing ? "\uf04c" : "\uf04b"
                     color: host.playing ? Theme.accent : Theme.barFaint
                     font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSize(10)
+                    font.pixelSize: Theme.fontSize(12)
                 }
                 Text {
-                    width: parent.width - 16
+                    width: parent.width - 18
                     anchors.verticalCenter: parent.verticalCenter
                     elide: Text.ElideRight
                     text: host.track
                     color: Theme.barText
                     font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontTiny
+                    font.pixelSize: Theme.fontSmall
                 }
             }
 
             // нижний ряд — мини-спектр cava
             Row {
                 width: parent.width
-                height: 9
+                height: 11
                 spacing: 2
                 Repeater {
                     model: 14
                     delegate: Item {
                         required property int index
                         width: 2
-                        height: 9
+                        height: 11
                         Rectangle {
                             anchors.horizontalCenter: parent.horizontalCenter
                             anchors.bottom: parent.bottom
                             width: parent.width
-                            height: 2 + (host.barValues[index] || 0) * 7
+                            height: 2 + (host.barValues[index] || 0) * 9
                             radius: 1
                             color: Theme.alpha(Theme.accent, 0.35 + 0.65 * (host.barValues[index] || 0))
                         }

@@ -57,8 +57,8 @@ Item {
 
             Image {
                 anchors.verticalCenter: parent.verticalCenter
-                width: 21
-                height: 21
+                width: 26
+                height: 26
                 source: Qt.resolvedUrl("../../assets/logo.svg")
                 sourceSize: Qt.size(64, 64)
                 fillMode: Image.PreserveAspectFit
@@ -72,7 +72,7 @@ Item {
                     ? ("0" + leftZone.host.focusedPhase).slice(-2) : "--")
                 color: Theme.barDim
                 font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize(14)
+                font.pixelSize: Theme.fontSize(16)
                 font.letterSpacing: 1.5
             }
         }
@@ -96,7 +96,7 @@ Item {
                 text: "PERF"
                 color: leftZone.host.cpuGovernor === "performance" ? Theme.barFaint : Theme.danger
                 font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize(12)
+                font.pixelSize: Theme.fontSize(13)
                 font.bold: leftZone.host.cpuGovernor !== "performance"
             }
         }
@@ -116,7 +116,7 @@ Item {
                 text: leftZone.host.kbLayout
                 color: Theme.barText
                 font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize(13)
+                font.pixelSize: Theme.fontSize(14)
                 font.bold: true
             }
         }

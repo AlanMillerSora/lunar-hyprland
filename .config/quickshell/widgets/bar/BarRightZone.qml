@@ -70,7 +70,7 @@ Item {
                     text: Weather.icon
                     color: Weather.ok ? Theme.barText : Theme.barFaint
                     font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontBody
+                    font.pixelSize: Theme.fontSize(16)
                 }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
@@ -102,7 +102,7 @@ Item {
                         text: rightZone.host.netKind === "eth" ? "󰈀" : "\uf1eb"
                         color: rightZone.host.netKind === "off" ? Theme.barFaint : Theme.barText
                         font.family: Theme.iconFont
-                        font.pixelSize: Theme.fontBody
+                        font.pixelSize: Theme.fontSize(16)
                     }
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
@@ -137,7 +137,7 @@ Item {
                 text: "\uf11b"
                 color: rightZone.host.gameMode ? Theme.danger : Theme.barDim
                 font.family: Theme.iconFont
-                font.pixelSize: Theme.fontSize(15)
+                font.pixelSize: Theme.fontSize(16)
             }
         }
     }
@@ -186,7 +186,7 @@ Item {
                     : (rightZone.host.dnd ? Theme.barFaint
                        : (rightZone.host.notifCount > 0 ? Theme.barText : Theme.barDim))
                 font.family: Theme.iconFont
-                font.pixelSize: Theme.fontSize(14)
+                font.pixelSize: Theme.fontSize(16)
             }
             Text {
                 anchors.verticalCenter: parent.verticalCenter
@@ -243,7 +243,7 @@ Item {
                             : (rightZone.host.vol < 0.34 ? "󰕿" : (rightZone.host.vol < 0.67 ? "󰖀" : "󰕾"))
                         color: rightZone.host.muted ? Theme.barFaint : Theme.barText
                         font.family: Theme.iconFont
-                        font.pixelSize: Theme.fontSize(16)
+                        font.pixelSize: Theme.fontSize(18)
                     }
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
