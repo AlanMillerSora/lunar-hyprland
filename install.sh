@@ -475,7 +475,7 @@ case "$ACTION" in
 esac
 
 # количество шагов для счётчика [n/total]
-LUNAR_TOTAL=13
+LUNAR_TOTAL=12
 [ "$WITH_DEPS" = 1 ] && LUNAR_TOTAL=$((LUNAR_TOTAL + 1))
 [ "$DO_SDDM" = 1 ] && LUNAR_TOTAL=$((LUNAR_TOTAL + 1))
 [ "$DO_PLYMOUTH" = 1 ] && LUNAR_TOTAL=$((LUNAR_TOTAL + 1))
@@ -704,7 +704,7 @@ else
 fi
 
 # ── systemd --user ─────────────────────────────────────────────
-step "systemd --user: wifi-guard, homepage"
+step "systemd --user: homepage"
 if [ -d "$REPO/systemd" ]; then
   mkdir -p "$HOME/.config/systemd/user"
   # lunar-cpu-performance*.service — системные (пишут в sysfs), в user-юниты
@@ -714,7 +714,6 @@ if [ -d "$REPO/systemd" ]; then
     cp "$u" "$HOME/.config/systemd/user/"
   done
   systemctl --user daemon-reload 2>/dev/null || true
-  systemctl --user enable --now lunar-wifi-guard.service 2>/dev/null || true
   systemctl --user enable --now lunar-homepage.service 2>/dev/null || true
   # quickshell НЕ включаем в автозапуск: его стартует hyprland.lua после
   # композитора (иначе юнит поднимется раньше Wayland и будет падать).
@@ -765,30 +764,6 @@ sudo systemctl disable --now power-profiles-daemon.service 2>/dev/null || true
 sudo systemctl mask power-profiles-daemon.service 2>/dev/null \
   && ok "power-profiles-daemon замаскирован (powersave не вернётся)" \
   || warn "power-profiles-daemon не замаскирован (нужен sudo)"
-
-# ── Wi-Fi: powersave off + ASPM ────────────────────────────────
-step "Wi-Fi: powersave off + mt7921e ASPM"
-if [ -f "$REPO/systemd/10-lunar-wifi-powersave-off.sh" ]; then
-  sudo install -m 0755 -o root -g root \
-    "$REPO/systemd/10-lunar-wifi-powersave-off.sh" \
-    /etc/NetworkManager/dispatcher.d/10-lunar-wifi-powersave-off.sh 2>/dev/null \
-    && ok "dispatcher: powersave выключен навсегда" \
-    || warn "dispatcher не установлен (нужен sudo)"
-fi
-if [ -f "$REPO/systemd/mt7921e-no-aspm.conf" ]; then
-  # только для адаптеров MediaTek mt7921e: на другом чипе файл — мёртвый груз
-  # не modinfo: модуль mt7921e in-tree и есть на любом ядре Arch, поэтому
-  # проверяем само железо — PCI-вендор MediaTek (0x14c3)
-  if grep -qi '^0x14c3' /sys/bus/pci/devices/*/vendor 2>/dev/null; then
-    sudo install -m 0644 -o root -g root \
-      "$REPO/systemd/mt7921e-no-aspm.conf" \
-      /etc/modprobe.d/mt7921e-no-aspm.conf 2>/dev/null \
-      && ok "mt7921e: disable_aspm=1" \
-      || warn "modprobe-конфиг не установлен (нужен sudo)"
-  else
-    say "mt7921e в системе нет — modprobe-конфиг пропущен (другой Wi-Fi адаптер)"
-  fi
-fi
 
 # ── Telegram: локальный MTProto-прокси (tg-ws-proxy) ───────────
 # Пакет из AUR, headless, живёт как systemd --user-юнит (sudo не нужен).

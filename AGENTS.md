@@ -132,7 +132,7 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
   `/sys/class/drm/*/device/vendor` (`0x10de`), иначе ломается рендер на AMD/Intel.
   Драйвер NVIDIA в Arch 615 — `nvidia-open` (`nvidia-open-dkms` — для нештатных ядер;
   проприетарного `nvidia-dkms` больше нет).
-- systemd-user: `lunar-quickshell` (+`lunar-quickshell-failure`), `lunar-wifi-guard`,
+- systemd-user: `lunar-quickshell` (+`lunar-quickshell-failure`),
   `lunar-homepage`, `lunar-player`, `lunar-tgproxy`.
   systemd system: `zapret.service`, `cronie.service`, `lunar-cpu-performance*.service`;
   `fwupd.service` (static).
@@ -167,7 +167,7 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 ├── .config/
 │   ├── hypr/{hyprland.lua, hypridle.conf, scripts/}
 │   │   └── scripts/eclipse-{status,gamemode,record,cleanup,transparency,zapret,zapret-tg,vencord,backup,update,perf,avatar,launch,agent-context,api-limit,media,mono-icons}.sh,
-│   │       eclipse-palette.py, eclipse-calendar.py, eclipse-cheatsheet.py, eclipse-askpass.py, eclipse-wifi-guard.py
+│   │       eclipse-palette.py, eclipse-calendar.py, eclipse-cheatsheet.py, eclipse-askpass.py
 │   ├── quickshell/
 │   │   ├── shell.qml грузит: LunarWallpaper, LunarPanel, LunarHub, LunarWallpapers,
 │   │   │   LunarClipboard, LunarPower, LunarAgent, LunarOverview, LunarPolkit,
@@ -259,8 +259,9 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 - «Discord падает на слабом GPU» — не баг риса.
 - `LunarLauncher.qml`/`LunarSettings.qml` — мусор, удалены; лаунчер = Hub.
 - Автогашение экрана и автолок — выключены намеренно.
-- Wi-Fi: адаптер Qualcomm WCN785x (`ath12k_wifi7_pci`), стек — `systemd-networkd`
-  (не NetworkManager). Powersave держим выключенным. `mt7921e`/ASPM неактуален (не MediaTek).
+- Wi-Fi: не используем — только Ethernet (RTL8126). Адаптер Qualcomm WCN785x
+  (`ath12k_wifi7_pci`) не поднимаем; мёртвая Wi-Fi-обвязка (powersave, NM-dispatcher,
+  гвард, MediaTek-ASPM) удалена и не возвращается.
 - Параллакс обоев к курсору — не нужен.
 - `ShaderEffect`/`.qsb` для короны (Quickshell, Qt6) — не подключать.
 - Полноэкранный блюр layer-оверлеев (`layer_rule … blur` на fullscreen-слой) — НЕ включать:

@@ -15,7 +15,7 @@
 # ════════════════════════════════════════════════════════════════
 
 # ── сеть ──
-# Определяю по маршруту/интерфейсам (networkd, без NetworkManager):
+# Определяю по маршруту/интерфейсам (systemd-networkd):
 # ethernet-устройство → eth, wireless → wifi, иначе off.
 net="off"
 defdev="$(ip route show default 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="dev"){print $(i+1); exit}}' | head -1)"

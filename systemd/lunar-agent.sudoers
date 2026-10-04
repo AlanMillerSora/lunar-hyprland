@@ -43,12 +43,6 @@ Cmnd_Alias LUNAR_SVC = \
   /usr/bin/systemctl reload sddm.service, \
   /usr/bin/systemctl enable sddm.service, \
   /usr/bin/systemctl disable sddm.service, \
-  /usr/bin/systemctl start NetworkManager.service, \
-  /usr/bin/systemctl stop NetworkManager.service, \
-  /usr/bin/systemctl restart NetworkManager.service, \
-  /usr/bin/systemctl reload NetworkManager.service, \
-  /usr/bin/systemctl enable NetworkManager.service, \
-  /usr/bin/systemctl disable NetworkManager.service, \
   /usr/bin/systemctl start bluetooth.service, \
   /usr/bin/systemctl stop bluetooth.service, \
   /usr/bin/systemctl restart bluetooth.service, \

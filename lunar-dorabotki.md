@@ -208,7 +208,7 @@ GitHub берёт коммиты между тегами.)
 **Пройти по пунктам (отметить `[x]`):**
 - [x] **Автозапуск:** после `./get-deps.sh` + `./install.sh` сервисы/компоненты
       поднимаются сами: hyprland.lua стартует quickshell-юнит, mako, hypridle,
-      cliphist, обои, polkit, btop; systemd-user включает wifi-guard/homepage.
+      cliphist, обои, polkit, btop; systemd-user включает homepage.
       Ручных действий не нужно.
 - [x] `hyprctl configerrors` — чисто.
 - [ ] NVIDIA-детект (`LIBVA_DRIVER_NAME=nvidia`, `GBM_BACKEND`, `NVD_BACKEND`,

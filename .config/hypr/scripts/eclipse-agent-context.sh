@@ -77,7 +77,7 @@ if command -v playerctl >/dev/null 2>&1; then
 fi
 
 svc=""
-for s in lunar-quickshell lunar-wifi-guard lunar-homepage lunar-tgproxy; do
+for s in lunar-quickshell lunar-homepage lunar-tgproxy; do
     a=$(systemctl --user is-active "$s" 2>/dev/null)
     svc="${svc}${s#lunar-}=${a} "
 done
