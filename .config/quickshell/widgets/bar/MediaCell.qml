@@ -10,7 +10,9 @@ import "../shared"
 Cell {
     property var host
     id: mediaInline
-    visible: host.mediaActive
+    // видимостью медиа-ячейки рулит зона (BarCenterZone): она знает и про
+    // настройки состава, и про «играет ли что-то». Свой биндинг на
+    // host.mediaActive тут ставить нельзя — через Loader он не пересчитывается.
     anchors.verticalCenter: parent.verticalCenter
     interactive: true
     accent: host.playing ? Theme.accent : Theme.barFaint

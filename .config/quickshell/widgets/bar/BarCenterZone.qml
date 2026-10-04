@@ -14,6 +14,20 @@ Item {
     // Loader, в котором живёт ячейка часов — задаёт центровку
     property Item clockItem: null
 
+    // Играет ли что-то: держу локально и обновляю по сигналу корня.
+    // Напрямую host.mediaActive в делегатах читать нельзя — host это
+    // property var, и через Loader такая зависимость не пересчитывается.
+    property bool mediaActive: false
+    function syncMedia() {
+        if (host)
+            mediaActive = host.mediaActive
+    }
+    Connections {
+        target: centerZone.host
+        function onMediaActiveChanged() { centerZone.syncMedia() }
+    }
+    Component.onCompleted: syncMedia()
+
     // расстояние от левого края зоны до центра ячейки часов. Между
     // уничтожением старого делегата часов и готовностью нового clockItem
     // на миг null — тогда держу последнее посчитанное значение, чтобы
@@ -55,6 +69,7 @@ Item {
         spacing: Theme.space2
 
         Repeater {
+            id: zoneRepeater
             model: BarSettings.centerVisible
 
             delegate: Loader {
@@ -62,7 +77,7 @@ Item {
                 required property var modelData
                 height: Theme.barH
                 anchors.verticalCenter: parent.verticalCenter
-                visible: item === null ? true : item.visible
+                visible: modelData.id === "media" ? centerZone.mediaActive : true
                 sourceComponent: centerZone.compFor(modelData.id)
                 // часы задают центровку строки: запоминаю их Loader, когда он готов
                 onStatusChanged: if (status === Loader.Ready && item
