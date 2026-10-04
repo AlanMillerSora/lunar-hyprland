@@ -21,6 +21,8 @@ Item {
     property real trackLength: 0
     property real trackPosition: 0
     property var mediaCellRef: null
+    property var notifCellRef: null
+    property var sysCellRef: null
     function openMediaBubble() {
         if (mediaCellRef)
             mediaCellRef.openBubbleFromHere()
@@ -77,7 +79,13 @@ Item {
     // ── ресурсы: три тонкие полоски CPU · RAM · GPU ──
     Component {
         id: sysComp
-        SystemIsland { host: rightZone.host }
+        SystemIsland {
+            id: sysIsland
+            host: rightZone.host
+            Component.onCompleted: rightZone.sysCellRef = sysIsland
+            Component.onDestruction: if (rightZone.sysCellRef === sysIsland)
+                rightZone.sysCellRef = null
+        }
     }
 
     // ── медиа-ячейка: трек, play/pause, мини-спектр; клик — плашка вниз ──
@@ -155,6 +163,9 @@ Item {
             accent: rightZone.host.notifCount > 0 ? Theme.accent : Theme.barFaint
             tip: "Уведомления"
             onClicked: BarState.togglePanel("notifs")
+            Component.onCompleted: rightZone.notifCellRef = notifCell
+            Component.onDestruction: if (rightZone.notifCellRef === notifCell)
+                rightZone.notifCellRef = null
             // мягкий пульс-подсветка на НОВОЕ уведомление (только рост
             // счётчика). Панель сама НЕ раскрывается — открытие по клику.
             property SequentialAnimation notifPulse: SequentialAnimation {
@@ -203,10 +214,9 @@ Item {
             id: volCell
             anchors.verticalCenter: parent.verticalCenter
             interactive: true
-            active: BarState.mode === "control"
             accent: rightZone.host.muted ? Theme.danger : Theme.barDim
-            tip: "Звук"
-            onClicked: rightZone.host.openVolumePanel()
+            tip: "Звук · микшер"
+            onClicked: rightZone.host.openMixer()
             property SequentialAnimation volPulse: SequentialAnimation {
                 NumberAnimation {
                     target: volCell; property: "scale"; to: 1.15
@@ -220,10 +230,10 @@ Item {
             property Connections volWatch: Connections {
                 target: rightZone.host
                 function onVolChanged() {
-                    if (rightZone.host.pulsePrimed) { volCell.volPulse.restart(); BarState.activate("control", 2500) }
+                    if (rightZone.host.pulsePrimed) volCell.volPulse.restart()
                 }
                 function onMutedChanged() {
-                    if (rightZone.host.pulsePrimed) { volCell.volPulse.restart(); BarState.activate("control", 2500) }
+                    if (rightZone.host.pulsePrimed) volCell.volPulse.restart()
                 }
             }
             Item {

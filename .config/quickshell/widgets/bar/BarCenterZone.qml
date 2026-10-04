@@ -42,7 +42,6 @@ Item {
     function compFor(id) {
         if (id === "network") return netComp
         if (id === "weather") return weatherComp
-        if (id === "control") return controlComp
         if (id === "clock") return clockComp
         return null
     }
@@ -66,10 +65,10 @@ Item {
     Row {
         id: leftRow
         anchors.right: clockLoader.left
-        anchors.rightMargin: Theme.space3
+        anchors.rightMargin: Theme.space2
         anchors.verticalCenter: parent.verticalCenter
         height: Theme.barH
-        spacing: Theme.space2
+        spacing: 6
 
         Repeater {
             model: centerZone.leftCells
@@ -88,10 +87,10 @@ Item {
     Row {
         id: rightRow
         anchors.left: clockLoader.right
-        anchors.leftMargin: Theme.space3
+        anchors.leftMargin: Theme.space2
         anchors.verticalCenter: parent.verticalCenter
         height: Theme.barH
-        spacing: Theme.space2
+        spacing: 6
 
         Repeater {
             model: centerZone.rightCells
@@ -142,26 +141,6 @@ Item {
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(10)
                 }
-            }
-        }
-    }
-
-    // ── «пульт» ──
-    Component {
-        id: controlComp
-        Cell {
-            anchors.verticalCenter: parent.verticalCenter
-            interactive: true
-            active: BarState.mode === "control"
-            accent: Theme.barDim
-            tip: "Пульт · звук и действия"
-            onClicked: BarState.togglePanel("control")
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: "\uf013"
-                color: BarState.mode === "control" ? Theme.accent : Theme.barText
-                font.family: Theme.iconFont
-                font.pixelSize: Theme.fontSize(16)
             }
         }
     }

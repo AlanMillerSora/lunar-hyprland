@@ -9,7 +9,7 @@ import QtQuick
 QtObject {
     id: bar
 
-    property string mode: ""            // "" | control | media | search | notifs | sys | weather
+    property string mode: ""            // "" | media | search | notifs | sys | weather
     readonly property bool expanded: mode !== ""
     // приоритеты: кто открыл (ручной клик важнее пульса) и сколько держать
     property bool isPulse: false
@@ -21,23 +21,10 @@ QtObject {
     // игра: пульсовые острова не всплывают (синхронизируется из LunarPanel)
     property bool gameMode: false
 
-    // ── пузырь в полосе бара: погода/медиа.
-    // Клик по ячейке теперь раскрывает САМУ плашку вниз (режимы
-    // weather/media), поэтому отдельного «пузыря в полке» больше нет.
-    // Оставляю эти имена как алиасы на режим — чтобы хоткеи/IPC и старые
-    // вызовы работали как раньше, но вели к морфу, а не к боковому пузырю.
-    property string bubble: ""
-    // экранные координаты ячейки-источника — исторические, больше не нужны
-    property real bubbleX: 0
-    property real bubbleY: 0
-    // legacy: открыть погоду/медиа как режим-морф плашки
-    function openBubble(name, x, y) {
-        bar.openPanel(name)
-    }
-    function toggleBubble(name, x, y) {
-        bar.togglePanel(name)
-    }
-    function closeBubble() {}
+    // ── откуда раскрылась плашка: экранный X центра кликнутой ячейки.
+    // Морф теперь привязан к ячейке (а не к центру экрана): хоткеи и IPC
+    // без клика оставляют -1 → раскрытие идёт от центра, как раньше. ──
+    property real originX: -1
 
     property Timer holdTimer: Timer {
         repeat: false

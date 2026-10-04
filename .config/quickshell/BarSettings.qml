@@ -23,7 +23,6 @@ QtObject {
         { id: "network",    zone: "center", name: "Сеть ↓" },
         { id: "weather",    zone: "center", name: "Погода" },
         { id: "clock",      zone: "center", name: "Часы и дата", locked: true },
-        { id: "control",    zone: "center", name: "Пульт" },
         { id: "media",      zone: "right",  name: "Медиа" },
         { id: "game",       zone: "right",  name: "Game Mode" },
         { id: "layout",     zone: "right",  name: "Раскладка" },

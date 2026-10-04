@@ -59,7 +59,7 @@ PanelWindow {
         visible: BarState.expanded
         MouseArea {
             anchors.fill: parent
-            onClicked: { BarState.closePanel(); BarState.closeBubble() }
+            onClicked: { BarState.closePanel() }
         }
     }
 
@@ -411,8 +411,9 @@ PanelWindow {
         pavuProc.running = true
     }
 
-    // Значок звука в баре открывает панель-пульт (там инлайн-громкость и мик).
-    function openVolumePanel() { BarState.togglePanel("control") }
+    // Значок звука в баре открывает микшер (pavucontrol) — прежний «пульт»
+    // убран, отдельного ползунка в баре нет.
+    function openVolumePanel() { root.openMixer() }
 
     // ─────────── системный трей ───────────
     // сколько значков показываем в панели, остальные — в списке (Theme.trayVisible)
@@ -658,7 +659,6 @@ PanelWindow {
     Behavior on panelOpen { Anim { type: Anim.DefaultSpatial } }
     // высота панели по режиму (анимируется при смене режима)
     function panelHeightFor(m) {
-        if (m === "control") return Theme.panelHeaderH + ctlBody.implicitHeight + Theme.space4
         if (m === "media") return Theme.panelHeaderH + mediaPanel.implicitHeight + Theme.space3
         if (m === "search") return Theme.panelHSearch
         if (m === "notifs") return Theme.panelHNotifs
@@ -671,18 +671,32 @@ PanelWindow {
 
     // ширина панели по режиму: пульт/поиск — фикс, медиа/погода — по содержимому
     function panelWidthFor(m) {
-        if (m === "control") return Theme.panelWControl
         if (m === "search") return Theme.panelWSearchWide
         if (m === "media") return mediaPanel.implicitWidth + 2 * Theme.space3
         if (m === "notifs") return Theme.panelWNotifs
         if (m === "weather") return wxBody.implicitWidth + 2 * Theme.space4
         return Theme.panelWSearch
     }
-    readonly property bool panelHasHeader: BarState.mode === "control"
-        || BarState.mode === "notifs" || BarState.mode === "sys"
+
+    // ── привязка морфа к ячейке: где кликнули, оттуда и раскрывается.
+    //    x ячейки беру в координатах контента плашки (contentItem), клампинг
+    //    в `bar.expandedX` не даёт панели вылезти за края экрана. ──
+    function cellOriginX(item) {
+        if (!item)
+            return root.width / 2
+        return item.mapToItem(root.contentItem, item.width / 2, 0).x
+    }
+    function originForMode(m) {
+        if (m === "weather") return cellOriginX(centerZone.weatherCellRef)
+        if (m === "media") return cellOriginX(rightZone.mediaCellRef)
+        if (m === "notifs") return cellOriginX(rightZone.notifCellRef)
+        if (m === "sys") return cellOriginX(rightZone.sysCellRef)
+        return root.width / 2
+    }
+    readonly property bool panelHasHeader: BarState.mode === "notifs"
+        || BarState.mode === "sys"
         || BarState.mode === "weather"
     readonly property string panelTitle: {
-        if (BarState.mode === "control") return "ПУЛЬТ"
         if (BarState.mode === "media") return "МЕДИА"
         if (BarState.mode === "search") return "ПОИСК"
         if (BarState.mode === "notifs") return "УВЕДОМЛЕНИЯ"
@@ -709,20 +723,16 @@ PanelWindow {
 
     // панель закрывается кликом по её фону, Esc (поиск) или повторным режимом
 
-    // IPC: qs ipc call bar control|media|search|notifs|reset
+    // IPC: qs ipc call bar volume|media|search|notifs|sys|weather|reset
     IpcHandler {
         target: "bar"
         function volume() { root.openVolumePanel() }
-        function control() { BarState.togglePanel("control") }
         function media() { BarState.togglePanel("media") }
         function search() { BarState.togglePanel("search") }
         function notifs() { BarState.togglePanel("notifs") }
         function sys() { BarState.togglePanel("sys") }
         function weather() { BarState.togglePanel("weather") }
-        function reset() { BarState.closePanel(); BarState.closeBubble() }
-        // пузыри в полосе (для хоткеев/теста): как по клику по ячейке
-        function bubbleWeather() { centerZone.openWeatherBubble() }
-        function bubbleMedia() { rightZone.openMediaBubble() }
+        function reset() { BarState.closePanel() }
     }
 
     // поиск — в сервисе Launcher (панель биндится к нему)
@@ -734,8 +744,11 @@ PanelWindow {
         function onModeChanged() {
             // морф плашки — теперь для ВСЕХ режимов: плашка сама
             // раскрывается вниз и становится панелью.
+            // запоминаю ячейку-источник: морф раскрывается от неё, а не
+            // от центра. При закрытии (mode "") origin не трогаю — плашка
+            // плавно возвращается на своё место.
             if (BarState.mode !== "")
-                BarState.closeBubble()
+                BarState.originX = root.originForMode(BarState.mode)
             root.morph = (BarState.mode !== "") ? 1 : 0
             root.panelContentOpacity = 0
             panelFade.restart()
@@ -747,8 +760,6 @@ PanelWindow {
             }
             if (BarState.mode !== "" && BarState.mode !== "search")
                 statusProc.running = true
-            // «пульт» содержит свой ползунок громкости — OSD при нём не дублирую
-            Theme.barControlOpen = (BarState.mode === "control")
             if (BarState.mode !== "search")
                 Launcher.reset()
         }
@@ -808,8 +819,16 @@ PanelWindow {
         readonly property real collapsedX: Theme.barMargin
         readonly property real collapsedW: parent.width - 2 * Theme.barMargin
         readonly property real expandedW: root.panelWidthFor(BarState.mode) + 2 * Theme.barPad
+        // цель по X: центр кликнутой ячейки, зажатый в границы экрана.
+        // без клика (хоткей/IPC) originX = -1 → раскрытие от центра экрана.
+        readonly property real expandedX: {
+            var c = BarState.originX >= 0 ? BarState.originX : parent.width / 2
+            var min = Theme.barMargin
+            var max = Math.max(min, parent.width - expandedW - Theme.barMargin)
+            return Math.max(min, Math.min(max, c - expandedW / 2))
+        }
         width: collapsedW + (expandedW - collapsedW) * root.morph
-        x: collapsedX + ((parent.width - width) / 2 - collapsedX) * root.morph
+        x: collapsedX + (expandedX - collapsedX) * root.morph
         anchors.top: parent.top
         anchors.topMargin: Theme.barMargin
         // в морфе плашка = строка + контент режима (panelTargetH — только контент)
@@ -975,9 +994,6 @@ PanelWindow {
                     color: Theme.border
                 }
             }
-
-            // ── ПУЛЬТ: три яруса — состояния, звук, действия ──
-            PanelControl { host: root; id: ctlBody }
 
             // ── МЕДИА: обложка, seek, транспорт, shuffle/repeat, очередь ──
             LunarMediaPanel {

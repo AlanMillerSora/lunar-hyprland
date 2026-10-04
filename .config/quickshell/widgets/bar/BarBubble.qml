@@ -13,7 +13,7 @@ import "../shared"
 // ════════════════════════════════════════════════════════════════
 Item {
     id: root
-    property string kind: BarState.bubble
+    property string kind: ""
     property var host                 // корень LunarPanel (на будущее)
 
     implicitWidth: inner.width

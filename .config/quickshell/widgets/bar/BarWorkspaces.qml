@@ -43,8 +43,9 @@ Item {
                 readonly property bool alerting: host.wsBlink[wsId] !== undefined
                 readonly property string appIcon: host.appIconFor(host.firstClassFor(wsId))
                 readonly property bool peek: host.wsPeek === wsId
-                // иконка приложения — только на «пике» после переключения
-                readonly property bool showApp: !alerting && appIcon !== "" && peek
+                // иконка приложения — у любого ЗАНЯТОГО стола, постоянно:
+                // видно, где что открыто. Фаза остаётся пустым столам.
+                readonly property bool showApp: !alerting && appIcon !== "" && isOccupied
 
                 // импульс кольца при переходе на этот стол
                 onIsFocusedChanged: if (isFocused) focusPulse.restart()

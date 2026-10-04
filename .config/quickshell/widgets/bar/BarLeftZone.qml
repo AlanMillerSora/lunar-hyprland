@@ -56,6 +56,9 @@ Item {
         id: perfComp
         Item {
             anchors.verticalCenter: parent.verticalCenter
+            // PERF показываю только когда governor уехал с performance:
+            // в норме это мёртвая надпись, а как красный сигнал сбоя — нужна.
+            visible: leftZone.host.cpuGovernor !== "performance"
             implicitWidth: perfText.implicitWidth
             implicitHeight: Theme.barCellH
             Text {
