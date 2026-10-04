@@ -15,6 +15,7 @@ Cell {
     id: sysCell
     anchors.verticalCenter: parent.verticalCenter
     interactive: true
+    active: BarState.mode === "sys"
     accent: SysInfo.hot ? Theme.danger : Theme.barDim
     tip: "Телеметрия"
     onClicked: BarState.togglePanel("sys")

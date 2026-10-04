@@ -20,6 +20,7 @@ Cell {
     // host.mediaActive тут ставить нельзя — через Loader он не пересчитывается.
     anchors.verticalCenter: parent.verticalCenter
     interactive: true
+    active: BarState.mode === "media"
     accent: host.playing ? Theme.accent : Theme.barFaint
     tip: "Медиа — раскрыть в баре"
     onClicked: clickedBubble()

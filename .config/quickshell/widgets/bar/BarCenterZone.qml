@@ -111,7 +111,8 @@ Item {
         Cell {
             anchors.verticalCenter: parent.verticalCenter
             interactive: true
-            accent: BarState.mode === "control" ? Theme.accent : Theme.barDim
+            active: BarState.mode === "control"
+            accent: Theme.barDim
             tip: "Пульт · звук и действия"
             onClicked: BarState.togglePanel("control")
             Text {

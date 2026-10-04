@@ -67,6 +67,7 @@ Item {
             id: weatherCell
             anchors.verticalCenter: parent.verticalCenter
             interactive: true
+            active: BarState.mode === "weather"
             accent: Theme.barFaint
             tip: "Погода"
             // клик по ячейке раскрывает саму плашку вниз (морф), как у ArchEclipse
@@ -144,6 +145,7 @@ Item {
         Cell {
             anchors.verticalCenter: parent.verticalCenter
             interactive: true
+            active: rightZone.host.gameMode
             accent: rightZone.host.gameMode ? Theme.danger : Theme.barFaint
             tip: "Game Mode"
             onClicked: rightZone.host.toggleGameMode()
@@ -170,6 +172,7 @@ Item {
             id: notifCell
             anchors.verticalCenter: parent.verticalCenter
             interactive: true
+            active: BarState.mode === "notifs"
             accent: rightZone.host.notifCount > 0 ? Theme.accent : Theme.barFaint
             tip: "Уведомления"
             onClicked: BarState.togglePanel("notifs")
@@ -221,6 +224,7 @@ Item {
             id: volCell
             anchors.verticalCenter: parent.verticalCenter
             interactive: true
+            active: BarState.mode === "control"
             accent: rightZone.host.muted ? Theme.danger : Theme.barDim
             tip: "Звук"
             onClicked: rightZone.host.openVolumePanel()

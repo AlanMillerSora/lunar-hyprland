@@ -14,6 +14,8 @@ Rectangle {
     default property alias content: cellContent.children
     property color accent: Theme.barFaint
     property bool interactive: false
+    // ячейка — «активный» режим (его панель сейчас открыта): подсветка
+    property bool active: false
     property string tip: ""
     signal clicked()
 
@@ -25,7 +27,12 @@ Rectangle {
     implicitWidth: cellContent.implicitWidth + Theme.space3 * 2 + (cell.signalBar ? 8 : 0)
     width: implicitWidth
     radius: Theme.radius
-    color: cellHover.hovered && cell.interactive ? Theme.hoverStrong : Theme.fill
+    color: cell.active ? Theme.active
+         : cellHover.hovered && cell.interactive ? Theme.hoverStrong
+         : Theme.fill
+    border.width: cell.active ? 1 : 0
+    border.color: Theme.activeBorder
+    Behavior on color { ColorAnimation { duration: Theme.animFast } }
 
     HoverHandler {
         id: cellHover
