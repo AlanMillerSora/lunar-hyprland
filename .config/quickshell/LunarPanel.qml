@@ -33,8 +33,8 @@ PanelWindow {
     // клавиатуру забираю, пока открыт режим — чтобы Esc закрывал
     WlrLayershell.keyboardFocus: BarState.expanded
         ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-    // окна не заезжают только под полосу бара
-    WlrLayershell.exclusiveZone: Theme.barH
+    // окна не заезжают под полосу бара (плюс небольшой зазор снизу)
+    WlrLayershell.exclusiveZone: Theme.barMargin + Theme.barH + Theme.space1
     WlrLayershell.anchors.top: true
     WlrLayershell.anchors.left: true
     WlrLayershell.anchors.right: true

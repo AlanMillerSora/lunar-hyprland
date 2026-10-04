@@ -177,7 +177,7 @@ def palette_from_image(path: Path) -> dict:
         "barText":      hsl_to_hex(h, 0.07, 0.88),
         "barDim":       hsl_to_hex(h, 0.12, 0.68),
         "barFaint":     hsl_to_hex(h, 0.14, 0.55),
-        "barPill":      bg(0.85, 0.055),
+        "barPill":      bg(1.0, 0.10),
         "cursor":       hsl_to_hex(h, 0.08, 0.93),
     }
 

@@ -55,7 +55,7 @@ QtObject {
     readonly property color barText: hexColor(palette.barText, "#d5dce4")
     readonly property color barDim: hexColor(palette.barDim, "#a6aeb9")
     readonly property color barFaint: hexColor(palette.barFaint, "#7b838d")
-    readonly property color barPill: Qt.rgba(_barPillBase.r, _barPillBase.g, _barPillBase.b, 1.0 * interfaceOpacity)
+    readonly property color barPill: Qt.rgba(_barPillBase.r, _barPillBase.g, _barPillBase.b, 0.74 * interfaceOpacity)
 
     // ── arch-слой «островов»: подложки в НЕЙТРАЛИ (тон обоев/окна ~#171A1B),
     //    чтобы бар читался единым тоном с системой, а не «стальным» тёмным.
@@ -257,12 +257,11 @@ QtObject {
     property int cardPad: 12
 
     // панель-острова (этап 1): высота плашки, зазоры, поля, отступ внутри.
-    // arch-стиль: тонкая полоса, контент без «плашек» — отсюда 40 → 36 и
-    // ячейка 32 → 28, полоса стала плотнее и легче.
-    property int barH: 36
-    property int barMargin: 8
+    // arch-стиль: тонкая полоса, контент без «плашек».
+    property int barH: 30
+    property int barMargin: 5
     property int barPad: 12
-    property int barRadius: 10
+    property int barRadius: 8
     // высота содержимого ячейки бара (иконки/текст внутри плашки)
     property int barCellH: 28
     // высоты строк панелей: поле поиска и строка «пульта»
