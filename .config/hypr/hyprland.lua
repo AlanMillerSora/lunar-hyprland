@@ -278,7 +278,7 @@ hl.window_rule({ match = { title = "^(Lunar Agent)$" },     float = true, center
 -- ─────────── Автораскладка: приложение → свой стол ───────────
 -- Раскладка по задачам:
 --   1 — игры              2 — браузер (Firefox)   3 — Discord
---   4 — Steam             5 — затмение (пустой)    6 — кодинг
+--   4 — Vesktop           5 — затмение (пустой)    6 — кодинг
 --   7 — пустой            8 — пустой               9 — btop (автозапуск)
 -- Не перечисленные приложения открываются на текущем столе.
 local app_ws = {
@@ -291,10 +291,10 @@ local app_ws = {
   ["2"] = { "firefox", "firefox-developer-edition", "chromium",
             "google-chrome", "brave-browser", "vivaldi-stable",
             "zen", "zen-browser" },
-  -- 3 — Discord
-  ["3"] = { "discord", "vesktop" },
-  -- 4 — Steam (сам клиент)
-  ["4"] = { "steam", "steamwebhelper" },
+  -- 3 — Discord (открывается вручную; из автозапуска убран)
+  ["3"] = { "discord" },
+  -- 4 — Vesktop (замена Discord: автозапуск + всегда этот стол)
+  ["4"] = { "vesktop" },
   -- 6 — кодинг
   ["6"] = { "code", "code-oss", "code-url-handler", "cursor", "zed",
             "jetbrains-.*" },
@@ -433,11 +433,11 @@ hl.on("hyprland.start", function()
   if not btop_running then
     hl.exec_cmd("[workspace 9 silent] kitty --class lunar-btop --title btop -e btop")
   end
-  -- Discord и Firefox в автозапуске, по своим столам и без перехвата фокуса.
+  -- Vesktop и Firefox в автозапуске, по своим столам и без перехвата фокуса.
   -- Идемпотентно: если уже запущены — второй раз не поднимаю.
   local autostart = {
     { bin = "firefox", cmd = "[workspace 2 silent] firefox" },
-    { bin = "Discord", cmd = "[workspace 3 silent] discord" },
+    { bin = "vesktop", cmd = "[workspace 4 silent] vesktop" },
   }
   for _, a in ipairs(autostart) do
     local h = io.popen("pgrep -x " .. a.bin .. " 2>/dev/null")

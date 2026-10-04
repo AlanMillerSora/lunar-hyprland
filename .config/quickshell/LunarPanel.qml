@@ -651,8 +651,8 @@ PanelWindow {
     }
     function originForMode(m) {
         if (m === "weather") return cellOriginX(centerZone.weatherCellRef)
-        if (m === "media") return rightZone.mediaActive
-            ? cellOriginX(rightZone.mediaCellRef) : -1
+        if (m === "media") return centerZone.mediaActive
+            ? cellOriginX(centerZone.mediaCellRef) : -1
         if (m === "notifs") return cellOriginX(rightZone.notifCellRef)
         if (m === "sys") return cellOriginX(rightZone.sysCellRef)
         if (m === "audio") return cellOriginX(rightZone.volumeCellRef)
@@ -834,6 +834,25 @@ PanelWindow {
             color: "white"
             visible: false
             layer.enabled: true
+        }
+
+        // ── линия прогресса трека во всю ширину бара: минимальная заливка
+        //    пустоты. Видна только когда играет и длина известна ──
+        Rectangle {
+            id: trackLine
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            height: 2
+            color: Theme.alpha(Theme.barText, 0.10)
+            visible: root.playing && root.trackLength > 0
+            Rectangle {
+                width: parent.width * Math.max(0, Math.min(1,
+                    root.trackLength > 0 ? root.trackPosition / root.trackLength : 0))
+                height: parent.height
+                color: Theme.accent
+                Behavior on width { Anim { type: Anim.FastEffects } }
+            }
         }
 
     }

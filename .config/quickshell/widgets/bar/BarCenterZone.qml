@@ -19,6 +19,16 @@ Item {
             weatherCellRef.openBubbleFromHere()
     }
 
+    // ── медиа-полоса в центре: показывается, только когда что-то играет
+    //    (сквозной прогресс рисует LunarPanel во всю ширину бара) ──
+    property var mediaCellRef: null
+    property bool mediaActive: false
+    Connections {
+        target: centerZone.host
+        function onMediaActiveChanged() { centerZone.mediaActive = centerZone.host.mediaActive }
+    }
+    Component.onCompleted: if (host) mediaActive = host.mediaActive
+
     // ── ячейки центра и ось ──
     readonly property var cells: BarSettings.centerVisible
     // индекс часов: они всегда есть (locked) и служат осью композиции
@@ -42,6 +52,7 @@ Item {
     function compFor(id) {
         if (id === "network") return netComp
         if (id === "weather") return weatherComp
+        if (id === "media") return mediaComp
         if (id === "clock") return clockComp
         return null
     }
@@ -61,11 +72,32 @@ Item {
         sourceComponent: centerZone.compFor("clock")
     }
 
+    // ── тихие разделители вокруг часов: часы читаются отдельным «островом».
+    //    Высота — доля ячейки, цвет — едва заметный штрих текста. ──
+    Rectangle {
+        width: 1
+        height: Math.round(Theme.barCellH * 0.55)
+        anchors.right: clockLoader.left
+        anchors.rightMargin: Theme.space2
+        anchors.verticalCenter: parent.verticalCenter
+        color: Theme.alpha(Theme.barText, 0.12)
+        visible: centerZone.mediaActive
+    }
+    Rectangle {
+        width: 1
+        height: Math.round(Theme.barCellH * 0.55)
+        anchors.left: clockLoader.right
+        anchors.leftMargin: Theme.space2
+        anchors.verticalCenter: parent.verticalCenter
+        color: Theme.alpha(Theme.barText, 0.12)
+        visible: centerZone.rightCells.length > 0
+    }
+
     // ── ячейки слева от часов: прижаты к их левому краю ──
     Row {
         id: leftRow
         anchors.right: clockLoader.left
-        anchors.rightMargin: Theme.space2
+        anchors.rightMargin: Theme.space3
         anchors.verticalCenter: parent.verticalCenter
         height: Theme.barH
         spacing: 6
@@ -78,6 +110,8 @@ Item {
                 width: item ? item.implicitWidth : 0
                 height: parent.height
                 anchors.verticalCenter: parent.verticalCenter
+                // медиа-полоса появляется только когда есть что играть
+                visible: modelData.id === "media" ? centerZone.mediaActive : true
                 sourceComponent: centerZone.compFor(modelData.id)
             }
         }
@@ -87,7 +121,7 @@ Item {
     Row {
         id: rightRow
         anchors.left: clockLoader.right
-        anchors.leftMargin: Theme.space2
+        anchors.leftMargin: Theme.space3
         anchors.verticalCenter: parent.verticalCenter
         height: Theme.barH
         spacing: 6
@@ -100,6 +134,8 @@ Item {
                 width: item ? item.implicitWidth : 0
                 height: parent.height
                 anchors.verticalCenter: parent.verticalCenter
+                // медиа-полоса появляется только когда есть что играть
+                visible: modelData.id === "media" ? centerZone.mediaActive : true
                 sourceComponent: centerZone.compFor(modelData.id)
             }
         }
@@ -180,6 +216,24 @@ Item {
                     font.pixelSize: Theme.fontSize(12)
                 }
             }
+        }
+    }
+
+    // ── медиа-полоса в центре: обложка + трек + прогресс;
+    //    клик раскрывает пузырь МЕДИА ──
+    Component {
+        id: mediaComp
+        MediaCell {
+            id: mediaStrip
+            host: centerZone.host
+            stripWidth: 420
+            function openBubbleFromHere() {
+                BarState.togglePanel("media")
+            }
+            Component.onCompleted: centerZone.mediaCellRef = mediaStrip
+            Component.onDestruction: if (centerZone.mediaCellRef === mediaStrip)
+                centerZone.mediaCellRef = null
+            onClickedBubble: openBubbleFromHere()
         }
     }
 

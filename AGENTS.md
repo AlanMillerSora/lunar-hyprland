@@ -215,7 +215,7 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 - Токены `Theme.qml`: отступы `space1..6` 4/8/12/16/24/32; строки `rowHCompact/rowH/rowHComfy`
   34/42/48, `headerH` 44; радиусы `radiusS/radius/radiusM/radiusL` 6/8/10/12; текст
   `fontMicro/fontTiny/fontSmall/fontBody/fontPanelTitle/fontTitle/fontClock` 9/11/12/14/16/22/16;
-  панель `barH/barMargin/barPad/barRadius` 30/5/12/8, ячейка бара `barCellH` 28,
+  панель `barH/barMargin/barPad/barRadius` 34/5/12/9, ячейка бара `barCellH` 30,
   строки панелей `panelFieldH/panelRowH/sparkH` 46/36/26; `iconXL/cardPad` 30/12;
   `hoverGrow` 1.25 (ховер-рост групп панели); `hover/hoverStrong/active/activeBorder/fill/onAccent`;
   `tooltipDelay` 600; `clamp()`.

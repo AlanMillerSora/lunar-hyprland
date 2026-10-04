@@ -20,10 +20,10 @@ QtObject {
     readonly property var catalog: [
         { id: "workspaces", zone: "left",   name: "Фазы столов" },
         { id: "perf",       zone: "left",   name: "PERF" },
+        { id: "media",      zone: "center", name: "Медиа · полоса" },
+        { id: "clock",      zone: "center", name: "Часы и дата", locked: true },
         { id: "network",    zone: "center", name: "Сеть ↓" },
         { id: "weather",    zone: "center", name: "Погода" },
-        { id: "clock",      zone: "center", name: "Часы и дата", locked: true },
-        { id: "media",      zone: "right",  name: "Медиа" },
         { id: "game",       zone: "right",  name: "Game Mode" },
         { id: "layout",     zone: "right",  name: "Раскладка" },
         { id: "tray",       zone: "right",  name: "Трей" },

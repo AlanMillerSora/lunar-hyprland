@@ -3,9 +3,9 @@ import "../.."
 import "../shared"
 
 // ════════════════════════════════════════════════════════════════
-//  BarRightZone — правая зона бара (arch-стиль): медиа, Game Mode,
-//  раскладка, трей, уведомления и звук. Всё «плоское», без плашек.
-//  Состав/порядок/видимость — из BarSettings (bar.json). host = LunarPanel.
+//  BarRightZone — правая зона бара (arch-стиль): Game Mode, раскладка,
+//  трей, уведомления и звук. Всё «плоское», без плашек. Медиа-полоса
+//  живёт в центре (BarCenterZone). Состав/порядок — из BarSettings.
 // ════════════════════════════════════════════════════════════════
 Item {
     id: rightZone
@@ -15,37 +15,13 @@ Item {
     implicitHeight: Theme.barH
     clip: true
 
-    // медиа: значения прогресса держу локально и обновляю по сигналам
-    // корня — через property var в Loader'е они не пересчитываются.
-    property bool mediaActive: false
-    property real trackLength: 0
-    property real trackPosition: 0
-    property var mediaCellRef: null
+    // ссылки на ячейки — привязка пузырей (origin) и маркер ячейки
     property var notifCellRef: null
     property var sysCellRef: null
     property var volumeCellRef: null
-    function openMediaBubble() {
-        if (mediaCellRef)
-            mediaCellRef.openBubbleFromHere()
-    }
-    function syncMedia() { if (host) mediaActive = host.mediaActive }
-    function syncProgress() {
-        if (!host)
-            return
-        trackLength = host.trackLength
-        trackPosition = host.trackPosition
-    }
-    Connections {
-        target: rightZone.host
-        function onMediaActiveChanged() { rightZone.syncMedia() }
-        function onTrackLengthChanged() { rightZone.syncProgress() }
-        function onTrackPositionChanged() { rightZone.trackPosition = host.trackPosition }
-    }
-    Component.onCompleted: { syncMedia(); syncProgress() }
 
     function compFor(id) {
         if (id === "system") return sysComp
-        if (id === "media") return mediaComp
         if (id === "game") return gameComp
         if (id === "layout") return layoutComp
         if (id === "tray") return trayComp
@@ -70,8 +46,7 @@ Item {
                 width: item ? item.implicitWidth : 0
                 height: Theme.barH
                 anchors.verticalCenter: parent.verticalCenter
-                visible: modelData.id === "media" ? rightZone.mediaActive
-                                                   : (item === null ? true : item.visible)
+                visible: item === null ? true : item.visible
                 sourceComponent: rightZone.compFor(modelData.id)
             }
         }
@@ -86,24 +61,6 @@ Item {
             Component.onCompleted: rightZone.sysCellRef = sysIsland
             Component.onDestruction: if (rightZone.sysCellRef === sysIsland)
                 rightZone.sysCellRef = null
-        }
-    }
-
-    // ── медиа-ячейка: трек, play/pause, мини-спектр; клик — плашка вниз ──
-    Component {
-        id: mediaComp
-        MediaCell {
-            id: mediaCellItem
-            host: rightZone.host
-            progressLength: rightZone.trackLength
-            progressPosition: rightZone.trackPosition
-            function openBubbleFromHere() {
-                BarState.togglePanel("media")
-            }
-            Component.onCompleted: rightZone.mediaCellRef = mediaCellItem
-            Component.onDestruction: if (rightZone.mediaCellRef === mediaCellItem)
-                rightZone.mediaCellRef = null
-            onClickedBubble: openBubbleFromHere()
         }
     }
 

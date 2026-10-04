@@ -260,12 +260,12 @@ QtObject {
 
     // панель-острова (этап 1): высота плашки, зазоры, поля, отступ внутри.
     // arch-стиль: тонкая полоса, контент без «плашек».
-    property int barH: 30
+    property int barH: 34
     property int barMargin: 5
     property int barPad: 12
-    property int barRadius: 8
+    property int barRadius: 9
     // высота содержимого ячейки бара (иконки/текст внутри плашки)
-    property int barCellH: 28
+    property int barCellH: 30
     // высоты строк панелей: поле поиска и строка «пульта»
     property int panelFieldH: 46
     property int panelRowH: 36
