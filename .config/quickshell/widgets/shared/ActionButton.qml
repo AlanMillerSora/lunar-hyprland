@@ -24,13 +24,11 @@ Rectangle {
     implicitWidth: Math.max(minWidth, btnText.implicitWidth + hPad)
     height: Theme.rowH
     radius: Theme.radius
-    color: !enabledBtn ? Theme.fill
-         : btnArea.containsMouse ? Theme.active
-         : "transparent"
-    // рамка — часть аффорданса, оставляю (как было в исходных кнопках)
-    border.width: 1
-    border.color: !enabledBtn ? Theme.border
-                : (btnArea.containsMouse || accent) ? Theme.accent : Theme.border
+    color: !enabledBtn ? Theme.surface
+         : btnArea.containsMouse ? Theme.surfaceHover
+         : Theme.surface
+    // arch: рамки нет, кнопка — подложка surface
+    border.width: 0
 
     Text {
         id: btnText

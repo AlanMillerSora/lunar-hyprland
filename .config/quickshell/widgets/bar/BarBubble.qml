@@ -53,7 +53,7 @@ Item {
                         text: Weather.ok ? Weather.temp : "—"
                         color: Theme.text
                         font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontTitle
+                        font.pixelSize: Theme.fontBig
                         font.bold: true
                     }
                     Text {
@@ -70,7 +70,7 @@ Item {
                     }
                 }
             }
-            Rectangle { width: parent.width; height: 1; color: Theme.border }
+            Rectangle { width: parent.width; height: 1; color: Theme.border2 }
             Row {
                 width: parent.width
                 spacing: Theme.space4

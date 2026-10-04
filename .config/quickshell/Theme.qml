@@ -52,10 +52,19 @@ QtObject {
 
     // ── панель-бар: чуть мягче и холоднее общего текста (правил отдельно,
     //    чтобы не выцветал текст оверлеев) ──
-    property color barText: hexColor(palette.barText, "#d5dce4")
-    property color barDim: hexColor(palette.barDim, "#a6aeb9")
-    property color barFaint: hexColor(palette.barFaint, "#7b838d")
-    property color barPill: Qt.rgba(_barPillBase.r, _barPillBase.g, _barPillBase.b, 1.0 * interfaceOpacity)
+    readonly property color barText: hexColor(palette.barText, "#d5dce4")
+    readonly property color barDim: hexColor(palette.barDim, "#a6aeb9")
+    readonly property color barFaint: hexColor(palette.barFaint, "#7b838d")
+    readonly property color barPill: Qt.rgba(_barPillBase.r, _barPillBase.g, _barPillBase.b, 1.0 * interfaceOpacity)
+
+    // ── arch-слой «островов»: подложки/рамки в тоне палитры (не от текста),
+    //    как surface/surfaceHover/surfaceActive/border у ArchEclipse ──
+    //    в покое подложка полупрозрачна (бары/сайдбары парят), в hover — плотней
+    readonly property color surface: Qt.rgba(_barPillBase.r, _barPillBase.g, _barPillBase.b, 0.85)
+    readonly property color surfaceSolid: _barPillBase
+    readonly property color surfaceHover: Qt.rgba(_barPillBase.r, _barPillBase.g, _barPillBase.b, 0.96)
+    readonly property color surfaceActive: Qt.rgba(accent.r, accent.g, accent.b, 0.16)
+    readonly property color border2: Qt.rgba(text.r, text.g, text.b, 0.10)
     // непрозрачный цвет фона — для текста поверх акцента (выделение и т.п.);
     // Theme.bg полупрозрачен и на плашке выделения читался бы неровно
     property color onAccent: _bgBase
@@ -263,7 +272,7 @@ QtObject {
 
     // панель-остров (этап 2): шапка, строки, ширины режимов
     property int panelHeaderH: 30
-    property int panelWControl: 720
+    property int panelWControl: 760
     property int panelWSearch: 520
     property int panelWNotifs: 460
     // панель поиска раскрывается шире строки — отдельная «широкая» ширина

@@ -2,8 +2,9 @@ import QtQuick
 import "../.."
 
 // ════════════════════════════════════════════════════════════════
-//  Card — единая подложка панелей: фон + радиус + рамка и внутренняя
-//  колонка с общим ритмом. Контент складываем внутрь (default property).
+//  Card — единая подложка панелей в arch-стиле: плотный surface без
+//  рамки (как Card у ArchEclipse: surface + radius, border почти не
+//  виден), внутри — колонка с общим ритмом. Контент внутрь (default).
 //  Высота — по содержимому; ширину задаёт вызывающий.
 // ════════════════════════════════════════════════════════════════
 Rectangle {
@@ -12,11 +13,13 @@ Rectangle {
     default property alias content: col.children
     property int contentMargins: Theme.cardPad
     property int contentSpacing: 8
+    // рамку оставил опциональной: у arch карточки рамки почти нет
+    property bool bordered: false
 
-    color: Theme.cardBg
+    color: Theme.surface
     radius: Theme.radiusM
-    border.width: 1
-    border.color: Theme.border
+    border.width: root.bordered ? 1 : 0
+    border.color: Theme.border2
     implicitHeight: col.implicitHeight + contentMargins * 2
 
     Column {

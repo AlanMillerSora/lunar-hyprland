@@ -3,11 +3,9 @@ import QtQuick.Layouts
 import ".."
 import "../widgets/shared"
 
-        // ── Пульт: приборная панель. Три яруса на всю ширину ──
-        //  1) крупные плитки состояний (игра/запись/питание);
-        //  2) две карточки звука в ряд (вывод · микрофон);
-        //  3) ряд действий (hub/обои/поиск/телеметрия).
-        //  Телеметрию сюда не кладу — она уже в систем-острове бара.
+        // ── Пульт в arch-стиле: две колонки — слева звук (вывод + микрофон)
+        //  карточками, справа сетка состояний (игра/запись/питание) и ряд
+        //  действий. Плотные surface-подложки, без «плит» во всю ширину. ──
         Item {
             property var host
             id: ctlBody
@@ -17,92 +15,24 @@ import "../widgets/shared"
             anchors.topMargin: Theme.panelHeaderH
             anchors.horizontalCenter: parent.horizontalCenter
             width: parent.width - Theme.space3 * 2
-            implicitHeight: ctlCol.height
+            implicitHeight: ctlRow.height
             height: implicitHeight
 
-            Column {
-                id: ctlCol
+            Row {
+                id: ctlRow
                 width: parent.width
                 spacing: Theme.space3
 
-                // ── ярус 1: крупные плитки состояний ──
-                Row {
-                    width: parent.width
-                    spacing: Theme.space2
-
-                    Repeater {
-                        model: [
-                            { g: "\uf11b", label: "ИГРА",    on: host.gameMode,  danger: false, act: "game" },
-                            { g: "\uf111", label: "ЗАПИСЬ",  on: host.recording, danger: true,  act: "rec" },
-                            { g: "\uf011", label: "ПИТАНИЕ", on: false,          danger: false, act: "power" }
-                        ]
-                        delegate: Rectangle {
-                            id: stateTile
-                            required property var modelData
-                            readonly property bool lit: modelData.on
-                            readonly property color litColor: modelData.danger ? Theme.danger : Theme.accent
-
-                            width: (ctlCol.width - ctlCol.spacing * 2) / 3
-                            height: 64
-                            radius: Theme.radiusM
-                            color: stateTile.lit
-                                ? Theme.alpha(stateTile.litColor, 0.16)
-                                : (stateMouse.containsMouse ? Theme.hoverStrong : Theme.fill)
-                            border.width: 1
-                            border.color: stateTile.lit
-                                ? Theme.alpha(stateTile.litColor, 0.5)
-                                : (stateMouse.containsMouse ? Theme.borderAccent : Theme.border)
-                            Behavior on color { ColorAnimation { duration: Theme.animFast } }
-
-                            Column {
-                                anchors.centerIn: parent
-                                spacing: Theme.space1
-
-                                Text {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: stateTile.modelData.g
-                                    color: stateTile.lit ? stateTile.litColor
-                                        : (stateMouse.containsMouse ? Theme.text : Theme.textDim)
-                                    font.family: Theme.iconFont
-                                    font.pixelSize: Theme.fontSize(22)
-                                }
-                                Text {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: stateTile.modelData.label
-                                    color: stateTile.lit ? Theme.text : Theme.textDim
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontTiny
-                                    font.bold: true
-                                    font.letterSpacing: 2
-                                }
-                            }
-
-                            MouseArea {
-                                id: stateMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    if (stateTile.modelData.act === "game")
-                                        host.toggleGameMode()
-                                    else if (stateTile.modelData.act === "rec")
-                                        host.toggleRecording()
-                                    else if (stateTile.modelData.act === "power")
-                                        host.openPower()
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // ── ярус 2: звук — две карточки в ряд ──
-                Row {
-                    width: parent.width
+                // ── левая колонка: звук ──
+                Column {
+                    width: (parent.width - parent.spacing) / 2
                     spacing: Theme.space3
 
                     // вывод
                     Card {
-                        width: (parent.width - parent.spacing) / 2
+                        width: parent.width
+                        contentMargins: 14
+                        contentSpacing: 8
                         Column {
                             width: parent.width
                             spacing: Theme.space1
@@ -114,7 +44,7 @@ import "../widgets/shared"
                                     text: host.muted ? "\uf026" : (host.vol < 0.34 ? "\uf027" : "\uf028")
                                     color: host.muted ? Theme.danger : Theme.accent
                                     font.family: Theme.iconFont
-                                    font.pixelSize: Theme.fontSize(16)
+                                    font.pixelSize: Theme.fontSize(17)
                                     MouseArea {
                                         anchors.fill: parent
                                         cursorShape: Qt.PointingHandCursor
@@ -154,7 +84,9 @@ import "../widgets/shared"
 
                     // микрофон
                     Card {
-                        width: (parent.width - parent.spacing) / 2
+                        width: parent.width
+                        contentMargins: 14
+                        contentSpacing: 8
                         Column {
                             width: parent.width
                             spacing: Theme.space1
@@ -166,7 +98,7 @@ import "../widgets/shared"
                                     text: host.micMuted ? "\uf131" : "\uf130"
                                     color: host.micMuted ? Theme.danger : Theme.accent
                                     font.family: Theme.iconFont
-                                    font.pixelSize: Theme.fontSize(16)
+                                    font.pixelSize: Theme.fontSize(17)
                                     MouseArea {
                                         anchors.fill: parent
                                         cursorShape: Qt.PointingHandCursor
@@ -205,34 +137,74 @@ import "../widgets/shared"
                     }
                 }
 
-                // ── ярус 3: действия одной строкой ──
-                Row {
-                    width: parent.width
-                    spacing: Theme.space2
+                // ── правая колонка: состояния + действия ──
+                Column {
+                    width: (parent.width - parent.spacing) / 2
+                    spacing: Theme.space3
 
-                    Repeater {
-                        model: [
-                            { g: "\uf009", label: "HUB",        act: "hub" },
-                            { g: "\uf03e", label: "ОБОИ",       act: "wall" },
-                            { g: "\uf002", label: "ПОИСК",      act: "search" },
-                            { g: "\uf080", label: "ТЕЛЕМЕТРИЯ", act: "sys" }
-                        ]
-                        delegate: ActionTile {
-                            required property var modelData
-                            width: (ctlCol.width - ctlCol.spacing * 3) / 4
-                            height: Theme.rowHComfy
-                            glyph: modelData.g
-                            label: modelData.label
-                            tip: modelData.label
-                            onClicked: {
-                                if (modelData.act === "hub")
-                                    host.openHub()
-                                else if (modelData.act === "wall")
-                                    host.openWallpapers()
-                                else if (modelData.act === "search")
-                                    BarState.openPanel("search")
-                                else if (modelData.act === "sys")
-                                    BarState.openPanel("sys")
+                    // состояния 2×2 (игра / запись / питание / телеметрия)
+                    Grid {
+                        width: parent.width
+                        columns: 2
+                        columnSpacing: Theme.space2
+                        rowSpacing: Theme.space2
+                        Repeater {
+                            model: [
+                                { g: "\uf11b", label: "ИГРА",   on: host.gameMode,  act: "game" },
+                                { g: "\uf111", label: "ЗАПИСЬ", on: host.recording, act: "rec" },
+                                { g: "\uf011", label: "ПИТАНИЕ", on: false,         act: "power" },
+                                { g: "\uf080", label: "ТЕЛЕМЕТРИЯ", on: false,      act: "sys" }
+                            ]
+                            delegate: ActionTile {
+                                required property var modelData
+                                width: (parent.width - parent.columnSpacing) / 2
+                                height: 46
+                                glyph: modelData.g
+                                glyphSize: Theme.fontSize(18)
+                                label: modelData.label
+                                active: modelData.on
+                                activeColor: modelData.act === "rec" ? Theme.danger : Theme.accent
+                                tip: modelData.label
+                                onClicked: {
+                                    if (modelData.act === "game")
+                                        host.toggleGameMode()
+                                    else if (modelData.act === "rec")
+                                        host.toggleRecording()
+                                    else if (modelData.act === "power")
+                                        host.openPower()
+                                    else if (modelData.act === "sys")
+                                        BarState.openPanel("sys")
+                                }
+                            }
+                        }
+                    }
+
+                    // ряд действий: hub / обои / поиск
+                    Row {
+                        width: parent.width
+                        spacing: Theme.space2
+                        Repeater {
+                            model: [
+                                { g: "\uf009", label: "HUB",   act: "hub" },
+                                { g: "\uf03e", label: "ОБОИ",  act: "wall" },
+                                { g: "\uf002", label: "ПОИСК", act: "search" }
+                            ]
+                            delegate: ActionTile {
+                                required property var modelData
+                                width: (parent.width - parent.spacing * 2) / 3
+                                height: 46
+                                glyph: modelData.g
+                                glyphSize: Theme.fontSize(18)
+                                label: modelData.label
+                                tip: modelData.label
+                                onClicked: {
+                                    if (modelData.act === "hub")
+                                        host.openHub()
+                                    else if (modelData.act === "wall")
+                                        host.openWallpapers()
+                                    else if (modelData.act === "search")
+                                        BarState.openPanel("search")
+                                }
                             }
                         }
                     }
