@@ -871,12 +871,14 @@ PanelWindow {
     // случайно раскрыть при проносе курсора; выключено — по BarSettings.hotZone.
     Process { id: sidebarOpenProc; running: false }
     Process { id: rsidebarOpenProc; running: false }
+    // открываю по ховеру через `hover`, а НЕ `open`: open пиннит панель
+    // навсегда, и она висела поверх контента, перехватывая ввод
     function openSidebar() {
-        sidebarOpenProc.command = ["bash", "-c", "qs ipc call sidebar open"]
+        sidebarOpenProc.command = ["bash", "-c", "qs ipc call sidebar hover"]
         sidebarOpenProc.running = true
     }
     function openRsidebar() {
-        rsidebarOpenProc.command = ["bash", "-c", "qs ipc call rsidebar open"]
+        rsidebarOpenProc.command = ["bash", "-c", "qs ipc call rsidebar hover"]
         rsidebarOpenProc.running = true
     }
 
@@ -884,8 +886,7 @@ PanelWindow {
         id: hotZoneLeft
         anchors.left: parent.left
         anchors.top: parent.top
-        anchors.topMargin: Theme.barMargin
-        width: 6
+        width: 5
         height: Theme.barH
         visible: BarSettings.hotZone && !BarState.expanded && BarState.bubble === ""
         HoverHandler {
@@ -906,8 +907,7 @@ PanelWindow {
         id: hotZoneRight
         anchors.right: parent.right
         anchors.top: parent.top
-        anchors.topMargin: Theme.barMargin
-        width: 6
+        width: 5
         height: Theme.barH
         visible: BarSettings.hotZone && !BarState.expanded && BarState.bubble === ""
         HoverHandler {

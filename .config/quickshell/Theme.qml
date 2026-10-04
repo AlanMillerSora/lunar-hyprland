@@ -248,12 +248,13 @@ QtObject {
     property int cardPad: 12
 
     // панель-острова (этап 1): высота плашки, зазоры, поля, отступ внутри
-    property int barH: 44
+    // чуть опустил (44 → 40) — на 44 полоса дышала слишком свободно
+    property int barH: 40
     property int barMargin: 8
-    property int barPad: 14
-    property int barRadius: 10
+    property int barPad: 13
+    property int barRadius: 9
     // высота содержимого ячейки бара (иконки/текст внутри плашки)
-    property int barCellH: 34
+    property int barCellH: 32
     // высоты строк панелей: поле поиска и строка «пульта»
     property int panelFieldH: 46
     property int panelRowH: 36

@@ -36,7 +36,7 @@ PanelWindow {
             sysStats.running = true
             sysStatsTimer.restart()
             if (tabIndex === 0) api.refresh()
-            if (!pinned && !stripHover.hovered && !contentHover.hovered) hideTimer.restart()
+            if (!pinned && !stripHover.hovered && !contentHover.hovered && !topHover.hovered) hideTimer.restart()
         }
     }
 
@@ -49,12 +49,27 @@ PanelWindow {
             else { root.pinned = false; root.closePanel() }
         }
         function open(): void { root.pinned = true; root.openPanel() }
+        // открыть по ховеру края: без пиннинга, чтобы панель сама закрылась,
+        // когда курсор ушёл (иначе висела бы поверх контента)
+        function hover(): void { root.pinned = false; root.openPanel() }
         function close(): void { root.pinned = false; root.closePanel() }
         function tab(idx: int): void { root.tabIndex = Math.max(0, Math.min(1, idx)) }
     }
 
     mask: Region {
-        item: collapsed ? hoverStrip : contentBox
+        Region { item: collapsed ? hoverStrip : topHold }
+        Region { item: collapsed ? null : contentBox }
+    }
+
+    // прозрачная зона сверху: пока панель раскрыта из горячей зоны бара,
+    // курсор на ней держит панель (иначе она мигала бы и сразу закрывалась)
+    Item {
+        id: topHold
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: 46
+        HoverHandler { id: topHover }
     }
 
     Item {
@@ -63,14 +78,27 @@ PanelWindow {
         anchors.topMargin: 46
         anchors.bottom: parent.bottom
         anchors.left: parent.left
-        width: 22
+        // тонкая полоса у края (как HotZone/BarHoverWindow в ArchEclipse):
+        // раньше была 22 px и перехватывала колесо у края — теперь 5 px,
+        // центр скроллбара свободен, страницы листаются нормально
+        width: 5
 
         HoverHandler {
             id: stripHover
             onHoveredChanged: {
-                if (hovered) root.openPanel()
-                else if (!contentHover.hovered) hideTimer.restart()
+                // задержка: мимолётный пронос у края панель не раскрывает
+                if (hovered) stripDwell.restart()
+                else {
+                    stripDwell.stop()
+                    if (!contentHover.hovered) hideTimer.restart()
+                }
             }
+        }
+        Timer {
+            id: stripDwell
+            interval: BarSettings.revealIn
+            repeat: false
+            onTriggered: if (stripHover.hovered) root.openPanel()
         }
     }
 
@@ -103,7 +131,7 @@ PanelWindow {
             id: contentHover
             onHoveredChanged: {
                 if (hovered) root.openPanel()
-                else if (!stripHover.hovered) hideTimer.restart()
+                else if (!stripHover.hovered && !topHover.hovered) hideTimer.restart()
             }
         }
 
@@ -490,7 +518,7 @@ PanelWindow {
         id: hideTimer
         interval: BarSettings.revealOut
         onTriggered: {
-            if (!root.pinned && !stripHover.hovered && !contentHover.hovered) root.closePanel()
+            if (!root.pinned && !stripHover.hovered && !contentHover.hovered && !topHover.hovered) root.closePanel()
         }
     }
 
