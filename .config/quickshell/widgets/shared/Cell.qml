@@ -2,10 +2,11 @@ import QtQuick
 import "../.."
 
 // ════════════════════════════════════════════════════════════════
-//  Cell — ячейка-сегмент бара (по мотивам ArchEclipse): плотный фон
-//  + короткий акцентный штрих слева. Внутрь кладу что угодно
-//  (текст/иконку/строку) через default-свойство content.
-//  Жила инлайном в LunarPanel — вынес в общий слой.
+//  Cell — ячейка-сегмент бара: плотная плашка (Theme.fill → hoverStrong).
+//  Акцентный штрих слева показываю ТОЛЬКО когда accent = сигнал (danger
+//  или светлый акцент), а не нейтральный серый — так спокойные ячейки
+//  выглядят ровно и минималистично, а тревожные (перегрев, mute, игра)
+//  по-прежнему кричат штрихом.
 // ════════════════════════════════════════════════════════════════
 Rectangle {
     id: cell
@@ -16,8 +17,12 @@ Rectangle {
     property string tip: ""
     signal clicked()
 
+    // штрих — только для «сигнальных» акцентов (danger/accent), не для серых
+    readonly property bool signalBar: accent !== Theme.barFaint
+        && accent !== Theme.barDim
+
     height: Theme.barCellH
-    implicitWidth: cellContent.implicitWidth + Theme.space3 * 2 + 8
+    implicitWidth: cellContent.implicitWidth + Theme.space3 * 2 + (cell.signalBar ? 8 : 0)
     width: implicitWidth
     radius: Theme.radius
     color: cellHover.hovered && cell.interactive ? Theme.hoverStrong : Theme.fill
@@ -26,8 +31,9 @@ Rectangle {
         id: cellHover
     }
 
-    // короткий штрих-акцент слева (как цветные флажки у ArchEclipse)
+    // короткий штрих-акцент слева — только у «сигнальных» ячеек
     Rectangle {
+        visible: cell.signalBar
         anchors.left: parent.left
         anchors.leftMargin: 7
         anchors.verticalCenter: parent.verticalCenter
@@ -40,9 +46,9 @@ Rectangle {
     Row {
         id: cellContent
         anchors.left: parent.left
-        anchors.leftMargin: 15
+        anchors.leftMargin: cell.signalBar ? 15 : Theme.space3
         anchors.right: parent.right
-        anchors.rightMargin: 9
+        anchors.rightMargin: Theme.space3
         anchors.verticalCenter: parent.verticalCenter
         spacing: Theme.space2
     }
