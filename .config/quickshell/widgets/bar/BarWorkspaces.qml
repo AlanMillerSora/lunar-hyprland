@@ -4,15 +4,24 @@ import "../shared"
 
 // ════════════════════════════════════════════════════════════════
 //  BarWorkspaces — ряд лунных фаз столов: фокус, занятость, мигание
-//  на новое окно. Наведение мышью НЕ раскрывает и не подменяет фазу —
-//  ряд остаётся спокойным. Вынесено из LunarPanel; корень передаёт
-//  себя как host.
+//  на новое окно. Активный стол подсвечивает скользящая капсула —
+//  она плавно едет к фазе и мягко пульсирует при переходе. Наведение
+//  мышью фазу не подменяет — ряд остаётся спокойным.
 // ════════════════════════════════════════════════════════════════
 Item {
     id: root
     property var host
     implicitWidth: wsRow.implicitWidth
     implicitHeight: Theme.barCellH
+
+    readonly property int phaseW: 32
+    readonly property int phaseGap: 7
+    readonly property int step: phaseW + phaseGap
+    readonly property int focusIdx: (host && host.focusedWs && host.focusedWs.id >= 1)
+        ? host.focusedWs.id - 1 : -1
+
+    // пульс капсулы при переходе на другой стол
+    onFocusIdxChanged: if (root.focusIdx >= 0) capsulePulse.restart()
 
     // тонкая «орбита» за фазами — связывает индикаторы в цикл
     Rectangle {
@@ -23,11 +32,44 @@ Item {
         color: Theme.active
     }
 
+    // ── скользящая капсула активного стола: плавно едет к фазе ──
+    Rectangle {
+        id: capsule
+        visible: root.focusIdx >= 0
+        width: 28
+        height: 28
+        radius: 14
+        color: Theme.alpha(Theme.accent, 0.12)
+        border.width: 1
+        border.color: Theme.alpha(Theme.accent, 0.35)
+        y: (parent.height - height) / 2
+        x: wsRow.x + root.focusIdx * root.step + (root.phaseW - width) / 2
+        opacity: visible ? 1 : 0
+
+        Behavior on x { NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut } }
+        Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
+
+        // короткий импульс при переходе: лёгкое расширение и возврат
+        ParallelAnimation {
+            id: capsulePulse
+            SequentialAnimation {
+                NumberAnimation {
+                    target: capsule; property: "scale"; to: 1.12
+                    duration: 130; easing.type: Theme.easeOut
+                }
+                NumberAnimation {
+                    target: capsule; property: "scale"; to: 1.0
+                    duration: 170; easing.type: Easing.InCubic
+                }
+            }
+        }
+    }
+
     Row {
         id: wsRow
         anchors.centerIn: parent
         height: Theme.barCellH
-        spacing: 7
+        spacing: root.phaseGap
 
         Repeater {
             model: 9
@@ -41,72 +83,11 @@ Item {
                 readonly property bool isOccupied: ws !== null && ws.toplevels.values.length > 0
                 readonly property bool alerting: host.wsBlink[wsId] !== undefined
 
-                // импульс кольца при переходе на этот стол
-                onIsFocusedChanged: if (isFocused) focusPulse.restart()
-
-                width: 32
+                width: root.phaseW
                 height: Theme.barCellH
                 color: "transparent"
 
-                // мягкое гало под активной фазой — «стол светится»
-                Rectangle {
-                    anchors.centerIn: parent
-                    width: 32
-                    height: 32
-                    radius: 16
-                    color: Theme.alpha(Theme.accent, wsPill.isFocused ? 0.10 : 0)
-                    Behavior on color { ColorAnimation { duration: Theme.animMed } }
-                }
-
-                // тонкое кольцо-выделение активного стола
-                Rectangle {
-                    id: focusRing
-                    anchors.centerIn: parent
-                    width: 28
-                    height: 28
-                    radius: 14
-                    color: "transparent"
-                    border.width: 1
-                    border.color: Theme.barText
-                    opacity: 0.55
-                    visible: wsPill.isFocused
-                }
-
-                // короткий импульс: вспышка + лёгкое расширение
-                ParallelAnimation {
-                    id: focusPulse
-                    SequentialAnimation {
-                        NumberAnimation {
-                            target: focusRing
-                            property: "scale"
-                            from: 1.0
-                            to: 1.4
-                            duration: 140
-                            easing.type: Theme.easeOut
-                        }
-                        NumberAnimation {
-                            target: focusRing
-                            property: "scale"
-                            from: 1.4
-                            to: 1.0
-                            duration: 160
-                            easing.type: Easing.InCubic
-                        }
-                    }
-                    SequentialAnimation {
-                        NumberAnimation {
-                            target: focusRing
-                            property: "opacity"
-                            from: 1.0
-                            to: 0.55
-                            duration: 300
-                            easing.type: Theme.easeOut
-                        }
-                    }
-                }
-
-                // сама фаза; мигает на новое окно. Иконки приложений на столах
-                // не рисую — только фазы (вернул дефолтный вид).
+                // сама фаза; мигает на новое окно, активная — ярче и крупнее
                 Image {
                     anchors.centerIn: parent
                     width: 20
@@ -121,7 +102,7 @@ Item {
                         ? (host.wsBlinkPhase ? 1.0 : 0.12)
                         : (wsPill.isFocused ? 1.0
                            : (wsPill.isOccupied ? 0.78 : 0.26))
-                    scale: wsPill.isFocused ? 1.15 : (wsPill.isOccupied ? 1.07 : 1.0)
+                    scale: wsPill.isFocused ? 1.18 : (wsPill.isOccupied ? 1.06 : 1.0)
                     Behavior on opacity { Anim { type: Anim.FastEffects } }
                     Behavior on scale { Anim { type: Anim.FastSpatial } }
                 }

@@ -53,6 +53,13 @@ Cell {
             + 12 + strip.cavaW + 2
         width: Math.min(mediaInline.stripWidth, natural)
         height: Theme.barCellH
+        // «выходит из линии»: поднимается снизу и проявляется, когда играет
+        property real reveal: mediaInline.host.mediaActive ? 1 : 0
+        opacity: strip.reveal
+        transform: Translate { y: (1 - strip.reveal) * 14 }
+        Behavior on reveal {
+            NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut }
+        }
 
         // обложка (монохром) или нота, если арта нет
         Item {
