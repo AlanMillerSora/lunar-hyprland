@@ -261,7 +261,7 @@ QtObject {
 
     // панель-остров (этап 2): шапка, строки, ширины режимов
     property int panelHeaderH: 30
-    property int panelWControl: 660
+    property int panelWControl: 720
     property int panelWSearch: 520
     property int panelWNotifs: 460
     // панель поиска раскрывается шире строки — отдельная «широкая» ширина

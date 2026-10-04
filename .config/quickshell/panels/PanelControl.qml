@@ -3,6 +3,11 @@ import QtQuick.Layouts
 import ".."
 import "../widgets/shared"
 
+        // ── Пульт: приборная панель. Три яруса на всю ширину ──
+        //  1) крупные плитки состояний (игра/запись/питание);
+        //  2) две карточки звука в ряд (вывод · микрофон);
+        //  3) ряд действий (hub/обои/поиск/телеметрия).
+        //  Телеметрию сюда не кладу — она уже в систем-острове бара.
         Item {
             property var host
             id: ctlBody
@@ -15,22 +20,89 @@ import "../widgets/shared"
             implicitHeight: ctlCol.height
             height: implicitHeight
 
-            Row {
+            Column {
                 id: ctlCol
                 width: parent.width
                 spacing: Theme.space3
 
-                // ===== ЛЕВАЯ КОЛОНКА: звук + состояние =====
-                Column {
-                    width: (parent.width - parent.spacing) / 2
+                // ── ярус 1: крупные плитки состояний ──
+                Row {
+                    width: parent.width
                     spacing: Theme.space2
 
-                    SectionLabel { text: "ЗВУК" }
+                    Repeater {
+                        model: [
+                            { g: "\uf11b", label: "ИГРА",    on: host.gameMode,  danger: false, act: "game" },
+                            { g: "\uf111", label: "ЗАПИСЬ",  on: host.recording, danger: true,  act: "rec" },
+                            { g: "\uf011", label: "ПИТАНИЕ", on: false,          danger: false, act: "power" }
+                        ]
+                        delegate: Rectangle {
+                            id: stateTile
+                            required property var modelData
+                            readonly property bool lit: modelData.on
+                            readonly property color litColor: modelData.danger ? Theme.danger : Theme.accent
 
+                            width: (ctlCol.width - ctlCol.spacing * 2) / 3
+                            height: 64
+                            radius: Theme.radiusM
+                            color: stateTile.lit
+                                ? Theme.alpha(stateTile.litColor, 0.16)
+                                : (stateMouse.containsMouse ? Theme.hoverStrong : Theme.fill)
+                            border.width: 1
+                            border.color: stateTile.lit
+                                ? Theme.alpha(stateTile.litColor, 0.5)
+                                : (stateMouse.containsMouse ? Theme.borderAccent : Theme.border)
+                            Behavior on color { ColorAnimation { duration: Theme.animFast } }
+
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: Theme.space1
+
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: stateTile.modelData.g
+                                    color: stateTile.lit ? stateTile.litColor
+                                        : (stateMouse.containsMouse ? Theme.text : Theme.textDim)
+                                    font.family: Theme.iconFont
+                                    font.pixelSize: Theme.fontSize(22)
+                                }
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: stateTile.modelData.label
+                                    color: stateTile.lit ? Theme.text : Theme.textDim
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.fontTiny
+                                    font.bold: true
+                                    font.letterSpacing: 2
+                                }
+                            }
+
+                            MouseArea {
+                                id: stateMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    if (stateTile.modelData.act === "game")
+                                        host.toggleGameMode()
+                                    else if (stateTile.modelData.act === "rec")
+                                        host.toggleRecording()
+                                    else if (stateTile.modelData.act === "power")
+                                        host.openPower()
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // ── ярус 2: звук — две карточки в ряд ──
+                Row {
+                    width: parent.width
+                    spacing: Theme.space3
+
+                    // вывод
                     Card {
-                        width: parent.width
-
-                        // вывод
+                        width: (parent.width - parent.spacing) / 2
                         Column {
                             width: parent.width
                             spacing: Theme.space1
@@ -42,7 +114,7 @@ import "../widgets/shared"
                                     text: host.muted ? "\uf026" : (host.vol < 0.34 ? "\uf027" : "\uf028")
                                     color: host.muted ? Theme.danger : Theme.accent
                                     font.family: Theme.iconFont
-                                    font.pixelSize: Theme.fontSize(15)
+                                    font.pixelSize: Theme.fontSize(16)
                                     MouseArea {
                                         anchors.fill: parent
                                         cursorShape: Qt.PointingHandCursor
@@ -61,6 +133,7 @@ import "../widgets/shared"
                                     color: host.muted ? Theme.textFaint : Theme.accent
                                     font.family: Theme.fontFamily
                                     font.pixelSize: Theme.fontSmall
+                                    font.bold: true
                                 }
                             }
                             Slider {
@@ -77,10 +150,11 @@ import "../widgets/shared"
                                 }
                             }
                         }
+                    }
 
-                        Rectangle { width: parent.width; height: 1; color: Theme.border }
-
-                        // микрофон
+                    // микрофон
+                    Card {
+                        width: (parent.width - parent.spacing) / 2
                         Column {
                             width: parent.width
                             spacing: Theme.space1
@@ -92,7 +166,7 @@ import "../widgets/shared"
                                     text: host.micMuted ? "\uf131" : "\uf130"
                                     color: host.micMuted ? Theme.danger : Theme.accent
                                     font.family: Theme.iconFont
-                                    font.pixelSize: Theme.fontSize(15)
+                                    font.pixelSize: Theme.fontSize(16)
                                     MouseArea {
                                         anchors.fill: parent
                                         cursorShape: Qt.PointingHandCursor
@@ -111,6 +185,7 @@ import "../widgets/shared"
                                     color: host.micMuted ? Theme.textFaint : Theme.accent
                                     font.family: Theme.fontFamily
                                     font.pixelSize: Theme.fontSmall
+                                    font.bold: true
                                 }
                             }
                             Slider {
@@ -128,141 +203,36 @@ import "../widgets/shared"
                             }
                         }
                     }
-
-                    SectionLabel { text: "СОСТОЯНИЕ" }
-
-                    Card {
-                        width: parent.width
-                        Repeater {
-                            model: [
-                                { g: "\uf11b", label: "ИГРА",    on: host.gameMode,  danger: false, act: "game" },
-                                { g: "\uf111", label: "ЗАПИСЬ",  on: host.recording, danger: true,  act: "rec" },
-                                { g: "\uf011", label: "ПИТАНИЕ", on: false,          danger: false, act: "power" }
-                            ]
-                            delegate: Item {
-                                id: stateRow
-                                required property var modelData
-                                width: parent.width
-                                height: Theme.panelRowH
-                                Rectangle {
-                                    anchors.fill: parent
-                                    radius: Theme.radius
-                                    color: stateMouse.containsMouse ? Theme.hover : "transparent"
-                                    Behavior on color { ColorAnimation { duration: Theme.animFast } }
-                                }
-                                RowLayout {
-                                    anchors.fill: parent
-                                    spacing: Theme.space2
-                                    Text {
-                                        Layout.alignment: Qt.AlignVCenter
-                                        text: modelData.g
-                                        color: modelData.on ? (modelData.danger ? Theme.danger : Theme.accent)
-                                            : (stateMouse.containsMouse ? Theme.text : Theme.textDim)
-                                        font.family: Theme.iconFont
-                                        font.pixelSize: Theme.fontSize(15)
-                                    }
-                                    Text {
-                                        Layout.alignment: Qt.AlignVCenter
-                                        text: modelData.label
-                                        color: modelData.on ? Theme.text : Theme.textDim
-                                        font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontTiny
-                                        font.bold: true
-                                        font.letterSpacing: 1
-                                    }
-                                    Item { Layout.fillWidth: true; implicitHeight: 1 }
-                                    Text {
-                                        Layout.alignment: Qt.AlignVCenter
-                                        visible: modelData.act === "power"
-                                        text: "\u203a"
-                                        color: stateMouse.containsMouse ? Theme.text : Theme.textFaint
-                                        font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontBody
-                                    }
-                                    Toggle {
-                                        Layout.alignment: Qt.AlignVCenter
-                                        visible: modelData.act !== "power"
-                                        on: modelData.on
-                                        danger: modelData.danger
-                                    }
-                                }
-                                MouseArea {
-                                    id: stateMouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        if (modelData.act === "game")
-                                            host.toggleGameMode()
-                                        else if (modelData.act === "rec")
-                                            host.toggleRecording()
-                                        else if (modelData.act === "power")
-                                            host.openPower()
-                                    }
-                                }
-                            }
-                        }
-                    }
                 }
 
-                // ===== ПРАВАЯ КОЛОНКА: действия + телеметрия =====
-                Column {
-                    width: (parent.width - parent.spacing) / 2
+                // ── ярус 3: действия одной строкой ──
+                Row {
+                    width: parent.width
                     spacing: Theme.space2
 
-                    SectionLabel { text: "ДЕЙСТВИЯ" }
-
-                    Grid {
-                        width: parent.width
-                        columns: 2
-                        columnSpacing: Theme.space2
-                        rowSpacing: Theme.space2
-                        Repeater {
-                            model: [
-                                { g: "\uf009", label: "HUB",        act: "hub" },
-                                { g: "\uf03e", label: "ОБОИ",       act: "wall" },
-                                { g: "\uf002", label: "ПОИСК",      act: "search" },
-                                { g: "\uf080", label: "ТЕЛЕМЕТРИЯ", act: "sys" }
-                            ]
-                            delegate: ActionTile {
-                                required property var modelData
-                                width: (parent.width - parent.columnSpacing) / 2
-                                height: Theme.rowHComfy
-                                glyph: modelData.g
-                                label: modelData.label
-                                tip: modelData.label
-                                onClicked: {
-                                    if (modelData.act === "hub")
-                                        host.openHub()
-                                    else if (modelData.act === "wall")
-                                        host.openWallpapers()
-                                    else if (modelData.act === "search")
-                                        BarState.openPanel("search")
-                                    else if (modelData.act === "sys")
-                                        BarState.openPanel("sys")
-                                }
-                            }
-                        }
-                    }
-
-                    SectionLabel { text: "ТЕЛЕМЕТРИЯ" }
-
-                    Card {
-                        width: parent.width
-                        Repeater {
-                            // фиксированный model: 3 — иначе JS-массив с SysInfo.*
-                            // пересобирался на каждом замере и пересоздавал MetricRow
-                            model: 3
-                            delegate: MetricRow {
-                                required property int index
-                                width: parent.width
-                                label: index === 0 ? "CPU" : (index === 1 ? "RAM" : "GPU")
-                                value: index === 0 ? SysInfo.cpu : (index === 1 ? SysInfo.ram : SysInfo.gpu)
-                                extra: index === 0
-                                    ? (SysInfo.cpuTemp > 0 ? (SysInfo.cpuTemp + "°C") : "")
-                                    : (index === 1
-                                        ? (SysInfo.ramTotal > 0 ? (SysInfo.ramTotal + " МБ") : "")
-                                        : (SysInfo.gpuTemp >= 0 ? (SysInfo.gpuTemp + "°C") : ""))
+                    Repeater {
+                        model: [
+                            { g: "\uf009", label: "HUB",        act: "hub" },
+                            { g: "\uf03e", label: "ОБОИ",       act: "wall" },
+                            { g: "\uf002", label: "ПОИСК",      act: "search" },
+                            { g: "\uf080", label: "ТЕЛЕМЕТРИЯ", act: "sys" }
+                        ]
+                        delegate: ActionTile {
+                            required property var modelData
+                            width: (ctlCol.width - ctlCol.spacing * 3) / 4
+                            height: Theme.rowHComfy
+                            glyph: modelData.g
+                            label: modelData.label
+                            tip: modelData.label
+                            onClicked: {
+                                if (modelData.act === "hub")
+                                    host.openHub()
+                                else if (modelData.act === "wall")
+                                    host.openWallpapers()
+                                else if (modelData.act === "search")
+                                    BarState.openPanel("search")
+                                else if (modelData.act === "sys")
+                                    BarState.openPanel("sys")
                             }
                         }
                     }
