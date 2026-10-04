@@ -3,21 +3,19 @@ import "../.."
 import "../shared"
 
 // ════════════════════════════════════════════════════════════════
-//  MediaCell — медиа-ячейка бара: трек, play/pause, мини-спектр cava;
-//  клик открывает медиа-панель. Собрана на общем Cell (host = корень):
-//  штрих-акцент, отступы и ховер — те же, что у прочих ячеек бара.
+//  MediaCell — медиа-пилюля бара в arch-стиле: одна строка — play/pause
+//  и название трека с обрезкой (как playerPill у ArchEclipse). Спектр
+//  cava остался в медиа-панели, в баре его нет — бар тонкий и тихий.
+//  Клик раскрывает плашку вниз. host = корень LunarPanel.
 // ════════════════════════════════════════════════════════════════
 Cell {
     property var host
-    // прогресс задаёт зона (BarCenterZone): через var-хост эти значения не
+    // прогресс задаёт зона (BarRightZone): через var-хост эти значения не
     // пересчитываются в Loader'е, поэтому приходят типизированными свойствами
     property real progressLength: 0
     property real progressPosition: 0
     signal clickedBubble()
     id: mediaInline
-    // видимостью медиа-ячейки рулит зона (BarCenterZone): она знает и про
-    // настройки состава, и про «играет ли что-то». Свой биндинг на
-    // host.mediaActive тут ставить нельзя — через Loader он не пересчитывается.
     anchors.verticalCenter: parent.verticalCenter
     interactive: true
     active: BarState.mode === "media"
@@ -42,79 +40,50 @@ Cell {
         function onTrackChanged() { if (host.pulsePrimed) mediaInline.trackPulse.restart() }
     }
 
-    // обёртка-Item: Column нельзя вешать на якоря прямо в Row-позиционере
     Item {
-        width: 168
+        width: 200
         height: Theme.barCellH
 
-        Column {
-            id: mediaCol
+        Row {
+            id: mediaRow
             anchors.centerIn: parent
-            width: parent.width
-            spacing: 1
-
-            Row {
-                width: parent.width
-                height: 15
-                spacing: Theme.space1
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: host.playing ? "\uf04c" : "\uf04b"
-                    color: host.playing ? Theme.accent : Theme.barFaint
-                    font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSize(12)
-                }
-                Text {
-                    width: parent.width - 18
-                    anchors.verticalCenter: parent.verticalCenter
-                    elide: Text.ElideRight
-                    text: host.track
-                    color: Theme.barText
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSmall
-                }
+            spacing: 6
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: host.playing ? "\uf04c" : "\uf04b"
+                color: host.playing ? Theme.accent : Theme.barFaint
+                font.family: Theme.iconFont
+                font.pixelSize: Theme.fontSize(13)
             }
-
-            // нижний ряд — мини-спектр cava
-            Row {
-                width: parent.width
-                height: 11
-                spacing: 2
-                Repeater {
-                    model: 14
-                    delegate: Item {
-                        required property int index
-                        width: 2
-                        height: 11
-                        Rectangle {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            anchors.bottom: parent.bottom
-                            width: parent.width
-                            height: 2 + (host.barValues[index] || 0) * 9
-                            radius: 1
-                            color: Theme.alpha(Theme.accent, 0.35 + 0.65 * (host.barValues[index] || 0))
-                        }
-                    }
-                }
+            Text {
+                width: 176
+                anchors.verticalCenter: parent.verticalCenter
+                elide: Text.ElideRight
+                text: host.track
+                color: Theme.barText
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize(12)
             }
+        }
 
-            // тонкая линия прогресса трека; гаснет, если длина неизвестна
-            // (радио/стримы) — тогда не показываю мёртвую полосу
+        // тонкая линия прогресса трека под строкой; гаснет, если длина
+        // неизвестна (радио/стримы) — не показываю мёртвую полосу
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            height: 1.5
+            radius: 1
+            color: Theme.trackBg
+            visible: mediaInline.progressLength > 0
             Rectangle {
-                width: parent.width
-                height: 2
-                radius: 1
-                color: Theme.trackBg
-                visible: mediaInline.progressLength > 0
-                Rectangle {
-                    width: parent.width * Math.max(0, Math.min(1,
-                        mediaInline.progressLength > 0
-                            ? mediaInline.progressPosition / mediaInline.progressLength : 0))
-                    height: parent.height
-                    radius: parent.radius
-                    color: Theme.accent
-                    Behavior on width { Anim { type: Anim.FastEffects } }
-                }
+                width: parent.width * Math.max(0, Math.min(1,
+                    mediaInline.progressLength > 0
+                        ? mediaInline.progressPosition / mediaInline.progressLength : 0))
+                height: parent.height
+                radius: parent.radius
+                color: Theme.accent
+                Behavior on width { Anim { type: Anim.FastEffects } }
             }
         }
     }
