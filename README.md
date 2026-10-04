@@ -16,7 +16,11 @@
 
 </div>
 
+<div align="center">
+
 ## Коротко
+
+</div>
 
 - **Панель** — одна плашка по содержимому: марка и фазы столов · медиа/часы · статус (сеть, погода, Game Mode, PERF, CPU·RAM·GPU, трей, звук). «Пульт» и поиск раскрывают саму плашку, остальные режимы выезжают карточкой снизу (`SUPER + C/X/D/N/I`, Esc закрывает).
 - **Hub** — лаунчер и настройки одним окном, которое ресайзится (`SUPER + G`): Launch, System, Devices, Network, Interface, Games, Dev, Update, Media.
@@ -26,7 +30,11 @@
 - **Агент** — OpenCode в оверлее по `SUPER + A`, действия только из белого списка.
 - **Шрифт** — Roboto Mono в интерфейсе, JetBrainsMono Nerd Font для иконок.
 
+<div align="center">
+
 ## Содержание
+
+</div>
 
 - [Столы](#столы) · [Панель и режимы](#панель-и-режимы) · [Hub](#hub) · [Сайдбары](#сайдбары)
 - [Обои](#обои) · [Палитра и тема](#палитра-и-тема) · [Плеер](#плеер) · [Обзор столов](#обзор-столов)
@@ -37,7 +45,11 @@
 - [Приложения](#приложения) · [Компоненты](#компоненты) · [Горячие клавиши](#горячие-клавиши)
 - [Структура репозитория](#структура-репозитория) · [Если что-то сломалось](#если-что-то-сломалось)
 
+<div align="center">
+
 ## Столы
+
+</div>
 
 | Стол | Назначение |
 |---|---|
@@ -58,7 +70,11 @@
 |:---:|:---:|:---:|
 | ![Частичное](assets/screens/desktop-partial.png) | ![Полное](assets/screens/desktop-total.png) | ![Открытая](assets/screens/desktop-full.png) |
 
+<div align="center">
+
 ## Панель и режимы
+
+</div>
 
 Панель — одна плашка по ширине содержимого, по центру сверху (`barH` 34, радиус 9). Слева марка `LUNAR` и ряд фаз столов, в центре — **линия медиа** (название трека и cava) и часы, справа — сеть, погода, Game Mode, PERF, систем-остров CPU·RAM·GPU, трей, уведомления, звук. Плашки плотные (альфа 1.0), зерно — тайлом (`assets/noise.png`), без «стекла».
 
@@ -82,7 +98,11 @@
 
 Мышь: колесо над часами — громкость; клик по треку / систем-острову / погоде / колоколу / сети — соответствующая панель; ПКМ по громкости — микшер; клик по фазе — переход на стол, наведение — иконка приложения. Ячейки импульсируют при смене громкости, трека, уведомлений (в Game Mode импульсы глушатся, ховер их придерживает). Состояния и состав ячеек живут в `BarState.qml` и `~/.config/lunar/bar.json`, вид — в `LunarPanel.qml`, тела режимов — `panels/Panel*.qml`.
 
+<div align="center">
+
 ## Hub
+
+</div>
 
 Hub (`SUPER + G`, `LunarHub.qml`) — лаунчер и настройки одним окном-`FloatingWindow` (1320×820, ресайзится, запоминает размер). Слева навигация, справа страница; снизу — единый поиск. Страницы:
 
@@ -110,7 +130,11 @@ Hub (`SUPER + G`, `LunarHub.qml`) — лаунчер и настройки од�
 |:---:|:---:|:---:|
 | ![Dev](assets/screens/hub-dev.png) | ![Update](assets/screens/hub-update.png) | ![Media](assets/screens/hub-media.png) |
 
+<div align="center">
+
 ## Сайдбары
+
+</div>
 
 **Слева** (`SUPER + SHIFT + E`, `LunarSidebar.qml`, 560px) — выезд от края, закрывается через 600 мс без наведения:
 
@@ -130,7 +154,11 @@ Hub (`SUPER + G`, `LunarHub.qml`) — лаунчер и настройки од�
 |:---:|:---:|
 | ![Календарь](assets/screens/sidebar-calendar.png) | ![Запись](assets/screens/sidebar-record.png) |
 
+<div align="center">
+
 ## Обои
+
+</div>
 
 Живые обои рисует Quickshell (`LunarWallpaper.qml`) — фоновый слой Qt Quick, без внешних движков. Два режима (`Theme.wallpaperMode`):
 
@@ -139,11 +167,19 @@ Hub (`SUPER + G`, `LunarHub.qml`) — лаунчер и настройки од�
 
 Подбор обоев — окно **`LunarWallpapers`** (`SUPER + B`): веер плиток с зумом от центра, инерционный глайд, затемнение и подтверждение. Источник — `~/Pictures/Wallpapers` (и `~/Wallpapers`, `~/Pictures`, до 150 картинок), миниатюры — `~/.cache/lunar/wall-thumbs`. Кнопка **СЦЕНА** возвращает режим затмения, **ФАЙЛ…** — выбор произвольной картинки. При `wallpaperAuto` цвет обоев считается автоматически (`--from-image`, пресет **ФОТО**).
 
+<div align="center">
+
 <img src="assets/screens/wallpapers.png" width="92%" alt="Подбор обоев"/>
+
+</div>
 
 Превью сцены без Hyprland: `qml6 .config/quickshell/preview.qml` (`1..9` — фазы, `L` — лёгкий режим).
 
+<div align="center">
+
 ## Палитра и тема
+
+</div>
 
 Цвета живут в одном месте — `.config/lunar/palette.toml`. Генератор `hypr/scripts/eclipse-palette.py` раскладывает их по приложениям:
 
@@ -172,63 +208,131 @@ palette.toml ──> eclipse-palette.py ──┬──> ~/.cache/lunar/palette.
 
 Палитра по умолчанию — `#08090d` (фон) · `#0c0e13` (панель) · `#e8ecf2` (текст) · `#98a1ac` (приглушённый) · акценты белые · опасность `#ff003c`. Зелёного в рисе нет: «ок» тоже светлый.
 
+<div align="center">
+
 ## Плеер
+
+</div>
 
 **Lunar Player** (`SUPER + M`, IPC `player`, окно `LunarPlayer.qml`) — свой mpv-демон-сервис `lunar-player.service` (on-demand, сокет `%t/lunar-player.sock`, гасится, когда плеер закрыт, ничего не играет и очередь пуста). Прямой JSON-IPC через `PlayerCore.qml`: очередь, поиск через yt-dlp, локальная `~/Music`, обложки YouTube. Страницы **Сейчас / Очередь / Поиск / Локальные**, винил, cava (`cava-player.conf`) и «лунный seek».
 
+<div align="center">
+
 <img src="assets/screens/player.png" width="80%" alt="Lunar Player"/>
+
+</div>
 
 В баре плеер живёт «рельсой»: в покое — тонкая линия, при воспроизведении — название, прогресс и cava; клик открывает полное окно или медиа-карточку.
 
+<div align="center">
+
 ## Обзор столов
+
+</div>
 
 **`SUPER + O`** (или `SUPER + SHIFT + TAB`) — `LunarOverview.qml`: все девять столов сеткой с живыми миниатюрами окон (`ScreencopyView`), окна перетаскиваются между столами мышью.
 
+<div align="center">
+
 <img src="assets/screens/overview.png" width="92%" alt="Обзор столов"/>
 
+</div>
+
+<div align="center">
+
 ## Агент OpenCode
+
+</div>
 
 **`SUPER + A`** — оверлей-агент `LunarAgent.qml` поверх рабочего стола, работает под профилем OpenCode `lunar` (свой промпт и память в `.config/opencode/agent/lunar.md`). Перед отправкой подмешивается справка: память агента и контекст системы (активное окно, стол, сеть, звук, GPU, медиа). У окна есть тумблер контекста (`ctx`) и разбор результата.
 
 Агент **сам действия не выполняет**: он предлагает блок `lunar-action`, оверлей показывает карточку и выполняет его только по кнопке — без шелла (argv) и лишь по белому списку `hyprctl` / `qs ipc call` / скриптов `eclipse-*.sh`. Это единственная граница между агентом и системой (`/etc/sudoers.d/lunar-agent`, `eclipse-launch.sh`).
 
+<div align="center">
+
 <img src="assets/screens/agent.png" width="80%" alt="Агент OpenCode"/>
+
+</div>
+
+<div align="center">
 
 ## Календарь
 
+</div>
+
 Локальный, без сети: клик по дню в правом сайдбаре → список событий и форма (название, время, за сколько минут напомнить). Точки на днях показывают, где есть события; напоминание приходит уведомлением mako, звук — опцией. События — в `~/.local/share/lunar/calendar.json`, логика — `hypr/scripts/eclipse-calendar.py`.
+
+<div align="center">
 
 <img src="assets/screens/sidebar-calendar.png" width="66%" alt="Календарь в правом сайдбаре"/>
 
+</div>
+
+<div align="center">
+
 ## Запись экрана
+
+</div>
 
 **`SUPER + SHIFT + R`** — `eclipse-record.sh` пишет экран через `wf-recorder` в `~/Videos/lunar-*.mp4`; аппаратный кодек (VAAPI/NVENC) с откатом на софт. Список записей и тумблер — в правом сайдбаре, качество и монитор — **Hub → Devices**. Настройки — в `~/.config/lunar/record.json`.
 
+<div align="center">
+
 ## Обновления
+
+</div>
 
 **Hub → Update** — состояние (буфер, число пакетов), кнопки **ОБНОВИТЬ** / **ОБНОВИТЬ СРАЗУ** / **ОТКАТ** / **ПРОВЕРИТЬ** / **ПОЧИСТИТЬ**, новости Arch с переводом на русский.
 
 `eclipse-update.sh` — буфер 1–2 дня, `informant`, бэкап, `pacman -Syu` (+ AUR), затем гигиена: `paccache -rk2` и журнал ≤ 200 МБ. `eclipse-backup.sh` — ротация 5 бэкапов; **timeshift** — снимки перед обновлением, откат — кнопкой **ОТКАТ**.
 
+<div align="center">
+
 ## Буфер обмена
+
+</div>
 
 **`SUPER + V`** — история `cliphist` окном `LunarClipboard.qml`: текст и картинки, клик — скопировать, ПКМ — удалить. Наблюдатели `wl-paste` поднимаются на старте сессии.
 
+<div align="center">
+
 <img src="assets/screens/clipboard.png" width="55%" alt="Буфер обмена"/>
+
+</div>
+
+<div align="center">
 
 ## Питание
 
+</div>
+
 **`SUPER + ESC`** — меню `LunarPower.qml`: спящий режим, гибернация, выход, перезагрузка, выключение.
+
+<div align="center">
 
 <img src="assets/screens/power.png" width="42%" alt="Меню питания"/>
 
+</div>
+
+<div align="center">
+
 ## Шпаргалка
+
+</div>
 
 **`SUPER + /`** — сжимаемая GTK-шпаргалка по всем хоткеям (`eclipse-cheatsheet.py`).
 
+<div align="center">
+
 <img src="assets/screens/cheatsheet.png" width="92%" alt="Шпаргалка по хоткеям"/>
 
+</div>
+
+<div align="center">
+
 ## Установка
+
+</div>
 
 Нужен **Hyprland 0.55+** (конфиг на Lua) и Arch-подобная система.
 
@@ -254,7 +358,11 @@ cd ~/rice
 
 Повторный запуск безопасен: прежние конфиги складываются в `~/.config-backup-<дата>/` (последние 5), аватар переносится, палитра перегенерируется. Установщик также ставит user-юниты (`lunar-wifi-guard`, `lunar-homepage`, `lunar-player`, `lunar-tgproxy`), системный `lunar-cpu-performance` (CPU всегда `performance`), root-хелперы в `/usr/local/lib/lunar/` и узкий sudoers `/etc/sudoers.d/lunar-agent`.
 
+<div align="center">
+
 ## Загрузка
+
+</div>
 
 Заставку рисует своя тема Plymouth `lunar`: кольцо-корона, диск Луны и надпись **LUNAR ECLIPSE** с полосой прогресса. Включается хуком `plymouth`, `quiet splash` в `/etc/kernel/cmdline` и пересборкой UKI. В меню GRUB есть пункт **«Lunar Eclipse (без заставки)»**.
 
@@ -267,11 +375,19 @@ sudo ./install.sh --plymouth-rescue   # (UKI) пункт меню «без за�
 
 Тема — `plymouth/lunar/`. На UKI-машине установщик гасит лишний пункт `10_linux` (он создаёт пункт без initramfs); после обновления пакета `grub` права могут сброситься — тогда прогнать `./install.sh --plymouth` заново.
 
+<div align="center">
+
 ## Экран входа
+
+</div>
 
 Тема входа — `lunar` (`sddm/lunar/`, Roboto Mono, палитра риса): крупный аватар врезается в карточку, **WELCOME <имя>**, строка пароля с подчёркиванием, индикатор раскладки (клик — переключить) и **CAPS LOCK**, часы, русская дата, кнопка **ВОЙТИ →**, выбор сессии и питание.
 
+<div align="center">
+
 <img src="assets/screens/sddm.png" width="80%" alt="Экран входа"/>
+
+</div>
 
 ```bash
 ./install.sh --sddm               # поставить и включить тему lunar
@@ -291,7 +407,11 @@ sudo ./install.sh --disable-sddm  # вернуть штатную тему
 
 Синхронизация с темой SDDM идёт через узкое NOPASSWD-правило `/etc/sudoers.d/lunar-agent` (root-хелпер `avatar-sync.sh`).
 
+<div align="center">
+
 ## Zapret и Vencord
+
+</div>
 
 **Zapret — обход DPI.** Оригинальный [zapret](https://github.com/bol-van/zapret) в `/opt/zapret` (+ `zapret.service`), чтобы открывались Discord и YouTube. Списки хостов — `zapret/zapret-hosts-user.txt`, drop-in `wait-online-any.conf` не даёт сервису ждать неактивный Wi-Fi. Управление — **Hub → Network → Zapret**.
 
@@ -320,11 +440,19 @@ sudo ./install.sh --disable-sddm  # вернуть штатную тему
 ~/.config/hypr/scripts/eclipse-vencord.sh update   # обновить инсталлятор и пропатчить
 ```
 
+<div align="center">
+
 ## Игры (Game Mode)
+
+</div>
 
 `SUPER + SHIFT + G` — анимации и blur выкл, DND, пауза hypridle, tearing. Откладываются обновление, бэкап и пересборка zapret; сервисы из `gamemode-pause.conf` выгружаются и возвращаются при выходе. Игры запускаются через **Steam и Lutris** (Proton/GE-Proton).
 
+<div align="center">
+
 ## NVIDIA
+
+</div>
 
 Переменные включаются, только если карта найдена — один конфиг для NVIDIA и AMD/Intel. Замена проприетарного модуля — **`nvidia-open-dkms`** (user-space — `nvidia-utils`), `get-deps.sh` ставит сам. Turing и новее — `nvidia-open-dkms`; Pascal и старше — legacy `nvidia-580xx-dkms` (AUR).
 
@@ -346,7 +474,11 @@ lib32-nvidia-utils
 
 </details>
 
+<div align="center">
+
 ## Приложения
+
+</div>
 
 Палитра и монохром разложены по всем приложениям:
 
@@ -369,7 +501,11 @@ lib32-nvidia-utils
 |:---:|:---:|
 | ![btop](assets/screens/btop.png) | ![Firefox](assets/screens/firefox.png) |
 
+<div align="center">
+
 ## Компоненты
+
+</div>
 
 | Компонент | Файл | Что делает |
 |---|---|---|
@@ -390,7 +526,11 @@ lib32-nvidia-utils
 | **Скрипты** | `hypr/scripts/eclipse-*.{sh,py}` | Палитра, обновление, бэкап, запись, Game Mode, очистка, статус, аватар, запуск, календарь, шпаргалка, лимиты, Zapret, Vencord, Wi-Fi-гвард |
 | **Юниты** | `systemd/` | `lunar-quickshell`, `lunar-player`, `lunar-wifi-guard`, `lunar-homepage`, `lunar-tgproxy`, `lunar-cpu-performance` |
 
+<div align="center">
+
 ## Горячие клавиши
+
+</div>
 
 | Клавиши | Действие |
 |---|---|
@@ -428,7 +568,11 @@ lib32-nvidia-utils
 
 Раскладка — `us,ru` (переключение `Alt + Shift`). Сжимаемая шпаргалка по всем хоткеям — `SUPER + /`.
 
+<div align="center">
+
 ## Структура репозитория
+
+</div>
 
 ```
 ~/rice/
@@ -447,7 +591,11 @@ lib32-nvidia-utils
 └── README.md  AGENTS.md  LICENSE  VERSION
 ```
 
+<div align="center">
+
 ## Если что-то сломалось
+
+</div>
 
 ```bash
 systemctl --user restart lunar-quickshell.service        # перезапуск
@@ -459,6 +607,10 @@ systemctl --user reset-failed lunar-quickshell.service   # если «start-limi
 
 Откат: конфиги — `git -C ~/rice checkout -- .config`; система — снимком timeshift (Hub → Update → **ОТКАТ**).
 
+<div align="center">
+
 ## Лицензия
+
+</div>
 
 [MIT](LICENSE)
