@@ -273,12 +273,15 @@ QtObject {
     // панель-остров (этап 2): шапка, строки, ширины режимов
     property int panelHeaderH: 30
     property int panelWSearch: 520
-    property int panelWNotifs: 460
+    property int panelWNotifs: 480
+    // «подгонка под режим»: у каждого пузыря своя ширина
+    property int panelWMedia: 520
+    property int panelWSys: 560
     // панель поиска раскрывается шире строки — отдельная «широкая» ширина
-    property int panelWSearchWide: 720
+    property int panelWSearchWide: 760
     // высота панелей-модалок (поиск/уведомления) до полного раскрытия
-    property int panelHSearch: 430
-    property int panelHNotifs: 320
+    property int panelHSearch: 440
+    property int panelHNotifs: 340
     property int radiusS: 6
 
     // мягкая реакция на наведение — масштаб глифа, без переверстки

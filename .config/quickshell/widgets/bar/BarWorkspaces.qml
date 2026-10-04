@@ -1,13 +1,12 @@
 import QtQuick
-import QtQuick.Effects
 import "../.."
 import "../shared"
 
 // ════════════════════════════════════════════════════════════════
 //  BarWorkspaces — ряд лунных фаз столов: фокус, занятость, мигание
-//  на новое окно и «пик» после переключения стола. Наведение мышью
-//  НЕ раскрывает и не подменяет фазу — ряд остаётся спокойным.
-//  Вынесено из LunarPanel; корень передаёт себя как host.
+//  на новое окно. Наведение мышью НЕ раскрывает и не подменяет фазу —
+//  ряд остаётся спокойным. Вынесено из LunarPanel; корень передаёт
+//  себя как host.
 // ════════════════════════════════════════════════════════════════
 Item {
     id: root
@@ -41,11 +40,6 @@ Item {
                 readonly property bool isFocused: host.focusedWs !== null && host.focusedWs.id === wsId
                 readonly property bool isOccupied: ws !== null && ws.toplevels.values.length > 0
                 readonly property bool alerting: host.wsBlink[wsId] !== undefined
-                readonly property string appIcon: host.appIconFor(host.firstClassFor(wsId))
-                readonly property bool peek: host.wsPeek === wsId
-                // иконка приложения — у любого ЗАНЯТОГО стола, постоянно:
-                // видно, где что открыто. Фаза остаётся пустым столам.
-                readonly property bool showApp: !alerting && appIcon !== "" && isOccupied
 
                 // импульс кольца при переходе на этот стол
                 onIsFocusedChanged: if (isFocused) focusPulse.restart()
@@ -111,7 +105,8 @@ Item {
                     }
                 }
 
-                // сама фаза; мигает на новое окно, на «пике» уступает иконке
+                // сама фаза; мигает на новое окно. Иконки приложений на столах
+                // не рисую — только фазы (вернул дефолтный вид).
                 Image {
                     anchors.centerIn: parent
                     width: 20
@@ -124,38 +119,11 @@ Item {
                     mipmap: true
                     opacity: wsPill.alerting
                         ? (host.wsBlinkPhase ? 1.0 : 0.12)
-                        : (wsPill.showApp ? 0.0
-                           : (wsPill.isFocused ? 1.0
-                              : (wsPill.isOccupied ? 0.78 : 0.26)))
+                        : (wsPill.isFocused ? 1.0
+                           : (wsPill.isOccupied ? 0.78 : 0.26))
                     scale: wsPill.isFocused ? 1.15 : (wsPill.isOccupied ? 1.07 : 1.0)
                     Behavior on opacity { Anim { type: Anim.FastEffects } }
                     Behavior on scale { Anim { type: Anim.FastSpatial } }
-                }
-
-                // иконка приложения стола — проявляется только на «пике»
-                // (монохром, как значки трея), чтобы не пестрить
-                Image {
-                    id: wsAppImg
-                    anchors.centerIn: parent
-                    width: 20
-                    height: 20
-                    source: wsPill.appIcon
-                    sourceSize: Qt.size(64, 64)
-                    fillMode: Image.PreserveAspectFit
-                    smooth: true
-                    visible: false
-                }
-                MultiEffect {
-                    anchors.centerIn: parent
-                    width: 20
-                    height: 20
-                    source: wsAppImg
-                    visible: wsPill.appIcon !== "" && wsAppImg.status === Image.Ready
-                    saturation: -1.0
-                    brightness: 0.45
-                    contrast: 0.05
-                    opacity: wsPill.showApp ? 1 : 0
-                    Behavior on opacity { Anim { type: Anim.FastEffects } }
                 }
 
                 MouseArea {

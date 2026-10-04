@@ -898,14 +898,12 @@ if command -v gsettings >/dev/null 2>&1; then
   gsettings set org.gnome.desktop.interface monospace-font-name 'Roboto Mono 11' 2>/dev/null || true
   gsettings set org.gnome.desktop.interface cursor-theme 'Bibata-Modern-Ice' 2>/dev/null || true
   gsettings set org.gnome.desktop.interface cursor-size 24 2>/dev/null || true
-  ok "gsettings: prefer-dark, шрифт, курсор"
+  # иконки: обычная (цветная) Tela; монохром Tela-lunar больше не собираю.
+  # Кастомную иконку Firefox (lunar-eclipse в hicolor) это не трогает.
+  gsettings set org.gnome.desktop.interface icon-theme 'Tela-dark' 2>/dev/null || true
+  ok "gsettings: prefer-dark, шрифт, курсор, иконки Tela"
 else
   warn "gsettings не найден — GTK-настройки пропущены"
-fi
-if [ -x "$HOME/.config/hypr/scripts/eclipse-mono-icons.sh" ]; then
-  "$HOME/.config/hypr/scripts/eclipse-mono-icons.sh" >/dev/null 2>&1 \
-    && ok "иконки: монохром Tela-lunar" \
-    || warn "иконки: нужен пакет tela-icon-theme (yay -S tela-icon-theme)"
 fi
 
 # ── опционально: SDDM ──────────────────────────────────────────

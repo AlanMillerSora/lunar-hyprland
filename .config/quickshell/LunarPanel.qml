@@ -96,33 +96,6 @@ PanelWindow {
         return null
     }
 
-    // первый класс окна стола — для иконки приложения
-    function firstClassFor(id) {
-        var ws = root.wsFor(id)
-        if (!ws || ws.toplevels.values.length === 0)
-            return ""
-        var t = ws.toplevels.values[0]
-        var cls = (t.lastIpcObject && t.lastIpcObject.class) ? t.lastIpcObject.class : ""
-        if (!cls && t.wayland)
-            cls = t.wayland.appId || ""
-        return cls
-    }
-    // класс окна → иконка темы (через DesktopEntries, как в лаунчере)
-    function appIconFor(cls) {
-        if (!cls)
-            return ""
-        var entry = null
-        try {
-            entry = DesktopEntries.heuristicLookup(cls)
-        } catch (e) {}
-        var ic = (entry && entry.icon) ? entry.icon : cls
-        if (Quickshell.hasThemeIcon(ic))
-            return Quickshell.iconPath(ic, true)
-        if (cls && Quickshell.hasThemeIcon(cls))
-            return Quickshell.iconPath(cls, true)
-        return ""
-    }
-
     // ── живые столы: фаза мигает, когда в неактивном столе открылось окно ──
     property var _wsCounts: ({})
     property bool _wsCountsInit: false
@@ -170,18 +143,6 @@ PanelWindow {
             delete nb[root.focusedWsId]
             root.wsBlink = nb
         }
-        // «пик» на переключение: фаза на пару секунд показывает иконку стола
-        if (root.focusedWsId > 0) {
-            root.wsPeek = root.focusedWsId
-            wsPeekTimer.restart()
-        }
-    }
-    // стол, который сейчас «пикает» иконкой
-    property int wsPeek: -1
-    Timer {
-        id: wsPeekTimer
-        interval: 1400
-        onTriggered: root.wsPeek = -1
     }
     Timer {
         interval: 220
@@ -670,8 +631,9 @@ PanelWindow {
     // ширина панели по режиму: пульт/поиск — фикс, медиа/погода — по содержимому
     function panelWidthFor(m) {
         if (m === "search") return Theme.panelWSearchWide
-        if (m === "media") return mediaPanel.implicitWidth + 2 * Theme.space3
+        if (m === "media") return Theme.panelWMedia
         if (m === "notifs") return Theme.panelWNotifs
+        if (m === "sys") return Theme.panelWSys
         if (m === "weather") return wxBody.implicitWidth + 2 * Theme.space4
         return Theme.panelWSearch
     }
@@ -1059,6 +1021,7 @@ PanelWindow {
                 id: mediaPanel
                 visible: BarState.mode === "media"
                 opacity: root.panelContentOpacity
+                width: parent.width - 2 * Theme.space3
                 anchors.top: parent.top
                 anchors.topMargin: Theme.panelHeaderH + Theme.space2
                 anchors.horizontalCenter: parent.horizontalCenter

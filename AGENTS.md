@@ -145,7 +145,9 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
   `QApplication` (`//@ pragma UseQApplication` в `shell.qml`). Палитру даёт
   `QT_QPA_PLATFORMTHEME=qt6ct`: `~/.config/qt6ct/qt6ct.conf` — обязательно
   `custom_palette=true` + своя схема `.config/qt6ct/colors/lunar.conf` (фон
-  #050505, текст #ffffff, акцент #ff003c) и `icon_theme=Tela-lunar`. Без
+  #050505, текст #ffffff, акцент #ff003c) и `icon_theme=Tela-dark` (обычная
+  цветная Tela; монохром Tela-lunar больше не собираю, кастомная иконка
+  Firefox `lunar-eclipse` живёт в hicolor). Без
   `custom_palette=true` меню были белыми.
 - **faillock:** после 3 неудачных попыток (считается и отменённый polkit-запрос)
   пароль «перестаёт подходить» — лечится `truncate -s 0 /run/faillock/sora`.

@@ -3,7 +3,6 @@ import Quickshell
 import Quickshell.Io
 import "../"
 import QtQuick.Layouts
-import QtQuick.Effects
 
 // ════════════════════════════════════════════════════════════════
 //  LaunchPage — сетка приложений Hub. Данные и запуск — из общего
@@ -166,19 +165,9 @@ Item {
                             source: page.hasRealIcon(modelData)
                                 ? Quickshell.iconPath(modelData.icon, true)
                                 : ""
-                            visible: false
-                        }
-
-                        // монохром: только гашу насыщенность, яркость не поднимаю —
-                        // иначе заливные иконки (Telegram, Lutris) выбеливались
-                        // в безликий диск, теряя внутренний рисунок
-                        MultiEffect {
-                            anchors.fill: appIcon
-                            source: appIcon
-                            visible: appIcon.status === Image.Ready
-                            saturation: -1.0
-                            brightness: 0.04
-                            contrast: 0.0
+                            // дефолтные (цветные) иконки приложений — без
+                            // обесцвечивания. Кастомную иконку Firefox
+                            // (lunar-eclipse) это не трогает: она из desktop-файла.
                         }
 
                         Text {
