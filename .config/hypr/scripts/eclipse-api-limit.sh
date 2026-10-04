@@ -54,8 +54,10 @@ molim=$(model_limit "${lead:-}")
 # ── официальный источник: проценты окон ──
 source="local"
 h5pct="" ; wkpct="" ; mopct=""
+# ключей opencode-go может быть несколько (сменил аккаунт) — беру активный и свежий
 key=$(sql "SELECT json_extract(value,'\$.key') FROM credential
-           WHERE integration_id='opencode-go' LIMIT 1;")
+           WHERE integration_id='opencode-go'
+           ORDER BY active DESC, time_updated DESC LIMIT 1;")
 if [ -n "${key:-}" ]; then
     usage=$(curl -s --max-time 8 -H "Authorization: Bearer $key" \
         https://opencode.ai/zen/go/v1/usage 2>/dev/null)
