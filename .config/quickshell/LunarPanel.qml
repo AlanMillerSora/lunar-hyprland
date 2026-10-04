@@ -721,8 +721,8 @@ PanelWindow {
         function weather() { BarState.togglePanel("weather") }
         function reset() { BarState.closePanel(); BarState.closeBubble() }
         // пузыри в полосе (для хоткеев/теста): как по клику по ячейке
-        function bubbleWeather() { rightZone.openWeatherBubble() }
-        function bubbleMedia() { centerZone.openMediaBubble() }
+        function bubbleWeather() { leftZone.openWeatherBubble() }
+        function bubbleMedia() { rightZone.openMediaBubble() }
     }
 
     // поиск — в сервисе Launcher (панель биндится к нему)
@@ -815,8 +815,11 @@ PanelWindow {
         // в морфе плашка = строка + контент режима (panelTargetH — только контент)
         height: Theme.barH + root.morph * root.panelTargetH
         radius: Theme.barRadius
-        color: root.pillBg
-        border.width: 1
+        // arch: в покое у бара НЕТ своей подложки — фон даёт только
+        // центральная пилюля (BarCenterZone); при раскрытии режима плашка
+        // проявляется и становится фоном панели.
+        color: root.morph > 0.001 ? root.pillBg : "transparent"
+        border.width: root.morph > 0.001 ? 1 : 0
         border.color: Theme.border
         clip: true
 
@@ -838,7 +841,8 @@ PanelWindow {
             source: nzBar
             maskEnabled: true
             maskSource: nmBar
-            opacity: 0.07
+            // зерно только у раскрытой плашки (в покое бара-подложки нет)
+            opacity: root.morph > 0.001 ? 0.07 : 0
         }
         Rectangle {
             id: nmBar
@@ -1017,7 +1021,7 @@ PanelWindow {
         anchors.topMargin: Theme.barMargin
         height: Theme.barH
         spacing: 0
-        x: root.width / 2 - (leftZone.width + centerZone.clockCenterFromLeft)
+        x: root.width / 2 - (leftZone.width + centerZone.pillCenterFromLeft)
         opacity: Math.max(0, 1 - root.morph * 8)
         enabled: !BarState.expanded
 

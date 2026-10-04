@@ -33,7 +33,7 @@ Cell {
                 readonly property int v: index === 0 ? SysInfo.cpu
                     : (index === 1 ? SysInfo.ram : SysInfo.gpu)
                 readonly property bool avail: index !== 2 || SysInfo.gpu >= 0
-                width: 40
+                width: 56
                 height: 4
                 radius: height / 2
                 color: Theme.trackBg

@@ -3,9 +3,9 @@ import "../.."
 import "../shared"
 
 // ════════════════════════════════════════════════════════════════
-//  BarRightZone — правая зона бара: систем-остров, погода, сеть,
-//  Game Mode, трей, уведомления и звук. Состав/порядок/видимость —
-//  из BarSettings (bar.json). host = корень LunarPanel.
+//  BarRightZone — правая зона бара (arch-стиль): медиа, Game Mode,
+//  раскладка, трей, уведомления и звук. Всё «плоское», без плашек.
+//  Состав/порядок/видимость — из BarSettings (bar.json). host = LunarPanel.
 // ════════════════════════════════════════════════════════════════
 Item {
     id: rightZone
@@ -15,23 +15,40 @@ Item {
     implicitHeight: Theme.barH
     clip: true
 
+    // медиа: значения прогресса держу локально и обновляю по сигналам
+    // корня — через property var в Loader'е они не пересчитываются.
+    property bool mediaActive: false
+    property real trackLength: 0
+    property real trackPosition: 0
+    property var mediaCellRef: null
+    function openMediaBubble() {
+        if (mediaCellRef)
+            mediaCellRef.openBubbleFromHere()
+    }
+    function syncMedia() { if (host) mediaActive = host.mediaActive }
+    function syncProgress() {
+        if (!host)
+            return
+        trackLength = host.trackLength
+        trackPosition = host.trackPosition
+    }
+    Connections {
+        target: rightZone.host
+        function onMediaActiveChanged() { rightZone.syncMedia() }
+        function onTrackLengthChanged() { rightZone.syncProgress() }
+        function onTrackPositionChanged() { rightZone.trackPosition = host.trackPosition }
+    }
+    Component.onCompleted: { syncMedia(); syncProgress() }
+
     function compFor(id) {
-        if (id === "system") return sysComp
-        if (id === "weather") return weatherComp
-        if (id === "network") return netComp
+        if (id === "media") return mediaComp
         if (id === "game") return gameComp
+        if (id === "layout") return layoutComp
         if (id === "tray") return trayComp
         if (id === "notifs") return notifComp
         if (id === "volume") return volComp
         return null
     }
-
-    // открыть пузырь погоды как при клике (для IPC/хоткея)
-    function openWeatherBubble() {
-        if (weatherCellRef)
-            weatherCellRef.openBubbleFromHere()
-    }
-    property var weatherCellRef: null
 
     Row {
         id: zoneRow
@@ -48,98 +65,32 @@ Item {
                 required property var modelData
                 height: Theme.barH
                 anchors.verticalCenter: parent.verticalCenter
-                visible: item === null ? true : item.visible
+                visible: modelData.id === "media" ? rightZone.mediaActive
+                                                   : (item === null ? true : item.visible)
                 sourceComponent: rightZone.compFor(modelData.id)
             }
         }
     }
 
-    // ── систем-остров ──
+    // ── медиа-ячейка: трек, play/pause, мини-спектр; клик — плашка вниз ──
     Component {
-        id: sysComp
-        SystemIsland { host: rightZone.host }
-    }
-
-    // ── погода: иконка + температура; клик раскрывает плашку вниз ──
-    Component {
-        id: weatherComp
-        Cell {
-            id: weatherCell
-            anchors.verticalCenter: parent.verticalCenter
-            interactive: true
-            active: BarState.mode === "weather"
-            accent: Theme.barFaint
-            tip: "Погода"
-            // клик по ячейке раскрывает саму плашку вниз (морф), как у ArchEclipse
+        id: mediaComp
+        MediaCell {
+            id: mediaCellItem
+            host: rightZone.host
+            progressLength: rightZone.trackLength
+            progressPosition: rightZone.trackPosition
             function openBubbleFromHere() {
-                BarState.togglePanel("weather")
+                BarState.togglePanel("media")
             }
-            Component.onCompleted: rightZone.weatherCellRef = weatherCell
-            Component.onDestruction: if (rightZone.weatherCellRef === weatherCell)
-                rightZone.weatherCellRef = null
-            onClicked: openBubbleFromHere()
-            Row {
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 5
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: Weather.icon
-                    color: Weather.ok ? Theme.barText : Theme.barFaint
-                    font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSize(16)
-                }
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: Weather.shortTemp
-                    color: Weather.ok ? Theme.barText : Theme.barDim
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontTiny
-                }
-            }
+            Component.onCompleted: rightZone.mediaCellRef = mediaCellItem
+            Component.onDestruction: if (rightZone.mediaCellRef === mediaCellItem)
+                rightZone.mediaCellRef = null
+            onClickedBubble: openBubbleFromHere()
         }
     }
 
-    // ── сеть: ДВУХЭТАЖНАЯ ячейка — иконка сверху, ↓/↑ мелко снизу ──
-    Component {
-        id: netComp
-        Cell {
-            anchors.verticalCenter: parent.verticalCenter
-            interactive: true
-            accent: rightZone.host.netKind === "off" ? Theme.barFaint : Theme.barDim
-            tip: "Сеть (Hub)"
-            onClicked: rightZone.host.openNetwork()
-            Column {
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 0
-                Row {
-                    spacing: 5
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: rightZone.host.netKind === "eth" ? "󰈀" : "\uf1eb"
-                        color: rightZone.host.netKind === "off" ? Theme.barFaint : Theme.barText
-                        font.family: Theme.iconFont
-                        font.pixelSize: Theme.fontSize(16)
-                    }
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: rightZone.host.netKind === "off" ? "нет"
-                            : (rightZone.host.netKind === "eth" ? "eth" : "wifi")
-                        color: Theme.barDim
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize(10)
-                    }
-                }
-                Text {
-                    text: "↓" + SysInfo.fmtRate(SysInfo.rx) + " ↑" + SysInfo.fmtRate(SysInfo.tx)
-                    color: Theme.barFaint
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontMicro
-                }
-            }
-        }
-    }
-
-    // ── действия: Game Mode ──
+    // ── Game Mode ──
     Component {
         id: gameComp
         Cell {
@@ -154,7 +105,27 @@ Item {
                 text: "\uf11b"
                 color: rightZone.host.gameMode ? Theme.danger : Theme.barDim
                 font.family: Theme.iconFont
-                font.pixelSize: Theme.fontSize(16)
+                font.pixelSize: Theme.fontSize(15)
+            }
+        }
+    }
+
+    // ── раскладка (клик — переключить) ──
+    Component {
+        id: layoutComp
+        Cell {
+            anchors.verticalCenter: parent.verticalCenter
+            interactive: true
+            accent: Theme.barDim
+            tip: "Раскладка — переключить"
+            onClicked: rightZone.host.switchLayout()
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: rightZone.host.kbLayout
+                color: Theme.barText
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize(12)
+                font.bold: true
             }
         }
     }
@@ -165,7 +136,7 @@ Item {
         BarTray { host: rightZone.host }
     }
 
-    // ── уведомления · громкость ──
+    // ── уведомления ──
     Component {
         id: notifComp
         Cell {
@@ -177,8 +148,7 @@ Item {
             tip: "Уведомления"
             onClicked: BarState.togglePanel("notifs")
             // мягкий пульс-подсветка на НОВОЕ уведомление (только рост
-            // счётчика). Панель сама НЕ раскрывается — иначе список
-            // выезжал на каждое уведомление; открытие только по клику.
+            // счётчика). Панель сама НЕ раскрывается — открытие по клику.
             property SequentialAnimation notifPulse: SequentialAnimation {
                 NumberAnimation {
                     target: notifCell; property: "scale"; to: 1.15
@@ -204,7 +174,7 @@ Item {
                     : (rightZone.host.dnd ? Theme.barFaint
                        : (rightZone.host.notifCount > 0 ? Theme.barText : Theme.barDim))
                 font.family: Theme.iconFont
-                font.pixelSize: Theme.fontSize(16)
+                font.pixelSize: Theme.fontSize(15)
             }
             Text {
                 anchors.verticalCenter: parent.verticalCenter
@@ -212,12 +182,13 @@ Item {
                 text: rightZone.host.notifCount
                 color: Theme.accent
                 font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize(11)
+                font.pixelSize: Theme.fontSize(10)
                 font.bold: true
             }
         }
     }
 
+    // ── звук ──
     Component {
         id: volComp
         Cell {
@@ -228,7 +199,6 @@ Item {
             accent: rightZone.host.muted ? Theme.danger : Theme.barDim
             tip: "Звук"
             onClicked: rightZone.host.openVolumePanel()
-            // пульс на изменение громкости или mute
             property SequentialAnimation volPulse: SequentialAnimation {
                 NumberAnimation {
                     target: volCell; property: "scale"; to: 1.15
@@ -262,14 +232,14 @@ Item {
                             : (rightZone.host.vol < 0.34 ? "󰕿" : (rightZone.host.vol < 0.67 ? "󰖀" : "󰕾"))
                         color: rightZone.host.muted ? Theme.barFaint : Theme.barText
                         font.family: Theme.iconFont
-                        font.pixelSize: Theme.fontSize(18)
+                        font.pixelSize: Theme.fontSize(16)
                     }
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: rightZone.host.muted ? "mute" : Math.round(rightZone.host.vol * 100) + "%"
                         color: Theme.barDim
                         font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize(12)
+                        font.pixelSize: Theme.fontSize(11)
                     }
                 }
                 MouseArea {

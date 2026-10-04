@@ -2,11 +2,11 @@ import QtQuick
 import "../.."
 
 // ════════════════════════════════════════════════════════════════
-//  Cell — ячейка-сегмент бара: плотная плашка (Theme.fill → hoverStrong).
-//  Акцентный штрих слева показываю ТОЛЬКО когда accent = сигнал (danger
-//  или светлый акцент), а не нейтральный серый — так спокойные ячейки
-//  выглядят ровно и минималистично, а тревожные (перегрев, mute, игра)
-//  по-прежнему кричат штрихом.
+//  Cell — ячейка-сегмент бара в arch-стиле: НЕ плашка, а «плоский»
+//  носитель содержимого. В покое фон прозрачный, на наведении — тихая
+//  подсветка, у открытого режима — accent. Никаких флажков и штрихов:
+//  минимализм, как в баре ArchEclipse (там всё это просто текст/иконки).
+//  accent оставлен ради совместимости (им красят содержимое снаружи).
 // ════════════════════════════════════════════════════════════════
 Rectangle {
     id: cell
@@ -19,42 +19,25 @@ Rectangle {
     property string tip: ""
     signal clicked()
 
-    // штрих — только для «сигнальных» акцентов (danger/accent), не для серых
-    readonly property bool signalBar: accent !== Theme.barFaint
-        && accent !== Theme.barDim
-
     height: Theme.barCellH
-    implicitWidth: cellContent.implicitWidth + Theme.space3 * 2 + (cell.signalBar ? 8 : 0)
+    implicitWidth: cellContent.implicitWidth + Theme.space3 * 2
     width: implicitWidth
     radius: Theme.radius
+    // arch: в покое ничего не рисуем; hover — слабый surface, active — сильнее
     color: cell.active ? Theme.active
          : cellHover.hovered && cell.interactive ? Theme.hoverStrong
-         : Theme.fill
-    border.width: cell.active ? 1 : 0
-    border.color: Theme.activeBorder
+         : "transparent"
     Behavior on color { ColorAnimation { duration: Theme.animFast } }
 
     HoverHandler {
         id: cellHover
     }
 
-    // короткий штрих-акцент слева — только у «сигнальных» ячеек
-    Rectangle {
-        visible: cell.signalBar
-        anchors.left: parent.left
-        anchors.leftMargin: 7
-        anchors.verticalCenter: parent.verticalCenter
-        width: 2
-        height: 18
-        radius: 1
-        color: cell.accent
-    }
-
     Row {
         id: cellContent
         anchors.left: parent.left
-        anchors.leftMargin: cell.signalBar ? 15 : Theme.space3
         anchors.right: parent.right
+        anchors.leftMargin: Theme.space3
         anchors.rightMargin: Theme.space3
         anchors.verticalCenter: parent.verticalCenter
         spacing: Theme.space2

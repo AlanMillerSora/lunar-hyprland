@@ -3,109 +3,116 @@ import "../.."
 import "../shared"
 
 // ════════════════════════════════════════════════════════════════
-//  BarCenterZone — центр бара: «пульт», медиа-ячейка и часы/дата.
-//  Состав/порядок/видимость — из BarSettings. Наружу отдаёт
-//  clockCenterFromLeft (позиция Loader'а часов): по нему корень
-//  ставит строку так, чтобы центр часов лёг на центр экрана.
+//  BarCenterZone — центр бара в arch-стиле: одна пилюля (accent-подложка),
+//  внутри — сеть ↓↑ · пульт · часы. Боковые ячейки равной ширины, поэтому
+//  кнопка пульта стоит ровно по центру экрана. Состав/порядок — из
+//  BarSettings. Наружу отдаю pillCenterFromLeft: по нему корень центрует
+//  строку так, чтобы центр пилюли лёг на центр экрана.
 // ════════════════════════════════════════════════════════════════
 Item {
     id: centerZone
     property var host
-    // Loader, в котором живёт ячейка часов — задаёт центровку
-    property Item clockItem: null
 
-    // Играет ли что-то и прогресс трека: держу локально и обновляю по
-    // сигналам корня. Напрямую host.mediaActive/trackLength в делегатах
-    // читать нельзя — host это property var, и через Loader такая
-    // зависимость не пересчитывается.
-    property bool mediaActive: false
-    property real trackLength: 0
-    property real trackPosition: 0
-    // ссылка на медиа-ячейку — чтобы открыть пузырь как при клике (IPC)
-    property var mediaCellRef: null
-    function openMediaBubble() {
-        if (mediaCellRef)
-            mediaCellRef.openBubbleFromHere()
-    }
-    function syncMedia() {
-        if (host)
-            mediaActive = host.mediaActive
-    }
-    function syncProgress() {
-        if (!host)
-            return
-        trackLength = host.trackLength
-        trackPosition = host.trackPosition
-    }
-    Connections {
-        target: centerZone.host
-        function onMediaActiveChanged() { centerZone.syncMedia() }
-        function onTrackLengthChanged() { centerZone.syncProgress() }
-        function onTrackPositionChanged() { centerZone.trackPosition = host.trackPosition }
-    }
-    Component.onCompleted: { syncMedia(); syncProgress() }
+    // равная ширина боковых ячеек — для симметрии пульта по центру
+    readonly property real sideW: 128
 
-    // расстояние от левого края зоны до центра ячейки часов. Между
-    // уничтожением старого делегата часов и готовностью нового clockItem
-    // на миг null — тогда держу последнее посчитанное значение, чтобы
-    // строка не дёргалась на кадр при реордере ячеек.
-    property real liveClockCenter:
-        clockItem ? (Theme.barPad + clockItem.x
-            + Math.max(clockItem.width, clockItem.implicitWidth) / 2) : NaN
-    property real lastClockCenter: 0
-    onLiveClockCenterChanged: if (!isNaN(liveClockCenter))
-        lastClockCenter = liveClockCenter
-    readonly property real clockCenterFromLeft:
-        !isNaN(liveClockCenter) ? liveClockCenter
-            : (lastClockCenter > 0 ? lastClockCenter : implicitWidth / 2)
-
-    implicitWidth: zoneRow.implicitWidth + 2 * Theme.barPad
+    implicitWidth: pill.width + 2 * Theme.space2
     implicitHeight: Theme.barH
     clip: true
 
     function compFor(id) {
+        if (id === "network") return netComp
         if (id === "control") return controlComp
-        if (id === "media") return mediaComp
         if (id === "clock") return clockComp
         return null
     }
 
-    // колесо над плашкой — громкость
+    // центр пилюли от левого края зоны — по нему корень центрует строку
+    readonly property real pillCenterFromLeft: Theme.space2 + pill.width / 2
+
+    // колесо над пилюлей — громкость
     WheelHandler {
         onWheel: function (ev) {
             centerZone.host.bumpVol(ev.angleDelta.y > 0 ? 0.05 : -0.05)
         }
     }
 
-    Row {
-        id: zoneRow
-        anchors.left: parent.left
-        anchors.leftMargin: Theme.barPad
-        anchors.verticalCenter: parent.verticalCenter
-        height: Theme.barH
-        spacing: Theme.space2
+    // ── пилюля режимов: мягкая accent-подложка (arch surfaceActive) ──
+    Rectangle {
+        id: pill
+        anchors.centerIn: parent
+        width: centerRow.implicitWidth + Theme.space3 * 2
+        height: Theme.barCellH + 4
+        radius: Theme.radius
+        color: Theme.active
+        border.width: 1
+        border.color: Theme.activeBorder
+        Behavior on width { NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut } }
 
-        Repeater {
-            id: zoneRepeater
-            model: BarSettings.centerVisible
+        Row {
+            id: centerRow
+            anchors.centerIn: parent
+            height: parent.height
+            spacing: Theme.space1
 
-            delegate: Loader {
-                id: centerLoader
-                required property var modelData
-                height: Theme.barH
-                anchors.verticalCenter: parent.verticalCenter
-                visible: modelData.id === "media" ? centerZone.mediaActive : true
-                sourceComponent: centerZone.compFor(modelData.id)
-                // часы задают центровку строки: запоминаю их Loader, когда он готов
-                onStatusChanged: if (status === Loader.Ready && item
-                    && modelData.id === "clock") centerZone.clockItem = centerLoader
-                Component.onDestruction: if (centerZone.clockItem === centerLoader)
-                    centerZone.clockItem = null
+            Repeater {
+                id: centerRep
+                model: BarSettings.centerVisible
+
+                delegate: Loader {
+                    required property var modelData
+                    id: centerLoader
+                    // боковые ячейки равной ширины, пульт — по содержимому
+                    width: (modelData.id === "network" || modelData.id === "clock")
+                        ? centerZone.sideW : (item ? item.implicitWidth : 0)
+                    height: parent.height
+                    anchors.verticalCenter: parent.verticalCenter
+                    sourceComponent: centerZone.compFor(modelData.id)
+                }
             }
         }
     }
 
-    // ── «пульт» — раскрывает панель управления вниз ──
+    // ── сеть ↓↑: клик открывает сеть в Hub ──
+    Component {
+        id: netComp
+        Cell {
+            id: netCell
+            anchors.verticalCenter: parent.verticalCenter
+            interactive: true
+            accent: centerZone.host.netKind === "off" ? Theme.barFaint : Theme.barDim
+            tip: "Сеть (Hub)"
+            onClicked: centerZone.host.openNetwork()
+            // компактная скорость, как fmtSpeed у arch: 4 знака, без «КБ/с»
+            function cs(kb) {
+                if (kb >= 1024) {
+                    var mb = kb / 1024
+                    return (mb >= 10 ? Math.round(mb) : mb.toFixed(1)) + "M"
+                }
+                return Math.round(kb) + "K"
+            }
+            Row {
+                anchors.centerIn: parent
+                spacing: 6
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: centerZone.host.netKind === "eth" ? "󰈀" : "\uf1eb"
+                    color: centerZone.host.netKind === "off" ? Theme.barFaint : Theme.barText
+                    font.family: Theme.iconFont
+                    font.pixelSize: Theme.fontSize(14)
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "↓" + netCell.cs(SysInfo.rx) + " ↑" + netCell.cs(SysInfo.tx)
+                    color: Theme.barDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(10)
+                }
+            }
+        }
+    }
+
+    // ── «пульт» ──
     Component {
         id: controlComp
         Cell {
@@ -118,86 +125,40 @@ Item {
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "\uf013"
-                color: BarState.mode === "control" ? Theme.accent : Theme.barDim
+                color: BarState.mode === "control" ? Theme.accent : Theme.barText
                 font.family: Theme.iconFont
                 font.pixelSize: Theme.fontSize(16)
             }
         }
     }
 
-    // ── медиа-ячейка ──
-    Component {
-        id: mediaComp
-        MediaCell {
-            id: mediaCellItem
-            host: centerZone.host
-            progressLength: centerZone.trackLength
-            progressPosition: centerZone.trackPosition
-            function openBubbleFromHere() {
-                // клик раскрывает саму плашку вниз (морф)
-                BarState.togglePanel("media")
-            }
-            Component.onCompleted: centerZone.mediaCellRef = mediaCellItem
-            Component.onDestruction: if (centerZone.mediaCellRef === mediaCellItem)
-                centerZone.mediaCellRef = null
-            onClickedBubble: openBubbleFromHere()
-        }
-    }
-
-    // ── часы + дата — одна ячейка со штрихом-акцентом ──
+    // ── часы + дата ──
     Component {
         id: clockComp
         Cell {
             anchors.verticalCenter: parent.verticalCenter
             accent: Theme.accent
+            tip: centerZone.host.dayText + " " + centerZone.host.dateText
             Row {
-                anchors.verticalCenter: parent.verticalCenter
+                anchors.centerIn: parent
                 height: Theme.barCellH
-                spacing: 0
+                spacing: centerZone.host.clockText.length > 0 ? 8 : 0
                 Text {
-                    id: clockLabel
-                    text: centerZone.host.clockText.substring(0, 2)
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: centerZone.host.clockText
                     color: Theme.barText
                     font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(19)
+                    font.pixelSize: Theme.fontSize(17)
                     font.bold: true
                     font.letterSpacing: 1
-                    height: Theme.barCellH
-                    verticalAlignment: Text.AlignVCenter
                 }
                 Text {
-                    id: clockColon
-                    text: ":"
-                    color: Theme.barText
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: centerZone.host.dayText + " " + centerZone.host.dateText
+                    color: Theme.barFaint
                     font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(19)
-                    font.bold: true
-                    height: Theme.barCellH
-                    verticalAlignment: Text.AlignVCenter
-                    opacity: centerZone.host.colonOn ? 1.0 : 0.15
-                    Behavior on opacity { NumberAnimation { duration: Theme.anim.slowEffects; easing.type: Easing.InOutSine } }
+                    font.pixelSize: Theme.fontSmall
                 }
-                Text {
-                    id: clockMin
-                    text: centerZone.host.clockText.substring(3)
-                    color: Theme.barText
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(19)
-                    font.bold: true
-                    font.letterSpacing: 1
-                    height: Theme.barCellH
-                    verticalAlignment: Text.AlignVCenter
-                }
-            }
-            Text {
-                id: dayLabel
-                anchors.verticalCenter: parent.verticalCenter
-                text: centerZone.host.dayText + " " + centerZone.host.dateText
-                color: Theme.barDim
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSmall
-                height: Theme.barCellH
-                verticalAlignment: Text.AlignVCenter
             }
         }
     }

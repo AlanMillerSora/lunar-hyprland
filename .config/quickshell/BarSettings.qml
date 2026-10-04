@@ -18,17 +18,16 @@ QtObject {
     // ── каталог ячеек: id, зона, человекочитаемое имя. locked —
     //    ячейку нельзя скрыть (часы задают центровку строки). ──
     readonly property var catalog: [
-        { id: "mark",       zone: "left",   name: "Марка LUNAR" },
         { id: "workspaces", zone: "left",   name: "Фазы столов" },
         { id: "perf",       zone: "left",   name: "PERF" },
-        { id: "layout",     zone: "left",   name: "Раскладка" },
+        { id: "system",     zone: "left",   name: "Ресурсы CPU·RAM·GPU" },
+        { id: "weather",    zone: "left",   name: "Погода" },
+        { id: "network",    zone: "center", name: "Сеть ↓↑" },
         { id: "control",    zone: "center", name: "Пульт" },
-        { id: "media",      zone: "center", name: "Медиа" },
         { id: "clock",      zone: "center", name: "Часы и дата", locked: true },
-        { id: "system",     zone: "right",  name: "Систем-остров" },
-        { id: "weather",    zone: "right",  name: "Погода" },
-        { id: "network",    zone: "right",  name: "Сеть" },
+        { id: "media",      zone: "right",  name: "Медиа" },
         { id: "game",       zone: "right",  name: "Game Mode" },
+        { id: "layout",     zone: "right",  name: "Раскладка" },
         { id: "tray",       zone: "right",  name: "Трей" },
         { id: "notifs",     zone: "right",  name: "Уведомления" },
         { id: "volume",     zone: "right",  name: "Звук" }
