@@ -45,6 +45,14 @@ QtObject {
     // число значков трея в баре (переехало из Theme.lunar-ui.json)
     property int trayVisible: 2
 
+    // ── горячие зоны у краёв бара → сайдбары по ховеру ──
+    //   hotZone: включать ли ховер-раскрытие;
+    //   revealIn: сколько держать курсор на краю до раскрытия (мс);
+    //   revealOut: сколько держать после ухода до закрытия (мс).
+    property bool hotZone: true
+    property int revealIn: 220
+    property int revealOut: 600
+
     // ── метаданные ячеек ──
     function meta(id) {
         for (var i = 0; i < catalog.length; i++)
@@ -203,9 +211,15 @@ QtObject {
         setItems("right", defaults("right"))
         bar.internal = false
         bar.trayVisible = 2
+        bar.hotZone = true
+        bar.revealIn = 220
+        bar.revealOut = 600
     }
 
     onTrayVisibleChanged: if (!internal) adapter.trayVisible = trayVisible
+    onHotZoneChanged: if (!internal) adapter.hotZone = hotZone
+    onRevealInChanged: if (!internal) adapter.revealIn = revealIn
+    onRevealOutChanged: if (!internal) adapter.revealOut = revealOut
 
     // досылаю нормализованное состояние, если правка adapter'а пришлась
     // на загрузку файла (watch-перезагрузка не всегда даёт onLoaded)
@@ -294,6 +308,9 @@ QtObject {
             property var center: bar.defaults("center")
             property var right: bar.defaults("right")
             property int trayVisible: 2
+            property bool hotZone: true
+            property int revealIn: 220
+            property int revealOut: 600
 
             onLeftChanged: bar.adoptZone("left")
             onCenterChanged: bar.adoptZone("center")
@@ -303,6 +320,27 @@ QtObject {
                     return
                 bar.internal = true
                 bar.trayVisible = trayVisible
+                bar.internal = false
+            }
+            onHotZoneChanged: {
+                if (bar.internal)
+                    return
+                bar.internal = true
+                bar.hotZone = hotZone
+                bar.internal = false
+            }
+            onRevealInChanged: {
+                if (bar.internal)
+                    return
+                bar.internal = true
+                bar.revealIn = revealIn
+                bar.internal = false
+            }
+            onRevealOutChanged: {
+                if (bar.internal)
+                    return
+                bar.internal = true
+                bar.revealOut = revealOut
                 bar.internal = false
             }
         }

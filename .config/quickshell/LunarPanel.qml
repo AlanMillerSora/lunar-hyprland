@@ -47,6 +47,8 @@ PanelWindow {
     mask: Region {
         Region { item: (BarState.expanded || BarState.bubble !== "") ? clickShield : null }
         Region { item: bar }
+        Region { item: BarSettings.hotZone ? hotZoneLeft : null }
+        Region { item: BarSettings.hotZone ? hotZoneRight : null }
         Region { item: BarState.bubble !== "" ? barBubble : null }
         Region { item: root.recording ? recPill : null }
     }
@@ -862,6 +864,64 @@ PanelWindow {
         BarLeftZone { id: leftZone; host: root }
         BarCenterZone { id: centerZone; host: root }
         BarRightZone { id: rightZone; host: root }
+    }
+
+    // ── ГОРЯЧИЕ ЗОНЫ у краёв бара: ховер раскрывает сайдбар ──
+    // Узкая полоса во всю высоту бара у левого/правого края. Dwell не даёт
+    // случайно раскрыть при проносе курсора; выключено — по BarSettings.hotZone.
+    Process { id: sidebarOpenProc; running: false }
+    Process { id: rsidebarOpenProc; running: false }
+    function openSidebar() {
+        sidebarOpenProc.command = ["bash", "-c", "qs ipc call sidebar open"]
+        sidebarOpenProc.running = true
+    }
+    function openRsidebar() {
+        rsidebarOpenProc.command = ["bash", "-c", "qs ipc call rsidebar open"]
+        rsidebarOpenProc.running = true
+    }
+
+    Item {
+        id: hotZoneLeft
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.topMargin: Theme.barMargin
+        width: 6
+        height: Theme.barH
+        visible: BarSettings.hotZone && !BarState.expanded && BarState.bubble === ""
+        HoverHandler {
+            onHoveredChanged: {
+                if (hovered) hotZoneLeftTimer.restart()
+                else hotZoneLeftTimer.stop()
+            }
+        }
+        Timer {
+            id: hotZoneLeftTimer
+            interval: BarSettings.revealIn
+            repeat: false
+            onTriggered: root.openSidebar()
+        }
+    }
+
+    Item {
+        id: hotZoneRight
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.topMargin: Theme.barMargin
+        width: 6
+        height: Theme.barH
+        visible: BarSettings.hotZone && !BarState.expanded && BarState.bubble === ""
+        HoverHandler {
+            onHoveredChanged: {
+                if (hovered) hotZoneRightTimer.restart()
+                else hotZoneRightTimer.stop()
+            }
+        }
+        Timer {
+            id: hotZoneRightTimer
+            interval: BarSettings.revealIn
+            repeat: false
+            onTriggered: root.openRsidebar()
+        }
     }
 
     // ── REC: отдельная правая пилюля (видна только при записи) ──

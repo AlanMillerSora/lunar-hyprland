@@ -1050,7 +1050,7 @@ PanelWindow {
 
     Timer {
         id: hideTimer
-        interval: 600
+        interval: BarSettings.revealOut
         onTriggered: {
             if (!stripHover.hovered && !contentHover.hovered)
                 root.closePanel()

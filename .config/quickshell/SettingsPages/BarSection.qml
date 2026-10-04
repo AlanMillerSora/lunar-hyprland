@@ -118,6 +118,132 @@ Item {
                 }
             }
 
+            // ── горячие зоны у краёв бара → сайдбары по ховеру ──
+            Item {
+                width: parent.width
+                height: Theme.rowHCompact
+
+                SectionLabel {
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "ГОРЯЧИЕ ЗОНЫ"
+                    textColor: Theme.text
+                    size: Theme.fontSmall
+                    bold: true
+                }
+                Text {
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: BarSettings.hotZone ? "ховер у края раскрывает сайдбар" : "выключено"
+                    color: Theme.textDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(10)
+                }
+            }
+
+            Row {
+                spacing: Theme.space3
+
+                Toggle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    on: BarSettings.hotZone
+                    MouseArea {
+                        anchors.fill: parent
+                        anchors.margins: -6
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: BarSettings.hotZone = !BarSettings.hotZone
+                    }
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: BarSettings.hotZone ? "ВКЛ" : "ВЫКЛ"
+                    color: BarSettings.hotZone ? Theme.accent : Theme.textFaint
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontTiny
+                    font.bold: true
+                }
+                Item { width: Theme.space3; height: 1 }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "раскрытие"
+                    color: Theme.textFaint
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(10)
+                }
+                Repeater {
+                    model: [0, 150, 250, 500]
+                    delegate: Rectangle {
+                        required property int modelData
+                        readonly property bool sel: BarSettings.revealIn === modelData
+                        width: revInTxt.implicitWidth + 22
+                        height: 28
+                        radius: Theme.radius
+                        color: sel ? Theme.active : (revInMa.containsMouse ? Theme.hover : Theme.fill)
+                        border.width: 1
+                        border.color: sel ? Theme.accent : Theme.border
+                        anchors.verticalCenter: parent.verticalCenter
+                        Text {
+                            id: revInTxt
+                            anchors.centerIn: parent
+                            text: modelData + "мс"
+                            color: sel ? Theme.accent : Theme.textDim
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontTiny
+                            font.bold: sel
+                        }
+                        MouseArea {
+                            id: revInMa
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: BarSettings.revealIn = modelData
+                        }
+                    }
+                }
+            }
+
+            Row {
+                spacing: Theme.space3
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "закрытие"
+                    color: Theme.textFaint
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(10)
+                }
+                Repeater {
+                    model: [300, 600, 900, 1500]
+                    delegate: Rectangle {
+                        required property int modelData
+                        readonly property bool sel: BarSettings.revealOut === modelData
+                        width: revOutTxt.implicitWidth + 22
+                        height: 28
+                        radius: Theme.radius
+                        color: sel ? Theme.active : (revOutMa.containsMouse ? Theme.hover : Theme.fill)
+                        border.width: 1
+                        border.color: sel ? Theme.accent : Theme.border
+                        anchors.verticalCenter: parent.verticalCenter
+                        Text {
+                            id: revOutTxt
+                            anchors.centerIn: parent
+                            text: modelData + "мс"
+                            color: sel ? Theme.accent : Theme.textDim
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontTiny
+                            font.bold: sel
+                        }
+                        MouseArea {
+                            id: revOutMa
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: BarSettings.revealOut = modelData
+                        }
+                    }
+                }
+            }
+
             ActionButton {
                 label: "СБРОСИТЬ ВСЁ"
                 minWidth: 150
