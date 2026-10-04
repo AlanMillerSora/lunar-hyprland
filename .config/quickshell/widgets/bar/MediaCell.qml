@@ -5,15 +5,15 @@ import "../shared"
 
 // ════════════════════════════════════════════════════════════════
 //  MediaCell — медиа-полоса бара: обложка (монохром) + значок
-//  воспроизведения + название трека с обрезкой. Прогресс — сквозной
-//  линией во всю ширину бара (LunarPanel), тут дубля нет.
+//  воспроизведения + название трека (до ~2/3 ширины) + мини-кава.
+//  Сквозной прогресс рисует LunarPanel линией во всю ширину бара.
 //  Ширина — по содержимому, но не шире stripWidth (задаёт зона).
 //  Клик раскрывает плашку МЕДИА вниз. host = корень LunarPanel.
 // ════════════════════════════════════════════════════════════════
 Cell {
     property var host
     // максимум ширины полосы (в центре — широкий)
-    property int stripWidth: 420
+    property int stripWidth: 640
     signal clickedBubble()
     id: mediaInline
     anchors.verticalCenter: parent.verticalCenter
@@ -45,9 +45,13 @@ Cell {
 
     Item {
         id: strip
-        // ширина — по содержимому, но не шире stripWidth (лишнего хвоста нет)
-        width: Math.min(mediaInline.stripWidth,
-            18 + 8 + ppText.implicitWidth + 8 + titleText.implicitWidth + 2)
+        readonly property int cavaW: 98
+        // название — не длиннее ~2/3 ширины полосы
+        readonly property int titleCap: Math.round(mediaInline.stripWidth * 0.6)
+        readonly property int natural: ppText.x + ppText.implicitWidth + 8
+            + Math.min(titleText.implicitWidth, strip.titleCap)
+            + 12 + strip.cavaW + 2
+        width: Math.min(mediaInline.stripWidth, natural)
         height: Theme.barCellH
 
         // обложка (монохром) или нота, если арта нет
@@ -105,17 +109,47 @@ Cell {
             font.pixelSize: Theme.fontSize(13)
         }
 
-        // трек: тянется до stripWidth, дальше — многоточие
+        // трек: до 2/3 полосы, дальше — многоточие
         Text {
             id: titleText
             x: ppText.x + ppText.implicitWidth + 8
-            width: Math.min(implicitWidth, mediaInline.stripWidth - x - 2)
+            width: Math.min(implicitWidth, strip.titleCap)
             anchors.verticalCenter: parent.verticalCenter
             elide: Text.ElideRight
             text: mediaInline.host.track
             color: Theme.barText
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSize(12)
+        }
+
+        // мини-кава: тонкие столбики по правому краю полосы
+        Row {
+            id: cavaRow
+            x: titleText.x + titleText.width + 12
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 2
+
+            Repeater {
+                model: 20
+
+                delegate: Item {
+                    required property int index
+                    width: 3
+                    height: Theme.barCellH
+
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: parent.width
+                        height: Math.max(1, (mediaInline.host.barValues[index] || 0)
+                            * (Theme.barCellH * 0.55))
+                        radius: 1
+                        color: Theme.alpha(Theme.accent, 0.85)
+                        Behavior on height {
+                            NumberAnimation { duration: 80; easing.type: Easing.OutQuad }
+                        }
+                    }
+                }
+            }
         }
     }
 }

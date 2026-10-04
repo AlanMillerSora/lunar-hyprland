@@ -226,7 +226,7 @@ Item {
         MediaCell {
             id: mediaStrip
             host: centerZone.host
-            stripWidth: 420
+            stripWidth: 640
             function openBubbleFromHere() {
                 BarState.togglePanel("media")
             }

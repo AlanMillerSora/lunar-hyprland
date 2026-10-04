@@ -1,13 +1,13 @@
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
-import Quickshell.Services.Mpris
 import QtQuick
 import QtQuick.Layouts
 
 // ════════════════════════════════════════════════════════════════
-//  LunarSidebarRight — правая панель: музыка, календарь, запись.
-//  Выезжает от правого края по наведению. Уведомления переехали в панель бара.
+//  LunarSidebarRight — правая панель: календарь и запись экрана.
+//  Выезжает от правого края по наведению. Музыка и уведомления
+//  переехали: плеер — в бар и окно Lunar Player, уведомления — в бар.
 //  IPC:  qs ipc call rsidebar toggle|open|close
 // ════════════════════════════════════════════════════════════════
 PanelWindow {
@@ -30,28 +30,6 @@ PanelWindow {
     // M35: открытие по IPC тоже подтягивает данные — toggle не должен просто переключать флаг
     function toggle() { if (collapsed) openPanel(); else closePanel() }
 
-    // ── крупный спектр cava во вкладке «музыка» ──
-    readonly property bool mediaPlaying: player !== null && player !== undefined && player.isPlaying
-    readonly property int barCount: 56
-    property var barValues: []
-
-    function feedCava(line) {
-        var t = ("" + line).trim()
-        if (t.length === 0)
-            return
-        var parts = t.split(/\s+/)
-        var prev = root.barValues
-        var out = []
-        for (var i = 0; i < root.barCount; i++) {
-            var raw = (parseInt(parts[i] === undefined ? "0" : parts[i]) || 0) / 1000
-            raw = Math.max(0, Math.min(1, raw))
-            var p = prev[i] || 0
-            // быстрый подъём, плавный спад — столбики не «дёргаются»
-            out.push(raw > p ? p + (raw - p) * 0.55 : p * 0.80 + raw * 0.20)
-        }
-        root.barValues = out
-    }
-
     // добавление события из формы календаря
     function addCalEvent() {
         if (!cal.selected) return
@@ -73,7 +51,7 @@ PanelWindow {
         // тот же путь, что и у левого: горячая зона бара зовёт `hover`
         function hover(): void { root.openPanel() }
         function close(): void { root.closePanel() }
-        function tab(idx: int): void { root.tabIndex = Math.max(0, Math.min(2, idx)) }
+        function tab(idx: int): void { root.tabIndex = Math.max(0, Math.min(1, idx)) }
     }
 
     // кнопка «горячие клавиши» в шапке панели
@@ -83,17 +61,7 @@ PanelWindow {
         running: false
     }
 
-    // cava для вкладки «музыка»: только когда вкладка видна и реально играет
-    Process {
-        id: cavaProc
-        running: root.tabIndex === 0 && root.mediaPlaying && !root.collapsed
-        command: ["cava", "-p", Quickshell.shellPath("cava-lunar-wide.conf")]
-        stdout: SplitParser {
-            splitMarker: "\n"
-            onRead: (line) => root.feedCava(line)
-        }
-        stderr: StdioCollector {}
-    }
+    // cava для вкладки «музыка» убрана — плеер живёт в баре и окне Lunar Player.
 
     mask: Region {
         Region { item: collapsed ? hoverStrip : topHold }
@@ -257,7 +225,7 @@ PanelWindow {
                     spacing: Theme.space1
                     Repeater {
                         id: rightTabRep
-                        model: ["музыка", "календарь", "запись"]
+                        model: ["календарь", "запись"]
                         delegate: Rectangle {
                             required property int index
                             required property string modelData
@@ -315,173 +283,6 @@ PanelWindow {
                 Layout.fillHeight: true
                 currentIndex: root.tabIndex
 
-
-                // ═══════════ сейчас играет ═══════════
-                Rectangle {
-                    color: Theme.bgCard
-                    radius: Theme.radius
-
-                    ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: Theme.space4
-                        spacing: Theme.space3
-
-                        Text {
-                            text: "сейчас играет"
-                            color: Theme.textDim
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(14)
-                        }
-
-                        Item { Layout.fillHeight: true }
-
-                        // крупный спектр cava, пока играет; иначе — нота
-                        Item {
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: 128
-
-                            Text {
-                                anchors.centerIn: parent
-                                visible: !root.mediaPlaying
-                                text: "\uf001"
-                                color: root.player ? Theme.accent : Theme.textFaint
-                                font.family: Theme.iconFont
-                                font.pixelSize: Theme.fontSize(52)
-                            }
-
-                            Row {
-                                visible: root.mediaPlaying
-                                anchors.fill: parent
-                                spacing: 2
-
-                                Repeater {
-                                    model: root.barCount
-                                    delegate: Item {
-                                        required property int index
-                                        width: Math.max(1, (parent.width - (root.barCount - 1) * 2) / root.barCount)
-                                        height: parent.height
-                                        Rectangle {
-                                            anchors.horizontalCenter: parent.horizontalCenter
-                                            anchors.bottom: parent.bottom
-                                            width: parent.width
-                                            height: 2 + (root.barValues[index] || 0) * (parent.height - 6)
-                                            radius: 2
-                                            color: Theme.alpha(Theme.accent, 0.32 + 0.68 * (root.barValues[index] || 0))
-
-                                            // светлый «кончик» — столбики читаются мягче
-                                            Rectangle {
-                                                anchors { left: parent.left; right: parent.right; top: parent.top }
-                                                height: 2
-                                                radius: 1
-                                                color: Theme.accent
-                                                opacity: 0.25 + 0.75 * (root.barValues[index] || 0)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: root.player && root.player.trackTitle
-                                ? root.player.trackTitle : "ничего не играет"
-                            color: Theme.text
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontTitle
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            elide: Text.ElideRight
-                        }
-
-                        Text {
-                            Layout.fillWidth: true
-                            visible: root.player && root.player.trackArtist
-                            text: root.player ? (root.player.trackArtist || "") : ""
-                            color: Theme.textDim
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(15)
-                            horizontalAlignment: Text.AlignHCenter
-                            elide: Text.ElideRight
-                        }
-
-                        // прогресс
-                        Item {
-                            id: progBox
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: 18
-                            visible: root.player && root.player.length > 0
-
-                            readonly property real target: root.player && root.player.length > 0
-                                ? Math.min(1, root.player.position / root.player.length) : 0
-                            property real shown: 0
-                            property bool primed: false
-                            onTargetChanged: if (primed) shown = target
-                            Component.onCompleted: primeTimer.restart()
-                            Timer {
-                                id: primeTimer
-                                interval: 60
-                                onTriggered: { progBox.shown = progBox.target; progBox.primed = true }
-                            }
-
-                            Rectangle {
-                                anchors.verticalCenter: parent.verticalCenter
-                                width: parent.width
-                                height: 4
-                                radius: 2
-                                color: Theme.trackBg
-                                Rectangle {
-                                    width: parent.width * progBox.shown
-                                    height: parent.height
-                                    radius: 2
-                                    color: Theme.accent
-                                    Behavior on width { NumberAnimation { duration: Theme.animMed } }
-                                }
-                            }
-                        }
-
-                        RowLayout {
-                            Layout.alignment: Qt.AlignHCenter
-                            spacing: 22
-
-                            Text {
-                                text: "\uf048"
-                                color: root.player && root.player.canGoPrevious ? Theme.text : Theme.textFaint
-                                font.family: Theme.iconFont
-                                font.pixelSize: Theme.fontSize(23)
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: if (root.player) root.player.previous()
-                                }
-                            }
-                            Text {
-                                text: (root.player && root.player.isPlaying) ? "\uf04c" : "\uf04b"
-                                color: Theme.text
-                                font.family: Theme.iconFont
-                                font.pixelSize: Theme.fontSize(29)
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: if (root.player) root.player.togglePlaying()
-                                }
-                            }
-                            Text {
-                                text: "\uf051"
-                                color: root.player && root.player.canGoNext ? Theme.text : Theme.textFaint
-                                font.family: Theme.iconFont
-                                font.pixelSize: Theme.fontSize(23)
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: if (root.player) root.player.next()
-                                }
-                            }
-                        }
-
-                        Item { Layout.fillHeight: true }
-                    }
-                }
 
                 // ═══════════ календарь (прокручивается) ═══════════
                 Rectangle {
@@ -1020,14 +821,6 @@ PanelWindow {
     }
 
     // ─────────────────────────── данные ───────────────────────────
-    readonly property var player: {
-        var ps = Mpris.players.values
-        for (var i = 0; i < ps.length; i++)
-            if (ps[i].isPlaying)
-                return ps[i]
-        return ps.length > 0 ? ps[0] : null
-    }
-
     readonly property var monthNames: [
         "январь", "февраль", "март", "апрель", "май", "июнь",
         "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"

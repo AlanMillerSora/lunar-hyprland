@@ -836,21 +836,21 @@ PanelWindow {
             layer.enabled: true
         }
 
-        // ── линия прогресса трека во всю ширину бара: минимальная заливка
-        //    пустоты. Видна только когда играет и длина известна ──
+        // ── линия во всю ширину бара, в тон «орбите» столов. В покое —
+        //    просто тонкий штрих; при игре заливается прогрессом трека ──
         Rectangle {
             id: trackLine
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
-            height: 2
-            color: Theme.alpha(Theme.barText, 0.10)
-            visible: root.playing && root.trackLength > 0
+            height: 1
+            color: Theme.active
             Rectangle {
-                width: parent.width * Math.max(0, Math.min(1,
-                    root.trackLength > 0 ? root.trackPosition / root.trackLength : 0))
+                width: parent.width * ((root.playing && root.trackLength > 0)
+                    ? Math.max(0, Math.min(1, root.trackPosition / root.trackLength)) : 0)
                 height: parent.height
                 color: Theme.accent
+                visible: root.playing && root.trackLength > 0
                 Behavior on width { Anim { type: Anim.FastEffects } }
             }
         }
