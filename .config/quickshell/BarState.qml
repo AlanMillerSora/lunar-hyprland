@@ -9,7 +9,7 @@ import QtQuick
 QtObject {
     id: bar
 
-    property string mode: ""            // "" | media | search | notifs | sys | weather
+    property string mode: ""            // "" | media | audio | search | notifs | sys | weather
     readonly property bool expanded: mode !== ""
     // приоритеты: кто открыл (ручной клик важнее пульса) и сколько держать
     property bool isPulse: false

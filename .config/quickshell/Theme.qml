@@ -277,6 +277,7 @@ QtObject {
     // «подгонка под режим»: у каждого пузыря своя ширина
     property int panelWMedia: 520
     property int panelWSys: 560
+    property int panelWAudio: 420
     // панель поиска раскрывается шире строки — отдельная «широкая» ширина
     property int panelWSearchWide: 760
     // высота панелей-модалок (поиск/уведомления) до полного раскрытия

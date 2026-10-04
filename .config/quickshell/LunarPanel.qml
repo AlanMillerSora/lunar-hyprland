@@ -373,9 +373,8 @@ PanelWindow {
         pavuProc.running = true
     }
 
-    // Значок звука в баре открывает микшер (pavucontrol) — прежний «пульт»
-    // убран, отдельного ползунка в баре нет.
-    function openVolumePanel() { root.openMixer() }
+    // (пустой ползунок убран: громкость/микрофон живут в пузыре звука
+    //  PanelAudio — открывается кликом по значку звука и SUPER + C)
 
     // ─────────── системный трей ───────────
     // сколько значков показываем в панели, остальные — в списке (Theme.trayVisible)
@@ -618,6 +617,7 @@ PanelWindow {
     Behavior on reveal { Anim { type: Anim.DefaultSpatial } }
     // высота карточки по режиму (анимируется при смене режима)
     function panelHeightFor(m) {
+        if (m === "audio") return Theme.panelHeaderH + audioBody.implicitHeight + Theme.space3
         if (m === "media") return Theme.panelHeaderH + mediaPanel.implicitHeight + Theme.space3
         if (m === "search") return Theme.panelHSearch
         if (m === "notifs") return Theme.panelHNotifs
@@ -631,6 +631,7 @@ PanelWindow {
     // ширина панели по режиму: пульт/поиск — фикс, медиа/погода — по содержимому
     function panelWidthFor(m) {
         if (m === "search") return Theme.panelWSearchWide
+        if (m === "audio") return Theme.panelWAudio
         if (m === "media") return Theme.panelWMedia
         if (m === "notifs") return Theme.panelWNotifs
         if (m === "sys") return Theme.panelWSys
@@ -654,6 +655,7 @@ PanelWindow {
             ? cellOriginX(rightZone.mediaCellRef) : -1
         if (m === "notifs") return cellOriginX(rightZone.notifCellRef)
         if (m === "sys") return cellOriginX(rightZone.sysCellRef)
+        if (m === "audio") return cellOriginX(rightZone.volumeCellRef)
         return -1
     }
     property real panelTargetW: root.panelWidthFor(BarState.mode)
@@ -668,11 +670,13 @@ PanelWindow {
         var max = Math.max(min, root.width - w - Theme.barMargin)
         return Math.max(min, Math.min(max, c - w / 2))
     }
-    readonly property bool panelHasHeader: BarState.mode === "media"
+    readonly property bool panelHasHeader: BarState.mode === "audio"
+        || BarState.mode === "media"
         || BarState.mode === "notifs"
         || BarState.mode === "sys"
         || BarState.mode === "weather"
     readonly property string panelTitle: {
+        if (BarState.mode === "audio") return "ЗВУК"
         if (BarState.mode === "media") return "МЕДИА"
         if (BarState.mode === "search") return "ПОИСК"
         if (BarState.mode === "notifs") return "УВЕДОМЛЕНИЯ"
@@ -699,10 +703,11 @@ PanelWindow {
 
     // панель закрывается кликом по её фону, Esc (поиск) или повторным режимом
 
-    // IPC: qs ipc call bar volume|media|search|notifs|sys|weather|reset
+    // IPC: qs ipc call bar volume|mixer|media|search|notifs|sys|weather|reset
     IpcHandler {
         target: "bar"
-        function volume() { root.openVolumePanel() }
+        function volume() { BarState.togglePanel("audio") }
+        function mixer() { root.openMixer() }
         function media() { BarState.togglePanel("media") }
         function search() { BarState.togglePanel("search") }
         function notifs() { BarState.togglePanel("notifs") }
@@ -1030,6 +1035,9 @@ PanelWindow {
 
             // ── ТЕЛЕМЕТРИЯ: плашки CPU · RAM · GPU + сеть ──
             PanelTelemetry { host: root; id: sysBody }
+
+            // ── ЗВУК: вывод и вход — выбор устройства + ползунки ──
+            PanelAudio { host: root; id: audioBody }
 
             // ── ПОГОДА: карточка «сейчас» + детали, компактным превью ──
             BarBubble {

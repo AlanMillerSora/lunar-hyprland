@@ -42,8 +42,9 @@ PanelWindow {
     }
 
     // изменение звука → показать OSD (после прайма и при наличии устройства).
-    onVolumeChanged: if (root.primed && root.volume >= 0) root.showOsd()
-    onMutedChanged: if (root.primed && root.volume >= 0) root.showOsd()
+    // Пока открыт пузырь звука — не показываю: там свой ползунок громкости.
+    onVolumeChanged: if (root.primed && root.volume >= 0 && BarState.mode !== "audio") root.showOsd()
+    onMutedChanged: if (root.primed && root.volume >= 0 && BarState.mode !== "audio") root.showOsd()
 
     readonly property int segments: 20
     readonly property real frac: (muted || volume <= 0) ? 0 : Math.min(volume / 100, 1)

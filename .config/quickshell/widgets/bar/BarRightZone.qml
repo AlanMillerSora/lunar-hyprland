@@ -23,6 +23,7 @@ Item {
     property var mediaCellRef: null
     property var notifCellRef: null
     property var sysCellRef: null
+    property var volumeCellRef: null
     function openMediaBubble() {
         if (mediaCellRef)
             mediaCellRef.openBubbleFromHere()
@@ -214,9 +215,13 @@ Item {
             id: volCell
             anchors.verticalCenter: parent.verticalCenter
             interactive: true
+            active: BarState.mode === "audio"
             accent: rightZone.host.muted ? Theme.danger : Theme.barDim
-            tip: "Звук · микшер"
-            onClicked: rightZone.host.openMixer()
+            tip: "Звук · вывод и вход"
+            onClicked: BarState.togglePanel("audio")
+            Component.onCompleted: rightZone.volumeCellRef = volCell
+            Component.onDestruction: if (rightZone.volumeCellRef === volCell)
+                rightZone.volumeCellRef = null
             property SequentialAnimation volPulse: SequentialAnimation {
                 NumberAnimation {
                     target: volCell; property: "scale"; to: 1.15

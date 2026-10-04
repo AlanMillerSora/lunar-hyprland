@@ -318,7 +318,8 @@ hl.bind(M .. " + SHIFT + E", dsp.exec_cmd("qs ipc call sidebar toggle"))   -- б
 hl.bind(M .. " + SHIFT + N", dsp.exec_cmd("qs ipc call rsidebar toggle"))  -- панель справа: уведомления/музыка/календарь
 hl.bind(M .. " + A",       dsp.exec_cmd("qs ipc call agent toggle"))      -- оверлей-агент OpenCode (Quickshell)
 hl.bind(M .. " + O",       dsp.exec_cmd("qs ipc call overview toggle"))   -- обзор столов (Quickshell)
--- панель бара: режимы вниз (медиа/поиск/уведы/телеметрия)
+-- панель бара: режимы вниз (звук/медиа/поиск/уведы/телеметрия)
+hl.bind(M .. " + C",       dsp.exec_cmd("qs ipc call bar volume"))  -- пузырь звука: вывод/вход с выбором
 hl.bind(M .. " + X",       dsp.exec_cmd("qs ipc call bar media"))
 hl.bind(M .. " + D",       dsp.exec_cmd("qs ipc call bar search"))
 hl.bind(M .. " + N",       dsp.exec_cmd("qs ipc call bar notifs"))
