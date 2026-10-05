@@ -513,7 +513,7 @@ Item {
                                             spacing: 9
 
                                             Text {
-                                                text: "\uf1eb"
+                                                text: "󰖩"
                                                 color: modelData.conn ? Theme.accent : Theme.textFaint
                                                 font.family: Theme.iconFont
                                                 font.pixelSize: Theme.fontBody
@@ -522,7 +522,7 @@ Item {
 
                                             Text {
                                                 visible: modelData.sec !== "open"
-                                                text: "\uf023"
+                                                text: "󰌾"
                                                 color: Theme.textFaint
                                                 font.family: Theme.iconFont
                                                 font.pixelSize: Theme.fontTiny

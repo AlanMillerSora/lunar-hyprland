@@ -71,7 +71,7 @@ Item {
 
                 Text {
                     anchors.centerIn: parent
-                    text: "\uf021"
+                    text: "󰑐"
                     color: refreshMouse.containsMouse ? Theme.accent : Theme.textDim
                     font.family: Theme.iconFont
                     font.pixelSize: Theme.fontBody

@@ -90,7 +90,7 @@ Item {
                     anchors.centerIn: parent
                     spacing: Theme.space2
                     Text {
-                        text: "\uf002"
+                        text: "󰍉"
                         color: Theme.accent
                         font.family: Theme.iconFont
                         font.pixelSize: Theme.fontSize(12)
@@ -154,7 +154,7 @@ Item {
                 var d = item.duration > 0 ? PlayerCore.fmt(item.duration) : ""
                 return (up + (up.length > 0 && d.length > 0 ? "  ·  " : "") + d)
             }
-            rightIconFor: function(item, index) { return "\uf067" }
+            rightIconFor: function(item, index) { return "󰐕" }
 
             onActivated: (index) => {
                 var item = PlayerCore.searchResults[index]

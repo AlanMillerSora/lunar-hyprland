@@ -10,20 +10,35 @@ Item {
     id: root
 
     property string text: ""
+    // необязательный глиф-иконка перед подписью — рисую отдельным Text
+    // в JetBrainsMono NF, чтобы знак не уезжал в чужой фолбэк (B6)
+    property string icon: ""
     property color textColor: Theme.textFaint
     property int size: Theme.fontTiny
     property bool bold: true
 
     readonly property int pad: Theme.sectionHeaderPad
+    readonly property real iconW: iconText.visible ? iconText.implicitWidth + root.pad : 0
 
-    implicitWidth: lb.implicitWidth + label.implicitWidth + rb.implicitWidth + 2 * root.pad
+    implicitWidth: iconW + lb.implicitWidth + label.implicitWidth + rb.implicitWidth + 2 * root.pad
     implicitHeight: Math.max(label.implicitHeight, Theme.sectionHeaderMinH(size))
 
+    Text {
+        id: iconText
+        visible: root.icon !== ""
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.left: parent.left
+        text: root.icon
+        color: root.textColor
+        font.family: Theme.iconFont
+        font.pixelSize: root.size
+    }
     Text {
         id: lb
         visible: Theme.arch
         anchors.verticalCenter: parent.verticalCenter
         anchors.left: parent.left
+        anchors.leftMargin: root.iconW
         text: "["
         color: Theme.hairAccent
         font.family: Theme.fontFamily
@@ -34,7 +49,7 @@ Item {
         id: label
         anchors.verticalCenter: parent.verticalCenter
         anchors.left: parent.left
-        anchors.leftMargin: lb.implicitWidth + root.pad
+        anchors.leftMargin: root.iconW + lb.implicitWidth + root.pad
         text: root.text
         color: root.textColor
         font.family: Theme.fontFamily

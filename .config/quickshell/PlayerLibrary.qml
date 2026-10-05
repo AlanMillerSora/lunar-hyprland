@@ -68,7 +68,7 @@ Item {
                     anchors.centerIn: parent
                     spacing: Theme.space2
                     Text {
-                        text: "\uf021"
+                        text: "󰑐"
                         color: PlayerCore.libraryBusy ? Theme.textFaint : Theme.accent
                         font.family: Theme.iconFont
                         font.pixelSize: Theme.fontSize(11)

@@ -91,7 +91,7 @@ Item {
             onClicked: rightZone.host.toggleGameMode()
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-                text: "\uf11b"
+                text: "󰊖"
                 color: rightZone.host.gameMode ? Theme.danger : Theme.barDim
                 font.family: Theme.iconFont
                 font.pixelSize: Theme.fontSize(15)
@@ -161,7 +161,7 @@ Item {
             }
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-                text: rightZone.host.dnd ? "\uf1f6" : "\uf0f3"
+                text: rightZone.host.dnd ? "󰂛" : "󰂚"
                 color: BarState.mode === "notifs" ? Theme.accent
                     : (rightZone.host.dnd ? Theme.barFaint
                        : (rightZone.host.notifCount > 0 ? Theme.barText : Theme.barDim))

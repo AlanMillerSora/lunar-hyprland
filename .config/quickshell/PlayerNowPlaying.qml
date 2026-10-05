@@ -131,7 +131,7 @@ Item {
                         border.width: 1
                         Text {
                             anchors.centerIn: parent
-                            text: "\uf001"
+                            text: "󰎇"
                             color: Theme.textFaint
                             font.family: Theme.iconFont
                             font.pixelSize: Theme.fontSize(52)
@@ -247,7 +247,7 @@ Item {
                     spacing: 6
 
                     Text {
-                        text: "\uf03d"
+                        text: "󰕧"
                         color: watchArea.containsMouse ? Theme.accent : Theme.textDim
                         font.family: Theme.iconFont
                         font.pixelSize: Theme.fontSize(12)
@@ -281,7 +281,7 @@ Item {
             Text {
                 anchors.centerIn: parent
                 visible: !PlayerCore.hasMedia
-                text: "\uf001"
+                text: "󰎇"
                 color: Theme.textFaint
                 font.family: Theme.iconFont
                 font.pixelSize: Theme.fontSize(44)

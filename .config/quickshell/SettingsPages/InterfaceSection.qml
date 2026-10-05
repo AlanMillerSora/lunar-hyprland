@@ -182,7 +182,7 @@ Item {
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.margins: Theme.space3
-                    text: "\uf071  " + Theme.uiError
+                    text: "󰀦  " + Theme.uiError
                     color: Theme.danger
                     font.family: Theme.iconFont
                     font.pixelSize: Theme.fontTiny
@@ -202,7 +202,7 @@ Item {
                     Text {
                         text: "󰝴"
                         color: Theme.accent
-                        font.family: page.mono
+                        font.family: Theme.iconFont
                         font.pixelSize: Theme.fontBody
                         anchors.verticalCenter: parent.verticalCenter
                     }
@@ -245,9 +245,9 @@ Item {
                     spacing: Theme.space4
 
                     Text {
-                        text: "\uf043"
+                        text: "󰖌"
                         color: Theme.accent
-                        font.family: page.mono
+                        font.family: Theme.iconFont
                         font.pixelSize: Theme.fontBody
                         anchors.verticalCenter: parent.verticalCenter
                     }
@@ -295,7 +295,7 @@ Item {
                     Text {
                         text: "󰬶"
                         color: Theme.accent
-                        font.family: page.mono
+                        font.family: Theme.iconFont
                         font.pixelSize: Theme.fontBody
                         anchors.verticalCenter: parent.verticalCenter
                     }
@@ -760,9 +760,9 @@ Item {
                 visible: Theme.wallpaperMode !== "image"
 
                 Text {
-                    text: "\uf03e"
+                    text: "󰋩"
                     color: Theme.accent
-                    font.family: page.mono
+                    font.family: Theme.iconFont
                     font.pixelSize: Theme.fontBody
                     anchors.verticalCenter: parent.verticalCenter
                 }

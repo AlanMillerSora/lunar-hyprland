@@ -56,8 +56,8 @@ PanelWindow {
     onFracChanged: if (showing) shownFrac = frac
     // значение в технических скобках: [ 42% ]
     readonly property string label: muted ? "[ mute ]" : (volume < 0 ? "[ -- ]" : "[ " + volume + "% ]")
-    // FontAwesome: mute / volume-low / volume-high
-    readonly property string icon: muted ? "\uf026" : (volume < 50 ? "\uf027" : "\uf028")
+    // глифы Nerd Font: mute / volume-low / volume-high
+    readonly property string icon: muted ? "󰖁" : (volume < 50 ? "󰕿" : "󰕾")
 
     function showOsd() {
         showing = true

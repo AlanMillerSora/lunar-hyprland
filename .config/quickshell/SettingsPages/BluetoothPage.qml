@@ -258,7 +258,7 @@ Item {
                         spacing: Theme.space2
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
-                            text: "\uf294"
+                            text: "󰂲"
                             color: Theme.textDim
                             font.family: Theme.iconFont
                             font.pixelSize: Theme.fontSize(24)
@@ -289,7 +289,7 @@ Item {
                         spacing: Theme.space2
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
-                            text: "\uf1eb"
+                            text: "󰖩"
                             color: Theme.textDim
                             font.family: Theme.iconFont
                             font.pixelSize: Theme.fontSize(22)
@@ -332,7 +332,7 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                             spacing: 10
                             Text {
-                                text: "\uf294"
+                                text: "󰂯"
                                 color: card.isConnected ? Theme.accent : Theme.textDim
                                 font.family: Theme.iconFont
                                 font.pixelSize: Theme.fontSize(15)
@@ -389,7 +389,7 @@ Item {
                                 anchors.verticalCenter: parent.verticalCenter
                                 Text {
                                     anchors.centerIn: parent
-                                    text: "\uf293"
+                                    text: "󰂯"
                                     color: Theme.textDim
                                     font.family: Theme.iconFont
                                     font.pixelSize: Theme.fontSize(16)

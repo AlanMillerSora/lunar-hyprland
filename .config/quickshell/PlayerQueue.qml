@@ -63,7 +63,7 @@ Item {
                 var d = item.duration > 0 ? PlayerCore.fmt(item.duration) : ""
                 return d
             }
-            rightIconFor: function(item, index) { return "\uf00d" }
+            rightIconFor: function(item, index) { return "󰅖" }
 
             onActivated: (index) => PlayerCore.jumpTo(index)
             onRightClicked: (index) => PlayerCore.removeAt(index)

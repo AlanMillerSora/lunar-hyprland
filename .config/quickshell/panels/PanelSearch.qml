@@ -42,7 +42,7 @@ Item {
             anchors.left: parent.left
             anchors.leftMargin: Theme.space3
             anchors.verticalCenter: parent.verticalCenter
-            text: "\uf002"
+            text: "󰍉"
             color: searchInput.activeFocus ? Theme.accent : Theme.textDim
             font.family: Theme.iconFont
             font.pixelSize: Theme.fontSize(16)
@@ -183,7 +183,7 @@ Item {
                             anchors.centerIn: parent
                             visible: modelData.image === undefined || modelData.image === ""
                                 || resIcon.status !== Image.Ready
-                            text: modelData.kind === "app" ? "\uf009" : (modelData.icon || "")
+                            text: modelData.kind === "app" ? "󰀻" : (modelData.icon || "")
                             color: index === Launcher.index ? Theme.accent : Theme.textDim
                             font.family: Theme.iconFont
                             font.pixelSize: modelData.kind === "app" ? 16 : Theme.fontSize(18)

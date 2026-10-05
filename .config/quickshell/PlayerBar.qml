@@ -89,7 +89,7 @@ Item {
                         border.width: 1
                         Text {
                             anchors.centerIn: parent
-                            text: "\uf001"
+                            text: "󰎇"
                             color: Theme.textFaint
                             font.family: Theme.iconFont
                             font.pixelSize: Theme.fontSize(16)
@@ -145,7 +145,7 @@ Item {
                     spacing: Theme.space4
 
                     Text {
-                        text: "\uf048"
+                        text: "󰒫"
                         color: prevMouse.containsMouse ? Theme.accent : Theme.textDim
                         font.family: Theme.iconFont
                         font.pixelSize: Theme.fontSize(16)
@@ -160,7 +160,7 @@ Item {
                         }
                     }
                     Text {
-                        text: PlayerCore.playing ? "\uf04c" : "\uf04b"
+                        text: PlayerCore.playing ? "󰏤" : "󰐊"
                         color: playMouse.containsMouse ? Theme.accent : Theme.text
                         font.family: Theme.iconFont
                         font.pixelSize: Theme.fontSize(20)
@@ -175,7 +175,7 @@ Item {
                         }
                     }
                     Text {
-                        text: "\uf051"
+                        text: "󰒬"
                         color: nextMouse.containsMouse ? Theme.accent : Theme.textDim
                         font.family: Theme.iconFont
                         font.pixelSize: Theme.fontSize(16)
@@ -202,7 +202,7 @@ Item {
                         border.color: Theme.alpha(Theme.accent, 0.5)
                         Text {
                             anchors.centerIn: parent
-                            text: "\uf074"
+                            text: "󰒝"
                             color: PlayerCore.shuffle ? Theme.accent : Theme.textDim
                             font.family: Theme.iconFont
                             font.pixelSize: Theme.fontSize(12)
@@ -217,7 +217,7 @@ Item {
                     }
 
                     Text {
-                        text: "\uf065"
+                        text: "󰊓"
                         color: expandMouse.containsMouse ? Theme.accent : Theme.textDim
                         font.family: Theme.iconFont
                         font.pixelSize: Theme.fontSize(13)
@@ -252,8 +252,8 @@ Item {
                         Text {
                             id: volIcon
                             text: (PlayerCore.muted || PlayerCore.volume <= 0)
-                                ? "\uf026"
-                                : (PlayerCore.volume < 50 ? "\uf027" : "\uf028")
+                                ? "󰖁"
+                                : (PlayerCore.volume < 50 ? "󰕿" : "󰕾")
                             color: (PlayerCore.muted || PlayerCore.volume <= 0)
                                 ? Theme.textFaint
                                 : (volMouse.containsMouse ? Theme.accent : Theme.textDim)

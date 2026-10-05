@@ -19,14 +19,14 @@ Item {
     property real marginBottom: 0
     property real sectionSpacing: 6
 
-    // иконки Nerd Font — одиночный \u (двойной слэш печатался буквально)
-    readonly property string icSpeaker: "\uf028"
-    readonly property string icMic: "\uf130"
-    readonly property string icMute: "\uf026"
-    readonly property string icRadioOff: "\uf10c"
-    readonly property string icHead: "\uf025"
-    readonly property string icBt: "\uf293"
-    readonly property string icMonitor: "\uf108"
+    // иконки — глифы Nerd Font (JetBrainsMono NF), единый набор (B6)
+    readonly property string icSpeaker: "󰕾"
+    readonly property string icMic: "󰍬"
+    readonly property string icMute: "󰖁"
+    readonly property string icRadioOff: "󰝦"
+    readonly property string icHead: "󰋋"
+    readonly property string icBt: "󰂯"
+    readonly property string icMonitor: "󰍹"
 
     PwObjectTracker {
         objects: Pipewire.nodes.values

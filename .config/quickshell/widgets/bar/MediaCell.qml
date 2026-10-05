@@ -116,7 +116,7 @@ Cell {
                 Text {
                     anchors.centerIn: parent
                     visible: artImg.status !== Image.Ready
-                    text: "\uf001"
+                    text: "󰎇"
                     color: Theme.barFaint
                     font.family: Theme.iconFont
                     font.pixelSize: Theme.fontSize(13)
@@ -127,7 +127,7 @@ Cell {
             Text {
                 id: ppText
                 anchors.verticalCenter: parent.verticalCenter
-                text: mediaInline.host.playing ? "\uf04c" : "\uf04b"
+                text: mediaInline.host.playing ? "󰏤" : "󰐊"
                 color: mediaInline.host.playing ? Theme.accent : Theme.barFaint
                 font.family: Theme.iconFont
                 font.pixelSize: Theme.fontSize(13)

@@ -226,7 +226,7 @@ PanelWindow {
                         Text {
                             anchors.centerIn: parent
                             visible: !rowIcon.visible
-                            text: "\uf111"
+                            text: "󰝥"
                             color: Theme.textFaint
                             font.family: Theme.iconFont
                             font.pixelSize: Theme.fontSize(8)

@@ -69,7 +69,7 @@ import "../shared"
                             Text {
                                 anchors.centerIn: parent
                                 visible: !(trayImg.source != "" && trayImg.status !== Image.Error)
-                                text: "\uf111"
+                                text: "󰝥"
                                 color: Theme.barFaint
                                 font.family: Theme.iconFont
                                 font.pixelSize: Theme.fontSize(7)

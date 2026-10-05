@@ -237,9 +237,9 @@ Item {
                 Text {
                     anchors.centerIn: thumb
                     visible: thumb.status !== Image.Ready
-                    text: grid.videos ? "▶" : "\uf03e"
+                    text: grid.videos ? "󰐊" : "󰋩"
                     color: Theme.textFaint
-                    font.family: grid.videos ? Theme.fontFamily : Theme.iconFont
+                    font.family: Theme.iconFont
                     font.pixelSize: grid.videos ? 28 : 22
                 }
 
@@ -256,9 +256,9 @@ Item {
 
                     Text {
                         anchors.centerIn: parent
-                        text: "▶"
+                        text: "󰐊"
                         color: Theme.text
-                        font.family: Theme.fontFamily
+                        font.family: Theme.iconFont
                         font.pixelSize: Theme.fontMicro
                     }
                 }

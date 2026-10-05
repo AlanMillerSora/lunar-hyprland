@@ -180,7 +180,7 @@ FloatingWindow {
                     anchors.left: parent.left
                     anchors.leftMargin: Theme.space3
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "\uf002"
+                    text: "󰍉"
                     font.family: Theme.iconFont
                     font.pixelSize: Theme.fontTiny
                     color: Theme.textDim

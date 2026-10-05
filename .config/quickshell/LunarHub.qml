@@ -67,15 +67,15 @@ FloatingWindow {
     // Nav model
     // -------------------------
     property var navItems: [
-        { name: "Launch",     icon: "\uf120", page: "LaunchPage" },
+        { name: "Launch",     icon: "󰆍", page: "LaunchPage" },
         { name: "System",     icon: "󰒓", page: "SystemPage" },
-        { name: "Devices",    icon: "\uf108", page: "DevicesPage" },
-        { name: "Network",    icon: "\uf1eb", page: "NetworkPage" },
-        { name: "Interface",  icon: "\uf085", page: "InterfacePage" },
-        { name: "Games",      icon: "\uf11b", page: "GamesPage" },
-        { name: "Dev",        icon: "\uf121", page: "DevPage" },
-        { name: "Update",     icon: "\uf021", page: "UpdatePage" },
-        { name: "Media",      icon: "\uf008", page: "MediaPage" }
+        { name: "Devices",    icon: "󰍹", page: "DevicesPage" },
+        { name: "Network",    icon: "󰖩", page: "NetworkPage" },
+        { name: "Interface",  icon: "󰣖", page: "InterfacePage" },
+        { name: "Games",      icon: "󰊖", page: "GamesPage" },
+        { name: "Dev",        icon: "󰅴", page: "DevPage" },
+        { name: "Update",     icon: "󰑐", page: "UpdatePage" },
+        { name: "Media",      icon: "󰈰", page: "MediaPage" }
     ]
 
     property int selectedIndex: 0
@@ -130,13 +130,13 @@ FloatingWindow {
     property var appHay: []
 
     property var searchActions: [
-        { name: "Game Mode — вкл/выкл", icon: "\uf11b",
+        { name: "Game Mode — вкл/выкл", icon: "󰊖",
           run: function() { root.runShell("~/.config/hypr/scripts/eclipse-gamemode.sh toggle") } },
-        { name: "Запись экрана — старт/стоп", icon: "\uf111",
+        { name: "Запись экрана — старт/стоп", icon: "󰝥",
           run: function() { root.runShell("~/.config/hypr/scripts/eclipse-record.sh toggle") } },
-        { name: "Микшер (pavucontrol)", icon: "\uf028",
+        { name: "Микшер (pavucontrol)", icon: "󰕾",
           run: function() { root.runShell("setsid pavucontrol >/dev/null 2>&1 &") } },
-        { name: "Живые обои — вкл/выкл", icon: "\uf03e",
+        { name: "Живые обои — вкл/выкл", icon: "󰋩",
           run: function() { Theme.wallpaperLive = !Theme.wallpaperLive } }
     ]
 

@@ -103,10 +103,10 @@ FloatingWindow {
     onPageIndexChanged: if (pageIndex !== 2) keyRoot.forceActiveFocus()
 
     property var pages: [
-        { name: "СЕЙЧАС",   icon: "\uf001", source: "PlayerNowPlaying.qml" },
-        { name: "ОЧЕРЕДЬ",  icon: "\uf03a", source: "PlayerQueue.qml" },
-        { name: "ПОИСК",    icon: "\uf002", source: "PlayerSearch.qml" },
-        { name: "ЛОКАЛЬНЫЕ", icon: "\uf07b", source: "PlayerLibrary.qml" }
+        { name: "СЕЙЧАС",   icon: "󰎇", source: "PlayerNowPlaying.qml" },
+        { name: "ОЧЕРЕДЬ",  icon: "󰉹", source: "PlayerQueue.qml" },
+        { name: "ПОИСК",    icon: "󰍉", source: "PlayerSearch.qml" },
+        { name: "ЛОКАЛЬНЫЕ", icon: "󰉋", source: "PlayerLibrary.qml" }
     ]
 
     function goto(i) { Theme.playerPage = Math.max(0, Math.min(pages.length - 1, i)) }

@@ -203,7 +203,7 @@ Item {
                 spacing: Theme.space3
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: centerZone.host.netKind === "eth" ? "󰈀" : "\uf1eb"
+                    text: centerZone.host.netKind === "eth" ? "󰈀" : "󰖩"
                     color: centerZone.host.netKind === "off" ? Theme.barFaint : Theme.barText
                     font.family: Theme.iconFont
                     font.pixelSize: Theme.fontSize(14)

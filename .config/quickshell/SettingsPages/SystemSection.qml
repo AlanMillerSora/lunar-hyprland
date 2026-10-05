@@ -576,7 +576,7 @@ Item {
                     Column {
                         spacing: 3
 
-                        SectionHeader { text: "󰒋  HOSTNAME"; textColor: Theme.accent; size: Theme.fontTiny; bold: false }
+                        SectionHeader { icon: "󰒋"; text: "HOSTNAME"; textColor: Theme.accent; size: Theme.fontTiny; bold: false }
 
                         Text {
                             text: page.hostname
@@ -589,7 +589,7 @@ Item {
                     Column {
                         spacing: 3
 
-                        SectionHeader { text: "󰣇  OS"; textColor: Theme.accent; size: Theme.fontTiny; bold: false }
+                        SectionHeader { icon: "󰣇"; text: "OS"; textColor: Theme.accent; size: Theme.fontTiny; bold: false }
 
                         Text {
                             text: page.os
@@ -604,7 +604,7 @@ Item {
                     Column {
                         spacing: 3
 
-                        SectionHeader { text: "󰔛  UPTIME"; textColor: Theme.accent; size: Theme.fontTiny; bold: false }
+                        SectionHeader { icon: "󰔛"; text: "UPTIME"; textColor: Theme.accent; size: Theme.fontTiny; bold: false }
 
                         Text {
                             text: page.uptime
@@ -627,7 +627,8 @@ Item {
 
                     SectionHeader {
                         id: cpuHeader
-                        text: "󰍛  CPU"
+                        icon: "󰍛"
+                        text: "CPU"
                         textColor: Theme.accent
                         size: page.hardwareLabelSize
                         bold: false
@@ -736,7 +737,8 @@ Item {
 
                     SectionHeader {
                         id: gpuHeader
-                        text: "󰢮  GPU"
+                        icon: "󰢮"
+                        text: "GPU"
                         textColor: Theme.accent
                         size: page.hardwareLabelSize
                         bold: false
@@ -844,7 +846,8 @@ Item {
 
                     SectionHeader {
                         id: memoryHeader
-                        text: "󰘚  RAM"
+                        icon: "󰘚"
+                        text: "RAM"
                         textColor: Theme.accent
                         size: page.hardwareLabelSize
                         bold: false
@@ -952,7 +955,8 @@ Item {
                     spacing: Theme.space5
 
                     SectionHeader {
-                        text: "󰚰  ОБНОВЛЕНИЯ"
+                        icon: "󰚰"
+                        text: "ОБНОВЛЕНИЯ"
                         textColor: Theme.accent
                         size: page.hardwareLabelSize
                         bold: false

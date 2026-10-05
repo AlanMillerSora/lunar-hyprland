@@ -113,7 +113,7 @@ Item {
 
                     Text {
                         visible: gIcon.status !== Image.Ready
-                        text: "\uf11b"
+                        text: "󰊖"
                         color: Theme.textDim
                         font.family: Theme.iconFont
                         font.pixelSize: Theme.fontSize(18)

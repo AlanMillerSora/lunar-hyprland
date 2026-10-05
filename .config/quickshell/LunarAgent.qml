@@ -234,9 +234,9 @@ FloatingWindow {
                         border.color: Theme.border
                         Text {
                             anchors.centerIn: parent
-                            text: "✕"
+                            text: "󰅖"
                             color: Theme.textDim
-                            font.family: Theme.fontFamily
+                            font.family: Theme.iconFont
                             font.pixelSize: Theme.fontSize(12)
                         }
                         MouseArea {

@@ -41,7 +41,7 @@ Item {
                 spacing: Theme.space3
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: Weather.ok ? Weather.icon : "\uf185"
+                    text: Weather.ok ? Weather.icon : "󰖙"
                     color: Theme.accent
                     font.family: Theme.iconFont
                     font.pixelSize: Theme.iconXL
@@ -127,7 +127,7 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     visible: artImg.status !== Image.Ready || MediaCore.art === ""
-                    text: "\uf001"
+                    text: "󰎇"
                     color: Theme.textFaint
                     font.family: Theme.iconFont
                     font.pixelSize: Theme.fontSize(22)
@@ -173,7 +173,7 @@ Item {
                 Row {
                     spacing: Theme.space3
                     Text {
-                        text: "\uf048"
+                        text: "󰒫"
                         color: MediaCore.player && MediaCore.player.canGoPrevious
                             ? (prevMa.containsMouse ? Theme.accent : Theme.textDim) : Theme.textFaint
                         font.family: Theme.iconFont
@@ -187,7 +187,7 @@ Item {
                         }
                     }
                     Text {
-                        text: MediaCore.playing ? "\uf04c" : "\uf04b"
+                        text: MediaCore.playing ? "󰏤" : "󰐊"
                         color: playMa.containsMouse ? Theme.accent : Theme.text
                         font.family: Theme.iconFont
                         font.pixelSize: Theme.fontSize(16)
@@ -200,7 +200,7 @@ Item {
                         }
                     }
                     Text {
-                        text: "\uf051"
+                        text: "󰒬"
                         color: MediaCore.player && MediaCore.player.canGoNext
                             ? (nextMa.containsMouse ? Theme.accent : Theme.textDim) : Theme.textFaint
                         font.family: Theme.iconFont

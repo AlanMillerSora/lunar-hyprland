@@ -13,15 +13,15 @@ QtObject {
 
     // страницы Hub (порядок = nav в LunarHub)
     readonly property var navItems: [
-        { name: "Launch",     icon: "\uf120" },
+        { name: "Launch",     icon: "󰆍" },
         { name: "System",     icon: "󰒓" },
-        { name: "Devices",    icon: "\uf108" },
-        { name: "Network",    icon: "\uf1eb" },
-        { name: "Interface",  icon: "\uf085" },
-        { name: "Games",      icon: "\uf11b" },
-        { name: "Dev",        icon: "\uf121" },
-        { name: "Update",     icon: "\uf021" },
-        { name: "Media",      icon: "\uf302" }
+        { name: "Devices",    icon: "󰍹" },
+        { name: "Network",    icon: "󰖩" },
+        { name: "Interface",  icon: "󰣖" },
+        { name: "Games",      icon: "󰊖" },
+        { name: "Dev",        icon: "󰅴" },
+        { name: "Update",     icon: "󰑐" },
+        { name: "Media",      icon: "󰈰" }
     ]
 
     property Process p: Process { running: false }
@@ -125,19 +125,19 @@ QtObject {
     }
 
     property var searchActions: [
-        { name: "Game Mode — вкл/выкл", icon: "\uf11b",
+        { name: "Game Mode — вкл/выкл", icon: "󰊖",
           run: function() { sm.runShell("~/.config/hypr/scripts/eclipse-gamemode.sh toggle") } },
-        { name: "Запись экрана — старт/стоп", icon: "\uf111",
+        { name: "Запись экрана — старт/стоп", icon: "󰝥",
           run: function() { sm.runShell("~/.config/hypr/scripts/eclipse-record.sh toggle") } },
-        { name: "Микшер (pavucontrol)", icon: "\uf028",
+        { name: "Микшер (pavucontrol)", icon: "󰕾",
           run: function() { sm.runShell("setsid pavucontrol >/dev/null 2>&1 &") } },
-        { name: "Обои — подбор", icon: "\uf03e",
+        { name: "Обои — подбор", icon: "󰋩",
           run: function() { sm.runShell("qs ipc call wallpapers toggle") } },
-        { name: "Живые обои — вкл/выкл", icon: "\uf03e",
+        { name: "Живые обои — вкл/выкл", icon: "󰋩",
           run: function() { Theme.wallpaperLive = !Theme.wallpaperLive } },
-        { name: "История буфера (cliphist)", icon: "\uf0ea",
+        { name: "История буфера (cliphist)", icon: "󰆒",
           run: function() { sm.runShell("qs ipc call clipboard open") } },
-        { name: "Медиа — мои файлы", icon: "\uf302",
+        { name: "Медиа — мои файлы", icon: "󰈰",
           run: function() { sm.openHubPage(8) } }
     ]
 
@@ -381,13 +381,13 @@ QtObject {
         var items = []
         var ans = sm.calcAnswer(q)
         if (ans !== null)
-            items.push({ kind: "calc", group: "СЧЁТ", rank: -1000, label: "= " + ans, icon: "\uf1ec", text: ans })
+            items.push({ kind: "calc", group: "СЧЁТ", rank: -1000, label: "= " + ans, icon: "󰃬", text: ans })
         var unit = sm.unitAnswer(q)
         if (unit !== null)
-            items.push({ kind: "unit", group: "СЧЁТ", rank: -990, label: "= " + unit, icon: "\uf1ec", text: unit })
+            items.push({ kind: "unit", group: "СЧЁТ", rank: -990, label: "= " + unit, icon: "󰃬", text: unit })
         var url = sm.urlOf(q)
         if (url !== "")
-            items.push({ kind: "url", group: "ССЫЛКА", rank: -980, label: url, icon: "\uf0c1", url: url })
+            items.push({ kind: "url", group: "ССЫЛКА", rank: -980, label: url, icon: "󰌷", url: url })
         var em = sm.emojiHit(q)
         if (em !== null)
             items.push({ kind: "emoji", group: "ЭМОДЗИ", rank: -970, label: em.e + "  " + em.k, icon: "", text: em.e })

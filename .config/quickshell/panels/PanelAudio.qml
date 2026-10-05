@@ -14,10 +14,10 @@ Item {
     id: root
     property var host
 
-    readonly property string icSpeaker: "\uf028"
-    readonly property string icLow: "\uf027"
-    readonly property string icMic: "\uf130"
-    readonly property string icMute: "\uf026"
+    readonly property string icSpeaker: "󰕾"
+    readonly property string icLow: "󰕿"
+    readonly property string icMic: "󰍬"
+    readonly property string icMute: "󰖁"
 
     PwObjectTracker { objects: Pipewire.nodes.values }
 

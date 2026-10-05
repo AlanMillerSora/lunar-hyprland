@@ -158,7 +158,7 @@ import "../widgets/shared"
                         Text {
                             anchors.centerIn: parent
                             visible: nIcon.status !== Image.Ready
-                            text: "\uf0f3"
+                            text: "󰂚"
                             color: Theme.textFaint
                             font.family: Theme.iconFont
                             font.pixelSize: Theme.fontSize(13)
@@ -209,7 +209,7 @@ import "../widgets/shared"
                         anchors.right: parent.right
                         anchors.rightMargin: Theme.space2
                         anchors.verticalCenter: parent.verticalCenter
-                        text: "\uf00d"
+                        text: "󰅖"
                         color: dismissMouse.containsMouse ? Theme.danger
                             : (notifMouse.containsMouse ? Theme.textFaint : "transparent")
                         font.family: Theme.iconFont

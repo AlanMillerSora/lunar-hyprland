@@ -1054,7 +1054,7 @@ PanelWindow {
                     }
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
-                        text: "\uf00d"
+                        text: "󰅖"
                         color: headCloseMouse.containsMouse ? Theme.danger : Theme.textFaint
                         font.family: Theme.iconFont
                         font.pixelSize: Theme.fontSize(13)
@@ -1241,7 +1241,7 @@ PanelWindow {
             Text {
                 id: recPillDot
                 anchors.verticalCenter: parent.verticalCenter
-                text: "\uf111"
+                text: "󰝥"
                 color: Theme.danger
                 font.family: Theme.iconFont
                 font.pixelSize: Theme.fontSize(10)

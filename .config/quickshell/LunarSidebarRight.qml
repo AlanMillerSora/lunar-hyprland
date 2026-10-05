@@ -192,7 +192,7 @@ PanelWindow {
                     border.color: Theme.borderAccent
                     Text {
                         anchors.centerIn: parent
-                        text: "\uf11c"
+                        text: "󰌌"
                         color: helpMouse.containsMouse ? Theme.accent : Theme.textDim
                         font.family: Theme.iconFont
                         font.pixelSize: Theme.fontSize(13)
@@ -215,9 +215,9 @@ PanelWindow {
                     border.color: Theme.borderAccent
                     Text {
                         anchors.centerIn: parent
-                        text: "✕"
+                        text: "󰅖"
                         color: Theme.textDim
-                        font.family: Theme.fontFamily
+                        font.family: Theme.iconFont
                         font.pixelSize: Theme.fontSize(15)
                     }
                     MouseArea {
@@ -490,7 +490,7 @@ PanelWindow {
                                     font.bold: true
                                 }
                                 Text {
-                                    text: "\uf00d"
+                                    text: "󰅖"
                                     color: Theme.textDim
                                     font.family: Theme.iconFont
                                     font.pixelSize: Theme.fontSize(15)
@@ -523,7 +523,7 @@ PanelWindow {
                                         elide: Text.ElideRight
                                     }
                                     Text {
-                                        text: "\uf1f8"
+                                        text: "󰩹"
                                         color: Theme.textFaint
                                         font.family: Theme.iconFont
                                         font.pixelSize: Theme.fontSize(14)
@@ -617,7 +617,7 @@ PanelWindow {
                                     }
                                 }
                                 Text {
-                                    text: "\uf067"
+                                    text: "󰐕"
                                     color: Theme.accent
                                     font.family: Theme.iconFont
                                     font.pixelSize: Theme.fontSize(17)
@@ -742,7 +742,7 @@ PanelWindow {
                                     spacing: Theme.space3
 
                                     Text {
-                                        text: "\uf03d"
+                                        text: "󰕧"
                                         color: Theme.accent
                                         font.family: Theme.iconFont
                                         font.pixelSize: Theme.fontSize(17)
@@ -769,7 +769,7 @@ PanelWindow {
                                     }
 
                                     Text {
-                                        text: "\uf04b"
+                                        text: "󰐊"
                                         color: playMouse.containsMouse ? Theme.accent : Theme.textDim
                                         font.family: Theme.iconFont
                                         font.pixelSize: Theme.fontSize(14)
@@ -782,7 +782,7 @@ PanelWindow {
                                         }
                                     }
                                     Text {
-                                        text: "\uf1f8"
+                                        text: "󰩹"
                                         color: delMouse.containsMouse ? Theme.danger : Theme.textFaint
                                         font.family: Theme.iconFont
                                         font.pixelSize: Theme.fontSize(13)

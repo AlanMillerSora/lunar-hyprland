@@ -82,7 +82,7 @@ Item {
                     color: Theme.fill
                     Text {
                         anchors.centerIn: parent
-                        text: "\uf001"
+                        text: "󰎇"
                         color: Theme.barFaint
                         font.family: Theme.iconFont
                         font.pixelSize: Theme.fontSize(22)
@@ -118,7 +118,7 @@ Item {
             Text {
                 id: openBtn
                 anchors.verticalCenter: parent.verticalCenter
-                text: "\uf065"
+                text: "󰊓"
                 color: openMouse.containsMouse ? Theme.accent : Theme.barDim
                 font.family: Theme.iconFont
                 font.pixelSize: Theme.fontSize(15)
@@ -227,7 +227,7 @@ Item {
             // shuffle
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-                text: "\uf074"
+                text: "󰒝"
                 color: !MediaCore.shuffleSupported ? Theme.textFaint
                     : (MediaCore.shuffle ? Theme.accent : Theme.barDim)
                 font.family: Theme.iconFont
@@ -243,7 +243,7 @@ Item {
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-                text: "\uf048"
+                text: "󰒫"
                 color: Theme.barDim
                 font.family: Theme.iconFont
                 font.pixelSize: Theme.fontSize(18)
@@ -256,7 +256,7 @@ Item {
             }
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-                text: mp.playing ? "\uf04c" : "\uf04b"
+                text: mp.playing ? "󰏤" : "󰐊"
                 color: mp.playing ? Theme.accent : Theme.barText
                 font.family: Theme.iconFont
                 font.pixelSize: Theme.fontSize(22)
@@ -269,7 +269,7 @@ Item {
             }
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-                text: "\uf051"
+                text: "󰒬"
                 color: Theme.barDim
                 font.family: Theme.iconFont
                 font.pixelSize: Theme.fontSize(18)
@@ -284,7 +284,7 @@ Item {
             // repeat: выкл → все → один
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-                text: MediaCore.loopState === 1 ? "\uf364" : "\uf363"
+                text: MediaCore.loopState === 1 ? "󰑘" : "󰑖"
                 color: !MediaCore.loopSupported ? Theme.textFaint
                     : (MediaCore.loopState !== 0 ? Theme.accent : Theme.barDim)
                 font.family: Theme.iconFont
@@ -322,7 +322,7 @@ Item {
                 spacing: Theme.space2
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "\uf03d"
+                    text: "󰕧"
                     color: Theme.barDim
                     font.family: Theme.iconFont
                     font.pixelSize: Theme.fontSize(13)

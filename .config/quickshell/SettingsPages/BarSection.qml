@@ -425,7 +425,7 @@ Item {
                             anchors.right: upBtn.left
                             anchors.rightMargin: Theme.space3
                             anchors.verticalCenter: parent.verticalCenter
-                            text: modelData.visible ? "\uf06e" : "\uf070"
+                            text: modelData.visible ? "󰈈" : "󰈉"
                             color: BarSettings.isLocked(modelData.id) ? Theme.textFaint
                                  : (eyeMa.containsMouse ? Theme.accent
                                     : (modelData.visible ? Theme.textDim : Theme.textFaint))
@@ -448,7 +448,7 @@ Item {
                             anchors.right: downBtn.left
                             anchors.rightMargin: Theme.space2
                             anchors.verticalCenter: parent.verticalCenter
-                            text: "\uf077"
+                            text: "󰅃"
                             color: index > 0
                                 ? (upMa.containsMouse ? Theme.accent : Theme.textDim)
                                 : Theme.border
@@ -471,7 +471,7 @@ Item {
                             anchors.right: parent.right
                             anchors.rightMargin: 8
                             anchors.verticalCenter: parent.verticalCenter
-                            text: "\uf078"
+                            text: "󰅀"
                             color: index < zb.items.length - 1
                                 ? (downMa.containsMouse ? Theme.accent : Theme.textDim)
                                 : Theme.border

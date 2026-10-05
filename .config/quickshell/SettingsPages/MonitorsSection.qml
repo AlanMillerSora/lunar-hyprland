@@ -517,7 +517,7 @@ Item {
                 Text {
                     text: "󰑐"
                     color: Theme.accent
-                    font.family: Theme.fontFamily
+                    font.family: Theme.iconFont
                     font.pixelSize: Theme.fontSize(22)
 
                     MouseArea {
@@ -664,7 +664,7 @@ Item {
                         width: parent.width - 70 - parent.spacing
                         height: parent.height
                         label: "NIGHT LIGHT"
-                        icon: "\uf186"
+                        icon: "󰖔"
                         value: page.nightlightValue
                         accentColor: Theme.accent
 
@@ -1056,7 +1056,7 @@ Item {
                         width: parent.width - 130 - parent.spacing
                         height: parent.height
                         label: "BITRATE"
-                        icon: "\uf03d"
+                        icon: "󰕧"
                         value: (page.recBitrate - 2) / 48
                         accentColor: Theme.accent
 

@@ -280,7 +280,7 @@ Item {
                             spacing: Theme.space2
 
                             Text {
-                                text: "\uf126 " + (modelData.branch || "—")
+                                text: "󰓁 " + (modelData.branch || "—")
                                 color: Theme.textDim
                                 font.family: Theme.iconFont
                                 font.pixelSize: Theme.fontMicro
@@ -400,7 +400,7 @@ Item {
 
                     Text {
                         anchors.centerIn: parent
-                        text: "\uf00d"
+                        text: "󰅖"
                         color: closeMouse.containsMouse
                             ? Theme.danger
                             : Theme.textDim

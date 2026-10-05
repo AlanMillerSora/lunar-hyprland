@@ -312,7 +312,7 @@ Item {
                             Text {
                                 anchors.centerIn: parent
                                 visible: page.isOn(modelData.key)
-                                text: "\uf00c"
+                                text: "󰄬"
                                 color: Theme.accent
                                 font.family: Theme.iconFont
                                 font.pixelSize: Theme.fontNano
