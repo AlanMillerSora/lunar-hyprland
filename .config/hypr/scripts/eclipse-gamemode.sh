@@ -76,7 +76,7 @@ svc_pause() {
         && echo "$unit" >>"$tmp"
     else
       if systemctl is-active --quiet "$unit"; then
-        if sudo -n systemctl stop "$unit" 2>/dev/null; then
+        if sudo -n /usr/local/lib/lunar/svc.sh stop "$unit" 2>/dev/null; then
           echo "system:$unit" >>"$tmp"
         else
           say "Game Mode: нет прав на $unit (sudo -n) — пропускаю"
@@ -106,7 +106,7 @@ svc_restore() {
   local unit
   while IFS= read -r unit || [[ -n "$unit" ]]; do
     case "$unit" in
-      system:*) sudo -n systemctl start "${unit#system:}" 2>/dev/null ;;
+      system:*) sudo -n /usr/local/lib/lunar/svc.sh start "${unit#system:}" 2>/dev/null ;;
       *)        systemctl --user start "$unit" 2>/dev/null ;;
     esac
   done <"$PAUSED_STATE"

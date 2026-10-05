@@ -17,13 +17,14 @@ set -uo pipefail
 ZDIR=/opt/zapret
 UNIT=zapret.service
 
-# без пароля (sudoers-правило от install.sh --zapret); если правило не
-# установлено — внятно сообщаем, а не уходим в невидимый polkit-диалог pkexec
+# без пароля (root-хелпер svc.sh ставит install.sh); если хелпер или
+# правило не установлены — внятно сообщаем, а не уходим в невидимый
+# polkit-диалог pkexec
 priv() {
   if sudo -n "$@" 2>/dev/null; then
     return 0
   fi
-  echo "zapret: нет прав без пароля (нужно правило sudoers — install.sh --zapret)" >&2
+  echo "zapret: нет прав без пароля (нужен root-хелпер svc.sh — ./install.sh)" >&2
   return 1
 }
 
@@ -60,20 +61,20 @@ case "${1:-status}" in
     ;;
 
   on)
-    if priv systemctl enable --now "$UNIT"; then echo "zapret включён"; else echo "не удалось включить"; fi
+    if priv /usr/local/lib/lunar/svc.sh enable --now "$UNIT"; then echo "zapret включён"; else echo "не удалось включить"; fi
     ;;
   off)
-    if priv systemctl disable --now "$UNIT"; then echo "zapret выключен"; else echo "не удалось выключить"; fi
+    if priv /usr/local/lib/lunar/svc.sh disable --now "$UNIT"; then echo "zapret выключен"; else echo "не удалось выключить"; fi
     ;;
   toggle)
     if is_active; then
-      priv systemctl disable --now "$UNIT" && echo "zapret выключен"
+      priv /usr/local/lib/lunar/svc.sh disable --now "$UNIT" && echo "zapret выключен"
     else
-      priv systemctl enable --now "$UNIT" && echo "zapret включён"
+      priv /usr/local/lib/lunar/svc.sh enable --now "$UNIT" && echo "zapret включён"
     fi
     ;;
   restart)
-    priv systemctl restart "$UNIT" && echo "zapret перезапущен"
+    priv /usr/local/lib/lunar/svc.sh restart "$UNIT" && echo "zapret перезапущен"
     ;;
 
   update)
@@ -81,7 +82,7 @@ case "${1:-status}" in
     echo "── обновляю zapret ──"
     sudo git -C "$ZDIR" pull --ff-only || { echo "git pull не удался"; exit 1; }
     sudo make -C "$ZDIR" systemd -j"$(nproc)" || { echo "сборка не удалась"; exit 1; }
-    sudo systemctl restart "$UNIT"
+    priv /usr/local/lib/lunar/svc.sh restart "$UNIT"
     echo
     healthcheck
     ;;
@@ -93,7 +94,7 @@ case "${1:-status}" in
     sudo "$ZDIR/blockcheck.sh"
     echo
     echo "Готово. Стратегию из SUMMARY впиши в NFQWS_OPT в $ZDIR/config"
-    echo "(или перезапусти: sudo systemctl restart $UNIT)"
+    echo "(или перезапусти: $0 restart)"
     ;;
 
   *)

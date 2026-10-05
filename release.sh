@@ -25,6 +25,20 @@ if [[ -z "$VERSION" ]]; then
   exit 1
 fi
 
+# VERSION должен быть больше последнего тега v* — иначе это тег «назад»:
+# релиз получит меньший номер, и заметки/история поедут. Равный тег ловит
+# проверка ниже (нужен --force для перезаписи), а меньший не пускаем никогда.
+LAST_TAG="$(git tag --list 'v*' --sort=-v:refname | head -n1 || true)"
+if [[ -n "$LAST_TAG" ]]; then
+  LAST_VER="${LAST_TAG#v}"
+  HIGHEST="$(printf '%s\n%s\n' "$LAST_VER" "$VERSION" | sort -V | tail -n1)"
+  if [[ "$HIGHEST" == "$LAST_VER" && "$VERSION" != "$LAST_VER" ]]; then
+    echo "ОШИБКА: VERSION=$VERSION не больше последнего тега $LAST_TAG — назад не тегаем" >&2
+    echo "  подними версию: ./bump.sh patch|minor|major" >&2
+    exit 1
+  fi
+fi
+
 # рабочее дерево должно быть чистым, иначе релиз уедет без правок
 if [[ -n "$(git status --porcelain)" ]]; then
   echo "ОШИБКА: есть незакоммиченные изменения — сначала закоммить" >&2

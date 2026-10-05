@@ -23,7 +23,9 @@
 - Варианты и уточнения давай инструментом **question**, не списком в чате.
 - **Правь ТОЛЬКО репозиторий** `/home/sora/rice/`, затем копируй в `~/.config` — держи repo == live.
   Проверка дрейфа: `./sync.sh check` (показать расхождения), разложить — `./sync.sh`.
-- Меняешь поведение → **бампай `VERSION`** (в корне репо): патч — фиксы, минор — новая функциональность.
+- Меняешь поведение → **бампай `VERSION`** через `./bump.sh`: `patch` — фиксы,
+  `minor` — новая функциональность, `major` — ломающее. `VERSION` вручную не правь —
+  скрипт печатает старый→новый и не делает git-операций (тег ставит `release.sh`).
 - **Коммиты и комментарии в коде — от лица автора риса:** первым лицом, по-русски, что и зачем
   («убрал серп», «беру», «считаю сам»). Никаких «пользователь попросил» / «по правке пользователя» —
   историю и код будто ведёт сам автор. HANDOFF — личные заметки «для себя», туда это правило не нужно.
@@ -93,7 +95,7 @@ cd /home/sora/rice
 cp .config/quickshell/X.qml ~/.config/quickshell/
 cp .config/hypr/hyprland.lua ~/.config/hypr/
 cp .config/hypr/scripts/X.sh ~/.config/hypr/scripts/
-cp systemd/foo.service ~/.config/systemd/user/ && systemctl --user daemon-reload
+cp systemd/user/foo.service ~/.config/systemd/user/ && systemctl --user daemon-reload
 # 3) Hyprland:
 hyprctl reload; hyprctl configerrors        # должно быть пусто
 # 4) Quickshell (systemd, Restart=on-failure):
@@ -198,9 +200,11 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 │   ├── fontconfig/fonts.conf                  ← хинтинг/сглаживание (чёткие буквы)
 │   ├── bat/ Code/ yazi/ firefox/ hypridle/ mako/ kitty/ fastfetch/ btop/
 │   └── gtk-3.0/ gtk-4.0/ kdeglobals/ .zshrc starship.toml
-├── systemd/  color-schemes/  assets/(+screens/)  zapret/
+├── systemd/{user,system,libexec,sudoers,conf}/  color-schemes/  assets/(+screens/)  zapret/
 ├── plymouth/lunar/   sddm/lunar/        ← только темы + README
-├── install.sh get-deps.sh ui.sh release.sh
+├── install/{dotfiles,system,optional}.sh   ← части установщика
+├── deps/{packages.txt,aur.txt,snapshot.sh} ← манифест пакетов + снимок версий
+├── install.sh get-deps.sh ui.sh release.sh bump.sh
 └── README.md LICENSE VERSION AGENTS.md PORTABILITY.md lunar-dorabotki.md .gitattributes
     HANDOFF.md — только локально, в .gitignore
 ```
@@ -214,12 +218,14 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 - Левый сайдбар: 0 api-limit ·1 заметки. Правый: 0 календарь ·1 запись.
 - 9 столов: 1 игры ·2 Firefox ·3 Discord ·4 Steam ·5 затмение/пусто ·6 кодинг ·7/8 пусто ·9 btop.
   **Фаза обоев = номер стола.**
-- **Единый установщик** `install.sh` (флаги в §8). Отдельных sddm/plymouth/zapret-скриптов больше нет.
+- **Единый установщик** `install.sh` (флаги в §8) — тонкий оркестратор: разбор флагов и счётчик шагов, а работа по частям — `install/dotfiles.sh` (пользовательское), `install/system.sh` (root), `install/optional.sh` (SDDM/Plymouth/zapret). Отдельных sddm/plymouth/zapret-скриптов больше нет.
 - Настройки записи: `~/.config/lunar/record.json` (Hub → Monitors), читает `eclipse-record.sh`.
-- Палитра: `~/.config/lunar/palette.toml` + шаблоны `lunar/templates/*.in` →
-  `hypr/scripts/eclipse-palette.py` → `~/.cache/lunar/palette.json` (читает Theme.qml)
-  и файлы приложений (kitty include, GTK @import, mako include, qt6ct, btop, yazi, fastfetch).
-  Выбор пресета: `~/.cache/lunar/preset`, картинка фотопалитры: `~/.cache/lunar/photo`.
+- Палитра: источник — `~/.config/lunar/palette.toml` + шаблоны `lunar/templates/*.in`;
+  `hypr/scripts/eclipse-palette.py` раскладывает цвета в файлы приложений (kitty include,
+  GTK @import, mako include, qt6ct, btop, yazi, fastfetch) и `~/.cache/lunar/palette.json`
+  (читает Theme.qml). Выходы — производные: в git не трекаются (`.gitignore`), при установке
+  создаются заново; в `templates/` генератор не пишет. Выбор пресета: `~/.cache/lunar/preset`,
+  картинка фотопалитры: `~/.cache/lunar/photo`.
 - `assets/screens/` — галерея README, не удалять.
 
 ## 5. Стиль
@@ -387,9 +393,14 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 - DND: `makoctl mode -t do-not-disturb`.
 - Круглая маска magick: `magick in -resize 512x512 \( -size 512x512 xc:black -fill white -draw "circle 256,256 256,2" \) -alpha off -compose CopyOpacity -composite PNG32:out`.
 - Root-хелперы риса (`/usr/local/lib/lunar/`: `avatar-sync.sh`, `journal-read.sh`,
-  `journal-vacuum.sh`) ставит `install.sh` (0755 root:root); в sudoers — только они
-  (аргументы валидируются внутри), без масок по пользовательским скриптам.
-  Журнал читать через `sudo -n /usr/local/lib/lunar/journal-read.sh …` — у raw
+  `journal-vacuum.sh`, `svc.sh`, `update.sh`) ставит `install.sh` (0755 root:root);
+  в sudoers — только они (аргументы валидируются внутри), без масок по
+  пользовательским скриптам. Управление сервисами — только через `svc.sh`
+  (allowlist юнитов внутри: `zapret.service`, `sddm.service`, `bluetooth.service`);
+  голый `systemctl` из sudoers убран. Обновление системы — только через
+  `update.sh` (`pacman -Syu` без `--noconfirm`: подтверждение за человеком);
+  широкий NOPASSWD на `pacman` убран. Журнал читать через
+  `sudo -n /usr/local/lib/lunar/journal-read.sh …` — у raw
   `journalctl` отозваны мутирующие режимы (`--vacuum`/`--rotate`).
 - CPU всегда `performance`: системный юнит `lunar-cpu-performance` зовёт
   `/usr/local/lib/lunar/cpu-performance.sh` (root, вне sudoers); он же гасит
@@ -425,12 +436,21 @@ sddm-greeter --test-mode --theme /usr/share/sddm/themes/lunar      # предп�
 sudo ~/rice/install.sh --disable-sddm && sudo systemctl restart sddm   # откат SDDM из TTY
 sudo ~/rice/install.sh --disable-plymouth                          # откат Plymouth
 sudo mkinitcpio -P                                                 # сборка UKI
+./bump.sh patch|minor|major                                        # поднять VERSION (semver)
 ```
 
 Релиз: `./release.sh` — тег `v<VERSION>` уходит в origin, GitHub Actions
 (`.github/workflows/release.yml`) сам создаёт Release с заметками из коммитов.
-Перед релизом рабочее дерево должно быть чистым.
-Зависимости: `./get-deps.sh`.
+`release.sh` не даст тегнуть `VERSION` меньше последнего тега `v*` (равный —
+только с `--force`). Перед релизом рабочее дерево должно быть чистым.
+Опциональный хук `.githooks/pre-commit` (не блокирует) напоминает про VERSION;
+включить: `git config core.hooksPath .githooks`.
+Зависимости: `./get-deps.sh`. Списки пакетов — `deps/packages.txt` (официальные,
+секции `[base]/[updates]/[games]/[zapret]`, GPU-секции `[gpu-amd]/[gpu-intel]/[gpu-nvidia]/[gpu-mesa]`)
+и `deps/aur.txt` (AUR). Править только эти файлы: `get-deps.sh` читает их и больше списков не
+хранит. GPU-секцию выбирает скрипт по `/sys/class/drm/*/device/vendor` (NVIDIA добавляет
+`*-headers` под текущее ядро). Снимок установленных версий для справки (не пин):
+`./deps/snapshot.sh` → `deps/snapshot-<дата>.txt`.
 
 ## 9. Lunar Player, окна, стекло и зерно (1.76–1.79)
 

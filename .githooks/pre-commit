@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════
+#  pre-commit: напоминание про VERSION.
+#
+#  Если в коммит идут код/доки, а VERSION не менялся — предупреждаю.
+#  Намеренно НЕ блокирую: не всякая правка кода меняет поведение,
+#  а ложный запрет хуже напоминания. Включение (один раз):
+#      git config core.hooksPath .githooks
+# ════════════════════════════════════════════════════════════════
+set -u
+
+repo="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+cd "$repo" || exit 0
+
+changed="$(git diff --cached --name-only)"
+[[ -z "$changed" ]] && exit 0
+
+# VERSION уже в этом коммите — всё хорошо
+grep -qx 'VERSION' <<<"$changed" && exit 0
+
+# есть ли среди изменённых код/доки (служебное не считаем)
+code=0
+while IFS= read -r f; do
+  [[ -z "$f" ]] && continue
+  case "$f" in
+    VERSION|.gitignore|.gitattributes|HANDOFF.md|.tasks/*) ;;
+    *.md|*.sh|*.qml|*.lua|*.conf|*.json|*.py|*.css|*.service|*.toml|*.html|*.in) code=1 ;;
+    .config/*|install/*|systemd/*|color-schemes/*|assets/*) code=1 ;;
+  esac
+done <<<"$changed"
+
+if [[ "$code" == 1 ]]; then
+  printf '\n\033[33m[hook] VERSION не менялся, а код/доки — да.\033[0m\n' >&2
+  printf '        Смена поведения? ./bump.sh patch|minor|major\n\n' >&2
+fi
+exit 0

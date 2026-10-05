@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # ════════════════════════════════════════════════════════════════
 #  Lunar Eclipse — зависимости (Arch / производные).
-#  Всё из официальных репозиториев; AUR — только VS Code и Vencord.
+#  Списки пакетов живут в deps/packages.txt (официальные) и
+#  deps/aur.txt (AUR): правим там, скрипт только читает.
 #  Обычно вызывает ./install.sh; отдельно: ./get-deps.sh
 # ════════════════════════════════════════════════════════════════
 set -euo pipefail
@@ -9,6 +10,21 @@ set -euo pipefail
 REPO="$(cd "$(dirname "$0")" && pwd)"
 # shellcheck source=ui.sh
 source "$REPO/ui.sh"
+
+# ── манифест пакетов ───────────────────────────────────────────
+# deps/packages.txt: секции [имя], по одному пакету в строке;
+# пустые строки и # игнорируются. pkgs <секция> печатает её пакеты.
+PKG_MANIFEST="$REPO/deps/packages.txt"
+AUR_MANIFEST="$REPO/deps/aur.txt"
+pkgs() {
+  awk -v want="[$1]" '
+    /^[[:space:]]*\[/ { inb = ($1 == want); next }
+    inb && $0 !~ /^[[:space:]]*(#|$)/ { print $1 }
+  ' "$PKG_MANIFEST"
+}
+aur_pkgs() {
+  grep -vE '^[[:space:]]*(#|$)' "$AUR_MANIFEST"
+}
 
 if [ "${LUNAR_EMBEDDED:-0}" != 1 ]; then
   lunar_banner
@@ -53,39 +69,27 @@ else
   say "multilib уже включён"
 fi
 
-# ── базовые пакеты ─────────────────────────────────────────────
-# Vulkan-провайдер по GPU: без него pacman для steam может выбрать
-# nvidia-провайдер даже на AMD/Intel.
-VULKAN_PKGS=""
+# ── Vulkan-провайдер по GPU ────────────────────────────────────
+# Без явного провайдера pacman для steam может выбрать nvidia-провайдер
+# даже на AMD/Intel. Список — секции [gpu-amd]/[gpu-intel] манифеста.
+VULKAN_SECTION=""
 if grep -qi '0x1002' /sys/class/drm/card*/device/vendor 2>/dev/null; then
-  VULKAN_PKGS="vulkan-radeon lib32-vulkan-radeon"
+  VULKAN_SECTION="gpu-amd"
 elif grep -qi '0x8086' /sys/class/drm/card*/device/vendor 2>/dev/null; then
-  VULKAN_PKGS="vulkan-intel lib32-vulkan-intel"
+  VULKAN_SECTION="gpu-intel"
+fi
+VULKAN_PKGS=()
+if [ -n "$VULKAN_SECTION" ]; then
+  mapfile -t VULKAN_PKGS < <(pkgs "$VULKAN_SECTION")
 fi
 
+# ── базовые пакеты ─────────────────────────────────────────────
+BASE_PKGS=()
+mapfile -t BASE_PKGS < <(pkgs base)
+
 say "pacman: базовые пакеты"
-if sudo pacman -S --needed --noconfirm \
-  git base-devel \
-  $VULKAN_PKGS \
-  hyprland hypridle \
-  quickshell qt6ct \
-  xdg-desktop-portal-hyprland xdg-desktop-portal-gtk \
-  kitty fastfetch chafa \
-  zsh starship eza zsh-autosuggestions zsh-syntax-highlighting \
-  mako firefox discord steam \
-  yazi bat ffmpeg 7zip jq fd ripgrep zoxide fzf \
-  poppler imagemagick fontconfig \
-  playerctl iw jq cliphist wl-clipboard \
-  grim slurp wf-recorder \
-  pipewire pipewire-pulse wireplumber pavucontrol cava \
-  polkit polkit-kde-agent \
-  iwd bluez bluez-utils blueman \
-  gammastep \
-  python python-psutil python-gobject \
-  pciutils dmidecode pacman-contrib \
-  librsvg curl \
-  ttf-roboto-mono ttf-jetbrains-mono-nerd ttf-iosevka-nerd
-then
+# Vulkan-провайдер ставим в одной транзакции с базой (как было раньше).
+if sudo pacman -S --needed --noconfirm "${BASE_PKGS[@]}" "${VULKAN_PKGS[@]}"; then
   ok "базовые пакеты"
 else
   warn "часть базовых пакетов не поставилась — см. вывод"
@@ -94,60 +98,65 @@ fi
 # статуса и GTK-виджетов (шпаргалка, календарь).
 
 # ── обновления (Hub → Update, eclipse-update.sh) ───────────────
-# informant — блокирует обновление, пока не прочитаны новости Arch;
-# translate-shell (trans) — перевод новостей; timeshift — снимки для отката;
-# fwupd — прошивки (отдельного fwupd-dummy-device в Arch нет).
+# Список — секция [updates] манифеста. informant — блокирует обновление,
+# пока не прочитаны новости Arch; translate-shell (trans) — перевод новостей;
+# timeshift — снимки для отката; fwupd — прошивки.
 say "pacman: обновления, откат, прошивки"
-sudo pacman -S --needed --noconfirm \
-  informant translate-shell timeshift cronie fwupd \
+UPD_PKGS=()
+mapfile -t UPD_PKGS < <(pkgs updates)
+sudo pacman -S --needed --noconfirm "${UPD_PKGS[@]}" \
   && ok "informant · timeshift · cronie · fwupd" \
   || warn "часть пакетов обновлений не поставилась — см. вывод"
 
 # ── игры и медиа (стол 01 — игры) ──────────────────────────────
-# Steam тянет Proton; gamescope/mangohud — композитинг и оверлеи;
-# gamemode — профиль производительности; lutris/эмуляторы/obs — по README.
+# Список — секция [games] манифеста. Steam тянет Proton; gamescope/mangohud —
+# композитинг и оверлеи; gamemode — профиль производительности;
+# lutris/эмуляторы/obs — по README.
 say "pacman: игры и медиа"
-sudo pacman -S --needed --noconfirm \
-  gamescope mangohud lib32-mangohud gamemode \
-  lutris \
-  retroarch dolphin-emu \
-  obs-studio mpv yt-dlp mpv-mpris \
+GAME_PKGS=()
+mapfile -t GAME_PKGS < <(pkgs games)
+sudo pacman -S --needed --noconfirm "${GAME_PKGS[@]}" \
   && ok "gamescope · mangohud · gamemode · lutris · obs" \
   || warn "часть игровых пакетов не поставилась — см. вывод"
 
 # ── NVIDIA ─────────────────────────────────────────────────────
 # Ставим только если в системе реально есть карта NVIDIA (по sysfs).
-# На AMD/Intel блок пропускается. Пакета nvidia/nvidia-dkms в Arch 615
-# больше нет — официальная замена nvidia-open-dkms (не nouveau).
+# На AMD/Intel блок пропускается. Пакеты — секция [gpu-nvidia] манифеста;
+# заголовки ядра добавляем сами (у linux — linux-headers, у linux-zen —
+# linux-zen-headers). Проприетарного nvidia/nvidia-dkms в Arch 615 больше
+# нет — официальная замена nvidia-open-dkms (не nouveau).
 if grep -qi '0x10de' /sys/class/drm/card*/device/vendor 2>/dev/null; then
-  # Заголовки ядра под DKMS: у linux — linux-headers, у linux-zen — linux-zen-headers.
   KERNEL_PKG="$(cat "/usr/lib/modules/$(uname -r)/pkgbase" 2>/dev/null || echo linux)"
+  NVIDIA_PKGS=()
+  mapfile -t NVIDIA_PKGS < <(pkgs gpu-nvidia)
   say "NVIDIA: nvidia-open-dkms $KERNEL_PKG-headers + nvidia-utils, libva-nvidia-driver, lib32-nvidia-utils"
   sudo pacman -S --needed --noconfirm \
-    nvidia-open-dkms "$KERNEL_PKG-headers" \
-    nvidia-utils nvidia-settings libva-nvidia-driver \
-    lib32-nvidia-utils libva-utils \
+    "$KERNEL_PKG-headers" "${NVIDIA_PKGS[@]}" \
     && ok "NVIDIA-драйверы (после установки — перезагрузись)" \
     || warn "NVIDIA-пакеты не поставились — см. вывод"
   # lib32-nvidia-utils — 32-битные GL/Vulkan для Steam/Proton (нужен multilib).
 else
   say "NVIDIA не найдена — драйверы NVIDIA пропущены (VAAPI через mesa)"
-  sudo pacman -S --needed --noconfirm libva-utils mesa-vdpau 2>/dev/null || true
+  MESA_PKGS=()
+  mapfile -t MESA_PKGS < <(pkgs gpu-mesa)
+  sudo pacman -S --needed --noconfirm "${MESA_PKGS[@]}" 2>/dev/null || true
 fi
 
 # ── zapret: обход DPI (Discord / YouTube) ──────────────────────
-# Сам zapret ставится из исходников через ./install.sh --zapret;
-# тут — зависимости сборки (gcc/make) и работы (netfilter/nftables).
+# Список — секция [zapret] манифеста. Сам zapret ставится из исходников
+# через ./install.sh --zapret; тут — зависимости сборки (gcc/make) и работы
+# (netfilter/nftables). systemd-libs отдельно не ставим — точечное
+# обновление ломает systemd.
 say "pacman: зависимости zapret (сборка nfqws + netfilter)"
-# systemd-libs отдельно не ставим — точечное обновление ломает systemd.
-sudo pacman -S --needed --noconfirm \
-  gcc make zlib libcap libnetfilter_queue libmnl nftables \
+ZAPRET_PKGS=()
+mapfile -t ZAPRET_PKGS < <(pkgs zapret)
+sudo pacman -S --needed --noconfirm "${ZAPRET_PKGS[@]}" \
   && ok "zapret: зависимости" \
   || warn "зависимости zapret не поставились — см. вывод"
 
 # ── yay (AUR-помощник) ─────────────────────────────────────────
-# Ставим сами, если нет ни yay, ни paru: иначе VS Code и Vencord (оба из
-# AUR) на чистой системе просто пропустятся. base-devel — в списке выше.
+# Ставим сами, если нет ни yay, ни paru: иначе AUR-пакеты из deps/aur.txt
+# на чистой системе просто пропустятся. base-devel — в списке выше.
 if ! command -v yay >/dev/null 2>&1 && ! command -v paru >/dev/null 2>&1; then
   say "AUR: ставлю yay (помощник для AUR)"
   if [ "$(id -u)" -eq 0 ]; then
@@ -166,47 +175,25 @@ else
   say "AUR-помощник уже есть: $(command -v yay >/dev/null 2>&1 && echo yay || echo paru)"
 fi
 
-# ── VS Code (AUR) ──────────────────────────────────────────────
-# В репах только code (OSS). Официальный билд Microsoft — visual-studio-code-bin.
-if command -v yay >/dev/null 2>&1; then
-  say "AUR: visual-studio-code-bin"
-  yay -S --needed --noconfirm visual-studio-code-bin \
-    && ok "VS Code" || warn "VS Code не установился — вручную: yay -S visual-studio-code-bin"
-elif command -v paru >/dev/null 2>&1; then
-  say "AUR: visual-studio-code-bin"
-  paru -S --needed --noconfirm visual-studio-code-bin \
-    && ok "VS Code" || warn "VS Code не установился — вручную: paru -S visual-studio-code-bin"
-else
-  warn "yay/paru не найден — VS Code пропущен (yay -S visual-studio-code-bin)"
-fi
-
+# ── AUR-пакеты (deps/aur.txt) ──────────────────────────────────
+# Все AUR-пакеты одним проходом: VS Code, Vencord, Tela. Ставим через
+# yay или paru, чем богаты.
 say "обои: живые — QML-сцена в Quickshell (LunarWallpaper.qml)"
-
-# ── Vencord (AUR) ──────────────────────────────────────────────
-# Мод Discord: патчит app.asar; после обновления Discord патч накатывается заново.
+AUR_HELPER=""
 if command -v yay >/dev/null 2>&1; then
-  say "AUR: vencord-installer-bin"
-  yay -S --needed --noconfirm vencord-installer-bin \
-    && ok "Vencord" || warn "Vencord не установился — вручную: yay -S vencord-installer-bin"
+  AUR_HELPER="yay"
 elif command -v paru >/dev/null 2>&1; then
-  say "AUR: vencord-installer-bin"
-  paru -S --needed --noconfirm vencord-installer-bin \
-    && ok "Vencord" || warn "Vencord не установился — вручную: paru -S vencord-installer-bin"
-else
-  warn "yay/paru не найден — Vencord пропущен (yay -S vencord-installer-bin)"
+  AUR_HELPER="paru"
 fi
-
-# ── Tela: база для монохромных иконок (AUR) ────────────────────
-# Из неё install.sh собирает монохромную Tela-lunar (eclipse-mono-icons.sh).
-say "AUR: tela-icon-theme"
-if command -v yay >/dev/null 2>&1; then
-  yay -S --needed --noconfirm tela-icon-theme \
-    && ok "Tela" || warn "Tela не установилась — вручную: yay -S tela-icon-theme"
-elif command -v paru >/dev/null 2>&1; then
-  paru -S --needed --noconfirm tela-icon-theme \
-    && ok "Tela" || warn "Tela не установилась — вручную: paru -S tela-icon-theme"
+if [ -n "$AUR_HELPER" ]; then
+  while IFS= read -r _pkg; do
+    [ -n "$_pkg" ] || continue
+    say "AUR: $_pkg"
+    "$AUR_HELPER" -S --needed --noconfirm "$_pkg" \
+      && ok "$_pkg" || warn "$_pkg не установился — вручную: $AUR_HELPER -S $_pkg"
+  done < <(aur_pkgs)
 else
-  warn "yay/paru не найден — Tela пропущена (yay -S tela-icon-theme)"
+  warn "yay/paru не найден — AUR-пакеты пропущены (вручную: makepkg -si)"
 fi
 
 if [ "${LUNAR_EMBEDDED:-0}" != 1 ]; then

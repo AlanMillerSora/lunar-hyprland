@@ -1,0 +1,146 @@
+# ════════════════════════════════════════════════════════════════
+#  Lunar Eclipse — официальные пакеты (Arch / производные).
+#
+#  Один пакет в строке. Пустые строки и строки, начинающиеся с #, —
+#  комментарии. Секции [имя] — группы, которые get-deps.sh ставит
+#  отдельными транзакциями pacman. Правь ТОЛЬКО здесь: в get-deps.sh
+#  списка больше нет (одна точка правки).
+#
+#  AUR-пакеты — deps/aur.txt. Снимок версий — deps/snapshot.sh.
+#
+#  GPU-секции get-deps.sh выбирает сам по /sys/class/drm/*/device/vendor:
+#  [gpu-amd]/[gpu-intel] — Vulkan-провайдер (без него pacman для steam
+#  может взять nvidia-провайдер и на AMD/Intel), [gpu-nvidia] — драйвер
+#  NVIDIA (скрипт добавляет к нему *-headers под текущее ядро), иначе —
+#  [gpu-mesa]. Пакеты NVIDIA/AMD/Intel вручную не ставь: нужен детект.
+# ════════════════════════════════════════════════════════════════
+
+[base]
+git
+base-devel
+hyprland
+hypridle
+quickshell
+qt6ct
+xdg-desktop-portal-hyprland
+xdg-desktop-portal-gtk
+kitty
+fastfetch
+chafa
+zsh
+starship
+eza
+zsh-autosuggestions
+zsh-syntax-highlighting
+mako
+firefox
+discord
+steam
+yazi
+bat
+ffmpeg
+7zip
+jq
+fd
+ripgrep
+zoxide
+fzf
+poppler
+imagemagick
+fontconfig
+playerctl
+iw
+cliphist
+wl-clipboard
+grim
+slurp
+wf-recorder
+pipewire
+pipewire-pulse
+wireplumber
+pavucontrol
+cava
+polkit
+polkit-kde-agent
+iwd
+bluez
+bluez-utils
+blueman
+gammastep
+python
+python-psutil
+python-gobject
+pciutils
+dmidecode
+pacman-contrib
+librsvg
+curl
+ttf-roboto-mono
+ttf-jetbrains-mono-nerd
+ttf-iosevka-nerd
+
+# ── обновления (Hub → Update, eclipse-update.sh) ───────────────
+# informant — блокирует обновление, пока не прочитаны новости Arch;
+# translate-shell (trans) — перевод новостей; timeshift — снимки для отката;
+# fwupd — прошивки (отдельного fwupd-dummy-device в Arch нет).
+[updates]
+informant
+translate-shell
+timeshift
+cronie
+fwupd
+
+# ── игры и медиа (стол 01 — игры) ──────────────────────────────
+# Steam тянет Proton; gamescope/mangohud — композитинг и оверлеи;
+# gamemode — профиль производительности; lutris/эмуляторы/obs — по README.
+[games]
+gamescope
+mangohud
+lib32-mangohud
+gamemode
+lutris
+retroarch
+dolphin-emu
+obs-studio
+mpv
+yt-dlp
+mpv-mpris
+
+# ── zapret: обход DPI (Discord / YouTube) ──────────────────────
+# Сам zapret ставится из исходников через ./install.sh --zapret;
+# тут — зависимости сборки (gcc/make) и работы (netfilter/nftables).
+# systemd-libs отдельно не ставим — точечное обновление ломает systemd.
+[zapret]
+gcc
+make
+zlib
+libcap
+libnetfilter_queue
+libmnl
+nftables
+
+# ── Vulkan-провайдер по GPU (см. шапку) ────────────────────────
+[gpu-amd]
+vulkan-radeon
+lib32-vulkan-radeon
+
+[gpu-intel]
+vulkan-intel
+lib32-vulkan-intel
+
+# ── NVIDIA (только при карте 0x10de) ───────────────────────────
+# nvidia-open-dkms — официальная замена nvidia/nvidia-dkms (в Arch 615
+# проприетарного больше нет); lib32-nvidia-utils — 32-битные GL/Vulkan
+# для Steam/Proton (нужен multilib). *-headers скрипт добавляет сам.
+[gpu-nvidia]
+nvidia-open-dkms
+nvidia-utils
+nvidia-settings
+libva-nvidia-driver
+lib32-nvidia-utils
+libva-utils
+
+# ── без NVIDIA: VAAPI/VDPAU через mesa ─────────────────────────
+[gpu-mesa]
+libva-utils
+mesa-vdpau

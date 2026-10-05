@@ -181,18 +181,20 @@ Hub (`SUPER + G`, `LunarHub.qml`) — лаунчер и настройки од�
 
 </div>
 
-Цвета живут в одном месте — `.config/lunar/palette.toml`. Генератор `hypr/scripts/eclipse-palette.py` раскладывает их по приложениям:
+Цвета живут в одном месте — `.config/lunar/palette.toml`, а форму файлам приложений задают шаблоны `.config/lunar/templates/*.in`. Генератор `hypr/scripts/eclipse-palette.py` раскладывает их по приложениям:
 
 ```
-palette.toml ──> eclipse-palette.py ──┬──> ~/.cache/lunar/palette.json   (читает Theme.qml)
-                                      ├──> kitty/lunar-theme.conf        (include)
-                                      ├──> gtk-3.0 · gtk-4.0/lunar-colors.css (@import)
-                                      ├──> qt6ct/colors/lunar.conf
-                                      ├──> mako/colors.conf              (include)
-                                      ├──> btop/themes/lunar.theme
-                                      ├──> yazi/flavors/lunar.yazi/
-                                      └──> fastfetch/config.jsonc
+palette.toml + templates/*.in ──> eclipse-palette.py ──┬──> ~/.cache/lunar/palette.json   (читает Theme.qml)
+                                                       ├──> kitty/lunar-theme.conf        (include)
+                                                       ├──> gtk-3.0 · gtk-4.0/lunar-colors.css (@import)
+                                                       ├──> qt6ct/colors/lunar.conf
+                                                       ├──> mako/colors.conf              (include)
+                                                       ├──> btop/themes/lunar.theme
+                                                       ├──> yazi/theme.toml
+                                                       └──> fastfetch/config.jsonc
 ```
+
+Выходы — производные: в git не трекаются (`.gitignore`) и создаются генератором при установке; в `templates/` он не пишет. Источник правок — только `palette.toml` и `templates/*.in`.
 
 Пресеты — **LUNAR** (холодный монохром, по умолчанию), **GRAPHITE** (чёрный с лёгким холодом, по мотивам 43PR), **STEEL** (серо-синий с акцентом), **ФОТО** (цвет считается с обоев). Выбор — **Hub → Interface**; kitty и mako перечитывают конфиг сразу, остальные — при следующем запуске.
 
@@ -354,7 +356,7 @@ cd ~/rice
 | `--disable-plymouth` | выключить заставку |
 | `--plymouth-rescue` | пункт меню «без заставки» (UKI) |
 
-Системные темы и сервисы — **SDDM**, **Plymouth**, **zapret** — ставятся только по явному флагу; без них установщик трогает лишь `~/.config` и системные мелочи. Зависимости ставит `get-deps.sh` (pacman + AUR через `yay`/`paru`; если их нет — поставит `yay-bin`). После установки — перелогин в Hyprland (или `hyprctl reload`).
+Системные темы и сервисы — **SDDM**, **Plymouth**, **zapret** — ставятся только по явному флагу; без них установщик трогает лишь `~/.config` и системные мелочи. Зависимости ставит `get-deps.sh` (pacman + AUR через `yay`/`paru`; если их нет — поставит `yay-bin`). Списки пакетов — декларативные: официальные в `deps/packages.txt`, AUR в `deps/aur.txt`; скрипт только читает их, отдельного списка в коде нет. Править зависимости нужно **там** (одна точка правки). Точный пин версий на rolling-Arch невозможен, поэтому для справки есть `deps/snapshot.sh` — он пишет `deps/snapshot-<дата>.txt` с `pacman -Q` (имя+версия), это не пин. После установки — перелогин в Hyprland (или `hyprctl reload`). Сам `install.sh` — тонкий оркестратор: разбор флагов и счётчик шагов, а работа разложена по `install/dotfiles.sh` (пользовательское), `install/system.sh` (root) и `install/optional.sh` (SDDM/Plymouth/zapret).
 
 Повторный запуск безопасен: прежние конфиги складываются в `~/.config-backup-<дата>/` (последние 5), аватар переносится, палитра перегенерируется. Установщик также ставит user-юниты (`lunar-homepage`, `lunar-player`, `lunar-tgproxy`), системный `lunar-cpu-performance` (CPU всегда `performance`), настраивает Wi-Fi (**iwd** для ассоциации + **systemd-networkd** для IP; `EnableNetworkConfiguration=false`, powersave для `ath12k*` выключен), root-хелперы в `/usr/local/lib/lunar/` и узкий sudoers `/etc/sudoers.d/lunar-agent`.
 
@@ -520,11 +522,11 @@ lib32-nvidia-utils
 | **Обзор** | `quickshell/LunarOverview.qml` | Девять столов с живыми миниатюрами, drag-and-drop окон |
 | **Буфер / питание / трей / OSD** | `LunarClipboard.qml`, `LunarPower.qml`, `LunarTray.qml`, `LunarOsd.qml` | cliphist, меню питания, трей, всплывающий OSD |
 | **polkit** | `quickshell/LunarPolkit.qml` | Свой агент polkit (вместо polkit-kde) |
-| **Палитра** | `.config/lunar/palette.toml`, `hypr/scripts/eclipse-palette.py` | Один источник цвета → шелл, kitty, GTK3/4, qt6ct, mako, btop, yazi, fastfetch + KDE-схема |
+| **Палитра** | `.config/lunar/palette.toml`, `.config/lunar/templates/*.in`, `hypr/scripts/eclipse-palette.py` | Один источник цвета → шелл, kitty, GTK3/4, qt6ct, mako, btop, yazi, fastfetch + KDE-схема; выходы генерируются и в git не трекаются |
 | **Тема** | `quickshell/Theme.qml` | Токены ритма и палитра; движение `anim`; настройки интерфейса (`lunar-ui.json`) |
 | **Общий слой** | `quickshell/widgets/shared/` | Единые компоненты: `Card`, `SectionHeader`, `ActionTile`, `MetricRow`, `Toggle`, `MiniBar`, `Cell`, `HoverBg`, `Anim` |
 | **Скрипты** | `hypr/scripts/eclipse-*.{sh,py}` | Палитра, обновление, бэкап, запись, Game Mode, очистка, статус, аватар, запуск, календарь, шпаргалка, лимиты, Zapret, Vencord |
-| **Юниты** | `systemd/` | `lunar-quickshell`, `lunar-player`, `lunar-homepage`, `lunar-tgproxy`, `lunar-cpu-performance` |
+| **Юниты** | `systemd/{user,system}/` | `lunar-quickshell`, `lunar-player`, `lunar-homepage`, `lunar-tgproxy`, `lunar-cpu-performance` |
 
 <div align="center">
 
@@ -586,7 +588,9 @@ lib32-nvidia-utils
 │   ├── avatars/avatar.png          ← единый аватар (рис + экран входа)
 │   ├── kitty/ btop/ yazi/ firefox/ gtk-3.0/ gtk-4.0/ qt6ct/ mako/ fastfetch/ bat/ Code/ opencode/ fontconfig/
 │   └── kdeglobals, starship.toml, .zshrc
-├── systemd/  color-schemes/  plymouth/lunar/  sddm/lunar/  zapret/  assets/{logo.svg, screens/}
+├── systemd/{user,system,libexec,sudoers,conf}/  color-schemes/  plymouth/lunar/  sddm/lunar/  zapret/  assets/{logo.svg, screens/}
+├── install/{dotfiles,system,optional}.sh   ← части установщика
+├── deps/{packages.txt,aur.txt,snapshot.sh} ← манифест пакетов + снимок версий
 ├── install.sh  get-deps.sh  ui.sh  release.sh
 └── README.md  AGENTS.md  PORTABILITY.md  LICENSE  VERSION
 ```

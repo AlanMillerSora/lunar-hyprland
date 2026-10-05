@@ -300,9 +300,10 @@ else
   say "timeshift не установлен — системный снимок пропущен"
 fi
 
-# обновление
+# обновление — через root-хелпер update.sh (pacman -Syu без --noconfirm:
+# подтверждение остаётся за человеком в терминале)
 say "обновляю систему (pacman -Syu)"
-sudo pacman -Syu --noconfirm || { say "pacman завершился с ошибкой"; exit 1; }
+sudo -n /usr/local/lib/lunar/update.sh || { say "pacman завершился с ошибкой"; exit 1; }
 
 # AUR
 if command -v paru >/dev/null 2>&1; then

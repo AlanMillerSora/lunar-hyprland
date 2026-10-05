@@ -8,8 +8,14 @@ HANDOFF.md
 .tasks/
 
 # Производные файлы палитры — их пишет eclipse-palette.py при установке.
+# Источник — .config/lunar/palette.toml + .config/lunar/templates/*.in;
+# выходы не трекаем, при установке генератор создаёт их заново.
 .config/kitty/lunar-theme.conf
 .config/gtk-3.0/lunar-colors.css
 .config/gtk-4.0/lunar-colors.css
 .config/mako/colors.conf
+.config/qt6ct/colors/lunar.conf
+.config/btop/themes/lunar.theme
+.config/yazi/theme.toml
 .config/yazi/flavors/
+.config/fastfetch/config.jsonc

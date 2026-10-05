@@ -1,0 +1,41 @@
+# ════════════════════════════════════════════════════════════════
+#  Lunar Eclipse — sudo-права для агента в чате (OpenCode).
+#
+#  Узкий белый список: без пароля запускается только перечисленное,
+#  всё остальное — с подтверждением в чате OpenCode.
+#
+#  Принципы:
+#    • только целевой пользователь (имя подставляет install.sh);
+#    • журнал читает root-хелпер journal-read.sh (в самом journalctl
+#      мутирующие режимы --vacuum/--rotate недоступны);
+#    • управление сервисами — только через root-хелпер svc.sh
+#      (allowlist юнитов внутри; голый systemctl наружу не выставлен);
+#    • обновление системы — только через root-хелпер update.sh
+#      (pacman -Syu интерактивно: подтверждение за человеком);
+#    • из пользовательских каталогов — только root-хелперы /usr/local/lib/lunar/.
+#
+#  Ставится из install.sh в /etc/sudoers.d/lunar-agent (0440 root:root).
+#  Проверка: sudo -n -l
+# ════════════════════════════════════════════════════════════════
+
+# чтение журнала — через хелпер (он пропускает только читающие опции)
+Cmnd_Alias LUNAR_READ = \
+  /usr/local/lib/lunar/journal-read.sh, \
+  /usr/local/lib/lunar/journal-read.sh *, \
+  /usr/bin/dmidecode -t memory
+
+# управление только разрешёнными юнитами — через хелпер с allowlist
+Cmnd_Alias LUNAR_SVC = \
+  /usr/local/lib/lunar/svc.sh *
+
+# обновление системы — через хелпер (интерактивный pacman -Syu)
+Cmnd_Alias LUNAR_PKG = \
+  /usr/local/lib/lunar/update.sh
+
+# root-хелперы риса (root:root, пользователь их не редактирует)
+Cmnd_Alias LUNAR_HELP = \
+  /usr/local/lib/lunar/avatar-sync.sh, \
+  /usr/local/lib/lunar/journal-vacuum.sh, \
+  /usr/local/lib/lunar/journal-vacuum.sh *
+
+sora ALL=(root) NOPASSWD: LUNAR_READ, LUNAR_SVC, LUNAR_PKG, LUNAR_HELP

@@ -253,7 +253,7 @@ def build_context(preset: dict, name: str) -> dict:
 def build_artifacts(preset: dict, name: str, templates_dir: Path):
     ctx = build_context(preset, name)
     gtk = render(load_template(templates_dir, "gtk-colors.css.in"), ctx)
-    return [
+    artifacts = [
         ("kitty/lunar-theme.conf",
          render(load_template(templates_dir, "kitty-theme.conf.in"), ctx)),
         ("gtk-3.0/lunar-colors.css", gtk),
@@ -268,7 +268,14 @@ def build_artifacts(preset: dict, name: str, templates_dir: Path):
          render(load_template(templates_dir, "yazi-theme.toml.in"), ctx)),
         ("fastfetch/config.jsonc",
          render(load_template(templates_dir, "fastfetch-config.jsonc.in"), ctx)),
-    ], render(load_template(templates_dir, "palette.json.in"), ctx)
+    ]
+    # Выходы палитры — только файлы приложений. Каталог шаблонов
+    # (lunar/templates/) генератор лишь читает; писать туда не должен,
+    # иначе источник и результат снова смешаются. Стерегу это здесь.
+    for rel, _ in artifacts:
+        if rel.startswith("lunar/") or "templates/" in rel:
+            raise ValueError(f"выход палитры уехал в шаблоны: {rel}")
+    return artifacts, render(load_template(templates_dir, "palette.json.in"), ctx)
 
 
 # ── CLI ─────────────────────────────────────────────────────────

@@ -37,7 +37,7 @@
   `lib32-nvidia-utils`. Blackwell/RTX 50xx — драйвер 570+; Pascal и старше — legacy.
 
 ### Сеть
-- `systemd/iwd-main.conf` — `PowerSaveDisable=ath12k*` прибито к Qualcomm WCN785x. На другой
+- `systemd/conf/iwd-main.conf` — `PowerSaveDisable=ath12k*` прибито к Qualcomm WCN785x. На другой
   Wi-Fi-карте убрать или сменить маску драйвера.
 - `/etc/systemd/network/20-wlan.network` (IP раздаёт systemd-networkd) **живёт вне репо** —
   на новой машине создать/поправить под своё имя интерфейса (`wlan0`).
@@ -47,9 +47,9 @@
 ### Пользователь и пути
 - `.config/kitty/kitty.conf` — `background_image /home/sora/.config/kitty/noise.png`.
 - `.config/qt6ct/qt6ct.conf` — `color_scheme_path=/home/sora/.config/qt6ct/colors/lunar.conf`.
-- `systemd/lunar-agent.sudoers` — имя `sora` подставляется `install.sh` по текущему
+- `systemd/sudoers/lunar-agent.sudoers` — имя `sora` подставляется `install.sh` по текущему
   пользователю (sed), так что правило переносимо; при ручной установке проверить.
-- `systemd/lunar-avatar-sync.sh` — фолбэк пользователя `sora`.
+- `systemd/libexec/lunar-avatar-sync.sh` — фолбэк пользователя `sora`.
 - Прочие абсолютные `/home/sora` в заметках и `HANDOFF.md` (локальный, в git не входит).
 
 ### Загрузка (не автоматизируется)
