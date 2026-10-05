@@ -6,8 +6,8 @@ import QtQuick.Layouts
 import "widgets/shared"
 
 // ════════════════════════════════════════════════════════════════
-//  LunarOsd — индикатор громкости: иконка + число + деления
-//  (сегментная шкала). Показывается сам при изменении звука
+//  LunarOsd — индикатор громкости: иконка + значение [ NN% ] + деления
+//  (TickScale). Показывается сам при изменении звука
 //  (напрямую из PipeWire). Пока открыт попап громкости — OSD прячем, без дубля.
 // ════════════════════════════════════════════════════════════════
 PanelWindow {
@@ -47,7 +47,6 @@ PanelWindow {
     onVolumeChanged: if (root.primed && root.volume >= 0 && BarState.mode !== "audio") root.showOsd()
     onMutedChanged: if (root.primed && root.volume >= 0 && BarState.mode !== "audio") root.showOsd()
 
-    readonly property int segments: 20
     readonly property real frac: (muted || volume <= 0) ? 0 : Math.min(volume / 100, 1)
 
     // плавное заполнение делений при показе и при изменении (как в «Памяти»)
@@ -55,7 +54,8 @@ PanelWindow {
     Behavior on shownFrac { NumberAnimation { duration: Theme.anim.normal; easing.type: Theme.easeOut } }
     onShowingChanged: shownFrac = showing ? frac : 0
     onFracChanged: if (showing) shownFrac = frac
-    readonly property string label: muted ? "mute" : (volume < 0 ? "--" : volume + "%")
+    // значение в технических скобках: [ 42% ]
+    readonly property string label: muted ? "[ mute ]" : (volume < 0 ? "[ -- ]" : "[ " + volume + "% ]")
     // FontAwesome: mute / volume-low / volume-high
     readonly property string icon: muted ? "\uf026" : (volume < 50 ? "\uf027" : "\uf028")
 
@@ -108,7 +108,7 @@ PanelWindow {
 
             // число
             Text {
-                Layout.preferredWidth: 46
+                Layout.preferredWidth: 78
                 horizontalAlignment: Text.AlignLeft
                 text: root.label
                 color: Theme.text
@@ -117,27 +117,30 @@ PanelWindow {
                 font.bold: true
             }
 
-            // деления
-            Row {
-                id: segRow
+            // деления — общий примитив TickScale (технические насечки).
+            // Число рисок считаю под доступную ширину, чтобы шкала тянулась
+            // по всей полосе, как прежняя сегментная.
+            Item {
+                id: scaleBox
                 Layout.fillWidth: true
-                spacing: 3
+                implicitHeight: 12
 
-                Repeater {
-                    model: root.segments
+                readonly property int tickSpacing: 3
+                readonly property int tickW: 2
+                readonly property int tickCount: Math.max(8,
+                    Math.floor((width + tickSpacing) / (tickW + tickSpacing)))
 
-                    delegate: Rectangle {
-                        required property int index
-                        readonly property bool on: index < Math.round(root.shownFrac * root.segments)
-
-                        width: Math.max(2, (segRow.width - (root.segments - 1) * 3) / root.segments)
-                        height: 12
-                        radius: Theme.radiusHair
-                        color: root.muted ? Theme.alpha(Theme.textDim, 0.45)
-                             : on ? Theme.accent
+                TickScale {
+                    anchors.verticalCenter: parent.verticalCenter
+                    count: scaleBox.tickCount
+                    value: root.shownFrac
+                    tickW: scaleBox.tickW
+                    tickH: 12
+                    spacing: scaleBox.tickSpacing
+                    tickColor: root.muted ? Theme.alpha(Theme.textDim, 0.45)
                              : Theme.alpha(Theme.text, 0.10)
-                        Behavior on color { ColorAnimation { duration: Theme.animFast } }
-                    }
+                    onColor: root.muted ? Theme.alpha(Theme.textDim, 0.45)
+                             : Theme.accent
                 }
             }
         }

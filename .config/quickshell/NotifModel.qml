@@ -35,7 +35,8 @@ QtObject {
                 summary: n.summary || "",
                 body: (n.body || "").replace(/\n/g, " "),
                 icon: n.app_icon || n.icon || "",
-                urgency: n.urgency || "normal"
+                urgency: n.urgency || "normal",
+                group: n.active ? "active" : "history"
             })
         }
         items = out
@@ -74,8 +75,10 @@ QtObject {
 
     property Process listProc: Process {
         running: false
-        // история mako (ограничена max-history=20) + активные, свежие сверху
-        command: ["bash", "-c", "jq -s 'add | unique_by(.id) | sort_by(.id) | reverse | .[0:20]' <(makoctl history -j 2>/dev/null || echo '[]') <(makoctl list -j 2>/dev/null || echo '[]')"]
+        // история mako (ограничена max-history=20) + активные, свежие сверху.
+        // Помечаю активные (из `list`) флагом active — панель рисует по ним
+        // секции [АКТИВНЫЕ]/[ИСТОРИЯ]; активные идут первыми.
+        command: ["bash", "-c", "jq -s '(.[0] // [] | map(. + {active:false})) as $h | (.[1] // [] | map(. + {active:true})) as $a | ($a + $h) | unique_by(.id) | sort_by([(if .active then 0 else 1 end), -.id]) | .[0:20]' <(makoctl history -j 2>/dev/null || echo '[]') <(makoctl list -j 2>/dev/null || echo '[]')"]
         stdout: StdioCollector {
             onStreamFinished: {
                 try {

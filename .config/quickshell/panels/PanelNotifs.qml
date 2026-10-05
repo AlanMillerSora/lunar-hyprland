@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Effects
 import ".."
+import "../widgets/shared"
 
         Column {
             id: root
@@ -80,6 +81,25 @@ import ".."
                 clip: true
                 spacing: Theme.space2
                 model: root.shown
+
+                // секции [АКТИВНЫЕ]/[ИСТОРИЯ]; активные идут первыми
+                // (порядок задаёт NotifModel). SectionHeader в arch рисует
+                // скобки/линию, в classic — просто подпись.
+                section.property: "group"
+                section.delegate: Item {
+                    required property string section
+                    width: notifList.width
+                    height: head.implicitHeight + Theme.space1
+
+                    SectionHeader {
+                        id: head
+                        anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+                        text: section === "active" ? "АКТИВНЫЕ" : "ИСТОРИЯ"
+                        textColor: Theme.text
+                        size: Theme.fontSmall
+                        bold: true
+                    }
+                }
 
                 delegate: Rectangle {
                     required property var modelData
