@@ -271,6 +271,8 @@ hl.window_rule({ match = { title = "^(Lunar Wallpapers)$" }, float = true, cente
 hl.window_rule({ match = { title = "^(Lunar Clipboard)$" }, float = true, center = true, rounding = 8, opacity = "0.97 override 0.97 override" })
 hl.window_rule({ match = { title = "^(Lunar Power)$" },     float = true, center = true, rounding = 8, opacity = "0.97 override 0.97 override" })
 hl.window_rule({ match = { title = "^(Lunar Agent)$" },     float = true, center = true, rounding = 8, opacity = "0.97 override 0.97 override" })
+-- Задачи — не окно, а layer-оверлей PanelWindow (двигаю/масштабирую сам):
+-- window_rule по «Lunar Tasks» больше не нужен.
 
 
 
@@ -317,6 +319,7 @@ hl.bind(M .. " + SHIFT + E", dsp.exec_cmd("qs ipc call sidebar toggle"))   -- б
 hl.bind(M .. " + SHIFT + N", dsp.exec_cmd("qs ipc call rsidebar toggle"))  -- панель справа: уведомления/музыка/календарь
 hl.bind(M .. " + A",       dsp.exec_cmd("qs ipc call agent toggle"))      -- оверлей-агент OpenCode (Quickshell)
 hl.bind(M .. " + O",       dsp.exec_cmd("qs ipc call overview toggle"))   -- обзор столов (Quickshell)
+hl.bind(M .. " + Z",       dsp.exec_cmd("qs ipc call tasks toggle"))      -- окно задач (Quickshell)
 -- панель бара: режимы вниз (звук/медиа/поиск/уведы/телеметрия)
 hl.bind(M .. " + C",       dsp.exec_cmd("qs ipc call bar volume"))  -- пузырь звука: вывод/вход с выбором
 hl.bind(M .. " + X",       dsp.exec_cmd("qs ipc call bar media"))
@@ -335,10 +338,10 @@ hl.bind(M .. " + F",       dsp.window.float())
 hl.bind(M .. " + P",       dsp.window.pseudo())
 hl.bind(M .. " + SPACE",   dsp.window.cycle_next())
 
--- альт-таб: следующее окно по кругу
-hl.bind(M .. " + TAB",  dsp.window.cycle_next({ next = true }))
--- SHIFT+TAB открывает обзор столов (в дополнение к SUPER+O)
-hl.bind(M .. " + SHIFT + TAB", dsp.exec_cmd("qs ipc call overview toggle"))
+-- альт-таб: листаю окна по кругу в обе стороны
+hl.bind(M .. " + TAB",  dsp.window.cycle_next({ next = true }))          -- следующее окно
+-- предыдущее окно: cycle_prev в 0.56 нет, беру cycle_next с next = false
+hl.bind(M .. " + SHIFT + TAB", dsp.window.cycle_next({ next = false }))
 
 -- фокус: HJKL и стрелки
 hl.bind(M .. " + LEFT",  dsp.focus({ direction = "left" }))
@@ -382,6 +385,7 @@ hl.bind(M .. " + SHIFT + S", dsp.window.move({ workspace = "special:scratchpad" 
 hl.bind("PRINT",           dsp.exec_cmd("sh -c 'g=$(slurp) || exit 0; [ -n \"$g\" ] || exit 0; grim -g \"$g\" - | wl-copy'"))
 hl.bind(M .. " + PRINT",   dsp.exec_cmd("grim - | wl-copy"))                    -- весь экран в буфер
 hl.bind(M .. " + SHIFT + PRINT", dsp.exec_cmd("sh -c 'mkdir -p $HOME/Pictures/Screenshots && grim $HOME/Pictures/Screenshots/lunar-$(date +%Y%m%d-%H%M%S).png'"))  -- весь экран в файл
+hl.bind(M .. " + ALT + PRINT", dsp.exec_cmd("sh -c 'mkdir -p $HOME/Pictures/Screenshots && grim -g \"$(slurp)\" $HOME/Pictures/Screenshots/lunar-$(date +%Y%m%d-%H%M%S).png'"))  -- область в файл
 hl.bind(M .. " + R",       dsp.exec_cmd("hyprctl reload"))
 hl.bind(M .. " + ESCAPE",  dsp.exec_cmd("qs ipc call power toggle"))     -- меню питания (Quickshell)
 

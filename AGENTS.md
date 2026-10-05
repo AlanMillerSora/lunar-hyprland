@@ -165,7 +165,8 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 - **Сеть:** дроп-ин `zapret/wait-online-any.conf` — `systemd-networkd-wait-online`
   не ждёт неактивный `wlan0` (иначе zapret стартует только через 2 минуты).
 - **Автозапуск:** firefox (стол 2) и discord (стол 3) из `hyprland.start`, тихо.
-- **Обзор столов:** `SUPER+O` / `SUPER+SHIFT+TAB`; окна перетаскиваются между столами.
+- **Обзор столов:** `SUPER+O`; окна перетаскиваются между столами. `SUPER+TAB`/`SUPER+SHIFT+TAB` листают окна вперёд/назад (`cycle_next`, у SHIFT — `next=false`).
+- **Скриншоты:** `PRINT` — область в буфер, `SUPER+PRINT` — весь экран в буфер, `SUPER+SHIFT+PRINT` — весь экран в файл, `SUPER+ALT+PRINT` — область в файл (`~/Pictures/Screenshots/lunar-*.png`).
 - **Меню трея (ПКМ):** штатные меню Quickshell (QMenu) работают только в режиме
   `QApplication` (`//@ pragma UseQApplication` в `shell.qml`). Палитру даёт
   `QT_QPA_PLATFORMTHEME=qt6ct`: `~/.config/qt6ct/qt6ct.conf` — обязательно
@@ -447,6 +448,7 @@ qs ipc call hub nav N                                          # 0..8 (см. §4
 sddm-greeter --test-mode --theme /usr/share/sddm/themes/lunar      # предпросмотр входа
 ~/.config/hypr/scripts/eclipse-avatar.sh pick|apply <cs> <cx> <cy> [/путь]
 ~/.config/hypr/scripts/eclipse-record.sh probe                     # проверка записи
+grim -g "$(slurp)" ~/Pictures/Screenshots/lunar-$(date +%Y%m%d-%H%M%S).png   # скриншот области в файл (SUPER+ALT+PRINT)
 sudo ~/rice/install.sh --disable-sddm && sudo systemctl restart sddm   # откат SDDM из TTY
 sudo ~/rice/install.sh --disable-plymouth                          # откат Plymouth
 sudo mkinitcpio -P                                                 # сборка UKI
