@@ -87,10 +87,8 @@ PanelWindow {
         Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
         Behavior on scale { NumberAnimation { duration: Theme.animFast } }
 
-        HudCrosshairs { inset: 10; arm: 5 }
-        HudNodes { inset: 5; size: 4 }
-        HudInnerFrame { variant: 0 }
-        HudDiagonals {}
+        // мелкий всплывающий OSD: оставил только скобки по углам — сам
+        // носитель маленький, визиры/узлы/рамка читались как грязь
         HudCorners { color: Theme.accent; size: 16; thickness: 1; margin: Theme.space3 }
 
         RowLayout {

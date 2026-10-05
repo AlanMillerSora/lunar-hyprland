@@ -133,11 +133,10 @@ PanelWindow {
             visible: Theme.arch
         }
 
-        // architect: визиры в полях
-        HudCrosshairs { inset: 10; arm: 5 }
+        // architect: только узлы и внутренняя линия — сайдбар не место для
+        // визиров и диагоналей (было шумно)
         HudNodes { inset: 5; size: 4 }
         HudInnerFrame { variant: 1 }
-        HudDiagonals {}
 
         HudCorners {
             color: Theme.accent

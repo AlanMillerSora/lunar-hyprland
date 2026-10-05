@@ -55,21 +55,13 @@ Item {
         font.bold: true
     }
 
-    // architect: линия под заголовком
+    // architect: линия под заголовком + узел на конце. Вторую (короткую)
+    // линию убрал — двойное правило по всем сорока заголовкам давало шум.
     Rectangle {
         visible: Theme.arch
         anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
         height: Theme.line
         color: Theme.hair
-    }
-    // architect: вторая (короткая) линия — двойное правило
-    Rectangle {
-        visible: Theme.arch
-        anchors { left: parent.left; bottom: parent.bottom }
-        anchors.bottomMargin: 3
-        width: parent.width * 0.6
-        height: Theme.line
-        color: Theme.hairFaint
     }
     // architect: узел на конце подчёркивания
     Rectangle {

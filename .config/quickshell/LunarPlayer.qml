@@ -213,8 +213,6 @@ FloatingWindow {
         }
 
         HudNodes { inset: 6; size: 4 }
-        HudInnerFrame { variant: 0 }
-        HudDiagonals {}
         HudCorners { color: Theme.accent; size: 16; thickness: 1; margin: 10 }
 
         ColumnLayout {

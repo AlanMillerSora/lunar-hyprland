@@ -924,11 +924,10 @@ PanelWindow {
             color: Theme.hairAccent
         }
 
-        // architect: визиры в полях
+        // architect: визиры в полях (без диагоналей — панель и так «техничная»)
         HudCrosshairs { inset: 10; arm: 5 }
         HudNodes { inset: 5; size: 4 }
         HudInnerFrame { variant: 0 }
-        HudDiagonals {}
 
         // зерно в тон бару
         Image {

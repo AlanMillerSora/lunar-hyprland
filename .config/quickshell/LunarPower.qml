@@ -123,8 +123,6 @@ FloatingWindow {
         }
 
         HudNodes { inset: 6; size: 4 }
-        HudInnerFrame { variant: 2 }
-        HudDiagonals {}
         HudCorners {
             color: Theme.accent
             size: 18

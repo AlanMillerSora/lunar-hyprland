@@ -126,8 +126,6 @@ FloatingWindow {
         Keys.onEscapePressed: root.closePanel()
 
         HudNodes { inset: 6; size: 4 }
-        HudInnerFrame { variant: 1 }
-        HudDiagonals {}
         HudCorners {
             color: Theme.accent
             size: 18

@@ -139,9 +139,7 @@ PanelWindow {
             onClicked: {}
         }
 
-        HudNodes { inset: 6; size: 4 }
-        HudInnerFrame { variant: 1 }
-        HudDiagonals {}
+        // поповер трея — маленький: оставил только скобки
         HudCorners {
             color: Theme.accent
             size: 14

@@ -281,11 +281,11 @@ FloatingWindow {
             color: Theme.hairAccent
         }
 
-        // architect: визиры в полях
+        // architect: визиры в полях (диагональные засечки убрал — Hub и без них
+        // держит «чертёж»: скобки HudFrame + узлы + внутренняя линия)
         HudCrosshairs { inset: 14; arm: 7 }
         HudNodes { inset: 7; size: 5 }
         HudInnerFrame { variant: 3 }
-        HudDiagonals {}
 
         // HUD-скобки (единый компонент; раньше были инлайном)
         HudFrame {
