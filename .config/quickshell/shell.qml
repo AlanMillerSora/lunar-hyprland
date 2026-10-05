@@ -37,7 +37,7 @@ ShellRoot {
     LunarOverview {}
     LunarPolkit {}
     LunarPlayer {}
-    LunarTasks {}
+    Todo {}
     LunarSidebar {}
     LunarSidebarRight {}
     LunarOsd {}
