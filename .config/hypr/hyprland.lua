@@ -233,7 +233,6 @@ hl.workspace_rule({ workspace = "9", default_name = "09" })
 
 -- ─────────────────────────────────── Окна ──────────────────────────
 -- Плавающие окна утилит по центру, со скруглением темы
-hl.window_rule({ match = { class = "nm-connection-editor" },  float = true, center = true })
 hl.window_rule({ match = { class = "blueman-manager" },       float = true, center = true })
 hl.window_rule({ match = { class = "org.pulseaudio.pavucontrol" }, float = true, center = true })
 
