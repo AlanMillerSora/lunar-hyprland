@@ -79,7 +79,7 @@ if sudo pacman -S --needed --noconfirm \
   grim slurp wf-recorder \
   pipewire pipewire-pulse wireplumber pavucontrol cava \
   polkit polkit-kde-agent \
-  networkmanager iwd bluez bluez-utils nm-connection-editor blueman \
+  iwd bluez bluez-utils blueman \
   gammastep \
   python python-psutil python-gobject \
   pciutils dmidecode pacman-contrib \

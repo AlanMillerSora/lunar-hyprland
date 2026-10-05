@@ -111,7 +111,7 @@ Hub (`SUPER + G`, `LunarHub.qml`) — лаунчер и настройки од�
 | 0 | **Launch** | Все приложения сеткой, «избранные»; поиск приложений, счёт |
 | 1 | **System** | Система и Память: железо, температуры, RAM/SWAP и кнопка «ОЧИСТИТЬ» |
 | 2 | **Devices** | Дисплей (запись) и Звук |
-| 3 | **Network** | Сеть, Bluetooth, Zapret, Zapret-TG, Vencord |
+| 3 | **Network** | Wi-Fi (iwd), Сеть, Bluetooth, Zapret, Zapret-TG, Vencord |
 | 4 | **Interface** | Интерфейс / Бар / Аватар: прозрачность, размытие, шрифт, OPTIMIZE, палитра, ячейки бара, аватар |
 | 5 | **Games** | Игровые клиенты и профили |
 | 6 | **Dev** | git-проекты: ветка, изменения, коммит; панель git (ветки/diff/pull/push) |
@@ -356,7 +356,7 @@ cd ~/rice
 
 Системные темы и сервисы — **SDDM**, **Plymouth**, **zapret** — ставятся только по явному флагу; без них установщик трогает лишь `~/.config` и системные мелочи. Зависимости ставит `get-deps.sh` (pacman + AUR через `yay`/`paru`; если их нет — поставит `yay-bin`). После установки — перелогин в Hyprland (или `hyprctl reload`).
 
-Повторный запуск безопасен: прежние конфиги складываются в `~/.config-backup-<дата>/` (последние 5), аватар переносится, палитра перегенерируется. Установщик также ставит user-юниты (`lunar-homepage`, `lunar-player`, `lunar-tgproxy`), системный `lunar-cpu-performance` (CPU всегда `performance`), root-хелперы в `/usr/local/lib/lunar/` и узкий sudoers `/etc/sudoers.d/lunar-agent`.
+Повторный запуск безопасен: прежние конфиги складываются в `~/.config-backup-<дата>/` (последние 5), аватар переносится, палитра перегенерируется. Установщик также ставит user-юниты (`lunar-homepage`, `lunar-player`, `lunar-tgproxy`), системный `lunar-cpu-performance` (CPU всегда `performance`), настраивает Wi-Fi (**iwd** для ассоциации + **systemd-networkd** для IP; `EnableNetworkConfiguration=false`, powersave для `ath12k*` выключен), root-хелперы в `/usr/local/lib/lunar/` и узкий sudoers `/etc/sudoers.d/lunar-agent`.
 
 <div align="center">
 

@@ -145,6 +145,10 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
   `polkit-kde-authentication-agent-1` (его запуск убран из `hyprland.lua`).
 - **Quickshell reload:** встроенный светлый попап о сбое заглушён
   (`QS_NO_RELOAD_POPUP=1` в юните), ошибка идёт уведомлением mako (`shell.qml`).
+- **Wi-Fi:** ассоциирует **iwd** (`iwd.service`, `/etc/iwd/main.conf`:
+  `EnableNetworkConfiguration=false` + `PowerSaveDisable=ath12k*`), IP раздаёт
+  **systemd-networkd** (`/etc/systemd/network/20-wlan.network`); NetworkManager
+  не используем. Поиск сетей — `iwctl station wlan0 get-networks` (без sudo).
 - **Сеть:** дроп-ин `zapret/wait-online-any.conf` — `systemd-networkd-wait-online`
   не ждёт неактивный `wlan0` (иначе zapret стартует только через 2 минуты).
 - **Автозапуск:** firefox (стол 2) и discord (стол 3) из `hyprland.start`, тихо.
@@ -166,7 +170,7 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 /home/sora/rice/
 ├── .config/
 │   ├── hypr/{hyprland.lua, hypridle.conf, scripts/}
-│   │   └── scripts/eclipse-{status,gamemode,record,cleanup,transparency,zapret,zapret-tg,vencord,backup,update,perf,avatar,launch,agent-context,api-limit,media,mono-icons}.sh,
+│   │   └── scripts/eclipse-{status,gamemode,record,cleanup,transparency,zapret,zapret-tg,vencord,backup,update,perf,avatar,launch,agent-context,api-limit,media,mono-icons,wifi}.sh,
 │   │       eclipse-palette.py, eclipse-calendar.py, eclipse-cheatsheet.py, eclipse-askpass.py
 │   ├── quickshell/
 │   │   ├── shell.qml грузит: LunarWallpaper, LunarPanel, LunarHub, LunarWallpapers,
@@ -259,9 +263,9 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 - «Discord падает на слабом GPU» — не баг риса.
 - `LunarLauncher.qml`/`LunarSettings.qml` — мусор, удалены; лаунчер = Hub.
 - Автогашение экрана и автолок — выключены намеренно.
-- Wi-Fi: не используем — только Ethernet (RTL8126). Адаптер Qualcomm WCN785x
-  (`ath12k_wifi7_pci`) не поднимаем; мёртвая Wi-Fi-обвязка (powersave, NM-dispatcher,
-  гвард, MediaTek-ASPM) удалена и не возвращается.
+- Wi-Fi: поднимаем через **iwd** (ассоциация) + **systemd-networkd** (IP), не через
+  NetworkManager; powersave для `ath12k*` выключен (`PowerSaveDisable`). Мёртвая
+  Wi-Fi-обвязка (NM-dispatcher, гвард, MediaTek-ASPM) удалена и не возвращается.
 - Параллакс обоев к курсору — не нужен.
 - `ShaderEffect`/`.qsb` для короны (Quickshell, Qt6) — не подключать.
 - Полноэкранный блюр layer-оверлеев (`layer_rule … blur` на fullscreen-слой) — НЕ включать:

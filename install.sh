@@ -475,7 +475,7 @@ case "$ACTION" in
 esac
 
 # количество шагов для счётчика [n/total]
-LUNAR_TOTAL=12
+LUNAR_TOTAL=13
 [ "$WITH_DEPS" = 1 ] && LUNAR_TOTAL=$((LUNAR_TOTAL + 1))
 [ "$DO_SDDM" = 1 ] && LUNAR_TOTAL=$((LUNAR_TOTAL + 1))
 [ "$DO_PLYMOUTH" = 1 ] && LUNAR_TOTAL=$((LUNAR_TOTAL + 1))
@@ -764,6 +764,21 @@ sudo systemctl disable --now power-profiles-daemon.service 2>/dev/null || true
 sudo systemctl mask power-profiles-daemon.service 2>/dev/null \
   && ok "power-profiles-daemon замаскирован (powersave не вернётся)" \
   || warn "power-profiles-daemon не замаскирован (нужен sudo)"
+
+# ── Wi-Fi: iwd (ассоциация) + systemd-networkd (IP) ────────────
+# NetworkManager не используем. Ассоциирует iwd; адреса раздаёт
+# systemd-networkd. EnableNetworkConfiguration=false — чтобы iwd не лез
+# за IP сам (сеть — networkd), PowerSaveDisable=ath12k* — не душим мой
+# Qualcomm WCN785x энергосбережением.
+step "Wi-Fi: iwd"
+if [ -f "$REPO/systemd/iwd-main.conf" ]; then
+  sudo install -Dm644 "$REPO/systemd/iwd-main.conf" /etc/iwd/main.conf 2>/dev/null \
+    && ok "iwd: /etc/iwd/main.conf" \
+    || warn "iwd-main.conf не установлен (нужен sudo)"
+fi
+sudo systemctl enable --now iwd.service 2>/dev/null \
+  && ok "iwd включён и запущен" \
+  || warn "iwd.service не включился (нужен sudo)"
 
 # ── Telegram: локальный MTProto-прокси (tg-ws-proxy) ───────────
 # Пакет из AUR, headless, живёт как systemd --user-юнит (sudo не нужен).
