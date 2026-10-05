@@ -1,0 +1,10 @@
+# .gitattributes — как git обращается с бинарями.
+# Крупные бинарники: не текст, без diff и попыток merge.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.ttf  binary
+*.bin  binary
+
+# Галерея скриншотов README: тяжёлая, текстовый diff по ней бессмысленен.
+assets/screens/** -diff

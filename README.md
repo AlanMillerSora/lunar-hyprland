@@ -588,8 +588,12 @@ lib32-nvidia-utils
 │   └── kdeglobals, starship.toml, .zshrc
 ├── systemd/  color-schemes/  plymouth/lunar/  sddm/lunar/  zapret/  assets/{logo.svg, screens/}
 ├── install.sh  get-deps.sh  ui.sh  release.sh
-└── README.md  AGENTS.md  LICENSE  VERSION
+└── README.md  AGENTS.md  PORTABILITY.md  LICENSE  VERSION
 ```
+
+**Скриншоты и вес репозитория.** Кадры галереи (`assets/screens/*.png`) — самые тяжёлые файлы: держу их по минимуму и **переиспользую имена** (`<раздел>.png`), черновые кадры в git не кладу (съёмка — в `/tmp/shots/`). В `.gitattributes` бинари помечены `binary`, скриншоты — `-diff`, чтобы git не строил по ним текстовый diff. История не переписывается — лишний кадр убирается обычным коммитом.
+
+Машинозависимые места (монитор `DP-2`, NVIDIA RTX 5070, Wi-Fi ath12k/WCN785x, пользователь `sora`) и что менять при переезде — в [PORTABILITY.md](PORTABILITY.md).
 
 <div align="center">
 

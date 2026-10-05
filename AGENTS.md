@@ -74,6 +74,16 @@ git diff          <база>..<HEAD> > /tmp/opencode/audit-<тема>.diff   # +
 
 `<база>` — предыдущий проверенный HEAD (состояние прошлого аудита), а не «начало».
 
+## 1.2 Скриншоты и бинари
+
+- Скриншоты — по минимуму: снимаю только то, что нужно для проверки или README, и
+  **переиспользую имена** (`assets/screens/<раздел>.png`), не плодя вариантов с датами.
+- Черновые и промежуточные кадры в git **не коммичу** — снимаю в `/tmp/shots/`; галерея
+  не свалка, тяжёлые PNG раздувают `.git`.
+- `.gitattributes` держит бинари без diff/merge (`binary`), скриншоты — `-diff`.
+- Историю не переписываю: лишний кадр убираю обычным коммитом (старые объекты остаются
+  в истории — это осознанно). `filter-branch`/BFG не применяю, `git gc` — без переписывания.
+
 ## 2. Рабочий цикл
 
 ```sh
@@ -191,7 +201,7 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 ├── systemd/  color-schemes/  assets/(+screens/)  zapret/
 ├── plymouth/lunar/   sddm/lunar/        ← только темы + README
 ├── install.sh get-deps.sh ui.sh release.sh
-└── README.md LICENSE VERSION AGENTS.md lunar-dorabotki.md
+└── README.md LICENSE VERSION AGENTS.md PORTABILITY.md lunar-dorabotki.md .gitattributes
     HANDOFF.md — только локально, в .gitignore
 ```
 
