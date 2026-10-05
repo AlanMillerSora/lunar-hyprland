@@ -44,6 +44,8 @@ DEFAULT_TEMPLATES = CONFIG_ROOT / "lunar" / "templates"
 
 # Куда пишем при --apply.
 APPLY_CONFIG_ROOT = HOME / ".config"
+# KDE-схема живёт не в ~/.config, а в ~/.local/share/color-schemes
+APPLY_SHARE_ROOT = HOME / ".local" / "share"
 APPLY_CACHE_JSON = HOME / ".cache" / "lunar" / "palette.json"
 APPLY_STATE_PRESET = HOME / ".cache" / "lunar" / "preset"
 # путь картинки, из которой построена «фотопалитра» (--from-image)
@@ -90,6 +92,12 @@ def argb(value: str, alpha: str = "ff") -> str:
 def hex8(value: str, alpha: str = "ff") -> str:
     """mako ждёт #rrggbbaa."""
     return rgb6(value) + alpha
+
+
+def rgb_triple(value: str) -> str:
+    """KDE-схема ждёт 'r,g,b'."""
+    r, g, b, _ = parse_hex(value)
+    return f"{r},{g},{b}"
 
 
 # ── рендер шаблонов ─────────────────────────────────────────────
@@ -247,6 +255,35 @@ def build_context(preset: dict, name: str) -> dict:
         argb(c, "80" if i in dim else "ff") for i, c in enumerate(disabled)
     )
     ctx["inactive_colors"] = ctx["active_colors"]
+
+    # KDE-схема: секции отличаются только поверхностями, текст/акцент общие.
+    # ForegroundPositive — это `ok` (светлый), зелёного в рисе нет.
+    def kde_section(title: str, bg: str, alt: str) -> str:
+        return "\n".join([
+            f"[Colors:{title}]",
+            f"BackgroundNormal={rgb_triple(bg)}",
+            f"BackgroundAlternate={rgb_triple(alt)}",
+            f"ForegroundNormal={rgb_triple(p['text'])}",
+            f"ForegroundInactive={rgb_triple(p['textDim'])}",
+            f"ForegroundActive={rgb_triple(p['accent'])}",
+            f"ForegroundLink={rgb_triple(p['accent'])}",
+            f"ForegroundVisited={rgb_triple(p['textDim'])}",
+            f"ForegroundNegative={rgb_triple(p['danger'])}",
+            f"ForegroundNeutral={rgb_triple(p['textDim'])}",
+            f"ForegroundPositive={rgb_triple(p['ok'])}",
+            f"DecorationFocus={rgb_triple(p['accent'])}",
+            f"DecorationHover={rgb_triple(p['accent'])}",
+        ])
+
+    ctx["kdeSections"] = "\n\n".join([
+        kde_section("Window", p["bg"], p["bgPanel"]),
+        kde_section("View", p["bg"], p["bgPanel"]),
+        kde_section("Button", p["bgCard"], p["bgTrack"]),
+        kde_section("Selection", p["bgTrack"], p["bgTrack"]),
+        kde_section("Tooltip", p["bgPanel"], p["bgTrack"]),
+        kde_section("Complementary", p["bg"], p["bgPanel"]),
+        kde_section("Header", p["bg"], p["bgPanel"]),
+    ])
     return ctx
 
 
@@ -269,13 +306,20 @@ def build_artifacts(preset: dict, name: str, templates_dir: Path):
         ("fastfetch/config.jsonc",
          render(load_template(templates_dir, "fastfetch-config.jsonc.in"), ctx)),
     ]
+    # KDE-схема — не в ~/.config, а в ~/.local/share/color-schemes
+    # (её читают KDE/Qt-приложения по имени из kdeglobals).
+    share_artifacts = [
+        ("color-schemes/LunarEclipse.colors",
+         render(load_template(templates_dir, "kde-colorscheme.in"), ctx)),
+    ]
     # Выходы палитры — только файлы приложений. Каталог шаблонов
     # (lunar/templates/) генератор лишь читает; писать туда не должен,
     # иначе источник и результат снова смешаются. Стерегу это здесь.
-    for rel, _ in artifacts:
+    for rel, _ in artifacts + share_artifacts:
         if rel.startswith("lunar/") or "templates/" in rel:
             raise ValueError(f"выход палитры уехал в шаблоны: {rel}")
-    return artifacts, render(load_template(templates_dir, "palette.json.in"), ctx)
+    return artifacts, share_artifacts, render(
+        load_template(templates_dir, "palette.json.in"), ctx)
 
 
 # ── CLI ─────────────────────────────────────────────────────────
@@ -358,7 +402,8 @@ def main() -> int:
             return 2
         preset = presets[name]
 
-    artifacts, palette_json = build_artifacts(preset, name, templates_dir)
+    artifacts, share_artifacts, palette_json = build_artifacts(
+        preset, name, templates_dir)
 
     if args.apply and args.out:
         print("--apply и --out взаимоисключающие", file=sys.stderr)
@@ -372,6 +417,8 @@ def main() -> int:
         print(f"  ~/.cache/lunar/palette.json  ← JSON для Theme.qml")
         for rel, _ in artifacts:
             print(f"  ~/.config/{rel}")
+        for rel, _ in share_artifacts:
+            print(f"  ~/.local/share/{rel}")
         print("\nчтобы записать в тест:  --out DIR")
         print("чтобы записать в живые: --apply")
         return 0
@@ -382,6 +429,10 @@ def main() -> int:
             dst = base / "config" / rel
             dst.parent.mkdir(parents=True, exist_ok=True)
             dst.write_text(content, encoding="utf-8")
+        for rel, content in share_artifacts:
+            dst = base / "share" / rel
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            dst.write_text(content, encoding="utf-8")
         cache = base / "cache" / "lunar" / "palette.json"
         cache.parent.mkdir(parents=True, exist_ok=True)
         cache.write_text(palette_json, encoding="utf-8")
@@ -389,12 +440,18 @@ def main() -> int:
         print(f"[режим]  запись в {base} (живые конфиги не тронуты)")
         for rel, _ in artifacts:
             print(f"  + {base / 'config' / rel}")
+        for rel, _ in share_artifacts:
+            print(f"  + {base / 'share' / rel}")
         print(f"  + {cache}")
         return 0
 
     # --apply
     for rel, content in artifacts:
         dst = APPLY_CONFIG_ROOT / rel
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        dst.write_text(content, encoding="utf-8")
+    for rel, content in share_artifacts:
+        dst = APPLY_SHARE_ROOT / rel
         dst.parent.mkdir(parents=True, exist_ok=True)
         dst.write_text(content, encoding="utf-8")
     APPLY_CACHE_JSON.parent.mkdir(parents=True, exist_ok=True)
@@ -410,6 +467,8 @@ def main() -> int:
     print(f"[режим]  apply — записано в ~/.config и {APPLY_CACHE_JSON}")
     for rel, _ in artifacts:
         print(f"  + ~/.config/{rel}")
+    for rel, _ in share_artifacts:
+        print(f"  + ~/.local/share/{rel}")
     print(f"  + {APPLY_CACHE_JSON}")
     print("\nподключи сгенерированные файлы (include/@import/flavor) — см. отчёт.")
     return 0

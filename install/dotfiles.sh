@@ -110,7 +110,12 @@ fi
 dotfiles_kde() {
 step "цветовая схема KDE → ~/.local/share/color-schemes"
 mkdir -p "$HOME/.local/share/color-schemes"
-cp "$REPO"/color-schemes/*.colors "$HOME/.local/share/color-schemes/" 2>/dev/null || true
+# Схему теперь пишет генератор палитры (eclipse-palette.py --apply) — она
+# едет за активным пресетом, включая фото. Статику из репо кладу только
+# запасным вариантом: когда генератора нет (нет python3) или он не отработал.
+if [ ! -f "$HOME/.local/share/color-schemes/LunarEclipse.colors" ]; then
+  cp "$REPO"/color-schemes/*.colors "$HOME/.local/share/color-schemes/" 2>/dev/null || true
+fi
 ok "kdeglobals + схема"
 }
 

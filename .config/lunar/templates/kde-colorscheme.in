@@ -1,0 +1,13 @@
+# ═══ Lunar Eclipse · цветовая схема KDE ═══
+# Сгенерировано eclipse-palette.py (пресет: {{preset}}). Руками не правь —
+# меняй palette.toml и перезапускай генератор.
+# Лежит в ~/.local/share/color-schemes/, kdeglobals ссылается по имени.
+# Секции и токены считаю от единой палитры: фон/поверхности, текст, акцент,
+# danger и ok (зелёного нет — «успех» тоже светлый).
+
+[General]
+Name=Lunar Eclipse
+ColorScheme=Lunar Eclipse
+shadeSortColumn=true
+
+{{kdeSections}}

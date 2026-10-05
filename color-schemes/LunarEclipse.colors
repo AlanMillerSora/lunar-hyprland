@@ -1,3 +1,10 @@
+# ═══ Lunar Eclipse · цветовая схема KDE ═══
+# Сгенерировано eclipse-palette.py (пресет: lunar). Руками не правь —
+# меняй palette.toml и перезапускай генератор.
+# Лежит в ~/.local/share/color-schemes/, kdeglobals ссылается по имени.
+# Секции и токены считаю от единой палитры: фон/поверхности, текст, акцент,
+# danger и ok (зелёного нет — «успех» тоже светлый).
+
 [General]
 Name=Lunar Eclipse
 ColorScheme=Lunar Eclipse
@@ -13,7 +20,7 @@ ForegroundLink=232,237,244
 ForegroundVisited=152,161,172
 ForegroundNegative=255,0,60
 ForegroundNeutral=152,161,172
-ForegroundPositive=0,255,156
+ForegroundPositive=232,237,244
 DecorationFocus=232,237,244
 DecorationHover=232,237,244
 
@@ -27,7 +34,7 @@ ForegroundLink=232,237,244
 ForegroundVisited=152,161,172
 ForegroundNegative=255,0,60
 ForegroundNeutral=152,161,172
-ForegroundPositive=0,255,156
+ForegroundPositive=232,237,244
 DecorationFocus=232,237,244
 DecorationHover=232,237,244
 
@@ -41,13 +48,13 @@ ForegroundLink=232,237,244
 ForegroundVisited=152,161,172
 ForegroundNegative=255,0,60
 ForegroundNeutral=152,161,172
-ForegroundPositive=0,255,156
+ForegroundPositive=232,237,244
 DecorationFocus=232,237,244
 DecorationHover=232,237,244
 
 [Colors:Selection]
-BackgroundNormal=28,32,39
-BackgroundAlternate=28,32,39
+BackgroundNormal=24,27,33
+BackgroundAlternate=24,27,33
 ForegroundNormal=232,236,242
 ForegroundInactive=152,161,172
 ForegroundActive=232,237,244
@@ -55,13 +62,13 @@ ForegroundLink=232,237,244
 ForegroundVisited=152,161,172
 ForegroundNegative=255,0,60
 ForegroundNeutral=152,161,172
-ForegroundPositive=0,255,156
+ForegroundPositive=232,237,244
 DecorationFocus=232,237,244
 DecorationHover=232,237,244
 
 [Colors:Tooltip]
-BackgroundNormal=8,9,13
-BackgroundAlternate=12,14,19
+BackgroundNormal=12,14,19
+BackgroundAlternate=24,27,33
 ForegroundNormal=232,236,242
 ForegroundInactive=152,161,172
 ForegroundActive=232,237,244
@@ -69,7 +76,7 @@ ForegroundLink=232,237,244
 ForegroundVisited=152,161,172
 ForegroundNegative=255,0,60
 ForegroundNeutral=152,161,172
-ForegroundPositive=0,255,156
+ForegroundPositive=232,237,244
 DecorationFocus=232,237,244
 DecorationHover=232,237,244
 
@@ -83,7 +90,7 @@ ForegroundLink=232,237,244
 ForegroundVisited=152,161,172
 ForegroundNegative=255,0,60
 ForegroundNeutral=152,161,172
-ForegroundPositive=0,255,156
+ForegroundPositive=232,237,244
 DecorationFocus=232,237,244
 DecorationHover=232,237,244
 
@@ -97,6 +104,6 @@ ForegroundLink=232,237,244
 ForegroundVisited=152,161,172
 ForegroundNegative=255,0,60
 ForegroundNeutral=152,161,172
-ForegroundPositive=0,255,156
+ForegroundPositive=232,237,244
 DecorationFocus=232,237,244
 DecorationHover=232,237,244

@@ -5,7 +5,7 @@
  * ════════════════════════════════════════════════════════════════ */
 
 /* Цвета — из единой палитры: файл lunar-colors.css пишет
- * eclipse-palette.py (пресеты lunar/graphite/steel, Hub → Interface).
+ * eclipse-palette.py (пресеты lunar/steel/photo, Hub → Interface).
  * Старый блок @define-color убран — он дублировал те же значения. */
 @import url("lunar-colors.css");
 

@@ -39,7 +39,8 @@ for f in "${files[@]}"; do
   case "$f" in
     .config/kitty/lunar-theme.conf|.config/gtk-3.0/lunar-colors.css|.config/gtk-4.0/lunar-colors.css|\
     .config/mako/colors.conf|.config/btop/themes/lunar.theme|.config/qt6ct/colors/lunar.conf|\
-    .config/yazi/theme.toml|.config/fastfetch/config.jsonc|.config/yazi/flavors/*)
+    .config/yazi/theme.toml|.config/fastfetch/config.jsonc|.config/yazi/flavors/*|\
+    color-schemes/LunarEclipse.colors)
       continue ;;
   esac
   # пользовательский аватар не перетираем
