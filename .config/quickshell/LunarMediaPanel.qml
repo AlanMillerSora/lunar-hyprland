@@ -148,7 +148,7 @@ Item {
                 anchors.top: parent.top
                 width: parent.width
                 height: 5
-                radius: 2.5
+                radius: height / 2
                 color: Theme.alpha(Theme.text, 0.12)
 
                 Rectangle {
@@ -165,7 +165,7 @@ Item {
                 Rectangle {
                     width: 12
                     height: 12
-                    radius: 6
+                    radius: width / 2
                     anchors.verticalCenter: parent.verticalCenter
                     x: Math.max(0, Math.min(seekBg.width, seekBg.width * seek.useFrac)) - width / 2
                     color: Theme.text

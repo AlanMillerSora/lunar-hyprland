@@ -98,7 +98,7 @@ import ".."
                         anchors.verticalCenter: parent.verticalCenter
                         width: 3
                         height: parent.height - 16
-                        radius: 1.5
+                        radius: width / 2
                         color: modelData.urgency === "critical" ? Theme.danger
                             : (modelData.urgency === "low" ? Theme.borderAccent : Theme.accent)
                         opacity: 0.8

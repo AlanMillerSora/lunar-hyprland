@@ -184,13 +184,13 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 10
-                    radius: 5
+                    radius: height / 2
                     color: Theme.trackBg
 
                     Rectangle {
                         width: parent.width * page.memPct
                         height: parent.height
-                        radius: 5
+                        radius: height / 2
                         color: page.memPct > 0.9 ? Theme.danger : Theme.accent
                         Behavior on width { NumberAnimation { duration: Theme.animMed } }
                     }
@@ -299,7 +299,7 @@ Item {
                         Rectangle {
                             width: 14
                             height: 14
-                            radius: 3
+                            radius: Theme.radiusChip
                             anchors.verticalCenter: parent.verticalCenter
                             color: page.isOn(modelData.key)
                                 ? Theme.alpha(Theme.accent, 0.15)
@@ -315,7 +315,7 @@ Item {
                                 text: "\uf00c"
                                 color: Theme.accent
                                 font.family: Theme.iconFont
-                                font.pixelSize: 8
+                                font.pixelSize: Theme.fontNano
                             }
                         }
 

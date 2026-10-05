@@ -790,9 +790,9 @@ PanelWindow {
         anchors.top: parent.top
         anchors.topMargin: Theme.barTop
         height: Theme.barH
-        radius: Theme.arch ? 0 : Theme.barRadius
+        radius: Theme.barOuterRadius
         color: root.pillBg
-        border.width: Theme.arch ? 0 : 1
+        border.width: Theme.barOuterBorder
         border.color: Theme.border
         clip: true
 
@@ -882,7 +882,7 @@ PanelWindow {
         opacity: root.reveal
         width: 18
         height: 2
-        radius: 1
+        radius: height / 2
         color: Theme.accent
         x: (BarState.originX >= 0 ? BarState.originX : root.width / 2) - width / 2
         y: Theme.barTop + Theme.barH - 2

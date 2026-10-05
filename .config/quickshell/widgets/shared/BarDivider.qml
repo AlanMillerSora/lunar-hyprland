@@ -9,7 +9,7 @@ import "../.."
 // ════════════════════════════════════════════════════════════════
 Rectangle {
     width: Theme.line
-    height: Math.round(Theme.barCellH * (Theme.arch ? 0.62 : 0.5))
-    radius: Theme.arch ? 0 : 1
-    color: Theme.arch ? Theme.hairAccent : Theme.alpha(Theme.barText, 0.12)
+    height: Math.round(Theme.barCellH * Theme.barDividerHFactor)
+    radius: Theme.barDividerRadius
+    color: Theme.barDividerColor
 }

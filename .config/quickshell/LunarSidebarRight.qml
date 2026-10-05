@@ -235,7 +235,7 @@ PanelWindow {
             Rectangle {
                 Layout.fillWidth: true
                 height: 1
-                color: Theme.arch ? Theme.hairAccent : Theme.border
+                color: Theme.dividerLine
             }
 
             // ── вкладки ──
@@ -295,7 +295,7 @@ PanelWindow {
                     y: rightTabRow.height - 2
                     width: active ? active.width : 0
                     height: 2
-                    radius: 1
+                    radius: height / 2
                     color: Theme.accent
                     Behavior on x { NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut } }
                     Behavior on width { NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut } }
@@ -432,7 +432,7 @@ PanelWindow {
                                                         visible: hasEvent
                                                         width: 5
                                                         height: 5
-                                                        radius: 3
+                                                        radius: width / 2
                                                         color: (isToday || isSel) ? Theme.accent : Theme.textDim
                                                         anchors.horizontalCenter: parent.horizontalCenter
                                                         anchors.bottom: parent.bottom
@@ -832,13 +832,11 @@ PanelWindow {
             Rectangle {
                 Layout.fillWidth: true
                 height: 1
-                color: Theme.arch ? Theme.hairAccent : Theme.border
+                color: Theme.dividerLine
             }
 
             Text {
-                text: Theme.arch
-                    ? "[ CPU " + SysInfo.cpu + "%  RAM " + SysInfo.ram + "% ]"
-                    : "CPU " + SysInfo.cpu + "%  RAM " + SysInfo.ram + "%"
+                text: Theme.hudBracket("CPU " + SysInfo.cpu + "%  RAM " + SysInfo.ram + "%")
                 color: Theme.textDim
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSize(13)

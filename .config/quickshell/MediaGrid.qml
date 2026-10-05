@@ -251,7 +251,7 @@ Item {
                     anchors.margins: 6
                     width: 22
                     height: 16
-                    radius: 4
+                    radius: Theme.radiusTile
                     color: Theme.bgPanel
 
                     Text {

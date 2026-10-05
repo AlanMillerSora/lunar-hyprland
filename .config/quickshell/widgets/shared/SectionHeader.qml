@@ -14,10 +14,10 @@ Item {
     property int size: Theme.fontTiny
     property bool bold: true
 
-    readonly property int pad: Theme.arch ? 6 : 0
+    readonly property int pad: Theme.sectionHeaderPad
 
-    implicitWidth: lb.implicitWidth + label.implicitWidth + rb.implicitWidth + (Theme.arch ? 2 * root.pad : 0)
-    implicitHeight: Math.max(label.implicitHeight, Theme.arch ? size + 2 : 0)
+    implicitWidth: lb.implicitWidth + label.implicitWidth + rb.implicitWidth + 2 * root.pad
+    implicitHeight: Math.max(label.implicitHeight, Theme.sectionHeaderMinH(size))
 
     Text {
         id: lb
@@ -34,7 +34,7 @@ Item {
         id: label
         anchors.verticalCenter: parent.verticalCenter
         anchors.left: parent.left
-        anchors.leftMargin: lb.implicitWidth + (Theme.arch ? root.pad : 0)
+        anchors.leftMargin: lb.implicitWidth + root.pad
         text: root.text
         color: root.textColor
         font.family: Theme.fontFamily
@@ -47,7 +47,7 @@ Item {
         visible: Theme.arch
         anchors.verticalCenter: parent.verticalCenter
         anchors.left: label.right
-        anchors.leftMargin: Theme.arch ? root.pad : 0
+        anchors.leftMargin: root.pad
         text: "]"
         color: Theme.hairAccent
         font.family: Theme.fontFamily

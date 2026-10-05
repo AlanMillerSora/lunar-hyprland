@@ -224,7 +224,7 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         width: parent.width
                         height: 3
-                        radius: 1.5
+                        radius: height / 2
                         color: Theme.trackBg
 
                         Rectangle {

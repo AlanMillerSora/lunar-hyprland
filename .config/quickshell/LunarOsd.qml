@@ -132,7 +132,7 @@ PanelWindow {
 
                         width: Math.max(2, (segRow.width - (root.segments - 1) * 3) / root.segments)
                         height: 12
-                        radius: 1
+                        radius: Theme.radiusHair
                         color: root.muted ? Theme.alpha(Theme.textDim, 0.45)
                              : on ? Theme.accent
                              : Theme.alpha(Theme.text, 0.10)

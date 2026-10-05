@@ -25,7 +25,7 @@ Rectangle {
     radius: Theme.radius
     // arch: в покое ничего не рисуем; hover — слабый surface, active — сильнее
     color: cell.active ? Theme.active
-         : (cellHover.hovered && cell.interactive && !Theme.arch) ? Theme.hoverStrong
+         : (cellHover.hovered && cell.interactive) ? Theme.cellHoverBg
          : "transparent"
     Behavior on color { ColorAnimation { duration: Theme.animFast } }
 

@@ -254,7 +254,7 @@ FloatingWindow {
                         Rectangle {
                             width: 28
                             height: 2
-                            radius: 1
+                            radius: height / 2
                             color: Theme.alpha(Theme.accent, 0.30)
                         }
 
@@ -280,7 +280,7 @@ FloatingWindow {
                                     visible: root.pageIndex === index
                                     width: 3
                                     height: parent.height - 16
-                                    radius: 1.5
+                                    radius: width / 2
                                     anchors.verticalCenter: parent.verticalCenter
                                     anchors.left: parent.left
                                     color: Theme.accent

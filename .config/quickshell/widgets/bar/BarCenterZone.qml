@@ -255,7 +255,7 @@ Item {
                 }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: Theme.arch ? "[ " + Weather.shortTemp + " ]" : Weather.shortTemp
+                    text: Theme.hudBracket(Weather.shortTemp)
                     color: Weather.ok ? Theme.barText : Theme.barDim
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(12)
@@ -293,7 +293,7 @@ Item {
             tip: centerZone.host.dayText + " " + centerZone.host.dateText
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-                text: Theme.arch ? "[ " + centerZone.host.clockText + " ]" : centerZone.host.clockText
+                text: Theme.hudBracket(centerZone.host.clockText)
                 color: Theme.barText
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSize(17)

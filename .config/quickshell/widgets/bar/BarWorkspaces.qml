@@ -38,7 +38,7 @@ Item {
         visible: root.focusIdx >= 0
         width: 28
         height: 28
-        radius: 14
+        radius: width / 2
         color: Theme.alpha(Theme.accent, 0.12)
         border.width: 1
         border.color: Theme.alpha(Theme.accent, 0.35)

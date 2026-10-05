@@ -204,7 +204,7 @@ PanelWindow {
             Rectangle {
                 Layout.fillWidth: true
                 height: 1
-                color: Theme.arch ? Theme.hairAccent : Theme.border
+                color: Theme.dividerLine
             }
 
             Item {
@@ -260,7 +260,7 @@ PanelWindow {
                     y: leftTabRow.height - 2
                     width: active ? active.width : 0
                     height: 2
-                    radius: 1
+                    radius: height / 2
                     color: Theme.accent
                     Behavior on x { NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut } }
                     Behavior on width { NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut } }
@@ -343,7 +343,7 @@ PanelWindow {
                                 Rectangle {
                                     Layout.fillWidth: true
                                     height: 8
-                                    radius: 3
+                                    radius: Theme.radiusChip
                                     color: Theme.trackBg
                                     border.color: Theme.border
                                     border.width: 1
@@ -356,7 +356,7 @@ PanelWindow {
                                         anchors.bottom: parent.bottom
                                         anchors.margins: 1
                                         width: (parent.width - 2) * ratio
-                                        radius: 2
+                                        radius: Theme.radiusDot
                                         color: (ratio * 100) > 80 ? Theme.danger : Theme.accent
                                         Behavior on width {
                                             NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut }
@@ -406,7 +406,7 @@ PanelWindow {
                                     Rectangle {
                                         Layout.fillWidth: true
                                         height: 4
-                                        radius: 2
+                                        radius: height / 2
                                         color: Theme.trackBg
                                         Rectangle {
                                             readonly property real ratio: api.modelsTotal > 0
@@ -416,7 +416,7 @@ PanelWindow {
                                             anchors.verticalCenter: parent.verticalCenter
                                             height: parent.height
                                             width: parent.width * ratio
-                                            radius: 2
+                                            radius: height / 2
                                             color: Theme.accent
                                             Behavior on width {
                                                 NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut }
@@ -525,13 +525,11 @@ PanelWindow {
             Rectangle {
                 Layout.fillWidth: true
                 height: 1
-                color: Theme.arch ? Theme.hairAccent : Theme.border
+                color: Theme.dividerLine
             }
 
             Text {
-                text: Theme.arch
-                    ? "[ CPU " + SysInfo.cpu + "%  RAM " + SysInfo.ram + "% ]"
-                    : "CPU " + SysInfo.cpu + "%  RAM " + SysInfo.ram + "%"
+                text: Theme.hudBracket("CPU " + SysInfo.cpu + "%  RAM " + SysInfo.ram + "%")
                 color: Theme.textDim
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSize(13)

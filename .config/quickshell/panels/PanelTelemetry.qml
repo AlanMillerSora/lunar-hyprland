@@ -64,7 +64,7 @@ import "../widgets/shared"
                             spacing: Theme.space1
                             Text {
                                 Layout.alignment: Qt.AlignBottom
-                                text: v < 0 ? "--" : (Theme.arch ? "[ " + v + "% ]" : (v + "%"))
+                                text: v < 0 ? "--" : Theme.hudBracket(v + "%")
                                 color: Theme.text
                                 font.family: Theme.fontFamily
                                 font.pixelSize: Theme.fontBig
@@ -97,13 +97,13 @@ import "../widgets/shared"
                     width: parent.width
                     spacing: Theme.space4
                     Text {
-                        text: (Theme.arch ? "[ ↓ " : "↓ ") + SysInfo.fmtRate(SysInfo.rx)
+                        text: Theme.hudBracketOpen + "↓ " + SysInfo.fmtRate(SysInfo.rx)
                         color: Theme.text
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontBody
                     }
                     Text {
-                        text: "↑ " + SysInfo.fmtRate(SysInfo.tx) + (Theme.arch ? " ]" : "")
+                        text: "↑ " + SysInfo.fmtRate(SysInfo.tx) + Theme.hudBracketClose
                         color: Theme.textDim
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontBody

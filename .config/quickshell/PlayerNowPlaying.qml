@@ -163,7 +163,7 @@ Item {
                     anchors.centerIn: parent
                     width: 20
                     height: 20
-                    radius: 10
+                    radius: width / 2
                     color: Theme.bg
                     border.color: Theme.borderAccent
                     border.width: 2
@@ -307,13 +307,13 @@ Item {
                             anchors.bottom: parent.bottom
                             width: parent.width
                             height: 2 + barItem.v * (barItem.height - 8)
-                            radius: 2
+                            radius: Theme.radiusDot
                             color: Theme.alpha(Theme.accent, 0.30 + 0.70 * barItem.v)
 
                             Rectangle {
                                 anchors { left: parent.left; right: parent.right; top: parent.top }
                                 height: 2
-                                radius: 1
+                                radius: height / 2
                                 color: Theme.accent
                                 opacity: 0.25 + 0.75 * barItem.v
                             }
@@ -368,7 +368,7 @@ Item {
                 anchors.verticalCenterOffset: 4
                 width: parent.width
                 height: 4
-                radius: 2
+                radius: height / 2
                 color: Theme.trackBg
                 border.color: Theme.border
                 border.width: 1
@@ -392,7 +392,7 @@ Item {
                 anchors.verticalCenter: seekHandle.verticalCenter
                 width: 30
                 height: 30
-                radius: 15
+                radius: width / 2
                 color: "transparent"
                 border.color: Theme.alpha(Theme.accent, 0.35)
                 border.width: 1
@@ -406,7 +406,7 @@ Item {
                 id: seekHandle
                 width: 12
                 height: 12
-                radius: 6
+                radius: width / 2
                 anchors.verticalCenter: seekBg.verticalCenter
                 x: Math.max(0, Math.min(seekBg.width, seekBg.width * seek.useFrac)) - width / 2
                 color: Theme.text

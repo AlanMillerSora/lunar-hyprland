@@ -84,6 +84,10 @@ QtObject {
     property color active: Qt.rgba(accent.r, accent.g, accent.b, 0.14)       // выбранное/включённое
     property color activeBorder: Qt.rgba(accent.r, accent.g, accent.b, 0.5)  // рамка выбранного
     property color fill: Qt.rgba(text.r, text.g, text.b, 0.04)               // покой (фон карточек/строк)
+    // подсветка ячейки бара на наведении: в architect её нет (плоский носитель)
+    readonly property color cellHoverBg: arch ? "transparent" : hoverStrong
+    // линия-разделитель в сайдбарах: в architect — акцентная волосинка
+    readonly property color dividerLine: arch ? hairAccent : border
 
     // ── карточки панелей: подложка чуть контрастнее строк + рамка ──
     property color cardBg: Qt.rgba(text.r, text.g, text.b, 0.055)
@@ -136,6 +140,17 @@ QtObject {
     readonly property real hudCornerOpacity: 0.35
     readonly property int hudTickGap: 6
     readonly property int hudTickH: 4
+
+    // ── производные токены профиля ───────────────────────────────
+    // Рендер не выбирает «arch или нет» сам: все ветвления профиля
+    // собраны здесь, компоненты читают готовое значение.
+    // скобки HUD: "[ X ]" в architect, "X" в classic
+    readonly property string hudBracketOpen: arch ? "[ " : ""
+    readonly property string hudBracketClose: arch ? " ]" : ""
+    function hudBracket(s) { return hudBracketOpen + s + hudBracketClose }
+    // HUD-скобки по углам: в architect крупнее и толще
+    function hudCornerSizeFor(sz) { return arch ? sz * 1.4 : sz }
+    function hudCornerThicknessFor(th) { return arch ? Math.max(2, th * 1.5) : th }
 
     // живые обои (QML-сцена): false — «лёгкий режим» без звёзд/метеоров/пыли
     property bool wallpaperLive: true
@@ -252,6 +267,13 @@ QtObject {
     property int radius: arch ? 2 : 8
     property int radiusM: arch ? 3 : 10
     property int radiusL: arch ? 4 : 12
+    // мелочь подэлементов: точки, пилюли, полоски-индикаторы. Точные
+    // значения и без профиля: это геометрия самого элемента, а не поверхности,
+    // поэтому arch её не заостряет — иначе поедут пиксели.
+    property int radiusHair: 1   // волосинка: 2-3px полоски, разделители
+    property int radiusDot: 2    // точки и мелкие пилюли 4-5px
+    property int radiusChip: 3   // чипы/точки 5-8px
+    property int radiusTile: 4   // мелкие плитки/иконки
 
     // ── ритм интерфейса ──────────────────────────────────────────
     // Всё, что раньше было «магическими числами» по файлам, свожу сюда:
@@ -281,6 +303,7 @@ QtObject {
     // Микро-шкала значений/иконок и поле карточки — чтобы панели не сыпали
     // «магическими» числами (всё считается от fontScale).
     property int fontMicro: fontSize(9)
+    property int fontNano: fontSize(8)   // самые мелкие подписи-служебки
     property int fontBig: fontSize(24)
     property int fontHero: fontSize(34)
     property int iconXL: fontSize(30)
@@ -294,8 +317,15 @@ QtObject {
     property int barTop: arch ? 8 : 5
     property int barPad: 16
     property int barRadius: arch ? 3 : 9
+    // внешняя кромка плашки бара: в architect — прямоугольник без рамки
+    readonly property int barOuterRadius: arch ? 0 : barRadius
+    readonly property int barOuterBorder: arch ? 0 : 1
     // высота содержимого ячейки бара (иконки/текст внутри плашки)
     property int barCellH: 30
+    // разделитель между ячейками бара: в architect — выше и акцентный
+    readonly property real barDividerHFactor: arch ? 0.62 : 0.5
+    readonly property int barDividerRadius: arch ? 0 : 1
+    readonly property color barDividerColor: arch ? hairAccent : alpha(barText, 0.12)
     // высоты строк панелей: поле поиска и строка «пульта»
     property int panelFieldH: 46
     property int panelRowH: 36
@@ -315,6 +345,10 @@ QtObject {
     property int panelHSearch: 520
     property int panelHNotifs: 420
     property int radiusS: arch ? 0 : 6
+
+    // SectionHeader: в architect — скобки и отступ, в classic — просто подпись
+    readonly property int sectionHeaderPad: arch ? 6 : 0
+    function sectionHeaderMinH(sz) { return arch ? sz + 2 : 0 }
 
     // мягкая реакция на наведение — масштаб глифа, без переверстки
     property real hoverGrow: 1.25

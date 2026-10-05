@@ -164,7 +164,7 @@ Cell {
                             width: parent.width
                             height: Math.max(1, mediaInline.bandVal(index, mediaInline.cavaBars)
                                 * (Theme.barCellH * 0.55))
-                            radius: 1
+                            radius: Theme.radiusHair
                             color: Theme.alpha(Theme.accent, 0.85)
                             Behavior on height {
                                 NumberAnimation { duration: 80; easing.type: Easing.OutQuad }

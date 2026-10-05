@@ -404,7 +404,7 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                             width: 2
                             height: 14
-                            radius: 1
+                            radius: width / 2
                             color: modelData.visible ? Theme.barDim : "transparent"
                         }
 

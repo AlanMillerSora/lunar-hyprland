@@ -708,7 +708,7 @@ Item {
                         color: Theme.text
                         opacity: 0.35
                         font.family: page.mono
-                        font.pixelSize: 8
+                        font.pixelSize: Theme.fontNano
                     }
 
                     Text {
@@ -720,7 +720,7 @@ Item {
                         color: Theme.text
                         opacity: 0.35
                         font.family: page.mono
-                        font.pixelSize: 8
+                        font.pixelSize: Theme.fontNano
                     }
                 }
             }
@@ -816,7 +816,7 @@ Item {
                         color: Theme.text
                         opacity: 0.35
                         font.family: page.mono
-                        font.pixelSize: 8
+                        font.pixelSize: Theme.fontNano
                     }
 
                     Text {
@@ -828,7 +828,7 @@ Item {
                         color: Theme.text
                         opacity: 0.35
                         font.family: page.mono
-                        font.pixelSize: 8
+                        font.pixelSize: Theme.fontNano
                     }
                 }
             }
@@ -924,7 +924,7 @@ Item {
                         color: Theme.text
                         opacity: 0.35
                         font.family: page.mono
-                        font.pixelSize: 8
+                        font.pixelSize: Theme.fontNano
                     }
 
                     Text {
@@ -936,7 +936,7 @@ Item {
                         color: Theme.text
                         opacity: 0.35
                         font.family: page.mono
-                        font.pixelSize: 8
+                        font.pixelSize: Theme.fontNano
                     }
                 }
             }

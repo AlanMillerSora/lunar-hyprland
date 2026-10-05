@@ -12,8 +12,8 @@ Item {
     property int thickness: 2
     property int margin: 10
 
-    readonly property real s: Theme.arch ? root.size * 1.4 : root.size
-    readonly property real t: Theme.arch ? Math.max(2, root.thickness * 1.5) : root.thickness
+    readonly property real s: Theme.hudCornerSizeFor(root.size)
+    readonly property real t: Theme.hudCornerThicknessFor(root.thickness)
 
     Rectangle {
         width: root.s; height: root.t; color: root.color

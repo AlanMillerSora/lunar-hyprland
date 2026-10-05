@@ -147,7 +147,7 @@ Item {
                 Rectangle {
                     width: 3
                     height: 12
-                    radius: 1.5
+                    radius: width / 2
                     anchors.verticalCenter: parent.verticalCenter
                     color: Theme.accent
                 }

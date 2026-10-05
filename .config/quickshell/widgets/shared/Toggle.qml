@@ -22,7 +22,7 @@ Rectangle {
     Rectangle {
         width: 12
         height: 12
-        radius: 6
+        radius: width / 2
         y: 1
         x: root.on ? root.width - width - 2 : 2
         color: root.on ? Theme.bg : Theme.textDim

@@ -75,7 +75,7 @@ Window {
                 required property int index
                 width: 34
                 height: 30
-                radius: 4
+                radius: Theme.radiusTile
                 color: win.phase === index + 1 ? Theme.text : Theme.hover
                 border.width: 1
                 border.color: win.phase === index + 1 ? Theme.text : Theme.borderAccent
@@ -96,7 +96,7 @@ Window {
         Rectangle {
             width: 96
             height: 30
-            radius: 4
+            radius: Theme.radiusTile
             color: win.live ? Theme.hover : Theme.text
             border.width: 1
             border.color: win.live ? Theme.borderAccent : Theme.text
