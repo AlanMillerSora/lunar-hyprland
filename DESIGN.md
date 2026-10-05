@@ -18,7 +18,7 @@
 - **Две независимые оси темы:** **Палитра** (цвет) × **Стиль-профиль** (форма/мотив).
 
 ```
-ТЕМА = ПАЛИТРА (lunar / graphite / steel / photo)  ×  СТИЛЬ (classic / architect)
+ТЕМА = ПАЛИТРА (lunar / steel / photo)  ×  СТИЛЬ (classic / architect)
 ```
 
 Выбор: **Hub → Интерфейс**. Палитра пишется генератором в `~/.cache/lunar/palette.json`,

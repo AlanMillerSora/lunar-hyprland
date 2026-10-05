@@ -364,7 +364,6 @@ Item {
                     Repeater {
                         model: [
                             { id: "lunar", name: "LUNAR" },
-                            { id: "graphite", name: "GRAPHITE" },
                             { id: "steel", name: "STEEL" },
                             { id: "photo", name: "ФОТО" }
                         ]

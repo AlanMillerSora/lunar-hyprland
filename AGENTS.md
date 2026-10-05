@@ -234,8 +234,7 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 ## 5. Стиль
 
 - Палитра — из `~/.cache/lunar/palette.json` (пишет `eclipse-palette.py` из `lunar/palette.toml`).
-  Пресеты: **lunar** (по умолчанию, холодный монохром), **graphite** (чёрный, но с лёгким
-  холодом — чистый нейтрал на тёплых матрицах читается коричневым), **steel** (серо-синий
+  Пресеты: **lunar** (по умолчанию, холодный монохром), **steel** (серо-синий
   с акцентом), **photo** (`--from-image`: цвет считается с обоев). В `Theme.qml` цвета
   читаются через `hexColor()`: палитра пишет `#RRGGBBAA`, а Qt ждёт `#AARRGGBB`.
 - Флэт, без глянца: плашки панели плотные (`barPill` альфа `arch?0.95:0.85`),
@@ -441,7 +440,7 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 ./lunar reload                                                 # перезагрузить рис БЕЗ приложений (hyprctl + quickshell + mako + hypridle + cliphist)
 ./install.sh [--sddm|--plymouth|--zapret|--status|--disable-sddm|--disable-plymouth|--plymouth-rescue|--no-deps|--deps-only]
 ~/.config/hypr/scripts/eclipse-palette.py                      # палитра: dry-run
-~/.config/hypr/scripts/eclipse-palette.py --preset graphite --apply
+~/.config/hypr/scripts/eclipse-palette.py --preset steel --apply
 ~/.config/hypr/scripts/eclipse-palette.py --from-image ~/Pictures/wall.jpg --apply
 qs ipc call wallpapers toggle|open|close                       # подбор обоев (SUPER + B)
 qs ipc call hub nav N                                          # 0..8 (см. §4)

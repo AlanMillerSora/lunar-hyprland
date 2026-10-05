@@ -8,7 +8,7 @@ QtObject {
 
     // ── палитра ──────────────────────────────────────────────
     // Цвета приходят из ~/.cache/lunar/palette.json (генератор
-    // eclipse-palette.py, пресеты lunar/graphite/steel). Если файла нет —
+    // eclipse-palette.py, пресеты lunar/steel/photo). Если файла нет —
     // работают прежние значения риса: шелл не зависит от генератора.
     property var palette: ({})
 
@@ -248,7 +248,7 @@ QtObject {
             runPalette("restore")
     }
 
-    // ручной пресет из Hub (lunar/graphite/steel/…) — через ту же очередь,
+    // ручной пресет из Hub (lunar/steel/photo) — через ту же очередь,
     // что и фото, чтобы прогоны не писали палитру одновременно
     function setPreset(name) {
         if (name !== "")
