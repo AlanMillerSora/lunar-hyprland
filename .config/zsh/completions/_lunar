@@ -1,0 +1,71 @@
+#compdef lunar
+# ════════════════════════════════════════════════════════════════
+#  _lunar — zsh-автодополнение точки входа риса Lunar Eclipse.
+#
+#  Подсказываю подкоманды `lunar` и, где можно, их аргументы.
+#  Файл живёт в репо; каталог добавляется в fpath из ~/.config/.zshrc
+#  ПЕРЕД compinit (иначе zsh о нём не узнает).
+# ════════════════════════════════════════════════════════════════
+
+_lunar() {
+  local -a commands
+  commands=(
+    'help:справка (по умолчанию)'
+    'install:установка/обновление: ./install.sh [флаги]'
+    'deps:зависимости: ./get-deps.sh'
+    'sync:repo ↔ live: ./sync.sh [apply|check]'
+    'bump:VERSION (semver): ./bump.sh [patch|minor|major]'
+    'ci:гейт (shell/py/токены): ./ci/check.sh'
+    'doctor:health-check риса: ./doctor.sh'
+    'palette:палитра: eclipse-palette.py [--preset … --apply]'
+    'snapshot:снимок версий пакетов: ./deps/snapshot.sh'
+    'release:тег + push: ./release.sh [--force]'
+    'reload:перезагрузить рис без приложений: ./reload.sh'
+  )
+
+  _arguments -C \
+    '1:команда:->command' \
+    '*::аргумент:->args'
+
+  case "$state" in
+    command)
+      _describe -t commands 'команда lunar' commands
+      ;;
+    args)
+      case "$words[1]" in
+        bump)
+          _values 'тип инкремента' patch minor major
+          ;;
+        sync)
+          _values 'режим' apply check
+          ;;
+        release)
+          _arguments '--force[тегнуть даже равный VERSION]'
+          ;;
+        install)
+          _arguments \
+            '--sddm[тема экрана входа]' \
+            '--plymouth[заставка при загрузке]' \
+            '--zapret[обход DPI (Discord/YouTube)]' \
+            '--status[показать статус]' \
+            '--disable-sddm[откат SDDM]' \
+            '--disable-plymouth[откат Plymouth]' \
+            '--plymouth-rescue[аварийный Plymouth]' \
+            '--no-deps[без пакетов]' \
+            '--deps-only[только пакеты]'
+          ;;
+        palette)
+          _arguments \
+            '--preset[пресет палитры]:пресет:(lunar graphite steel photo)' \
+            '--from-image[цвет из картинки]:картинка:_files' \
+            '--apply[применить]'
+          ;;
+        *)
+          _default
+          ;;
+      esac
+      ;;
+  esac
+}
+
+_lunar "$@"

@@ -46,6 +46,20 @@ if [[ -n "$(git status --porcelain)" ]]; then
   exit 1
 fi
 
+# preflight: origin должен существовать и отвечать ДО тега. git ls-remote
+# проверяет и адрес remote, и доступ (сеть/SSH-ключ/credential) — без этого
+# тег поставится локально, а пуш упадёт уже после.
+if ! git remote get-url origin >/dev/null 2>&1; then
+  echo "ОШИБКА: remote 'origin' не настроен — пушить некуда" >&2
+  echo "  добавь: git remote add origin <url>" >&2
+  exit 1
+fi
+if ! git ls-remote origin >/dev/null 2>&1; then
+  echo "ОШИБКА: origin недоступен (нет сети, доступа или credential)" >&2
+  echo "  проверь: git ls-remote origin" >&2
+  exit 1
+fi
+
 if git rev-parse "$TAG" >/dev/null 2>&1; then
   if [[ "$FORCE" != 1 ]]; then
     echo "Тег $TAG уже существует. Перезаписать: ./release.sh --force" >&2
@@ -61,9 +75,11 @@ echo "==> коммит:   $(git rev-parse --short HEAD)"
 echo "==> тег:      $TAG"
 
 git tag -a "$TAG" -m "Lunar Eclipse ${VERSION}"
-git push origin HEAD
-git push origin "$TAG"
+
+# Атомарно: ветка и тег уходят одной транзакцией. Обрыв связи не оставит
+# «половину» релиза — тег без коммита (или наоборот).
+git push --atomic origin HEAD "$TAG"
 
 echo
-echo "Готово: тег $TAG отправлен."
+echo "Готово: ветка и тег $TAG отправлены (атомарно)."
 echo "Release соберётся сам: https://github.com/AlanMillerSora/lunar-hyprland/actions"

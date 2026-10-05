@@ -18,6 +18,8 @@
 [base]
 git
 base-devel
+# shellcheck — гейт ci/check.sh (необязателен: без него шаг пропускается)
+shellcheck
 hyprland
 hypridle
 quickshell

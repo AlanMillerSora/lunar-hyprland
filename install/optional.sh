@@ -371,7 +371,7 @@ zapret_service() {
   # Управление zapret идёт через root-хелпер /usr/libexec/lunar/svc.sh
   # (allowlist юнитов внутри; голый systemctl в sudoers не выставляем).
   # Хелпер ставит system_helpers из install/system.sh; отдельного
-  # правила /etc/sudoers.d/lunar-zapret больше нет.
+  # широкого sudoers-правила для zapret больше нет.
   say "zapret: управление — через /usr/libexec/lunar/svc.sh"
 }
 

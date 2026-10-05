@@ -4,9 +4,10 @@
 #
 #  Что проверяю:
 #    1) синтаксис shell-скриптов (bash -n);
-#    2) синтаксис python-скриптов (py_compile);
-#    3) дрейф токенов Theme.qml ↔ AGENTS.md §5 / DESIGN.md §2.4;
-#    4) smoke: eclipse-palette.py в dry-run (без --apply) — exit 0.
+#    2) shellcheck по shell-скриптам, если установлен (иначе — пропуск);
+#    3) синтаксис python-скриптов (py_compile);
+#    4) дрейф токенов Theme.qml ↔ AGENTS.md §5 / DESIGN.md §2.4;
+#    5) smoke: eclipse-palette.py в dry-run (без --apply) — exit 0.
 #
 #  Запуск из корня репо:  bash ci/check.sh
 #  Провал любого шага → exit 1.
@@ -35,7 +36,29 @@ for f in lunar doctor.sh reload.sh install.sh get-deps.sh ui.sh \
     fi
 done
 
-# 2) синтаксис python
+# 2) shellcheck — только если установлен; без него шаг пропускаю (не провал).
+# Гоняю по тому же списку, что и bash -n, на severity=error: ловлю реальные
+# ошибки, а не стилевые придирки. Файл без ошибок — молчание.
+step "Shellcheck (если доступен)"
+if ! command -v shellcheck >/dev/null 2>&1; then
+    ok "shellcheck не установлен — пропущено (не провал)"
+else
+    sc_clean=1
+    for f in lunar doctor.sh reload.sh install.sh get-deps.sh ui.sh \
+             release.sh sync.sh bump.sh install/*.sh deps/snapshot.sh \
+             systemd/libexec/*.sh packaging/*/*.install .config/hypr/scripts/*.sh; do
+        [ -e "$f" ] || continue
+        if err=$(shellcheck -S error --shell=bash "$f" 2>&1); then
+            continue
+        fi
+        sc_clean=0
+        bad "$f (shellcheck)"
+        printf '%s\n' "$err" | sed 's/^/      /'
+    done
+    [ "$sc_clean" = 1 ] && ok "shellcheck: чисто (severity=error)"
+fi
+
+# 3) синтаксис python
 step "Синтаксис Python (py_compile)"
 if out=$(python3 -m py_compile .config/hypr/scripts/*.py 2>&1); then
     ok ".config/hypr/scripts/*.py"
@@ -46,7 +69,7 @@ fi
 # py_compile сыпет кэш в дерево — подчищаю (в .gitignore, но чистота важна)
 rm -rf .config/hypr/scripts/__pycache__
 
-# 3) дрейф токенов Theme.qml ↔ доки
+# 4) дрейф токенов Theme.qml ↔ доки
 step "Дрейф токенов Theme.qml ↔ доки"
 if out=$(python3 ci/check-tokens.py "$ROOT" 2>&1); then
     ok "AGENTS.md §5 / DESIGN.md §2.4 совпадают с Theme.qml"
@@ -55,7 +78,7 @@ else
     printf '%s\n' "$out" | sed 's/^/      /'
 fi
 
-# 4) smoke: палитра в dry-run не должна ничего ломать
+# 5) smoke: палитра в dry-run не должна ничего ломать
 step "Smoke: eclipse-palette.py (dry-run)"
 if out=$(python3 .config/hypr/scripts/eclipse-palette.py 2>&1); then
     ok "dry-run exit 0"

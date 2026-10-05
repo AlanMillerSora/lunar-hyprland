@@ -198,7 +198,7 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 │   ├── lunar/{home/firefox-home.html, lunar.bash, gamemode-pause.conf}
 │   ├── lunar/{palette.toml, templates/*.in}   ← единая палитра: пресеты + шаблоны
 │   ├── fontconfig/fonts.conf                  ← хинтинг/сглаживание (чёткие буквы)
-│   ├── bat/ Code/ yazi/ firefox/ hypridle/ mako/ kitty/ fastfetch/ btop/
+│   ├── bat/ Code/ yazi/ firefox/ hypridle/ mako/ kitty/ fastfetch/ btop/ zsh/
 │   └── gtk-3.0/ gtk-4.0/ kdeglobals/ .zshrc starship.toml
 ├── systemd/{user,system,libexec,sudoers,conf}/  color-schemes/  assets/(+screens/)  zapret/
 ├── plymouth/lunar/   sddm/lunar/        ← только темы + README
@@ -436,7 +436,7 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 
 ```sh
 ./lunar help                                                   # точка входа: install|deps|sync|bump|ci|doctor|palette|snapshot|release|reload
-./doctor.sh                                                    # health-check риса (шелл/конфиг/сеть/дрейф/ci)
+./doctor.sh                                                    # health-check риса (шелл/конфиг/сеть/демоны/палитра/дрейф/ci)
 ./lunar reload                                                 # перезагрузить рис БЕЗ приложений (hyprctl + quickshell + mako + hypridle + cliphist)
 ./install.sh [--sddm|--plymouth|--zapret|--status|--disable-sddm|--disable-plymouth|--plymouth-rescue|--no-deps|--deps-only]
 ~/.config/hypr/scripts/eclipse-palette.py                      # палитра: dry-run
@@ -455,8 +455,13 @@ sudo mkinitcpio -P                                                 # сборк�
 
 Релиз: `./release.sh` — тег `v<VERSION>` уходит в origin, GitHub Actions
 (`.github/workflows/release.yml`) сам создаёт Release с заметками из коммитов.
-`release.sh` не даст тегнуть `VERSION` меньше последнего тега `v*` (равный —
-только с `--force`). Перед релизом рабочее дерево должно быть чистым.
+Пуш атомарный (`git push --atomic origin HEAD "$TAG"`): ветка и тег уходят
+одной транзакцией, обрыв не оставит «половину» релиза. Перед тегом скрипт
+проверяет доступ к origin (`git ls-remote`) и внятно падает, если remote нет
+или он недоступен. `release.sh` не даст тегнуть `VERSION` меньше последнего
+тега `v*` (равный — только с `--force`). Перед релизом рабочее дерево чистое.
+`./doctor.sh` предупредит, если `VERSION` ушёл вперёд последнего тега больше
+чем на минор, — значит, релизы не выпускались.
 Опциональный хук `.githooks/pre-commit` (не блокирует) напоминает про VERSION;
 включить: `git config core.hooksPath .githooks`.
 Зависимости: `./get-deps.sh`. Списки пакетов — `deps/packages.txt` (официальные,

@@ -351,9 +351,11 @@ cd ~/rice
 
 ```bash
 ./lunar help             # справка: install|deps|sync|bump|ci|doctor|palette|snapshot|release|reload
-./doctor.sh              # health-check: quickshell, configerrors, iwd/networkd, дрейф, ci
+./doctor.sh              # health-check: quickshell, configerrors, iwd/networkd, демоны/tgproxy/палитра/sudo, дрейф, ci
 ./lunar reload           # перезагрузить рис без приложений (Hyprland, quickshell, mako, hypridle, cliphist)
 ```
+
+Команды `lunar` дополняются в zsh: комплит `.config/zsh/completions/_lunar` (каталог добавлен в `fpath` из `~/.zshrc` до `compinit`).
 
 | Флаг | Что делает |
 |---|---|
@@ -594,7 +596,7 @@ lib32-nvidia-utils
 │   │   ├── panels/, Player*.qml, SettingsPages/, widgets/shared/
 │   ├── lunar/{palette.toml, templates/*.in, home/, lunar.bash, gamemode-pause.conf}
 │   ├── avatars/avatar.png          ← единый аватар (рис + экран входа)
-│   ├── kitty/ btop/ yazi/ firefox/ gtk-3.0/ gtk-4.0/ qt6ct/ mako/ fastfetch/ bat/ Code/ opencode/ fontconfig/
+│   ├── kitty/ btop/ yazi/ firefox/ gtk-3.0/ gtk-4.0/ qt6ct/ mako/ fastfetch/ bat/ Code/ opencode/ fontconfig/ zsh/
 │   └── kdeglobals, starship.toml, .zshrc
 ├── systemd/{user,system,libexec,sudoers,conf}/  color-schemes/  plymouth/lunar/  sddm/lunar/  zapret/  assets/{logo.svg, screens/}
 ├── install/{dotfiles,system,optional}.sh   ← части установщика

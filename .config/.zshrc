@@ -55,6 +55,9 @@ function y() {
 }
 
 # ── Автодополнение ──
+# Свои комплиты риса (например, `lunar`) — каталог в fpath ДО compinit,
+# иначе zsh файл не найдёт. Живёт в репо: .config/zsh/completions/_lunar.
+fpath=("$HOME/.config/zsh/completions" $fpath)
 autoload -Uz compinit
 compinit
 zstyle ':completion:*' menu select

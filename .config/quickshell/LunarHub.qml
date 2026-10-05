@@ -80,18 +80,37 @@ FloatingWindow {
 
     property int selectedIndex: 0
 
-    // H: кэш страниц. Создаю страницу при первом заходе и держу живой —
-    // переключение вкладок не пересобирает QML и не убивает её Process
-    // (System/Network/Monitors и т.д. стартуют один раз). Спящие страницы
-    // не рисуются и гасят свои таймеры по visible. Индекс 0 — сразу.
+    // H: кэш страниц — LRU на pageCacheLimit (текущая + недавние).
+    // Раньше страница жила до конца сессии, и все девять держали свои
+    // Process/модели (сотни МБ). Теперь живыми остаются только последние
+    // три: при заходе на четвёртую самую старую выгружаю (снимаю
+    // visitedPages) — её Process и таймеры останавливаются, память
+    // возвращается. Повторный заход поднимает страницу заново
+    // (ensurePage/selectPage), переключение при этом не ломается.
+    property int pageCacheLimit: 3
+    property var pageOrder: [0]
     property var visitedPages: [true]
 
-    function ensurePage(i) {
-        if (i < 0 || i >= root.navItems.length || root.visitedPages[i] === true)
-            return
+    function touchPage(i) {
+        var o = root.pageOrder.slice()
+        var at = o.indexOf(i)
+        if (at !== -1)
+            o.splice(at, 1)
+        o.unshift(i)
         var v = root.visitedPages.slice()
+        while (o.length > root.pageCacheLimit) {
+            var old = o.pop()
+            v[old] = false
+        }
         v[i] = true
+        root.pageOrder = o
         root.visitedPages = v
+    }
+
+    function ensurePage(i) {
+        if (i < 0 || i >= root.navItems.length)
+            return
+        root.touchPage(i)
     }
 
     function selectPage(i) {
@@ -418,11 +437,12 @@ FloatingWindow {
                         color: Theme.hair
                     }
 
-                    // H: страницы в кэше. Каждая создаётся один раз (при первом
-                    // заходе) и живёт до конца сессии — поэтому переходы мгновенные,
-                    // а её Process не убиваются SIGKILL посреди долгой операции.
-                    // Живая, но не текущая страница = invisible: таймеры-поллинг
-                    // (Network/Bluetooth/Memory/System) спят по page.visible.
+                    // H: страницы в кэше — LRU (см. pageCacheLimit выше).
+                    // Живыми держу не больше трёх: давние выгружаю, их Process
+                    // останавливаются. Переходы всё равно мгновенные (живой
+                    // набор), а долгие операции с выгруженной страницы уже не
+                    // нужны. Живая, но не текущая страница = invisible: таймеры-
+                    // поллинг (Network/Bluetooth/Memory/System) спят по page.visible.
                     Repeater {
                         model: root.navItems
 

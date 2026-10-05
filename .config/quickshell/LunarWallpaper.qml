@@ -147,6 +147,6 @@ PanelWindow {
         phase: Math.max(1, Math.min(9, root.wsId))
         live: Theme.wallpaperLive && Theme.wallpaperMode !== "image"
         optimize: true
-        tickMs: 40
+        tickMs: 120
     }
 }

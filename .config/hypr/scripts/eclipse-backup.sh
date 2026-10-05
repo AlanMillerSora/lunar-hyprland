@@ -83,7 +83,7 @@ fi
 mkdir -p "$TMP/etc"
 for f in /etc/pacman.conf /etc/mkinitcpio.conf /etc/fstab \
          /etc/default/grub /etc/modprobe.d /etc/modules-load.d \
-         /etc/sudoers.d/lunar-zapret /etc/systemd/system/zapret.service; do
+         /etc/systemd/system/zapret.service; do
   if [[ -e "$f" ]]; then
     sudo -n cp -a "$f" "$TMP/etc/" 2>/dev/null || true
   fi
