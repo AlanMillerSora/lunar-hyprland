@@ -291,60 +291,62 @@ QtObject {
     // Всё, что раньше было «магическими числами» по файлам, свожу сюда:
     // отступы, высоты строк, шкала текста, геометрия панели. Меняем тут —
     // меняется весь рис разом (этап «воздух»).
-    property int space1: 4
-    property int space2: 8
-    property int space3: 12
-    property int space4: 20
-    property int space5: 28
-    property int space6: 32
+    // «воздух» (B4): шаг отступов поднят на ступень, чтобы интерфейс дышал.
+    property int space1: 5
+    property int space2: 10
+    property int space3: 14
+    property int space4: 22
+    property int space5: 30
+    property int space6: 36
 
-    property int rowHCompact: 38
-    property int rowH: 42
-    property int rowHComfy: 48
-    property int headerH: 44
+    property int rowHCompact: 42
+    property int rowH: 46
+    property int rowHComfy: 54
+    property int headerH: 50
 
     // Все ступени — через fontSize(): тогда fontScale двигает шкалу целиком,
-    // а не наполовину (раньше семантические токены были константами)
-    property int fontTiny: fontSize(11)
-    property int fontSmall: fontSize(12)
-    property int fontBody: fontSize(14)
-    property int fontPanelTitle: fontSize(16)
-    property int fontTitle: fontSize(22)
-    property int fontClock: fontSize(16)
+    // а не наполовину (раньше семантические токены были константами).
+    // B4: кегль поднят на 1-2 пункта — тело читаемее, заголовки заметнее.
+    property int fontTiny: fontSize(12)
+    property int fontSmall: fontSize(13)
+    property int fontBody: fontSize(15)
+    property int fontPanelTitle: fontSize(18)
+    property int fontTitle: fontSize(26)
+    property int fontClock: fontSize(18)
 
     // Микро-шкала значений/иконок и поле карточки — чтобы панели не сыпали
     // «магическими» числами (всё считается от fontScale).
-    property int fontMicro: fontSize(9)
-    property int fontNano: fontSize(8)   // самые мелкие подписи-служебки
-    property int fontBig: fontSize(24)
-    property int fontHero: fontSize(34)
-    property int iconXL: fontSize(30)
-    property int cardPad: 20
+    property int fontMicro: fontSize(10)
+    property int fontNano: fontSize(9)   // самые мелкие подписи-служебки
+    property int fontBig: fontSize(26)
+    property int fontHero: fontSize(38)
+    property int iconXL: fontSize(32)
+    property int cardPad: 22
 
     // панель-острова (этап 1): высота плашки, зазоры, поля, отступ внутри.
     // arch-стиль: тонкая полоса, контент без «плашек».
-    property int barH: arch ? 38 : 34
+    property int barH: arch ? 40 : 38
     property int barMargin: arch ? 0 : 5
     // верхний отступ бара (воздух сверху), отдельно от бокового
-    property int barTop: arch ? 8 : 5
-    property int barPad: 16
+    property int barTop: arch ? 8 : 6
+    property int barPad: 18
     property int barRadius: arch ? 3 : 12
     // внешняя кромка плашки бара: в architect — прямоугольник без рамки
     readonly property int barOuterRadius: arch ? 0 : barRadius
     readonly property int barOuterBorder: arch ? 0 : 1
     // высота содержимого ячейки бара (иконки/текст внутри плашки)
-    property int barCellH: 30
+    property int barCellH: 34
     // разделитель между ячейками бара: в architect — выше и акцентный
     readonly property real barDividerHFactor: arch ? 0.62 : 0.5
     readonly property int barDividerRadius: arch ? 0 : 1
     readonly property color barDividerColor: arch ? hairAccent : alpha(barText, 0.12)
     // высоты строк панелей: поле поиска и строка «пульта»
-    property int panelFieldH: 46
-    property int panelRowH: 36
-    property int sparkH: 26
+    property int panelFieldH: 50
+    property int panelRowH: 40
+    property int sparkH: 28
 
     // панель-остров (этап 2): шапка, строки, ширины режимов
-    property int panelHeaderH: 44
+    property int panelHeaderH: 50
     property int panelWSearch: 620
     property int panelWNotifs: 580
     // «подгонка под режим»: у каждого пузыря своя ширина

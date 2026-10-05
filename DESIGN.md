@@ -58,15 +58,15 @@
 `hudCornerSize` 14 · `hudCornerThickness` 1 · `hudCornerInset` 8 · `hudTickGap` 6 · `hudTickH` 4.
 
 ### 2.4 Ритм
-- Отступы: `space1..6` = **4 / 8 / 12 / 20 / 28 / 32**.
-- Строки: `rowHCompact / rowH / rowHComfy` = **38 / 42 / 48**, `headerH` 44.
+- Отступы: `space1..6` = **5 / 10 / 14 / 22 / 30 / 36**.
+- Строки: `rowHCompact / rowH / rowHComfy` = **42 / 46 / 54**, `headerH` 50.
 - Радиусы: `radiusS / radius / radiusM / radiusL` = classic **8/12/14/18** → arch **0/2/3/4**.
-- Панель: `barH` 34→**38** (arch), `barMargin` 5→**0**, `barTop` 5→**8**, `barPad` 16,
-  `barRadius` 12→**3**, `barCellH` 30; `panelHeaderH` 44, `cardPad` 20, `sparkH` 26.
+- Панель: `barH` 38→**40** (arch), `barMargin` 5→**0**, `barTop` 6→**8**, `barPad` 18,
+  `barRadius` 12→**3**, `barCellH` 34; `panelHeaderH` 50, `cardPad` 22, `sparkH` 28.
 
 ### 2.5 Шрифт
 `Roboto Mono` — интерфейс; `JetBrainsMono Nerd Font` — иконки.
-`fontMicro…fontTitle` = 9/11/12/14/16/22 (умножаются на `fontScale`). Заголовок панели `fontPanelTitle`.
+`fontMicro…fontTitle` = 10/9/12/13/15/18/26/18 (умножаются на `fontScale`). Заголовок панели `fontPanelTitle`.
 
 ### 2.6 Движение
 `Theme.anim` — spatial (с перелётом) и effects (без), кривые expressive/standard/emphasized.
