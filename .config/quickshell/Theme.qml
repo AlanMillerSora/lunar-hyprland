@@ -273,10 +273,12 @@ QtObject {
     property bool playerOpen: false
     property int playerPage: 0
 
-    // Радиусы: мелкое — 8, среднее — 10, крупные поверхности (Hub, сайдбары) — 12
-    property int radius: arch ? 2 : 8
-    property int radiusM: arch ? 3 : 10
-    property int radiusL: arch ? 4 : 12
+    // Радиусы: мелкое — 12, среднее — 14, крупные поверхности (Hub, сайдбары) — 18.
+    // classic смягчён (этап «форма»): мягкие крупные углы как у 43PR,
+    // arch оставляю острым — профиль не трогаю.
+    property int radius: arch ? 2 : 12
+    property int radiusM: arch ? 3 : 14
+    property int radiusL: arch ? 4 : 18
     // мелочь подэлементов: точки, пилюли, полоски-индикаторы. Точные
     // значения и без профиля: это геометрия самого элемента, а не поверхности,
     // поэтому arch её не заостряет — иначе поедут пиксели.
@@ -317,7 +319,7 @@ QtObject {
     property int fontBig: fontSize(24)
     property int fontHero: fontSize(34)
     property int iconXL: fontSize(30)
-    property int cardPad: 16
+    property int cardPad: 20
 
     // панель-острова (этап 1): высота плашки, зазоры, поля, отступ внутри.
     // arch-стиль: тонкая полоса, контент без «плашек».
@@ -326,7 +328,7 @@ QtObject {
     // верхний отступ бара (воздух сверху), отдельно от бокового
     property int barTop: arch ? 8 : 5
     property int barPad: 16
-    property int barRadius: arch ? 3 : 9
+    property int barRadius: arch ? 3 : 12
     // внешняя кромка плашки бара: в architect — прямоугольник без рамки
     readonly property int barOuterRadius: arch ? 0 : barRadius
     readonly property int barOuterBorder: arch ? 0 : 1
@@ -354,7 +356,7 @@ QtObject {
     // высота панелей-модалок (поиск/уведомления) до полного раскрытия
     property int panelHSearch: 520
     property int panelHNotifs: 420
-    property int radiusS: arch ? 0 : 6
+    property int radiusS: arch ? 0 : 8
 
     // SectionHeader: в architect — скобки и отступ, в classic — просто подпись
     readonly property int sectionHeaderPad: arch ? 6 : 0

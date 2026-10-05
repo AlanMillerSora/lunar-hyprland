@@ -114,7 +114,7 @@ hl.config({
   },
 
   decoration = {
-    rounding       = 8,       -- ровно как у 43PR
+    rounding       = 12,      -- мягче системного: крупные углы как у 43PR
     rounding_power = 2.0,      -- скругленные "сквирклы" как в превью
     active_opacity   = 0.94,
     inactive_opacity = 0.90,
@@ -246,9 +246,9 @@ hl.window_rule({ match = { class = "^(code|code-url-handler)$" }, rounding = 12,
 hl.window_rule({ match = { class = "^(lunar-yazi)$" }, rounding = 12, opacity = "1.0 override 1.0 override" })
 
 -- Попапы райса: календарь, шпаргалка хоткеев, ввод пароля — по центру, без рамок
-hl.window_rule({ match = { class = "eclipse-calendar" },   float = true, center = true, rounding = 8, border_size = 0 })
+hl.window_rule({ match = { class = "eclipse-calendar" },   float = true, center = true, rounding = 12, border_size = 0 })
 hl.window_rule({ match = { class = "eclipse-cheatsheet" }, float = true, center = true, rounding = 12, border_size = 0 })
-hl.window_rule({ match = { class = "eclipse-askpass" },    float = true, center = true, rounding = 8, border_size = 0 })
+hl.window_rule({ match = { class = "eclipse-askpass" },    float = true, center = true, rounding = 12, border_size = 0 })
 
 
 -- Quickshell: единая оболочка Lunar Eclipse (панель, лаунчер, sidebar, настройки, OSD)
@@ -261,16 +261,16 @@ hl.layer_rule({ match = { namespace = "lunar-sidebar-right" }, blur = true, igno
 -- Плеер — обычное окно (Quickshell FloatingWindow): плавающее, по центру,
 -- со скруглением и полупрозрачностью. Блюр Hyprland даёт сам (окно с
 -- opacity<1), общий blur включён — отдельный слой тут больше не нужен.
-hl.window_rule({ match = { title = "^(Lunar Player)$" }, float = true, center = true, rounding = 8, opacity = "0.97 override 0.97 override" })
+hl.window_rule({ match = { title = "^(Lunar Player)$" }, float = true, center = true, rounding = 12, opacity = "0.97 override 0.97 override" })
 
 -- Крупные модалки — тоже обычные окна (Quickshell FloatingWindow): их можно
 -- тянуть и ресайзить, блюр им даёт прозрачность окна. Заголовки ставлю в QML.
--- Радиус 14 (чуть больше системного): без обводки форму читает именно угол.
-hl.window_rule({ match = { title = "^(Lunar Hub)$" },       float = true, center = true, rounding = 8, opacity = "0.97 override 0.97 override" })
-hl.window_rule({ match = { title = "^(Lunar Wallpapers)$" }, float = true, center = true, rounding = 8, opacity = "0.97 override 0.97 override" })
-hl.window_rule({ match = { title = "^(Lunar Clipboard)$" }, float = true, center = true, rounding = 8, opacity = "0.97 override 0.97 override" })
-hl.window_rule({ match = { title = "^(Lunar Power)$" },     float = true, center = true, rounding = 8, opacity = "0.97 override 0.97 override" })
-hl.window_rule({ match = { title = "^(Lunar Agent)$" },     float = true, center = true, rounding = 8, opacity = "0.97 override 0.97 override" })
+-- Радиус 12 (как системный): без обводки форму читает именно угол.
+hl.window_rule({ match = { title = "^(Lunar Hub)$" },       float = true, center = true, rounding = 12, opacity = "0.97 override 0.97 override" })
+hl.window_rule({ match = { title = "^(Lunar Wallpapers)$" }, float = true, center = true, rounding = 12, opacity = "0.97 override 0.97 override" })
+hl.window_rule({ match = { title = "^(Lunar Clipboard)$" }, float = true, center = true, rounding = 12, opacity = "0.97 override 0.97 override" })
+hl.window_rule({ match = { title = "^(Lunar Power)$" },     float = true, center = true, rounding = 12, opacity = "0.97 override 0.97 override" })
+hl.window_rule({ match = { title = "^(Lunar Agent)$" },     float = true, center = true, rounding = 12, opacity = "0.97 override 0.97 override" })
 -- Задачи — не окно, а layer-оверлей PanelWindow (двигаю/масштабирую сам):
 -- window_rule по «Lunar Tasks» больше не нужен.
 

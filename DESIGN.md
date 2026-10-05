@@ -60,9 +60,9 @@
 ### 2.4 Ритм
 - Отступы: `space1..6` = **4 / 8 / 12 / 20 / 28 / 32**.
 - Строки: `rowHCompact / rowH / rowHComfy` = **38 / 42 / 48**, `headerH` 44.
-- Радиусы: `radiusS / radius / radiusM / radiusL` = classic **6/8/10/12** → arch **0/2/3/4**.
+- Радиусы: `radiusS / radius / radiusM / radiusL` = classic **8/12/14/18** → arch **0/2/3/4**.
 - Панель: `barH` 34→**38** (arch), `barMargin` 5→**0**, `barTop` 5→**8**, `barPad` 16,
-  `barRadius` 9→**3**, `barCellH` 30; `panelHeaderH` 44, `cardPad` 16, `sparkH` 26.
+  `barRadius` 12→**3**, `barCellH` 30; `panelHeaderH` 44, `cardPad` 20, `sparkH` 26.
 
 ### 2.5 Шрифт
 `Roboto Mono` — интерфейс; `JetBrainsMono Nerd Font` — иконки.

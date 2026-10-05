@@ -205,7 +205,7 @@ palette.toml + templates/*.in ──> eclipse-palette.py ──┬──> ~/.cac
 ~/.config/hypr/scripts/eclipse-palette.py --from-image ~/pic.jpg --apply  # цвет с картинки
 ```
 
-Ритм интерфейса — токены в `quickshell/Theme.qml`: отступы `space1..6` (4/8/12/20/28/32), высоты строк `rowHCompact/rowH/rowHComfy` (38/42/48), радиусы `radiusS/radius/radiusM/radiusL` (6/8/10/12, arch 0/2/3/4), шкала шрифтов `fontMicro…fontTitle` (9…22), геометрия панели (`barH` 34/38, `barMargin` 5/0, `barPad` 16, `barRadius` 9/3 — classic/arch), подложка карточек `cardBg`/`cardPad` и движение `anim` (spatial/effects, expressive-кривые, стили `expressive/standard/emphasized`). Меняешь токен — меняется весь рис.
+Ритм интерфейса — токены в `quickshell/Theme.qml`: отступы `space1..6` (4/8/12/20/28/32), высоты строк `rowHCompact/rowH/rowHComfy` (38/42/48), радиусы `radiusS/radius/radiusM/radiusL` (8/12/14/18, arch 0/2/3/4), шкала шрифтов `fontMicro…fontTitle` (9…22), геометрия панели (`barH` 34/38, `barMargin` 5/0, `barPad` 16, `barRadius` 12/3 — classic/arch), подложка карточек `cardBg`/`cardPad` и движение `anim` (spatial/effects, expressive-кривые, стили `expressive/standard/emphasized`). Меняешь токен — меняется весь рис.
 
 **Hub → Interface** хранит: прозрачность, размытие, размер шрифта, тумблер **OPTIMIZE** (лёгкий профиль blur/тени), пресеты палитры, стиль островов, курсор `Bibata-Modern-Ice`. Настройки переживают `hyprctl reload` (файл `lunar-ui.json`).
 

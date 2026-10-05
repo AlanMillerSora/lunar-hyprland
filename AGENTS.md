@@ -238,17 +238,17 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
   с акцентом), **photo** (`--from-image`: цвет считается с обоев). В `Theme.qml` цвета
   читаются через `hexColor()`: палитра пишет `#RRGGBBAA`, а Qt ждёт `#AARRGGBB`.
 - Флэт, без глянца: плашки панели плотные (`barPill` альфа `arch?0.95:0.85`),
-  радиус плашек `arch?3:9`, окон 8,
+  радиус плашек `arch?3:12`, окон 12,
   зазоры окон 5/10, тень короткая (`range 8`, `render_power 3`), зерно тихое (0.07).
   Градиент-блик сверху («стекло») не добавлять — это читается глянцем из нулевых.
 - Шрифт интерфейса — `Roboto Mono` (моно, полная кириллица, все веса), иконки —
   `JetBrainsMono Nerd Font`. Не писать имена семейств, которых нет в системе
   (`"JetBrains Mono"`, `Iosevka NFM` без установки) — Qt молча подставит Noto.
 - Токены `Theme.qml`: отступы `space1..6` 4/8/12/20/28/32; строки `rowHCompact/rowH/rowHComfy`
-  38/42/48, `headerH` 44; радиусы classic `radiusS/radius/radiusM/radiusL` 6/8/10/12
+  38/42/48, `headerH` 44; радиусы classic `radiusS/radius/radiusM/radiusL` 8/12/14/18
   (arch 0/2/3/4); текст
   `fontMicro/fontTiny/fontSmall/fontBody/fontPanelTitle/fontTitle/fontClock` 9/11/12/14/16/22/16;
-  панель `barH/barMargin/barTop/barPad/barRadius` classic 34/5/5/16/9 (arch 38/0/8/16/3),
+  панель `barH/barMargin/barTop/barPad/barRadius` classic 34/5/5/16/12 (arch 38/0/8/16/3),
   ячейка бара `barCellH` 30,
   строки панелей `panelFieldH/panelRowH/sparkH` 46/36/26; `iconXL/cardPad` 30/16;
   `hoverGrow` 1.25 (ховер-рост групп панели); `hover/hoverStrong/active/activeBorder/fill/onAccent`;
