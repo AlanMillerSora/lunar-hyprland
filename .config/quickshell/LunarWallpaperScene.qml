@@ -18,6 +18,8 @@ import QtQuick
 //    · чем дальше от 5, тем бледнее гало и полутень.
 //  live=false — «лёгкий режим»: без звёзд/пыли.
 //  optimize=true — реже звёзды, без пыли и «дыхания» (см. LunarWallpaper).
+//  Небо тихое: звёзд немного, мерцание медленное и неглубокое, пыль
+//  редкая — сцена не рябит и не спорит с окнами.
 // ════════════════════════════════════════════════════════════════
 Item {
     id: scene
@@ -27,13 +29,12 @@ Item {
     // облегчённый режим: небо реже, без пыли/«дыхания» (см. LunarWallpaper).
     property bool optimize: false
 
-    // ── общее время сцены, обновляется ~8 раз/с ────────────────
+    // ── общее время сцены, обновляется ~7 раз/с ────────────────
     // Все анимации (звёзды, пыль) считаются от `slowT`, а не тикают на
     // каждом кадре. Раньше таймер будил сцену 25 раз/с, но `slowT` всё
-    // равно двигался раз в 120 мс (каждый 3-й тик) — лишние пробуждения.
-    // Теперь тик ровно на 120 мс: тот же темп анимации, но втрое меньше
-    // пробуждений. Композитор перерисовывает фон 8 раз/с.
-    // темп анимации: 16 мс (≈60 fps) или 120 мс (≈8 fps, лёгкий режим)
+    // равно двигался реже — лишние пробуждения. Теперь тик редкий
+    // (лёгкий режим — 150 мс), и композитор перерисовывает фон ~7 раз/с.
+    // темп анимации: 16 мс (≈60 fps, предпросмотр) или 150 мс (обои)
     property int tickMs: 16
     // slowT ограничен сутками, чтобы аргумент sin не рос бесконечно
     property real slowT: 0
@@ -138,12 +139,13 @@ Item {
     function makeStars() {
         var a = [], s = 20240924
         function rnd() { s = (s * 1103515245 + 12345) % 2147483648; return s / 2147483648 }
-        for (var i = 0; i < 170; i++) {
+        // звёзд немного: 120 вместо 170 — небо читается, но не «шумит»
+        for (var i = 0; i < 120; i++) {
             a.push({
                 x: rnd(), y: rnd(),
-                size: rnd() < 0.07 ? 2 : 1,
-                dur: 1600 + rnd() * 5200,
-                max: 0.25 + rnd() * 0.75,
+                size: rnd() < 0.04 ? 2 : 1,
+                dur: 2600 + rnd() * 6800,
+                max: 0.16 + rnd() * 0.48,
                 delay: rnd() * 4000,
                 ph: rnd() * 6.28318
             })
@@ -153,12 +155,13 @@ Item {
     function makeDust() {
         var a = [], s = 4242
         function rnd() { s = (s * 1103515245 + 12345) % 2147483648; return s / 2147483648 }
-        for (var i = 0; i < 20; i++) {
+        // пылинок меньше и они медленнее — только намёк на движение
+        for (var i = 0; i < 12; i++) {
             a.push({
                 x: rnd(), y: rnd(),
-                size: 1 + rnd() * 2.2,
-                dur: 9000 + rnd() * 22000,
-                drift: rnd() * 140 - 70,
+                size: 1 + rnd() * 1.8,
+                dur: 14000 + rnd() * 26000,
+                drift: rnd() * 90 - 45,
                 delay: rnd() * 15000,
                 ph: rnd() * 6.28318
             })
@@ -170,10 +173,10 @@ Item {
     readonly property var starData: makeStars()
     readonly property var dustData: makeDust()
 
-    // лёгкий режим: та же карта неба, но реже — ровно 100 звёзд из 170
+    // лёгкий режим: та же карта неба, но реже — ровно 72 звезды из 120
     // (равномерная выборка, чтобы небо не «сбивалось» в одну сторону).
     readonly property var starDataOpt: {
-        var n = 100
+        var n = 72
         var src = starData
         var a = []
         if (src.length <= n)
@@ -287,10 +290,10 @@ Item {
             // мерцание считается от общего времени сцены (без анимации на кадр).
             // slowT — чтобы не пересчитывать все звёзды каждый тик (M66)
             opacity: {
-                var hi = scene.fullEclipse ? Math.min(1, modelData.max * 1.5) : modelData.max
+                var hi = scene.fullEclipse ? Math.min(0.9, modelData.max * 1.3) : modelData.max
                 var w = Math.PI / (modelData.dur / 1000)
                 var k = 0.5 + 0.5 * Math.sin(scene.slowT * w + modelData.ph)
-                return 0.1 + (hi - 0.1) * k
+                return 0.06 + (hi - 0.06) * k
             }
         }
     }
@@ -342,10 +345,10 @@ Item {
             radius: width / 2
             color: "#ffffff"
             opacity: scene.live
-                ? scene.dustOps[scene.p] * (0.12 + 0.12 * (0.5 + 0.5 * Math.sin(scene.slowT * 0.5 + modelData.ph)))
+                ? scene.dustOps[scene.p] * (0.08 + 0.10 * (0.5 + 0.5 * Math.sin(scene.slowT * 0.4 + modelData.ph)))
                 : 0
-            x: modelData.x * scene.width + modelData.drift * scene.unit * Math.sin(scene.slowT * 0.15 + modelData.ph)
-            y: modelData.y * scene.height - 40 * scene.unit * (0.5 + 0.5 * Math.sin(scene.slowT * 0.12 + modelData.ph * 1.3))
+            x: modelData.x * scene.width + modelData.drift * scene.unit * Math.sin(scene.slowT * 0.09 + modelData.ph)
+            y: modelData.y * scene.height - 34 * scene.unit * (0.5 + 0.5 * Math.sin(scene.slowT * 0.07 + modelData.ph * 1.3))
         }
     }
 

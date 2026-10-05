@@ -33,7 +33,7 @@ PanelWindow {
     readonly property int wsId: (ws && ws.id > 0) ? ws.id : 5
 
     // Единственный облегчённый режим: на лету задаёт блюр/тени Hyprland
-    // (eclipse-perf.sh) и темп анимации обоев (~25 fps, без пыли/метеоров).
+    // (eclipse-perf.sh) и тихий темп анимации обоев (~7 fps, без пыли).
     Component.onCompleted: applyPerf()
 
     // hyprctl reload возвращает decoration из hyprland.lua: заново применяем
@@ -147,6 +147,7 @@ PanelWindow {
         phase: Math.max(1, Math.min(9, root.wsId))
         live: Theme.wallpaperLive && Theme.wallpaperMode !== "image"
         optimize: true
-        tickMs: 120
+        // тише: 150 мс вместо 120 — меньше пробуждений, сцена не спешит
+        tickMs: 150
     }
 }
