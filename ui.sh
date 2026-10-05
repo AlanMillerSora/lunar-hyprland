@@ -58,3 +58,50 @@ lunar_done() {
     "$C_BOLD" "$C_FG" "$C_RESET" "$C_DIM" "$C_RESET"
   lunar_hr
 }
+
+# ── root в установщике: спросить один раз ──────────────────────
+# Системные команды ходят через `sudo -n`: пароль спрашиваем ровно один раз
+# здесь (в интерактиве — приглашение sudo, в headless — SUDO_ASKPASS),
+# дальше таймстемп только продлеваем. Без root системную часть аккуратно
+# пропускаем ОДНИМ предупреждением — без россыпи ошибок и без риска
+# словить faillock повторными неудачными попытками.
+_LUNAR_ROOT_STATE=""
+ensure_root() {
+  # уже root — sudo не нужен вовсе
+  if [ "$(id -u)" -eq 0 ]; then
+    _LUNAR_ROOT_STATE=ok
+    return 0
+  fi
+  # вердикт уже вынесен: не спрашиваем и не предупреждаем повторно
+  case "$_LUNAR_ROOT_STATE" in
+    ok) _root_keepalive; return 0 ;;
+    no) return 1 ;;
+  esac
+  # пароль ещё в кэше — приглашение не нужно
+  if sudo -n true 2>/dev/null; then
+    _LUNAR_ROOT_STATE=ok
+    _root_keepalive
+    return 0
+  fi
+  # один раз спрашиваем (headless возьмёт SUDO_ASKPASS); приглашение
+  # sudo идёт в /dev/tty, поэтому stderr прятать безопасно
+  if sudo -v 2>/dev/null; then
+    _LUNAR_ROOT_STATE=ok
+    _root_keepalive
+    return 0
+  fi
+  _LUNAR_ROOT_STATE=no
+  warn "системные шаги пропущены (нужен root)"
+  return 1
+}
+
+# Длинный прогон может пережить таймстемп sudo (по умолчанию ~15 мин) —
+# тихо продлеваем его фоном, пока жив родительский установщик.
+_root_keepalive() {
+  [ -n "${_LUNAR_KEEPALIVE_PID:-}" ] && return 0
+  ( while sleep 50; do
+      kill -0 "$PPID" 2>/dev/null || exit 0
+      sudo -n true 2>/dev/null || exit 0
+    done ) &
+  _LUNAR_KEEPALIVE_PID=$!
+}

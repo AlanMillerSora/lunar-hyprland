@@ -14,16 +14,16 @@ SDDM_THEME_DST="/usr/share/sddm/themes/lunar"
 SDDM_CONF="/etc/sddm.conf.d/10-lunar-theme.conf"
 
 sddm_install() {
-  sudo mkdir -p "$SDDM_THEME_DST"
-  sudo cp -rf "$SDDM_THEME_SRC"/. "$SDDM_THEME_DST"/
-  sudo chmod -R a+rX "$SDDM_THEME_DST"
+  sudo -n mkdir -p "$SDDM_THEME_DST"
+  sudo -n cp -rf "$SDDM_THEME_SRC"/. "$SDDM_THEME_DST"/
+  sudo -n chmod -R a+rX "$SDDM_THEME_DST"
 }
 sddm_enable() {
   sddm_install
-  sudo mkdir -p "$(dirname "$SDDM_CONF")"
-  printf '[Theme]\nCurrent=lunar\n' | sudo tee "$SDDM_CONF" >/dev/null
+  sudo -n mkdir -p "$(dirname "$SDDM_CONF")"
+  printf '[Theme]\nCurrent=lunar\n' | sudo -n tee "$SDDM_CONF" >/dev/null
 }
-sddm_disable() { sudo rm -f "$SDDM_CONF"; }
+sddm_disable() { ensure_root || return 1; sudo -n rm -f "$SDDM_CONF"; }
 sddm_status() {
   echo "── SDDM ──"
   echo "тема установлена : $([ -d "$SDDM_THEME_DST" ] && echo да || echo нет)"
@@ -47,29 +47,29 @@ ply_cmdline_file() { if ply_is_uki; then echo /etc/kernel/cmdline; else echo /et
 ply_hooks_has() { grep -qE '^HOOKS=\(.*\bplymouth\b.*\)' /etc/mkinitcpio.conf; }
 
 # какие параметры ядра добавил именно рис (чтобы --disable убирал только свои)
-ply_state_has() { sudo grep -qxF -- "$1" "$PLY_PARAMS" 2>/dev/null; }
-ply_state_add() { sudo touch "$PLY_PARAMS"; sudo grep -qxF -- "$1" "$PLY_PARAMS" 2>/dev/null || echo "$1" | sudo tee -a "$PLY_PARAMS" >/dev/null; }
-ply_state_del() { sudo sed -i "/^$1\$/d" "$PLY_PARAMS" 2>/dev/null || true; }
+ply_state_has() { sudo -n grep -qxF -- "$1" "$PLY_PARAMS" 2>/dev/null; }
+ply_state_add() { sudo -n touch "$PLY_PARAMS"; sudo -n grep -qxF -- "$1" "$PLY_PARAMS" 2>/dev/null || echo "$1" | sudo -n tee -a "$PLY_PARAMS" >/dev/null; }
+ply_state_del() { sudo -n sed -i "/^$1\$/d" "$PLY_PARAMS" 2>/dev/null || true; }
 
 # одноразовый бэкап файла перед правкой (прежний .bak не затираем)
-ply_backup() { sudo cp -n "$1" "$1.lunar.bak" 2>/dev/null || true; }
+ply_backup() { sudo -n cp -n "$1" "$1.lunar.bak" 2>/dev/null || true; }
 
 ply_hooks_add() {
   ply_hooks_has && return 0
-  sudo cp -n /etc/mkinitcpio.conf /etc/mkinitcpio.conf.bak 2>/dev/null || true
+  sudo -n cp -n /etc/mkinitcpio.conf /etc/mkinitcpio.conf.bak 2>/dev/null || true
   if grep -qE '^HOOKS=\([^)]*\budev\b' /etc/mkinitcpio.conf; then
-    sudo sed -i -E 's/^(HOOKS=\([^)]*\budev\b)/\1 plymouth/' /etc/mkinitcpio.conf
+    sudo -n sed -i -E 's/^(HOOKS=\([^)]*\budev\b)/\1 plymouth/' /etc/mkinitcpio.conf
   elif grep -qE '^HOOKS=\([^)]*\bsystemd\b' /etc/mkinitcpio.conf; then
-    sudo sed -i -E 's/^(HOOKS=\([^)]*\bsystemd\b)/\1 plymouth/' /etc/mkinitcpio.conf
+    sudo -n sed -i -E 's/^(HOOKS=\([^)]*\bsystemd\b)/\1 plymouth/' /etc/mkinitcpio.conf
   else
-    sudo sed -i -E 's/^(HOOKS=\()/\1plymouth /' /etc/mkinitcpio.conf
+    sudo -n sed -i -E 's/^(HOOKS=\()/\1plymouth /' /etc/mkinitcpio.conf
   fi
   say "HOOKS: добавлен plymouth"
 }
 
 ply_hooks_del() {
   ply_hooks_has || return 0
-  sudo sed -i -E 's/\bplymouth //; s/ plymouth\b//' /etc/mkinitcpio.conf
+  sudo -n sed -i -E 's/\bplymouth //; s/ plymouth\b//' /etc/mkinitcpio.conf
   say "HOOKS: убран plymouth"
 }
 
@@ -82,9 +82,9 @@ ply_nvidia_kms() {
   if ! grep -qE '^MODULES=\(.*\bnvidia_drm\b' /etc/mkinitcpio.conf; then
     ply_backup /etc/mkinitcpio.conf
     if grep -qE '^MODULES=\(\)' /etc/mkinitcpio.conf; then
-      sudo sed -i -E "s/^MODULES=\(\)/MODULES=($mods)/" /etc/mkinitcpio.conf
+      sudo -n sed -i -E "s/^MODULES=\(\)/MODULES=($mods)/" /etc/mkinitcpio.conf
     else
-      sudo sed -i -E "s/^MODULES=\(([^)]*)\)/MODULES=($mods \1)/" /etc/mkinitcpio.conf
+      sudo -n sed -i -E "s/^MODULES=\(([^)]*)\)/MODULES=($mods \1)/" /etc/mkinitcpio.conf
     fi
     say "MODULES: + $mods (KMS NVIDIA для Plymouth)"
     ply_state_add nvidia-kms
@@ -97,8 +97,8 @@ ply_nvidia_kms() {
 
 ply_nvidia_kms_del() {
   ply_state_has nvidia-kms || return 0
-  sudo sed -i -E 's/\bnvidia //; s/ nvidia\b//; s/\bnvidia_modeset //; s/ nvidia_modeset\b//; s/\bnvidia_uvm //; s/ nvidia_uvm\b//; s/\bnvidia_drm //; s/ nvidia_drm\b//' /etc/mkinitcpio.conf
-  sudo sed -i -E 's/^MODULES=\(\)$/MODULES=()/' /etc/mkinitcpio.conf
+  sudo -n sed -i -E 's/\bnvidia //; s/ nvidia\b//; s/\bnvidia_modeset //; s/ nvidia_modeset\b//; s/\bnvidia_uvm //; s/ nvidia_uvm\b//; s/\bnvidia_drm //; s/ nvidia_drm\b//' /etc/mkinitcpio.conf
+  sudo -n sed -i -E 's/^MODULES=\(\)$/MODULES=()/' /etc/mkinitcpio.conf
   say "MODULES: убраны nvidia-модули"
   ply_param_raw_del 'nvidia_drm.modeset=1'
 }
@@ -109,9 +109,9 @@ ply_param_raw() {
   grep -qw -- "$p" "$f" 2>/dev/null && return 0
   ply_backup "$f"
   if ply_is_uki; then
-    sudo sed -i "s/\$/ $p/" "$f"
+    sudo -n sed -i "s/\$/ $p/" "$f"
   else
-    sudo sed -i -E "s/^(GRUB_CMDLINE_LINUX_DEFAULT=\"[^\"]*)\"/\1 $p\"/" "$f"
+    sudo -n sed -i -E "s/^(GRUB_CMDLINE_LINUX_DEFAULT=\"[^\"]*)\"/\1 $p\"/" "$f"
   fi
   say "cmdline: + $p"
   ply_state_add "$p"
@@ -121,7 +121,7 @@ ply_param_raw_del() {
   local p="$1" f; f="$(ply_cmdline_file)"
   ply_state_has "$p" || return 0
   ply_backup "$f"
-  sudo sed -i -E "s/ *\b$p\b//g" "$f"
+  sudo -n sed -i -E "s/ *\b$p\b//g" "$f"
   ply_state_del "$p"
   say "cmdline: - $p"
 }
@@ -131,11 +131,11 @@ ply_param_add() {  # splash|quiet — добавляю и запоминаю Т�
   ply_backup "$f"
   if ply_is_uki; then
     if ! grep -qw -- "$p" "$f" 2>/dev/null; then
-      sudo sed -i "s/\$/ $p/" "$f"; say "cmdline: + $p"; ply_state_add "$p"
+      sudo -n sed -i "s/\$/ $p/" "$f"; say "cmdline: + $p"; ply_state_add "$p"
     fi
   else
     if ! grep -qE "^GRUB_CMDLINE_LINUX_DEFAULT=.*\b$p\b" "$f"; then
-      sudo sed -i -E "s/^(GRUB_CMDLINE_LINUX_DEFAULT=\"[^\"]*)\"/\1 $p\"/" "$f"
+      sudo -n sed -i -E "s/^(GRUB_CMDLINE_LINUX_DEFAULT=\"[^\"]*)\"/\1 $p\"/" "$f"
       say "grub: + $p"; ply_state_add "$p"
     fi
   fi
@@ -149,9 +149,9 @@ ply_param_del() {  # splash|quiet — убираю, только если доб
   fi
   ply_backup "$f"
   if ply_is_uki; then
-    sudo sed -i -E "s/ *\b$p\b//g" "$f"
+    sudo -n sed -i -E "s/ *\b$p\b//g" "$f"
   else
-    sudo sed -i -E "s/(GRUB_CMDLINE_LINUX_DEFAULT=\"[^\"]*) *\b$p\b/\1/" "$f"
+    sudo -n sed -i -E "s/(GRUB_CMDLINE_LINUX_DEFAULT=\"[^\"]*) *\b$p\b/\1/" "$f"
   fi
   ply_state_del "$p"
   say "cmdline: - $p"
@@ -163,7 +163,7 @@ ply_grub_guard() {
   [ -d /boot/grub ] || return 0
   ply_is_uki || return 0
   if [ -x /etc/grub.d/10_linux ] && ! compgen -G '/boot/initramfs-linux*.img' >/dev/null; then
-    sudo chmod -x /etc/grub.d/10_linux
+    sudo -n chmod -x /etc/grub.d/10_linux
     warn "10_linux отключён: на UKI его пункт по умолчанию нерабочий (нет initramfs)"
   fi
 }
@@ -171,21 +171,21 @@ ply_grub_guard() {
 ply_rebuild() {
   if command -v mkinitcpio >/dev/null; then
     say "пересборка initramfs/UKI"
-    if ! sudo mkinitcpio -P; then
+    if ! sudo -n mkinitcpio -P; then
       warn "mkinitcpio -P завершился с ошибкой — образ мог не собраться"
     fi
   fi
   ply_grub_guard
   if command -v grub-mkconfig >/dev/null && [ -d /boot/grub ]; then
-    say "пересборка grub.cfg"; sudo grub-mkconfig -o /boot/grub/grub.cfg
+    say "пересборка grub.cfg"; sudo -n grub-mkconfig -o /boot/grub/grub.cfg
   fi
 }
 
 ply_install() {
   [ -d "$PLY_THEME_SRC" ] || { warn "нет каталога темы: $PLY_THEME_SRC"; return 1; }
-  sudo mkdir -p "$PLY_THEME_DST"
-  sudo cp -rf "$PLY_THEME_SRC"/. "$PLY_THEME_DST"/
-  sudo plymouth-set-default-theme lunar
+  sudo -n mkdir -p "$PLY_THEME_DST"
+  sudo -n cp -rf "$PLY_THEME_SRC"/. "$PLY_THEME_DST"/
+  sudo -n plymouth-set-default-theme lunar
   say "тема lunar → $PLY_THEME_DST"
 }
 
@@ -193,7 +193,7 @@ ply_enable() {
   # пакет не в get-deps (нужен только с флагом) — ставим его здесь
   if ! command -v plymouthd >/dev/null; then
     say "Plymouth: пакета нет — ставлю plymouth"
-    sudo pacman -S --needed --noconfirm plymouth \
+    sudo -n pacman -S --needed --noconfirm plymouth \
       || { warn "пакет plymouth не поставился (вручную: sudo pacman -S plymouth; если блокирует хук informant — sudo informant read --all)"; return 1; }
   fi
   ply_install
@@ -205,6 +205,7 @@ ply_enable() {
 }
 
 ply_disable() {
+  ensure_root || return 1
   ply_hooks_del
   ply_param_del splash
   ply_param_del quiet
@@ -213,31 +214,32 @@ ply_disable() {
 }
 
 ply_rescue() {
+  ensure_root || return 1
   ply_is_uki || { warn "резервный образ рассчитан на режим UKI"; return 1; }
 
   # предпроверки ДО любых изменений: иначе падаем после сборки и оставляем мусор
-  sudo test -f /etc/kernel/cmdline || { warn "нет /etc/kernel/cmdline — rescue не собираю"; return 1; }
-  sudo test -f /boot/vmlinuz-linux || { warn "нет /boot/vmlinuz-linux — rescue не собираю"; return 1; }
+  sudo -n test -f /etc/kernel/cmdline || { warn "нет /etc/kernel/cmdline — rescue не собираю"; return 1; }
+  sudo -n test -f /boot/vmlinuz-linux || { warn "нет /boot/vmlinuz-linux — rescue не собираю"; return 1; }
   local boot_src uuid
   boot_src="$(findmnt -no SOURCE /boot 2>/dev/null || true)"
   [ -n "$boot_src" ] || { warn "не вижу загрузочный раздел /boot (findmnt пуст)"; return 1; }
-  uuid="$(sudo blkid -s UUID -o value "$boot_src" 2>/dev/null || true)"
+  uuid="$(sudo -n blkid -s UUID -o value "$boot_src" 2>/dev/null || true)"
   [ -n "$uuid" ] || { warn "не определил UUID раздела $boot_src"; return 1; }
 
-  sudo cp -f /etc/mkinitcpio.conf "$PLY_RESCUE_CONF"
-  sudo cp -f /etc/kernel/cmdline "$PLY_RESCUE_CMDLINE"
-  sudo sed -i -E 's/ *\bsplash\b//g; s/ *\bquiet\b//g' "$PLY_RESCUE_CMDLINE"
-  sudo mkdir -p "$(dirname "$PLY_RESCUE_UKI")"
-  if ! sudo mkinitcpio -c "$PLY_RESCUE_CONF" -k /boot/vmlinuz-linux -U "$PLY_RESCUE_UKI" \
+  sudo -n cp -f /etc/mkinitcpio.conf "$PLY_RESCUE_CONF"
+  sudo -n cp -f /etc/kernel/cmdline "$PLY_RESCUE_CMDLINE"
+  sudo -n sed -i -E 's/ *\bsplash\b//g; s/ *\bquiet\b//g' "$PLY_RESCUE_CMDLINE"
+  sudo -n mkdir -p "$(dirname "$PLY_RESCUE_UKI")"
+  if ! sudo -n mkinitcpio -c "$PLY_RESCUE_CONF" -k /boot/vmlinuz-linux -U "$PLY_RESCUE_UKI" \
        --cmdline "$PLY_RESCUE_CMDLINE"; then
     warn "сборка резервного UKI не удалась — убираю артефакты"
-    sudo rm -f "$PLY_RESCUE_UKI" "$PLY_RESCUE_CONF" "$PLY_RESCUE_CMDLINE"
+    sudo -n rm -f "$PLY_RESCUE_UKI" "$PLY_RESCUE_CONF" "$PLY_RESCUE_CMDLINE"
     return 1
   fi
 
   if ! grep -q 'lunar-rescue' "$PLY_GRUB_CUSTOM" 2>/dev/null; then
-    sudo cp -n "$PLY_GRUB_CUSTOM" "$PLY_GRUB_CUSTOM.bak" 2>/dev/null || true
-    sudo tee -a "$PLY_GRUB_CUSTOM" >/dev/null <<EOF
+    sudo -n cp -n "$PLY_GRUB_CUSTOM" "$PLY_GRUB_CUSTOM.bak" 2>/dev/null || true
+    sudo -n tee -a "$PLY_GRUB_CUSTOM" >/dev/null <<EOF
 
 menuentry 'Lunar Eclipse (без заставки)' --id lunar-rescue {
     insmod part_gpt
@@ -249,7 +251,7 @@ menuentry 'Lunar Eclipse (без заставки)' --id lunar-rescue {
 EOF
     say "в меню GRUB добавлен пункт «Lunar Eclipse (без заставки)»"
   fi
-  command -v grub-mkconfig >/dev/null && sudo grub-mkconfig -o /boot/grub/grub.cfg
+  command -v grub-mkconfig >/dev/null && sudo -n grub-mkconfig -o /boot/grub/grub.cfg
 }
 
 ply_status() {
@@ -279,38 +281,38 @@ ZAPRET_UNIT=zapret.service
 zapret_deps() {
   say "zapret: зависимости (gcc/make, netfilter, nftables)"
   # systemd-libs отдельно не ставим: точечное обновление ломает связку с systemd.
-  sudo pacman -S --needed --noconfirm \
+  sudo -n pacman -S --needed --noconfirm \
     gcc make zlib libcap libnetfilter_queue libmnl nftables curl
 }
 
 zapret_sources() {
   if [ -d "$ZAPRET_DST/.git" ]; then
     say "zapret: git pull — $ZAPRET_DST"
-    sudo git -C "$ZAPRET_DST" pull --ff-only || warn "pull не удался, оставляю текущую версию"
+    sudo -n git -C "$ZAPRET_DST" pull --ff-only || warn "pull не удался, оставляю текущую версию"
   else
     say "zapret: клонирую bol-van/zapret → $ZAPRET_DST"
-    sudo mkdir -p "$ZAPRET_DST"
-    sudo git clone --depth=1 https://github.com/bol-van/zapret.git "$ZAPRET_DST"
+    sudo -n mkdir -p "$ZAPRET_DST"
+    sudo -n git clone --depth=1 https://github.com/bol-van/zapret.git "$ZAPRET_DST"
   fi
 }
 
 zapret_build() {
   say "zapret: сборка (make systemd -j$(nproc))"
-  sudo make -C "$ZAPRET_DST" systemd -j"$(nproc)"
+  sudo -n make -C "$ZAPRET_DST" systemd -j"$(nproc)"
 }
 
 zapret_fake() {
   [ -d "$ZAPRET_DIR/files/fake" ] || return 0
   say "zapret: fake-пакеты → $ZAPRET_DST/files/fake"
-  sudo mkdir -p "$ZAPRET_DST/files/fake"
-  sudo install -m 0644 "$ZAPRET_DIR"/files/fake/*.bin "$ZAPRET_DST/files/fake/"
+  sudo -n mkdir -p "$ZAPRET_DST/files/fake"
+  sudo -n install -m 0644 "$ZAPRET_DIR"/files/fake/*.bin "$ZAPRET_DST/files/fake/"
 }
 
 # Конфиг генерируется из апстримного config.default, наши значения — поверх.
 zapret_config() {
   say "zapret: хостлист → $ZAPRET_DST/ipset/zapret-hosts-user.txt"
-  sudo mkdir -p "$ZAPRET_DST/ipset"
-  sudo install -m 0644 "$ZAPRET_DIR/zapret-hosts-user.txt" "$ZAPRET_DST/ipset/zapret-hosts-user.txt"
+  sudo -n mkdir -p "$ZAPRET_DST/ipset"
+  sudo -n install -m 0644 "$ZAPRET_DIR/zapret-hosts-user.txt" "$ZAPRET_DST/ipset/zapret-hosts-user.txt"
 
   local tmp; tmp="$(mktemp)"
   if ! python3 - "$ZAPRET_DST" "$tmp" <<'PY'
@@ -349,22 +351,22 @@ PY
     return 1
   fi
   say "zapret: конфиг → $ZAPRET_DST/config"
-  sudo install -m 0644 "$tmp" "$ZAPRET_DST/config"
+  sudo -n install -m 0644 "$tmp" "$ZAPRET_DST/config"
   rm -f "$tmp"
 }
 
 zapret_service() {
   say "zapret: systemd-юнит $ZAPRET_UNIT"
-  sudo install -m 0644 "$ZAPRET_DIR/zapret.service" "/etc/systemd/system/$ZAPRET_UNIT"
+  sudo -n install -m 0644 "$ZAPRET_DIR/zapret.service" "/etc/systemd/system/$ZAPRET_UNIT"
 
   # wait-online иначе ждёт неактивный wlan0 все 2 минуты, и zapret (After=
   # network-online.target) стартует только после таймаута.
   local wo="/etc/systemd/system/systemd-networkd-wait-online.service.d"
-  sudo mkdir -p "$wo"
-  sudo install -m 0644 "$ZAPRET_DIR/wait-online-any.conf" "$wo/any.conf"
+  sudo -n mkdir -p "$wo"
+  sudo -n install -m 0644 "$ZAPRET_DIR/wait-online-any.conf" "$wo/any.conf"
   say "сеть: wait-online → любой интерфейс ($wo/any.conf)"
 
-  sudo systemctl daemon-reload
+  sudo -n systemctl daemon-reload
 
   # Управление zapret идёт через root-хелпер /usr/libexec/lunar/svc.sh
   # (allowlist юнитов внутри; голый systemctl в sudoers не выставляем).
@@ -400,6 +402,7 @@ zapret_status() {
 
 # ── опционально: SDDM ──────────────────────────────────────────
 optional_sddm() {
+  ensure_root || return 0
   step "SDDM: тема экрана входа lunar"
   if sddm_enable; then
     ok "тема lunar включена"
@@ -411,6 +414,7 @@ optional_sddm() {
 
 # ── опционально: Plymouth (меняет загрузку) ────────────────────
 optional_plymouth() {
+  ensure_root || return 0
   step "Plymouth: заставка загрузки (HOOKS/cmdline/UKI)"
   warn "Plymouth меняет загрузку: HOOKS, параметры ядра, пересборка initramfs"
   if ply_enable; then
@@ -423,6 +427,7 @@ optional_plymouth() {
 
 # ── опционально: zapret ────────────────────────────────────────
 optional_zapret() {
+  ensure_root || return 0
   step "zapret → /opt/zapret (обход DPI: Discord/YouTube)"
   if [ -f "$ZAPRET_DIR/zapret.service" ]; then
     zapret_deps
@@ -431,9 +436,9 @@ optional_zapret() {
     zapret_build
     if zapret_config; then
       zapret_service
-      sudo systemctl enable "$ZAPRET_UNIT"
+      sudo -n systemctl enable "$ZAPRET_UNIT"
       # именно restart: конфиг мог измениться, а enable --now уже запущенный не перезапускает
-      sudo systemctl restart "$ZAPRET_UNIT"
+      sudo -n systemctl restart "$ZAPRET_UNIT"
       ok "zapret установлен и включён в автозапуск"
       zapret_health
     else

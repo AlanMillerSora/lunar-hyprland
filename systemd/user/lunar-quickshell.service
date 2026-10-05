@@ -17,7 +17,7 @@ Type=simple
 # разворачивал shell, а не systemd.
 ExecStartPre=/usr/bin/sh -c 'test -S "$$XDG_RUNTIME_DIR/$$WAYLAND_DISPLAY"'
 # Платформенная тема Qt — qt6ct: даёт тёмную палитру для штатных меню
-# (QMenu в трее) и берёт icon-theme (Tela-lunar) из ~/.config/qt6ct/qt6ct.conf.
+# (QMenu в трее) и берёт icon-theme (Tela-dark) из ~/.config/qt6ct/qt6ct.conf.
 # GTK3-платформа тёмную палитру QtWidgets не отдавала (меню были белыми).
 Environment=QT_QPA_PLATFORMTHEME=qt6ct
 # Светлый встроенный попап Quickshell о провале перезагрузки конфига не в

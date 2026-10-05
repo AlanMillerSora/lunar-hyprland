@@ -347,6 +347,14 @@ cd ~/rice
 ./install.sh --zapret    # + обход DPI (Discord/YouTube)
 ```
 
+Все команды риса собраны в одной точке входа — `./lunar` (маршрутизация на прежние скрипты, проброс аргументов):
+
+```bash
+./lunar help             # справка: install|deps|sync|bump|ci|doctor|palette|snapshot|release|reload
+./doctor.sh              # health-check: quickshell, configerrors, iwd/networkd, дрейф, ci
+./lunar reload           # перезагрузить рис без приложений (Hyprland, quickshell, mako, hypridle, cliphist)
+```
+
 | Флаг | Что делает |
 |---|---|
 | `--no-deps` | только конфиги, без пакетов |
@@ -592,6 +600,7 @@ lib32-nvidia-utils
 ├── install/{dotfiles,system,optional}.sh   ← части установщика
 ├── packaging/lunar-helpers/{PKGBUILD,*.install} ← root-хелперы в пакете (/usr/libexec/lunar)
 ├── deps/{packages.txt,aur.txt,snapshot.sh} ← манифест пакетов + снимок версий
+├── lunar  doctor.sh  reload.sh   ← точка входа + health-check + перезагрузка риса
 ├── install.sh  get-deps.sh  ui.sh  release.sh
 └── README.md  AGENTS.md  PORTABILITY.md  LICENSE  VERSION
 ```

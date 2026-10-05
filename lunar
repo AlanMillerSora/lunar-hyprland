@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════
+#  lunar — одна точка входа в рис Lunar Eclipse.
+#
+#  Раньше команды риса жили отдельными скриптами, и держать в голове
+#  их имена было неудобно. Теперь всё через `./lunar <команда>`:
+#  маршрутизация с пробросом аргументов на существующие скрипты,
+#  ничего не переизобретаю и не дублирую логику.
+#
+#  Внешних зависимостей нет — только bash и сам репозиторий.
+#
+#  Запуск: ./lunar help   (без аргументов — тоже справка)
+# ════════════════════════════════════════════════════════════════
+set -euo pipefail
+
+REPO="$(cd "$(dirname "$0")" && pwd)"
+
+usage() {
+  cat <<'EOF'
+lunar — точка входа в рис Lunar Eclipse
+
+использование: lunar <команда> [аргументы]
+
+команды:
+  help       эта справка (по умолчанию)
+  install    установка/обновление:   ./install.sh [флаги]
+  deps       зависимости:            ./get-deps.sh
+  sync       repo ↔ live:            ./sync.sh [apply|check]
+  bump       VERSION (semver):       ./bump.sh [patch|minor|major]
+  ci         гейт (shell/py/токены): ./ci/check.sh
+  doctor     health-check риса:      ./doctor.sh
+  palette    палитра:                eclipse-palette.py [--preset … --apply]
+  snapshot   снимок версий пакетов:  ./deps/snapshot.sh
+  release    тег + push:             ./release.sh [--force]
+  reload     перезагрузить рис без приложений: ./reload.sh
+
+Аргументы после команды пробрасываются в целевой скрипт как есть.
+EOF
+}
+
+CMD="${1:-help}"
+[ $# -gt 0 ] && shift
+
+case "$CMD" in
+  help|-h|--help) usage ;;
+  install)  exec "$REPO/install.sh" "$@" ;;
+  deps)     exec "$REPO/get-deps.sh" "$@" ;;
+  sync)     exec "$REPO/sync.sh" "$@" ;;
+  bump)     exec "$REPO/bump.sh" "$@" ;;
+  ci)       exec bash "$REPO/ci/check.sh" "$@" ;;
+  doctor)   exec bash "$REPO/doctor.sh" "$@" ;;
+  palette)  exec "$REPO/.config/hypr/scripts/eclipse-palette.py" "$@" ;;
+  snapshot) exec "$REPO/deps/snapshot.sh" "$@" ;;
+  release)  exec "$REPO/release.sh" "$@" ;;
+  reload)   exec bash "$REPO/reload.sh" "$@" ;;
+  *)
+    printf 'lunar: неизвестная команда «%s»\n\n' "$CMD" >&2
+    usage >&2
+    exit 1
+    ;;
+esac

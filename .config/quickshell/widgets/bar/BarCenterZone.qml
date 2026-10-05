@@ -197,7 +197,9 @@ Item {
                 return Math.round(kb) + "K"
             }
             Row {
-                anchors.centerIn: parent
+                // прямой ребёнок Cell кладётся в Row ячейки: centerIn внутри
+                // Row запрещён (варнинг) — выравниваю по вертикали, как соседи.
+                anchors.verticalCenter: parent.verticalCenter
                 spacing: Theme.space3
                 Text {
                     anchors.verticalCenter: parent.verticalCenter

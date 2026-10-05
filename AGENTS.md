@@ -205,6 +205,7 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 ├── install/{dotfiles,system,optional}.sh   ← части установщика
 ├── packaging/lunar-helpers/{PKGBUILD,*.install} ← root-хелперы в пакете (/usr/libexec/lunar)
 ├── deps/{packages.txt,aur.txt,snapshot.sh} ← манифест пакетов + снимок версий
+├── lunar  doctor.sh  reload.sh            ← точка входа + health-check + перезагрузка риса
 ├── install.sh get-deps.sh ui.sh release.sh bump.sh
 └── README.md LICENSE VERSION AGENTS.md PORTABILITY.md lunar-dorabotki.md .gitattributes
     HANDOFF.md — только локально, в .gitignore
@@ -310,6 +311,8 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 - НЕ ставить `systemd-libs` отдельно — частичный апгрейд ломает systemd.
 - Steam на AMD/Intel: явно `vulkan-radeon` + `lib32-vulkan-radeon`.
 - `install.sh`: `| head` под `set -o pipefail` роняет скрипт (exit 141) — `|| true`.
+- `install.sh` спрашивает root один раз: `ensure_root` (один `sudo -v`, дальше системные
+  команды через `sudo -n`); нет root — одно предупреждение, системная часть пропускается.
 - `pacman -Rns` может унести нужное → сначала `pacman -Rs --print`.
 - `timeshift` печатает безобидное `status: No such file or directory`.
 - **UKI/загрузка:** `mtime` — красная селёдка (objcopy копирует mtime stub), проверять содержимое
@@ -432,6 +435,9 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 ## 8. Быстрые команды
 
 ```sh
+./lunar help                                                   # точка входа: install|deps|sync|bump|ci|doctor|palette|snapshot|release|reload
+./doctor.sh                                                    # health-check риса (шелл/конфиг/сеть/дрейф/ci)
+./lunar reload                                                 # перезагрузить рис БЕЗ приложений (hyprctl + quickshell + mako + hypridle + cliphist)
 ./install.sh [--sddm|--plymouth|--zapret|--status|--disable-sddm|--disable-plymouth|--plymouth-rescue|--no-deps|--deps-only]
 ~/.config/hypr/scripts/eclipse-palette.py                      # палитра: dry-run
 ~/.config/hypr/scripts/eclipse-palette.py --preset graphite --apply

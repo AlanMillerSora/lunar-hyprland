@@ -7,6 +7,9 @@ HANDOFF.md
 # Пакет задач для агентов + снимок живой системы (локально, машинозависимо).
 .tasks/
 
+# Снимок установленных версий (deps/snapshot.sh) — машинозависимый, не трекаю.
+deps/snapshot-*.txt
+
 # Артефакты сборки пакета root-хелперов (makepkg кладёт рядом с PKGBUILD).
 packaging/lunar-helpers/pkg/
 packaging/lunar-helpers/src/

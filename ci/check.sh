@@ -23,7 +23,9 @@ bad()  { printf '  ✗ %s\n' "$1"; FAIL=1; }
 
 # 1) синтаксис shell
 step "Синтаксис shell (bash -n)"
-for f in install.sh get-deps.sh ui.sh release.sh sync.sh .config/hypr/scripts/*.sh; do
+for f in lunar doctor.sh reload.sh install.sh get-deps.sh ui.sh \
+         release.sh sync.sh bump.sh install/*.sh deps/snapshot.sh \
+         systemd/libexec/*.sh packaging/*/*.install .config/hypr/scripts/*.sh; do
     [ -e "$f" ] || continue
     if err=$(bash -n "$f" 2>&1); then
         ok "$f"

@@ -46,7 +46,7 @@
 **Статус: ВЫПОЛНЕНО (коммит `288c4f9`, VERSION 1.25.0).**
 
 **Что сделать:**
-- [x] Создать systemd-user-юнит `systemd/lunar-quickshell.service`
+- [x] Создать systemd-user-юнит `systemd/user/lunar-quickshell.service`
       (~/.config/systemd/user/ после `install.sh`):
   - `ExecStart=/usr/bin/quickshell`
   - `Restart=always`, `RestartSec=2`

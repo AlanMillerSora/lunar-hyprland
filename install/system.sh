@@ -10,9 +10,13 @@
 # Пакет ставит get-deps, но включить его должен установщик — иначе снимки
 # timeshift по расписанию не создаются.
 system_cronie() {
+ensure_root || return 0
 step "cronie: демон расписаний"
-if systemctl list-unit-files cronie.service >/dev/null 2>&1; then
-  sudo systemctl enable --now cronie.service 2>/dev/null \
+# list-unit-files с шаблоном возвращает 0 даже без совпадений, поэтому
+# наличие юнита проверяю по выводу, а не по коду возврата.
+if systemctl list-unit-files --type=service --no-legend 2>/dev/null \
+     | grep -q '^cronie\.service'; then
+  sudo -n systemctl enable --now cronie.service 2>/dev/null \
     && ok "cronie включён" \
     || warn "cronie не включился (нужен sudo)"
 else
@@ -26,6 +30,7 @@ fi
 # прежним копированием в /usr/libexec/lunar. Без пакета рис продолжает
 # работать: путь один и тот же, меняется только способ установки.
 system_helpers() {
+ensure_root || return 0
 step "root-хелперы: /usr/libexec/lunar (пакет или fallback)"
 local pkg="$REPO/packaging/lunar-helpers"
 if command -v makepkg >/dev/null 2>&1 && [ "$(id -u)" -ne 0 ] && [ -f "$pkg/PKGBUILD" ]; then
@@ -45,8 +50,8 @@ local h
 for h in lunar-avatar-sync.sh lunar-journal-read.sh lunar-journal-vacuum.sh \
          lunar-cpu-performance.sh lunar-svc.sh lunar-update.sh; do
   [ -f "$REPO/systemd/libexec/$h" ] || continue
-  sudo install -d -m 0755 -o root -g root /usr/libexec/lunar 2>/dev/null \
-    && sudo install -m 0755 -o root -g root \
+  sudo -n install -d -m 0755 -o root -g root /usr/libexec/lunar 2>/dev/null \
+    && sudo -n install -m 0755 -o root -g root \
          "$REPO/systemd/libexec/$h" "/usr/libexec/lunar/${h#lunar-}" 2>/dev/null \
     && ok "root-хелпер: /usr/libexec/lunar/${h#lunar-}" \
     || warn "root-хелпер $h не установлен (нужен sudo)"
@@ -58,25 +63,26 @@ done
 # power-saver, а на Ryzen «balanced» = governor powersave (просадки).
 # Поэтому глушим его навсегда, а CPU держим на performance своим юнитом.
 system_cpu_performance() {
+ensure_root || return 0
 step "CPU: performance вместо power-profiles-daemon"
 # сам хелпер кладёт system_helpers (пакет lunar-helpers / fallback)
 # в /usr/libexec/lunar/cpu-performance.sh; здесь — только юниты.
 for u in lunar-cpu-performance.service lunar-cpu-performance-resume.service; do
-  [ -f "$REPO/systemd/system/$u" ] && sudo install -m 0644 -o root -g root \
+  [ -f "$REPO/systemd/system/$u" ] && sudo -n install -m 0644 -o root -g root \
     "$REPO/systemd/system/$u" "/etc/systemd/system/$u" 2>/dev/null || true
 done
-sudo systemctl daemon-reload 2>/dev/null || true
-sudo systemctl enable --now lunar-cpu-performance.service 2>/dev/null \
+sudo -n systemctl daemon-reload 2>/dev/null || true
+sudo -n systemctl enable --now lunar-cpu-performance.service 2>/dev/null \
   && ok "CPU: governor performance (юнит включён)" \
   || warn "lunar-cpu-performance.service не включился (нужен sudo)"
-sudo systemctl enable lunar-cpu-performance-resume.service 2>/dev/null \
+sudo -n systemctl enable lunar-cpu-performance-resume.service 2>/dev/null \
   && ok "CPU: performance после сна (resume-юнит)" \
   || warn "lunar-cpu-performance-resume.service не включился (нужен sudo)"
 # power-profiles-daemon умеет только balanced/powersave (а на Ryzen
 # balanced = powersave): глушим и маскируем безусловно. mask работает
 # и для отсутствующего юнита — заглушка не даст демону подняться позже.
-sudo systemctl disable --now power-profiles-daemon.service 2>/dev/null || true
-sudo systemctl mask power-profiles-daemon.service 2>/dev/null \
+sudo -n systemctl disable --now power-profiles-daemon.service 2>/dev/null || true
+sudo -n systemctl mask power-profiles-daemon.service 2>/dev/null \
   && ok "power-profiles-daemon замаскирован (powersave не вернётся)" \
   || warn "power-profiles-daemon не замаскирован (нужен sudo)"
 }
@@ -87,13 +93,14 @@ sudo systemctl mask power-profiles-daemon.service 2>/dev/null \
 # за IP сам (сеть — networkd), PowerSaveDisable=ath12k* — не душим мой
 # Qualcomm WCN785x энергосбережением.
 system_iwd() {
+ensure_root || return 0
 step "Wi-Fi: iwd"
 if [ -f "$REPO/systemd/conf/iwd-main.conf" ]; then
-  sudo install -Dm644 "$REPO/systemd/conf/iwd-main.conf" /etc/iwd/main.conf 2>/dev/null \
+  sudo -n install -Dm644 "$REPO/systemd/conf/iwd-main.conf" /etc/iwd/main.conf 2>/dev/null \
     && ok "iwd: /etc/iwd/main.conf" \
     || warn "iwd-main.conf не установлен (нужен sudo)"
 fi
-sudo systemctl enable --now iwd.service 2>/dev/null \
+sudo -n systemctl enable --now iwd.service 2>/dev/null \
   && ok "iwd включён и запущен" \
   || warn "iwd.service не включился (нужен sudo)"
 }
@@ -102,6 +109,7 @@ sudo systemctl enable --now iwd.service 2>/dev/null \
 # Пакет из AUR, headless, живёт как systemd --user-юнит (sudo не нужен).
 # Секрет генерим один раз и держим в env-файле вне репо.
 system_tgproxy() {
+ensure_root || return 0
 step "tg-ws-proxy: прокси для Telegram"
 if command -v tg-ws-proxy >/dev/null 2>&1; then
   ok "tg-ws-proxy установлен"
@@ -139,6 +147,7 @@ fi
 # Сами root-хелперы ставит system_helpers (пакет lunar-helpers или
 # fallback в /usr/libexec/lunar); здесь — только правило sudoers.
 system_sudoers() {
+ensure_root || return 0
 step "sudo: белый список агента → /etc/sudoers.d/lunar-agent"
 AGENT_USER="${SUDO_USER:-$(id -un)}"
 if [ -f "$REPO/systemd/sudoers/lunar-agent.sudoers" ]; then
@@ -149,8 +158,8 @@ if [ -f "$REPO/systemd/sudoers/lunar-agent.sudoers" ]; then
     # иначе правило уйдёт несуществующему логину, и sudo -n молча вернёт 1.
     agent_tmp="$(mktemp)"
     sed "s/^sora /$AGENT_USER /" "$REPO/systemd/sudoers/lunar-agent.sudoers" > "$agent_tmp"
-    if sudo visudo -cf "$agent_tmp" >/dev/null 2>&1; then
-      sudo install -m 0440 -o root -g root \
+    if sudo -n visudo -cf "$agent_tmp" >/dev/null 2>&1; then
+      sudo -n install -m 0440 -o root -g root \
         "$agent_tmp" /etc/sudoers.d/lunar-agent 2>/dev/null \
         && ok "sudoers.d/lunar-agent ($AGENT_USER)" \
         || warn "sudoers не установлен (нужен sudo)"
@@ -166,7 +175,7 @@ fi
 # Убираю файл, если он остался с прошлых установок, — иначе привилегия
 # жила бы поверх нового, узкого списка.
 if [ -f /etc/sudoers.d/lunar-zapret ]; then
-  sudo rm -f /etc/sudoers.d/lunar-zapret 2>/dev/null \
+  sudo -n rm -f /etc/sudoers.d/lunar-zapret 2>/dev/null \
     && ok "убрал устаревшее правило /etc/sudoers.d/lunar-zapret" \
     || warn "не удалось убрать /etc/sudoers.d/lunar-zapret (нужен sudo)"
 fi

@@ -50,6 +50,12 @@ for a in "$@"; do
   esac
 done
 
+# --deps-only самодостаточен: он всегда тянет зависимости, даже если рядом
+# указан --no-deps. Иначе не выполнилось бы ни одного шага [n/total].
+if [ "$DEPS_ONLY" = 1 ]; then
+  WITH_DEPS=1
+fi
+
 # части установщика: пользовательское / системное / опциональное.
 # Подключаю после разбора флагов (как в прежнем монолите, где функции
 # определялись ниже парсинга), чтобы -h и неверный флаг выходили раньше
@@ -71,10 +77,13 @@ case "$ACTION" in
     zapret_status
     exit 0 ;;
   disable-sddm)
+    ensure_root || exit 1
     sddm_disable; ok "SDDM: возвращена штатная тема"; exit 0 ;;
   disable-plymouth)
+    ensure_root || exit 1
     ply_disable; ok "Plymouth: заставка выключена, загрузка обычная"; exit 0 ;;
   plymouth-rescue)
+    ensure_root || exit 1
     ply_rescue; exit 0 ;;
 esac
 
@@ -112,12 +121,17 @@ dotfiles_bibata
 dotfiles_systemd_user
 
 # ── системное (root): сервисы и хелперы ────────────────────────
-system_cronie
-system_helpers
-system_cpu_performance
-system_iwd
-system_tgproxy
-system_sudoers
+# Root спрашиваю один раз здесь: ensure_root кэширует таймстемп sudo,
+# дальше системные команды идут через `sudo -n` без повторных приглашений.
+# Нет root — одно предупреждение, системная часть аккуратно пропускается.
+if ensure_root; then
+  system_cronie
+  system_helpers
+  system_cpu_performance
+  system_iwd
+  system_tgproxy
+  system_sudoers
+fi
 
 # ── пользовательское: shell и GTK ──────────────────────────────
 dotfiles_shell

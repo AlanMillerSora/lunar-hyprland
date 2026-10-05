@@ -12,6 +12,6 @@ visual-studio-code-bin
 # Мод Discord: патчит app.asar; после обновления Discord патч накатывается заново.
 vencord-installer-bin
 
-# Tela — база для монохромных иконок: install.sh собирает из неё Tela-lunar
-# (eclipse-mono-icons.sh).
+# Tela — обычная цветная тема иконок: qt6ct и GTK берут Tela-dark
+# (монохром Tela-lunar больше не собираю).
 tela-icon-theme
