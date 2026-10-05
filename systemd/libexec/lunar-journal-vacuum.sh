@@ -2,7 +2,8 @@
 # ════════════════════════════════════════════════════════════════
 #  lunar-journal-vacuum.sh — root-хелпер: аккуратная чистка журнала.
 #
-#  Ставится install.sh в /usr/local/lib/lunar/journal-vacuum.sh (0755 root:root).
+#  Ставится install.sh в /usr/libexec/lunar/journal-vacuum.sh (0755 root:root):
+#  пакетом lunar-helpers, без пакета — копированием.
 #  Принимает РОВНО один аргумент — размер или срок: --size=200M / --time=14d
 #  (и полные формы --vacuum-size=… / --vacuum-time=…). Так из Hub (update.sh)
 #  можно чистить журнал без raw journalctl и без пароля, не открывая

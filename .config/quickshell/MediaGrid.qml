@@ -252,7 +252,7 @@ Item {
                     width: 22
                     height: 16
                     radius: Theme.radiusTile
-                    color: Theme.bgPanel
+                    color: Theme.surfacePanel
 
                     Text {
                         anchors.centerIn: parent

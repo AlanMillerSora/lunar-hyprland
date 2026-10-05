@@ -805,7 +805,7 @@ Item {
                         radius: width / 2
                         anchors.verticalCenter: parent.verticalCenter
                         x: Theme.wallpaperLive ? parent.width - width - 3 : 3
-                        color: Theme.wallpaperLive ? Theme.bgPanel : Theme.textDim
+                        color: Theme.wallpaperLive ? Theme.surfacePanel : Theme.textDim
                         Behavior on x { NumberAnimation { duration: Theme.animFast } }
                     }
 

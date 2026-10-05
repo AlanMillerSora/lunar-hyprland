@@ -2,7 +2,8 @@
 # ════════════════════════════════════════════════════════════════
 #  lunar-journal-read.sh — root-хелпер: БЕЗОПАСНЫЙ просмотр journal.
 #
-#  Ставится install.sh в /usr/local/lib/lunar/journal-read.sh (0755 root:root).
+#  Ставится install.sh в /usr/libexec/lunar/journal-read.sh (0755 root:root):
+#  пакетом lunar-helpers, без пакета — копированием.
 #  В sudoers — он один (аргументы любые), но хелпер сам пропускает только
 #  читающие опции: мутирующие (--vacuum-*, --rotate, --flush, --sync,
 #  --update-catalog, --relinquish-var) и чужие корни (--root, --image,

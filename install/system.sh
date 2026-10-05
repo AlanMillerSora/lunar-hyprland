@@ -20,20 +20,47 @@ else
 fi
 }
 
+# ── root-хелперы: пакет lunar-helpers или fallback ─────────────
+# Хелперы живут вне пользовательских каталогов и правятся только root:
+# ставлю их пакетом (makepkg -si от пользователя), а без base-devel —
+# прежним копированием в /usr/libexec/lunar. Без пакета рис продолжает
+# работать: путь один и тот же, меняется только способ установки.
+system_helpers() {
+step "root-хелперы: /usr/libexec/lunar (пакет или fallback)"
+local pkg="$REPO/packaging/lunar-helpers"
+if command -v makepkg >/dev/null 2>&1 && [ "$(id -u)" -ne 0 ] && [ -f "$pkg/PKGBUILD" ]; then
+  # makepkg не работает под root — собираем и ставим от текущего пользователя
+  if ( cd "$pkg" && makepkg -sif --noconfirm ) >/dev/null 2>&1; then
+    ok "пакет lunar-helpers собран и установлен"
+    return 0
+  fi
+  warn "makepkg не собрал пакет — ставлю хелперы копированием"
+fi
+_helpers_copy
+}
+
+# fallback: без пакета/сборки — кладу те же файлы прямо в /usr/libexec/lunar
+_helpers_copy() {
+local h
+for h in lunar-avatar-sync.sh lunar-journal-read.sh lunar-journal-vacuum.sh \
+         lunar-cpu-performance.sh lunar-svc.sh lunar-update.sh; do
+  [ -f "$REPO/systemd/libexec/$h" ] || continue
+  sudo install -d -m 0755 -o root -g root /usr/libexec/lunar 2>/dev/null \
+    && sudo install -m 0755 -o root -g root \
+         "$REPO/systemd/libexec/$h" "/usr/libexec/lunar/${h#lunar-}" 2>/dev/null \
+    && ok "root-хелпер: /usr/libexec/lunar/${h#lunar-}" \
+    || warn "root-хелпер $h не установлен (нужен sudo)"
+done
+}
+
 # ── CPU: всегда performance, без power-profiles-daemon ─────────
 # power-profiles-daemon запускается по D-Bus и умеет только balanced/
 # power-saver, а на Ryzen «balanced» = governor powersave (просадки).
 # Поэтому глушим его навсегда, а CPU держим на performance своим юнитом.
 system_cpu_performance() {
 step "CPU: performance вместо power-profiles-daemon"
-if [ -f "$REPO/systemd/libexec/lunar-cpu-performance.sh" ]; then
-  sudo install -d -m 0755 -o root -g root /usr/local/lib/lunar 2>/dev/null \
-    && sudo install -m 0755 -o root -g root \
-         "$REPO/systemd/libexec/lunar-cpu-performance.sh" \
-         /usr/local/lib/lunar/cpu-performance.sh 2>/dev/null \
-    && ok "хелпер: /usr/local/lib/lunar/cpu-performance.sh" \
-    || warn "хелпер cpu-performance не установлен (нужен sudo)"
-fi
+# сам хелпер кладёт system_helpers (пакет lunar-helpers / fallback)
+# в /usr/libexec/lunar/cpu-performance.sh; здесь — только юниты.
 for u in lunar-cpu-performance.service lunar-cpu-performance-resume.service; do
   [ -f "$REPO/systemd/system/$u" ] && sudo install -m 0644 -o root -g root \
     "$REPO/systemd/system/$u" "/etc/systemd/system/$u" 2>/dev/null || true
@@ -108,20 +135,11 @@ if command -v tg-ws-proxy >/dev/null 2>&1 && [ -f "$REPO/systemd/user/lunar-tgpr
 fi
 }
 
-# ── sudo: белый список агента (OpenCode) + root-хелперы ────────
+# ── sudo: белый список агента (OpenCode) ───────────────────────
+# Сами root-хелперы ставит system_helpers (пакет lunar-helpers или
+# fallback в /usr/libexec/lunar); здесь — только правило sudoers.
 system_sudoers() {
 step "sudo: белый список агента → /etc/sudoers.d/lunar-agent"
-if [ -d "$REPO/systemd/libexec" ]; then
-  for h in lunar-avatar-sync.sh lunar-journal-read.sh lunar-journal-vacuum.sh \
-           lunar-svc.sh lunar-update.sh; do
-    [ -f "$REPO/systemd/libexec/$h" ] || continue
-    sudo install -d -m 0755 -o root -g root /usr/local/lib/lunar 2>/dev/null \
-      && sudo install -m 0755 -o root -g root \
-           "$REPO/systemd/libexec/$h" "/usr/local/lib/lunar/${h#lunar-}" 2>/dev/null \
-      && ok "root-хелпер: /usr/local/lib/lunar/${h#lunar-}" \
-      || warn "root-хелпер $h не установлен (нужен sudo)"
-  done
-fi
 AGENT_USER="${SUDO_USER:-$(id -un)}"
 if [ -f "$REPO/systemd/sudoers/lunar-agent.sudoers" ]; then
   if [[ ! "$AGENT_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]; then
@@ -144,7 +162,7 @@ if [ -f "$REPO/systemd/sudoers/lunar-agent.sudoers" ]; then
 fi
 
 # Старое широкое правило zapret (голый systemctl) больше не нужно:
-# теперь zapret ходит через /usr/local/lib/lunar/svc.sh (allowlist юнитов).
+# теперь zapret ходит через /usr/libexec/lunar/svc.sh (allowlist юнитов).
 # Убираю файл, если он остался с прошлых установок, — иначе привилегия
 # жила бы поверх нового, узкого списка.
 if [ -f /etc/sudoers.d/lunar-zapret ]; then

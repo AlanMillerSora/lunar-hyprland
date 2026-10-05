@@ -89,7 +89,7 @@ import ".."
                     radius: Theme.radiusM
                     border.width: 1
                     border.color: expanded ? Theme.alpha(Theme.accent, 0.35) : Theme.border2
-                    color: expanded ? Theme.surfaceActive : (notifMouse.containsMouse ? Theme.surfaceHover : Theme.surface)
+                    color: expanded ? Theme.surfaceActive : (notifMouse.containsMouse ? Theme.surfaceHover : Theme.surfaceCard)
 
                     // важность слева
                     Rectangle {

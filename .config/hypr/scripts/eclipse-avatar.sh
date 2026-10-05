@@ -6,7 +6,7 @@
 #    apply <cs> <cx> <cy>  — обрезать source в квадрат cs на (cx,cy), скруглить
 #                            в круг → ~/.config/avatars/avatar.png и синкнуться с SDDM
 #    /путь/картинка.png    — поставить готовый файл (авто-кроп по центру)
-#  Синк в SDDM — root-хелпер /usr/local/lib/lunar/avatar-sync.sh (в sudoers, без аргументов).
+#  Синк в SDDM — root-хелпер /usr/libexec/lunar/avatar-sync.sh (в sudoers, без аргументов).
 # ════════════════════════════════════════════════════════════════
 set -euo pipefail
 
@@ -17,7 +17,7 @@ SRC="$CACHE_DIR/avatar-source"
 
 # синк аватара в тему SDDM — через root-хелпер (в sudoers, без пароля)
 sync_sddm() {
-    sudo -n /usr/local/lib/lunar/avatar-sync.sh >/dev/null 2>&1 || true
+    sudo -n /usr/libexec/lunar/avatar-sync.sh >/dev/null 2>&1 || true
 }
 
 # квадрат → 512 → круглая маска
@@ -40,7 +40,7 @@ commit() {  # commit <infile>
 }
 
 if [[ $EUID -eq 0 ]]; then
-    echo "запуск от root не нужен: синк делает /usr/local/lib/lunar/avatar-sync.sh" >&2
+    echo "запуск от root не нужен: синк делает /usr/libexec/lunar/avatar-sync.sh" >&2
     exit 1
 fi
 

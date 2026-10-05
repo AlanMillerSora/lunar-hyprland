@@ -61,20 +61,20 @@ case "${1:-status}" in
     ;;
 
   on)
-    if priv /usr/local/lib/lunar/svc.sh enable --now "$UNIT"; then echo "zapret включён"; else echo "не удалось включить"; fi
+    if priv /usr/libexec/lunar/svc.sh enable --now "$UNIT"; then echo "zapret включён"; else echo "не удалось включить"; fi
     ;;
   off)
-    if priv /usr/local/lib/lunar/svc.sh disable --now "$UNIT"; then echo "zapret выключен"; else echo "не удалось выключить"; fi
+    if priv /usr/libexec/lunar/svc.sh disable --now "$UNIT"; then echo "zapret выключен"; else echo "не удалось выключить"; fi
     ;;
   toggle)
     if is_active; then
-      priv /usr/local/lib/lunar/svc.sh disable --now "$UNIT" && echo "zapret выключен"
+      priv /usr/libexec/lunar/svc.sh disable --now "$UNIT" && echo "zapret выключен"
     else
-      priv /usr/local/lib/lunar/svc.sh enable --now "$UNIT" && echo "zapret включён"
+      priv /usr/libexec/lunar/svc.sh enable --now "$UNIT" && echo "zapret включён"
     fi
     ;;
   restart)
-    priv /usr/local/lib/lunar/svc.sh restart "$UNIT" && echo "zapret перезапущен"
+    priv /usr/libexec/lunar/svc.sh restart "$UNIT" && echo "zapret перезапущен"
     ;;
 
   update)
@@ -82,7 +82,7 @@ case "${1:-status}" in
     echo "── обновляю zapret ──"
     sudo git -C "$ZDIR" pull --ff-only || { echo "git pull не удался"; exit 1; }
     sudo make -C "$ZDIR" systemd -j"$(nproc)" || { echo "сборка не удалась"; exit 1; }
-    priv /usr/local/lib/lunar/svc.sh restart "$UNIT"
+    priv /usr/libexec/lunar/svc.sh restart "$UNIT"
     echo
     healthcheck
     ;;

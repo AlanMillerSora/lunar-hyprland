@@ -3,7 +3,8 @@
 #  lunar-svc.sh — root-хелпер: управление только разрешёнными
 #  системными юнитами.
 #
-#  Ставится install.sh в /usr/local/lib/lunar/svc.sh (0755 root:root).
+#  Ставится install.sh в /usr/libexec/lunar/svc.sh (0755 root:root):
+#  пакетом lunar-helpers, без пакета — копированием.
 #  В sudoers разрешён ТОЛЬКО этот хелпер — голый systemctl наружу не
 #  выставлен. Allowlist юнитов живёт здесь, аргументы проверяются до
 #  вызова systemd, произвольные юниты/флаги не проходят.

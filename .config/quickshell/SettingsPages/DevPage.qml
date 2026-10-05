@@ -357,7 +357,7 @@ Item {
         visible: page.gitOpen
         z: 10
         radius: Theme.radius
-        color: Theme.bgPanel
+        color: Theme.surfacePanel
         // акцентная рамка — граница панели над списком, оставляю
         border.width: 1
         border.color: Theme.accent

@@ -7,6 +7,12 @@ HANDOFF.md
 # Пакет задач для агентов + снимок живой системы (локально, машинозависимо).
 .tasks/
 
+# Артефакты сборки пакета root-хелперов (makepkg кладёт рядом с PKGBUILD).
+packaging/lunar-helpers/pkg/
+packaging/lunar-helpers/src/
+packaging/lunar-helpers/*.pkg.tar.zst
+packaging/lunar-helpers/*.pkg.tar.zst.sig
+
 # Производные файлы палитры — их пишет eclipse-palette.py при установке.
 # Источник — .config/lunar/palette.toml + .config/lunar/templates/*.in;
 # выходы не трекаем, при установке генератор создаёт их заново.

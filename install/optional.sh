@@ -366,11 +366,11 @@ zapret_service() {
 
   sudo systemctl daemon-reload
 
-  # Управление zapret идёт через root-хелпер /usr/local/lib/lunar/svc.sh
+  # Управление zapret идёт через root-хелпер /usr/libexec/lunar/svc.sh
   # (allowlist юнитов внутри; голый systemctl в sudoers не выставляем).
-  # Хелпер ставит базовый system_sudoers из install/system.sh; отдельного
+  # Хелпер ставит system_helpers из install/system.sh; отдельного
   # правила /etc/sudoers.d/lunar-zapret больше нет.
-  say "zapret: управление — через /usr/local/lib/lunar/svc.sh"
+  say "zapret: управление — через /usr/libexec/lunar/svc.sh"
 }
 
 zapret_health() {

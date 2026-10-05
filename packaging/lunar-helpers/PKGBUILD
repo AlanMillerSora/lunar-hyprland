@@ -1,0 +1,58 @@
+# Maintainer: AlanMillerSora <alanmillersora@users.noreply.github.com>
+# ════════════════════════════════════════════════════════════════
+#  lunar-helpers — root-хелперы Lunar Eclipse (pacman-пакет).
+#
+#  Хелперы лежат в systemd/libexec/ этого же репозитория: пакет не
+#  дублирует код, а берёт источники рядом (../../systemd/libexec).
+#  Версия — из VERSION репозитория, поэтому pkgver всегда совпадает
+#  с рисом.
+#
+#  Установка — в /usr/libexec/lunar/ (стандартный путь для внутренних
+#  исполняемых файлов пакета). Sudoers и systemd-юниты, которые на них
+#  ссылаются, ставит install.sh; пакет кладёт только сами хелперы.
+#
+#  Сборка (makepkg не работает под root):
+#    cd packaging/lunar-helpers && makepkg -sif
+#  После правки хелперов — ./bump.sh patch и updpkgsums (иначе makepkg
+#  поругается на изменившиеся sha256).
+# ════════════════════════════════════════════════════════════════
+
+pkgname=lunar-helpers
+_pkgdir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+pkgver="$(tr -d '[:space:]' < "$_pkgdir/../../VERSION")"
+pkgrel=1
+pkgdesc="Lunar Eclipse — root-хелперы (sudo-агент, journal, svc, update, avatar, CPU)"
+arch=('any')
+url="https://github.com/AlanMillerSora/rice"
+license=('MIT')
+depends=('bash')
+install=lunar-helpers.install
+
+# Источники — симлинки рядом на systemd/libexec/ этого же репо (makepkg
+# ищет локальные исходники только по имени в каталоге PKGBUILD). Так код
+# хелперов не дублируется: правка в systemd/libexec видна пакету сразу.
+source=(
+  "lunar-avatar-sync.sh"
+  "lunar-journal-read.sh"
+  "lunar-journal-vacuum.sh"
+  "lunar-cpu-performance.sh"
+  "lunar-svc.sh"
+  "lunar-update.sh"
+)
+sha256sums=('4de2a8f6ab8a1a25286c272769ba6618f80aa8073fcf33e94aee0ca29ac365da'
+            'e7e042fd420987def6359177b79050e1564fbae0b2361213ea782a603fb7f751'
+            '9e6af251c71c244f6bd8356bca364d5f563491f0654b62acac2e8d13f42e464c'
+            'e7157c960949b26e36fc59c06e4d553f8213edf686c4d617d68a679e0f0197d3'
+            'b1b0785e5fb4f9d7b306c101b43fc423aaacee78f169adea5ed53b8aec840bbe'
+            'a1ad2e0e522d67e04ada484943ebecad3056e45b8a93e46bba364b15b772e497')
+
+package() {
+  install -d -m 0755 "$pkgdir/usr/libexec/lunar"
+  # lunar-svc.sh → svc.sh и т.д.: имена без префикса, как их зовут
+  # sudoers (/usr/libexec/lunar/journal-read.sh …) и systemd-юниты.
+  local f
+  for f in lunar-avatar-sync.sh lunar-journal-read.sh lunar-journal-vacuum.sh \
+           lunar-cpu-performance.sh lunar-svc.sh lunar-update.sh; do
+    install -m 0755 "$srcdir/$f" "$pkgdir/usr/libexec/lunar/${f#lunar-}"
+  done
+}

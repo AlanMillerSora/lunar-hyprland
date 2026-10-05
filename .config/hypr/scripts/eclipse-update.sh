@@ -69,8 +69,8 @@ clean_cache_journal() {
 
   local jbefore jafter
   jbefore="$(journalctl --disk-usage 2>/dev/null | grep -o '[0-9.]*[MG]' | head -1)"
-  if [ -x /usr/local/lib/lunar/journal-vacuum.sh ]; then
-    sudo -n /usr/local/lib/lunar/journal-vacuum.sh --size=200M >/dev/null 2>&1 || true
+  if [ -x /usr/libexec/lunar/journal-vacuum.sh ]; then
+    sudo -n /usr/libexec/lunar/journal-vacuum.sh --size=200M >/dev/null 2>&1 || true
   else
     say "журнал: vacuum-хелпер не установлен — запусти ./install.sh"
   fi
@@ -303,7 +303,7 @@ fi
 # обновление — через root-хелпер update.sh (pacman -Syu без --noconfirm:
 # подтверждение остаётся за человеком в терминале)
 say "обновляю систему (pacman -Syu)"
-sudo -n /usr/local/lib/lunar/update.sh || { say "pacman завершился с ошибкой"; exit 1; }
+sudo -n /usr/libexec/lunar/update.sh || { say "pacman завершился с ошибкой"; exit 1; }
 
 # AUR
 if command -v paru >/dev/null 2>&1; then

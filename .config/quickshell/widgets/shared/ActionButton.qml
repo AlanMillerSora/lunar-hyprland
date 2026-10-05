@@ -24,10 +24,10 @@ Rectangle {
     implicitWidth: Math.max(minWidth, btnText.implicitWidth + hPad)
     height: Theme.rowH
     radius: Theme.radius
-    color: !enabledBtn ? Theme.surface
+    color: !enabledBtn ? Theme.surfaceCard
          : btnArea.containsMouse ? Theme.surfaceHover
-         : Theme.surface
-    // arch: рамки нет, кнопка — подложка surface
+         : Theme.surfaceCard
+    // arch: рамки нет, кнопка — подложка surfaceCard
     border.width: 0
 
     Text {

@@ -15,7 +15,7 @@ FloatingWindow {
 
     title: "Lunar Clipboard"
     // фон даёт окно, скругление/блюр — правило Hyprland по заголовку
-    color: Theme.bgPanel
+    color: Theme.surfacePanel
     visible: root.showing
     implicitWidth: 720
     implicitHeight: 600

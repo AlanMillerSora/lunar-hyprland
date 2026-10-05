@@ -358,7 +358,7 @@ cd ~/rice
 
 Системные темы и сервисы — **SDDM**, **Plymouth**, **zapret** — ставятся только по явному флагу; без них установщик трогает лишь `~/.config` и системные мелочи. Зависимости ставит `get-deps.sh` (pacman + AUR через `yay`/`paru`; если их нет — поставит `yay-bin`). Списки пакетов — декларативные: официальные в `deps/packages.txt`, AUR в `deps/aur.txt`; скрипт только читает их, отдельного списка в коде нет. Править зависимости нужно **там** (одна точка правки). Точный пин версий на rolling-Arch невозможен, поэтому для справки есть `deps/snapshot.sh` — он пишет `deps/snapshot-<дата>.txt` с `pacman -Q` (имя+версия), это не пин. После установки — перелогин в Hyprland (или `hyprctl reload`). Сам `install.sh` — тонкий оркестратор: разбор флагов и счётчик шагов, а работа разложена по `install/dotfiles.sh` (пользовательское), `install/system.sh` (root) и `install/optional.sh` (SDDM/Plymouth/zapret).
 
-Повторный запуск безопасен: прежние конфиги складываются в `~/.config-backup-<дата>/` (последние 5), аватар переносится, палитра перегенерируется. Установщик также ставит user-юниты (`lunar-homepage`, `lunar-player`, `lunar-tgproxy`), системный `lunar-cpu-performance` (CPU всегда `performance`), настраивает Wi-Fi (**iwd** для ассоциации + **systemd-networkd** для IP; `EnableNetworkConfiguration=false`, powersave для `ath12k*` выключен), root-хелперы в `/usr/local/lib/lunar/` и узкий sudoers `/etc/sudoers.d/lunar-agent`.
+Повторный запуск безопасен: прежние конфиги складываются в `~/.config-backup-<дата>/` (последние 5), аватар переносится, палитра перегенерируется. Установщик также ставит user-юниты (`lunar-homepage`, `lunar-player`, `lunar-tgproxy`), системный `lunar-cpu-performance` (CPU всегда `performance`), настраивает Wi-Fi (**iwd** для ассоциации + **systemd-networkd** для IP; `EnableNetworkConfiguration=false`, powersave для `ath12k*` выключен), root-хелперы в `/usr/libexec/lunar/` (пакет `lunar-helpers`) и узкий sudoers `/etc/sudoers.d/lunar-agent`.
 
 <div align="center">
 
@@ -590,6 +590,7 @@ lib32-nvidia-utils
 │   └── kdeglobals, starship.toml, .zshrc
 ├── systemd/{user,system,libexec,sudoers,conf}/  color-schemes/  plymouth/lunar/  sddm/lunar/  zapret/  assets/{logo.svg, screens/}
 ├── install/{dotfiles,system,optional}.sh   ← части установщика
+├── packaging/lunar-helpers/{PKGBUILD,*.install} ← root-хелперы в пакете (/usr/libexec/lunar)
 ├── deps/{packages.txt,aur.txt,snapshot.sh} ← манифест пакетов + снимок версий
 ├── install.sh  get-deps.sh  ui.sh  release.sh
 └── README.md  AGENTS.md  PORTABILITY.md  LICENSE  VERSION

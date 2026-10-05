@@ -13,7 +13,7 @@ FloatingWindow {
 
     title: "Lunar Power"
     // фон даёт окно, скругление/блюр — правило Hyprland по заголовку
-    color: Theme.bgPanel
+    color: Theme.surfacePanel
     visible: root.showing
     implicitWidth: 440
     implicitHeight: col.implicitHeight + Theme.space5 + Theme.space4

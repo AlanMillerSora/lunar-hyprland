@@ -1,0 +1,1 @@
+../../systemd/libexec/lunar-cpu-performance.sh

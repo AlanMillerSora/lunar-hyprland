@@ -20,7 +20,7 @@ FloatingWindow {
 
     title: "Lunar Agent"
     // фон даёт окно, скругление/блюр — правило Hyprland по заголовку
-    color: Theme.bgPanel
+    color: Theme.surfacePanel
     visible: root.showing
     implicitWidth: 1320
     implicitHeight: 768

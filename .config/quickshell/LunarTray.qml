@@ -124,7 +124,7 @@ PanelWindow {
         anchors.right: parent.right
         anchors.rightMargin: 12
         radius: Theme.radiusL
-        color: Theme.bgPanel
+        color: Theme.surfacePanel
         border.color: Theme.accent
         border.width: 1
         clip: true

@@ -2,7 +2,7 @@ import QtQuick
 import "../.."
 
 // ════════════════════════════════════════════════════════════════
-//  ActionTile — плитка-кнопка панелей в arch-стиле: подложка surface,
+//  ActionTile — плитка-кнопка панелей в arch-стиле: подложка surfaceCard,
 //  на наведении плотнее, у активной — accent-тон (surfaceActive).
 //  Иконка + подпись. Размер задаёт вызывающий.
 // ════════════════════════════════════════════════════════════════
@@ -21,7 +21,7 @@ Rectangle {
     radius: Theme.radius
     color: active
         ? Theme.surfaceActive
-        : (ma.containsMouse ? Theme.surfaceHover : Theme.surface)
+        : (ma.containsMouse ? Theme.surfaceHover : Theme.surfaceCard)
     border.width: 1
     border.color: active ? Theme.alpha(activeColor, 0.5) : Theme.border2
     Behavior on color { ColorAnimation { duration: Theme.animFast } }

@@ -2,7 +2,7 @@ import QtQuick
 import "../.."
 
 // ════════════════════════════════════════════════════════════════
-//  Card — единая подложка панелей в arch-стиле: плотный surface без
+//  Card — единая подложка панелей в arch-стиле: плотный surfaceCard без
 //  рамки (как Card у ArchEclipse: surface + radius, border почти не
 //  виден), внутри — колонка с общим ритмом. Контент внутрь (default).
 //  Высота — по содержимому; ширину задаёт вызывающий.
@@ -16,7 +16,7 @@ Rectangle {
     // рамку оставил опциональной: у arch карточки рамки почти нет
     property bool bordered: false
 
-    color: Theme.surface
+    color: Theme.surfaceCard
     radius: Theme.radiusM
     border.width: root.bordered ? 1 : 0
     border.color: Theme.border2

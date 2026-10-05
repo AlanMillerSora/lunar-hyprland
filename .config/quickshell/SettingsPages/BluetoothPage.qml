@@ -412,7 +412,7 @@ Item {
                                     width: tooltipText.width + 16
                                     height: 24
                                     radius: Theme.radius
-                                    color: Theme.bgPanel
+                                    color: Theme.surfacePanel
                                     border.width: 1
                                     border.color: Theme.border
                                     Text {
@@ -447,7 +447,7 @@ Item {
             width: Math.min(380, parent.width - 40)
             height: 132
             radius: Theme.radius
-            color: Theme.bgPanel
+            color: Theme.surfacePanel
             border.width: 1
             border.color: Theme.danger
 

@@ -73,6 +73,16 @@ QtObject {
     readonly property color surfaceSolid: Qt.rgba(23 / 255, 26 / 255, 27 / 255, 1)
     readonly property color surfaceHover: Qt.rgba(30 / 255, 34 / 255, 35 / 255, 0.94)
     readonly property color surfaceActive: Qt.rgba(text.r, text.g, text.b, 0.10)
+
+    // ── семантические поверхности (T20) ──────────────────────────
+    // Компонент читает роль, а не сырой токен палитры. Значения — ровно
+    // те, что стоят в прежних токенах, поэтому визуал не съезжает:
+    //   surfacePanel — подложка панелей/оверлеев (бывш. bgPanel);
+    //   surfaceCard  — подложка карточек/контролов (бывш. surface).
+    // surfaceHover/surfaceActive/surfaceSolid уже семантические — оставляю.
+    readonly property color surfacePanel: bgPanel
+    readonly property color surfaceCard: surface
+
     readonly property color border2: Qt.rgba(text.r, text.g, text.b, 0.10)
     // непрозрачный цвет фона — для текста поверх акцента (выделение и т.п.);
     // Theme.bg полупрозрачен и на плашке выделения читался бы неровно

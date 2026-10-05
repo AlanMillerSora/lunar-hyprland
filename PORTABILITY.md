@@ -50,6 +50,9 @@
 - `systemd/sudoers/lunar-agent.sudoers` — имя `sora` подставляется `install.sh` по текущему
   пользователю (sed), так что правило переносимо; при ручной установке проверить.
 - `systemd/libexec/lunar-avatar-sync.sh` — фолбэк пользователя `sora`.
+- Root-хелперы ставятся в `/usr/libexec/lunar/` (пакет `lunar-helpers` или fallback
+  `install.sh`); на этот путь смотрят sudoers и системные юниты — при переезде
+  ничего менять не нужно.
 - Прочие абсолютные `/home/sora` в заметках и `HANDOFF.md` (локальный, в git не входит).
 
 ### Загрузка (не автоматизируется)

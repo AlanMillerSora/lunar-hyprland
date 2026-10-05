@@ -67,7 +67,7 @@ PanelWindow {
     Rectangle {
         id: backdrop
         anchors.fill: parent
-        color: root.showing ? Theme.alpha(Theme.bgPanel, 0.62) : "transparent"
+        color: root.showing ? Theme.alpha(Theme.surfacePanel, 0.62) : "transparent"
         Behavior on color { ColorAnimation { duration: Theme.animMed } }
         focus: root.showing
         Keys.onEscapePressed: root.cancel()
@@ -81,7 +81,7 @@ PanelWindow {
         width: 460
         height: col.implicitHeight + Theme.space6
         radius: Theme.radiusL
-        color: Theme.bgPanel
+        color: Theme.surfacePanel
         border.color: Theme.accent
         border.width: 1
 

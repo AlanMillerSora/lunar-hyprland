@@ -203,6 +203,7 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 ├── systemd/{user,system,libexec,sudoers,conf}/  color-schemes/  assets/(+screens/)  zapret/
 ├── plymouth/lunar/   sddm/lunar/        ← только темы + README
 ├── install/{dotfiles,system,optional}.sh   ← части установщика
+├── packaging/lunar-helpers/{PKGBUILD,*.install} ← root-хелперы в пакете (/usr/libexec/lunar)
 ├── deps/{packages.txt,aur.txt,snapshot.sh} ← манифест пакетов + снимок версий
 ├── install.sh get-deps.sh ui.sh release.sh bump.sh
 └── README.md LICENSE VERSION AGENTS.md PORTABILITY.md lunar-dorabotki.md .gitattributes
@@ -392,18 +393,25 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 - `cliphist delete` читает stdin: `cliphist list | grep -P '^ID\t' | cliphist delete`.
 - DND: `makoctl mode -t do-not-disturb`.
 - Круглая маска magick: `magick in -resize 512x512 \( -size 512x512 xc:black -fill white -draw "circle 256,256 256,2" \) -alpha off -compose CopyOpacity -composite PNG32:out`.
-- Root-хелперы риса (`/usr/local/lib/lunar/`: `avatar-sync.sh`, `journal-read.sh`,
-  `journal-vacuum.sh`, `svc.sh`, `update.sh`) ставит `install.sh` (0755 root:root);
-  в sudoers — только они (аргументы валидируются внутри), без масок по
-  пользовательским скриптам. Управление сервисами — только через `svc.sh`
-  (allowlist юнитов внутри: `zapret.service`, `sddm.service`, `bluetooth.service`);
-  голый `systemctl` из sudoers убран. Обновление системы — только через
-  `update.sh` (`pacman -Syu` без `--noconfirm`: подтверждение за человеком);
-  широкий NOPASSWD на `pacman` убран. Журнал читать через
-  `sudo -n /usr/local/lib/lunar/journal-read.sh …` — у raw
+- Root-хелперы риса (`/usr/libexec/lunar/`: `avatar-sync.sh`, `journal-read.sh`,
+  `journal-vacuum.sh`, `svc.sh`, `update.sh`, `cpu-performance.sh`) ставит
+  `install.sh` (0755 root:root) — **пакетом `lunar-helpers`**
+  (`packaging/lunar-helpers/PKGBUILD`, `makepkg -sif` от пользователя), а без
+  `base-devel` — прежним копированием (fallback, путь тот же). Обновлять
+  хелперы так: правишь `systemd/libexec/lunar-*.sh` → `./bump.sh patch` →
+  `cd packaging/lunar-helpers && updpkgsums` (sha256 источников-симлинков) →
+  `./install.sh` собирает и ставит пакет. Пакет кладёт файлы под именами без
+  префикса `lunar-` (`lunar-svc.sh` → `svc.sh`). В sudoers — только они
+  (аргументы валидируются внутри), без масок по пользовательским скриптам.
+  Управление сервисами — только через `svc.sh` (allowlist юнитов внутри:
+  `zapret.service`, `sddm.service`, `bluetooth.service`); голый `systemctl`
+  из sudoers убран. Обновление системы — только через `update.sh`
+  (`pacman -Syu` без `--noconfirm`: подтверждение за человеком); широкий
+  NOPASSWD на `pacman` убран. Журнал читать через
+  `sudo -n /usr/libexec/lunar/journal-read.sh …` — у raw
   `journalctl` отозваны мутирующие режимы (`--vacuum`/`--rotate`).
 - CPU всегда `performance`: системный юнит `lunar-cpu-performance` зовёт
-  `/usr/local/lib/lunar/cpu-performance.sh` (root, вне sudoers); он же гасит
+  `/usr/libexec/lunar/cpu-performance.sh` (root, вне sudoers); он же гасит
   `power-profiles-daemon` (balanced/powersave).
 - `eclipse-askpass.py` — интерактивный GTK-диалог пароля (не автоподстановка).
 - Скрины для README: `grim -o DP-2` (3440×1440) → `magick … -resize 1600x900 -strip`.

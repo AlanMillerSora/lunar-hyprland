@@ -79,7 +79,7 @@ case "$ACTION" in
 esac
 
 # количество шагов для счётчика [n/total]
-LUNAR_TOTAL=13
+LUNAR_TOTAL=14
 [ "$WITH_DEPS" = 1 ] && LUNAR_TOTAL=$((LUNAR_TOTAL + 1))
 [ "$DO_SDDM" = 1 ] && LUNAR_TOTAL=$((LUNAR_TOTAL + 1))
 [ "$DO_PLYMOUTH" = 1 ] && LUNAR_TOTAL=$((LUNAR_TOTAL + 1))
@@ -113,6 +113,7 @@ dotfiles_systemd_user
 
 # ── системное (root): сервисы и хелперы ────────────────────────
 system_cronie
+system_helpers
 system_cpu_performance
 system_iwd
 system_tgproxy

@@ -1,0 +1,1 @@
+../../systemd/libexec/lunar-journal-vacuum.sh
