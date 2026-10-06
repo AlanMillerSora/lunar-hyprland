@@ -31,13 +31,24 @@ FloatingWindow {
 
     // агент и Hub взаимоисключающие: открылся Hub — гашу агента
     // (через Theme.activeOverlay, в одном процессе — плавно)
-    onShowingChanged: if (showing) Theme.activeOverlay = "hub"
+    onShowingChanged: {
+        if (showing) {
+            Theme.activeOverlay = "hub"
+            Theme.setModal("hub", true)
+        } else {
+            Theme.setModal("hub", false)
+        }
+    }
     Connections {
         target: Theme
         function onActiveOverlayChanged() {
             if (Theme.activeOverlay !== "hub" && root.showing) root.closePanel()
         }
     }
+
+    // окно закрыли извне (не через closePanel) — снимаю флаг подложки,
+    // иначе затемнение осталось бы висеть
+    onClosed: Theme.setModal("hub", false)
 
     function openPanel() { showing = true }
     function closePanel() {

@@ -22,6 +22,8 @@ FloatingWindow {
     minimumSize: Qt.size(360, 280)
 
     property bool showing: false
+    onShowingChanged: Theme.setModal("clipboard", showing)
+    onClosed: Theme.setModal("clipboard", false)
     property var items: []          // все записи: [{ id, preview }]
     property string query: ""
     property int selectedIndex: 0

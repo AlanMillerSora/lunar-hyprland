@@ -179,7 +179,16 @@ FloatingWindow {
 
     // модальные оверлеи взаимоисключающие (как Hub/Agent): показался плеер —
     // гашу Hub, открылся Hub — гашу плеер, всё в одном процессе и плавно
-    onVisibleChanged: if (visible) Theme.activeOverlay = "player"
+    onVisibleChanged: {
+        if (visible) {
+            Theme.activeOverlay = "player"
+            Theme.setModal("player", true)
+        } else {
+            Theme.setModal("player", false)
+        }
+    }
+    // окно закрыли извне — снимаю флаг подложки (см. Hub)
+    onClosed: Theme.setModal("player", false)
     Connections {
         target: Theme
         function onActiveOverlayChanged() {

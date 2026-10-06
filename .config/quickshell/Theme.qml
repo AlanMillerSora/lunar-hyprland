@@ -437,6 +437,29 @@ QtObject {
     // закрывает другой, плавно и в одном процессе (без внешнего qs ipc)
     property string activeOverlay: ""
 
+    // Крупные модалки (Hub/Player/Clipboard/Power/Agent/Wallpapers) отмечаются
+    // здесь, пока открыты, — по этому флагу LunarBackdrop плавно затемняет фон
+    // рабочего стола (dim-подложка как у 43PR). Держу множеством, а не строкой
+    // activeOverlay: модалки взаимоисключающие, но подложка должна жить, пока
+    // открыта любая, и не лезть в их логику закрытия. Мелкие поверхности
+    // (бар, сайдбары, OSD, попапы) сюда не пишут — фон они не затемняют.
+    property var openModals: ({})
+    readonly property bool backdropOn: {
+        for (var k in openModals)
+            if (openModals[k])
+                return true
+        return false
+    }
+    function setModal(name, isOpen) {
+        var next = {}
+        for (var k in openModals)
+            if (openModals[k] && k !== name)
+                next[k] = true
+        if (isOpen)
+            next[name] = true
+        openModals = next
+    }
+
     // ─────────── персистентность UI-настроек ───────────
     // Прозрачность интерфейса, масштаб шрифта и число значков трея
     // сохраняются между перезапусками Quickshell.

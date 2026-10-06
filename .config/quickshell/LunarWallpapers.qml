@@ -62,6 +62,7 @@ PanelWindow {
 
     // при открытии: фокус на ловца клавиш; сканирую только если ещё не сканировал
     onShowingChanged: {
+        Theme.setModal("wallpapers", showing)
         if (showing) {
             root.closing = false
             root.fade = 1

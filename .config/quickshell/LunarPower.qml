@@ -20,6 +20,8 @@ FloatingWindow {
     minimumSize: Qt.size(360, 280)
 
     property bool showing: false
+    onShowingChanged: Theme.setModal("power", showing)
+    onClosed: Theme.setModal("power", false)
     // подтверждение необратимых действий (M69)
     property int pendingIndex: -1
     property string status: ""

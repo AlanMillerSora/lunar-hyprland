@@ -28,6 +28,7 @@ ShellRoot {
     }
 
     LunarWallpaper {}   // живые обои (фоновый слой) — первыми, под всем
+    LunarBackdrop {}    // затемнение фона под крупными модалками (слой Bottom)
     LunarPanel {}
     LunarHub {}
     LunarWallpapers {}

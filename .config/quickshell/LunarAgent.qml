@@ -29,6 +29,9 @@ FloatingWindow {
     property bool showing: false
     readonly property string ctxScript: Quickshell.env("HOME") + "/.config/hypr/scripts/eclipse-agent-context.sh"
 
+    // окно закрыли извне — снимаю флаг подложки (см. Hub)
+    onClosed: Theme.setModal("agent", false)
+
     function openPanel() { showing = true }
     function closePanel() {
         // закрыл — гашу незавершённый ответ, чтобы не висел процесс
@@ -45,7 +48,10 @@ FloatingWindow {
     onShowingChanged: {
         if (showing) {
             Theme.activeOverlay = "agent"
+            Theme.setModal("agent", true)
             agentFocus.restart()
+        } else {
+            Theme.setModal("agent", false)
         }
     }
     Connections {
