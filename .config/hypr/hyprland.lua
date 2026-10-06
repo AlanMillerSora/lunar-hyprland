@@ -116,8 +116,8 @@ hl.config({
   decoration = {
     rounding       = 12,      -- мягче системного: крупные углы как у 43PR
     rounding_power = 2.0,      -- скругленные "сквирклы" как в превью
-    active_opacity   = 0.94,
-    inactive_opacity = 0.90,
+    active_opacity   = 0.90,   -- стекло: окно чуть сквозит обоями (было 0.94)
+    inactive_opacity = 0.85,   -- неактивное — ещё прозрачнее (было 0.90)
     dim_inactive     = true,
     dim_strength     = 0.08,   -- тише фон: 0.12 → 0.08, неактивные окна не гаснут в ноль
 
@@ -132,10 +132,14 @@ hl.config({
 
     -- Нормальные значения (режим NORMAL). Режим ECONOM (Hub → Interface)
     -- на лету облегчает их через hypr/scripts/eclipse-perf.sh.
+    -- Стекло как у 43PR: лёгкий блюр (size 5 / passes 1) вместо «сметаны».
+    -- Меньше проходов — обои сквозь панели читаются, а не размазываются;
+    -- vibrancy 0.2 даёт стеклу «дыхание». noise 0.05 — то же зерно, что
+    -- тайлами в баре/терминале: блюр и зерно остаются в одном тоне.
     blur = {
       enabled = true,
-      size    = 6,
-      passes  = 3,
+      size    = 5,
+      passes  = 1,
       ignore_opacity = false,
       vibrancy = 0.20,
       noise    = 0.05,
@@ -261,16 +265,16 @@ hl.layer_rule({ match = { namespace = "lunar-sidebar-right" }, blur = true, igno
 -- Плеер — обычное окно (Quickshell FloatingWindow): плавающее, по центру,
 -- со скруглением и полупрозрачностью. Блюр Hyprland даёт сам (окно с
 -- opacity<1), общий blur включён — отдельный слой тут больше не нужен.
-hl.window_rule({ match = { title = "^(Lunar Player)$" }, float = true, center = true, rounding = 12, opacity = "0.97 override 0.97 override" })
+hl.window_rule({ match = { title = "^(Lunar Player)$" }, float = true, center = true, rounding = 12, opacity = "0.95 override 0.95 override" })
 
 -- Крупные модалки — тоже обычные окна (Quickshell FloatingWindow): их можно
 -- тянуть и ресайзить, блюр им даёт прозрачность окна. Заголовки ставлю в QML.
 -- Радиус 12 (как системный): без обводки форму читает именно угол.
-hl.window_rule({ match = { title = "^(Lunar Hub)$" },       float = true, center = true, rounding = 12, opacity = "0.97 override 0.97 override" })
-hl.window_rule({ match = { title = "^(Lunar Wallpapers)$" }, float = true, center = true, rounding = 12, opacity = "0.97 override 0.97 override" })
-hl.window_rule({ match = { title = "^(Lunar Clipboard)$" }, float = true, center = true, rounding = 12, opacity = "0.97 override 0.97 override" })
-hl.window_rule({ match = { title = "^(Lunar Power)$" },     float = true, center = true, rounding = 12, opacity = "0.97 override 0.97 override" })
-hl.window_rule({ match = { title = "^(Lunar Agent)$" },     float = true, center = true, rounding = 12, opacity = "0.97 override 0.97 override" })
+hl.window_rule({ match = { title = "^(Lunar Hub)$" },       float = true, center = true, rounding = 12, opacity = "0.95 override 0.95 override" })
+hl.window_rule({ match = { title = "^(Lunar Wallpapers)$" }, float = true, center = true, rounding = 12, opacity = "0.95 override 0.95 override" })
+hl.window_rule({ match = { title = "^(Lunar Clipboard)$" }, float = true, center = true, rounding = 12, opacity = "0.95 override 0.95 override" })
+hl.window_rule({ match = { title = "^(Lunar Power)$" },     float = true, center = true, rounding = 12, opacity = "0.95 override 0.95 override" })
+hl.window_rule({ match = { title = "^(Lunar Agent)$" },     float = true, center = true, rounding = 12, opacity = "0.95 override 0.95 override" })
 -- Задачи — не окно, а layer-оверлей PanelWindow (двигаю/масштабирую сам):
 -- window_rule по «Lunar Tasks» больше не нужен.
 

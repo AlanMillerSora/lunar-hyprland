@@ -32,7 +32,7 @@ QtObject {
     readonly property color _bgCardBase: hexColor(palette.bgCard, Qt.rgba(18 / 255, 21 / 255, 27 / 255, 1))
     readonly property color _barPillBase: hexColor(palette.barPill, Qt.rgba(12 / 255, 14 / 255, 19 / 255, 1))
     property color bg: Qt.rgba(_bgBase.r, _bgBase.g, _bgBase.b, 0.72 * interfaceOpacity)
-    property color bgPanel: Qt.rgba(_bgPanelBase.r, _bgPanelBase.g, _bgPanelBase.b, 0.78 * interfaceOpacity)
+    property color bgPanel: Qt.rgba(_bgPanelBase.r, _bgPanelBase.g, _bgPanelBase.b, 0.80 * interfaceOpacity)
     property color bgCard: Qt.rgba(_bgCardBase.r, _bgCardBase.g, _bgCardBase.b, 0.62 * interfaceOpacity)
 
     // рамки — не линии, а намёк: белый на малых альфах (раньше был #1e1e1e)
@@ -55,16 +55,16 @@ QtObject {
     readonly property color barText: hexColor(palette.barText, "#d5dce4")
     readonly property color barDim: hexColor(palette.barDim, "#a6aeb9")
     readonly property color barFaint: hexColor(palette.barFaint, "#7b838d")
-    // тон как у окна Hub (Theme.alpha(surfaceSolid, 0.85)); альфу бара держу
-    // на уровне Hub, чтобы стекло читалось одинаково
-    readonly property color barPill: Qt.rgba(_barPillBase.r, _barPillBase.g, _barPillBase.b, (arch ? 0.95 : 0.85) * interfaceOpacity)
+    // тон как у окна Hub (Theme.alpha(surfaceSolid, 0.80)); альфу бара держу
+    // на уровне Hub и панелей (bgPanel 0.80) — стекло читается одинаково
+    readonly property color barPill: Qt.rgba(_barPillBase.r, _barPillBase.g, _barPillBase.b, (arch ? 0.90 : 0.80) * interfaceOpacity)
     // наведённое состояние поверхности (сайдбары/Hub): тот же тон, чуть светлее.
     // Производная от палитры — меняются обои, меняется и он.
     readonly property color barPillHover: Qt.rgba(
         Math.min(1, _barPillBase.r + 0.045),
         Math.min(1, _barPillBase.g + 0.045),
         Math.min(1, _barPillBase.b + 0.045),
-        (arch ? 0.97 : 0.92) * interfaceOpacity)
+        (arch ? 0.93 : 0.88) * interfaceOpacity)
 
     // ── arch-слой «островов»: подложки в НЕЙТРАЛИ (тон обоев/окна ~#171A1B),
     //    чтобы бар читался единым тоном с системой, а не «стальным» тёмным.
