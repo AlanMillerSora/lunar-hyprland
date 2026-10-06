@@ -198,7 +198,12 @@ hl.monitor({ output = "desc:Xiaomi Corporation Mi monitor 5323110105491",
 -- hl.workspace_rule({ workspace = "1", monitor = "DP-1" })
 
 -- ──────────────────────────────────── Анимации ─────────────────────
--- Скруглённые "лунные" кривые для всего.
+-- Кривая 43PR: мягкий заход и плавное приземление без «пружины».
+hl.curve("easeOut", {
+  type = "bezier",
+  points = { { 0.05, 0.9 }, { 0.1, 1.0 } },
+})
+-- Скруглённые "лунные" кривые для остального.
 hl.curve("moon", {
   type = "bezier",
   points = { { 0.05, 0.7 }, { 0.1, 1.0 } },   -- плавный заход, мягкое приземление
@@ -210,13 +215,13 @@ hl.curve("eclipse", {
 
 -- Доска: фазы затмения заезжают поверх друг друга
 -- (стили попроще: slidefadediagonal/popin тяжелы для iGPU)
-hl.animation({ leaf = "workspaces",  enabled = true, speed = 5,  bezier = "eclipse", style = "slide" })
-hl.animation({ leaf = "windows",     enabled = true, speed = 7,  bezier = "moon" })
-hl.animation({ leaf = "windowsIn",   enabled = true, speed = 8,  bezier = "moon", style = "popin 93%" })
-hl.animation({ leaf = "windowsOut",  enabled = true, speed = 7,  bezier = "moon", style = "popin 93%" })
-hl.animation({ leaf = "fade",        enabled = true, speed = 8,  bezier = "moon" })
-hl.animation({ leaf = "fadeSwitch",  enabled = true, speed = 7,  bezier = "moon" })
-hl.animation({ leaf = "border",      enabled = true, speed = 7, bezier = "moon" })
+hl.animation({ leaf = "workspaces",  enabled = true, speed = 5,  bezier = "eclipse", style = "slidefade" })
+hl.animation({ leaf = "windows",     enabled = true, speed = 5,  bezier = "easeOut" })
+hl.animation({ leaf = "windowsIn",   enabled = true, speed = 5,  bezier = "easeOut", style = "popin 93%" })
+hl.animation({ leaf = "windowsOut",  enabled = true, speed = 5,  bezier = "easeOut", style = "popin 93%" })
+hl.animation({ leaf = "fade",        enabled = true, speed = 5,  bezier = "easeOut" })
+hl.animation({ leaf = "fadeSwitch",  enabled = true, speed = 5,  bezier = "easeOut" })
+hl.animation({ leaf = "border",      enabled = true, speed = 5,  bezier = "easeOut" })
 -- Плавное появление/уход слоёв (уведомления mako, попапы)
 hl.animation({ leaf = "layers",      enabled = true, speed = 6, bezier = "moon", style = "fade" })
 hl.animation({ leaf = "fadeLayers",  enabled = true, speed = 6, bezier = "moon" })

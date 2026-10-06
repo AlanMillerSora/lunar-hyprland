@@ -416,13 +416,15 @@ QtObject {
         readonly property int normal: Math.round(250 * scale)
         readonly property int large: Math.round(400 * scale)
         readonly property int extraLarge: Math.round(600 * scale)
-        // expressive: spatial (с перелётом) и effects (без)
+        // expressive: spatial (с перелётом) и effects (без).
+        // effects-длительности сверил с 43PR (их animFast/animMed/animSlow
+        // 120/220/380) — тот же мягкий заход, что и кривая easeOut в Hyprland.
         readonly property int fastSpatial: Math.round(250 * scale)
         readonly property int defaultSpatial: Math.round(350 * scale)
         readonly property int slowSpatial: Math.round(500 * scale)
         readonly property int fastEffects: Math.round(120 * scale)
-        readonly property int defaultEffects: Math.round(180 * scale)
-        readonly property int slowEffects: Math.round(260 * scale)
+        readonly property int defaultEffects: Math.round(220 * scale)
+        readonly property int slowEffects: Math.round(380 * scale)
         readonly property var standard: [0.2, 0, 0, 1, 1, 1]
         readonly property var emphasized: [0.05, 0, 0.1333, 0.06, 0.1667, 0.4, 0.2083, 0.82, 0.25, 1, 1, 1]
         readonly property var expressiveFastSpatial: [0.42, 1.67, 0.21, 0.9, 1, 1]
