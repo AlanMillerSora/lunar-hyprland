@@ -42,5 +42,6 @@ ShellRoot {
     LunarSidebar {}
     LunarSidebarRight {}
     LunarOsd {}
+    LunarScreenshotOsd {}
     LunarTray {}
 }

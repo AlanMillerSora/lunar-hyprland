@@ -7,6 +7,10 @@ import "widgets/shared"
 // ════════════════════════════════════════════════════════════════
 //  LunarPower — меню питания в стиле системы (Quickshell).
 //  Открывается по SUPER + ESC.  IPC: qs ipc call power toggle|open|close
+//  Вид подтянут к 43PR PowerMenu: крупные мягкие карточки-строки,
+//  плитка-иконка, бейдж горячей клавиши, акцентная подсветка наведения
+//  и подтверждения. Функциональность прежняя: спящий/гибернация/выход/
+//  перезагрузка/выключение, цифры 1–5, Esc, второе подтверждение.
 // ════════════════════════════════════════════════════════════════
 FloatingWindow {
     id: root
@@ -15,9 +19,9 @@ FloatingWindow {
     // фон даёт окно, скругление/блюр — правило Hyprland по заголовку
     color: Theme.surfacePanel
     visible: root.showing
-    implicitWidth: 440
+    implicitWidth: 480
     implicitHeight: col.implicitHeight + Theme.space5 + Theme.space4
-    minimumSize: Qt.size(360, 280)
+    minimumSize: Qt.size(400, 340)
 
     property bool showing: false
     onShowingChanged: Theme.setModal("power", showing)
@@ -44,11 +48,11 @@ FloatingWindow {
     }
 
     readonly property var actions: [
-        { icon: "󰛇", label: "Спящий режим", key: "1", cmd: "systemctl suspend", confirm: false },
-        { icon: "󰤄",  label: "Гибернация",   key: "2", cmd: "systemctl hibernate", confirm: true },
-        { icon: "󰿅",  label: "Выйти",        key: "3", cmd: "hyprctl dispatch 'hl.dsp.exit()'", confirm: true },
-        { icon: "󰓮",  label: "Перезагрузить", key: "4", cmd: "systemctl reboot", confirm: true },
-        { icon: "󰐥",   label: "Выключить",    key: "5", cmd: "systemctl poweroff", confirm: true }
+        { icon: "󰛇", label: "Спящий режим",  hint: "systemctl suspend",  key: "1", cmd: "systemctl suspend", confirm: false },
+        { icon: "󰤄",  label: "Гибернация",    hint: "systemctl hibernate", key: "2", cmd: "systemctl hibernate", confirm: true },
+        { icon: "󰿅",  label: "Выйти",         hint: "hyprctl exit",        key: "3", cmd: "hyprctl dispatch 'hl.dsp.exit()'", confirm: true },
+        { icon: "󰓮",  label: "Перезагрузить", hint: "systemctl reboot",    key: "4", cmd: "systemctl reboot", confirm: true },
+        { icon: "󰐥",   label: "Выключить",     hint: "systemctl poweroff",  key: "5", cmd: "systemctl poweroff", confirm: true }
     ]
 
     // гибернация недоступна без swap — прячем пункт (M69)
@@ -137,26 +141,51 @@ FloatingWindow {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
-            anchors.margins: 22
+            anchors.margins: Theme.cardPad
             spacing: Theme.space3
 
+            // ── шапка: заголовок + подпись + бейдж Esc ──
             RowLayout {
                 Layout.fillWidth: true
+                spacing: Theme.space3
 
-                Text {
-                    text: "POWER"
-                    color: Theme.text
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(Theme.fontPanelTitle)
-                    font.bold: true
-                    font.letterSpacing: 4
+                ColumnLayout {
+                    spacing: 1
+                    Text {
+                        text: "POWER"
+                        color: Theme.text
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(Theme.fontPanelTitle)
+                        font.bold: true
+                        font.letterSpacing: 4
+                    }
+                    Text {
+                        text: "ПИТАНИЕ · СИСТЕМА"
+                        color: Theme.textFaint
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontNano
+                        font.letterSpacing: 2
+                    }
                 }
+
                 Item { Layout.fillWidth: true }
-                Text {
-                    text: "ESC — закрыть"
-                    color: Theme.textFaint
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize(9)
+
+                Rectangle {
+                    Layout.preferredWidth: 50
+                    Layout.preferredHeight: 26
+                    radius: Theme.radiusS
+                    color: Theme.fill
+                    border.width: 1
+                    border.color: Theme.border
+                    Text {
+                        anchors.centerIn: parent
+                        text: "ESC"
+                        color: Theme.textFaint
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontNano
+                        font.bold: true
+                        font.letterSpacing: 1
+                    }
                 }
             }
 
@@ -166,30 +195,67 @@ FloatingWindow {
                 color: Theme.border
             }
 
-            Text {
+            // ── баннер подтверждения/ошибки ──
+            Rectangle {
                 Layout.fillWidth: true
                 visible: root.status !== ""
-                text: root.status
-                color: Theme.danger
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize(10)
-                wrapMode: Text.WordWrap
+                implicitHeight: statusText.implicitHeight + Theme.space2 * 2
+                radius: Theme.radiusS
+                color: Theme.alpha(Theme.danger, 0.10)
+                border.width: 1
+                border.color: Theme.alpha(Theme.danger, 0.35)
+
+                Text {
+                    id: statusText
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.margins: Theme.space2
+                    text: root.status
+                    color: Theme.danger
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSmall
+                    wrapMode: Text.WordWrap
+                }
             }
 
+            // ── крупные мягкие карточки действий ──
             Repeater {
                 model: root.actions
 
                 delegate: Rectangle {
+                    id: card
                     required property var modelData
                     required property int index
+                    readonly property bool pending: root.pendingIndex === index
+                    readonly property bool hovered: cardMouse.containsMouse
 
                     visible: !(modelData.key === "2" && !root.canHibernate)
                     Layout.fillWidth: true
-                    height: Theme.rowHComfy
-                    radius: Theme.radius
-                    color: root.pendingIndex === index
-                        ? Theme.alpha(Theme.danger, 0.12)
-                        : (rowMouse.containsMouse ? Theme.hoverStrong : "transparent")
+                    height: 66
+                    radius: Theme.radiusM
+                    color: card.pending ? Theme.alpha(Theme.danger, 0.14)
+                         : card.hovered ? Theme.hoverStrong
+                         : Theme.fill
+                    border.width: (card.pending || card.hovered) ? 1 : 0
+                    border.color: card.pending ? Theme.alpha(Theme.danger, 0.6)
+                                               : Theme.activeBorder
+
+                    Behavior on color { ColorAnimation { duration: Theme.animFast } }
+                    Behavior on border.color { ColorAnimation { duration: Theme.animFast } }
+
+                    // акцентная риска слева — наведение/подтверждение
+                    Rectangle {
+                        width: 3
+                        height: parent.height - 24
+                        radius: Theme.radiusHair
+                        anchors.left: parent.left
+                        anchors.leftMargin: 3
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: card.pending ? Theme.danger : Theme.accent
+                        opacity: card.pending ? 1 : (card.hovered ? 0.9 : 0)
+                        Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
+                    }
 
                     RowLayout {
                         anchors.fill: parent
@@ -197,38 +263,88 @@ FloatingWindow {
                         anchors.rightMargin: Theme.space4
                         spacing: Theme.space3
 
-                        Text {
-                            text: modelData.icon
-                            color: Theme.accent
-                            font.family: Theme.iconFont
-                            font.pixelSize: Theme.fontSize(18)
+                        // плитка-иконка
+                        Rectangle {
+                            Layout.preferredWidth: 40
+                            Layout.preferredHeight: 40
+                            radius: Theme.radiusTile
+                            color: card.pending ? Theme.alpha(Theme.danger, 0.14)
+                                                : Theme.alpha(Theme.accent, 0.10)
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: card.modelData.icon
+                                color: card.pending ? Theme.danger : Theme.accent
+                                font.family: Theme.iconFont
+                                font.pixelSize: Theme.fontSize(19)
+                            }
                         }
 
-                        Text {
-                            text: modelData.label
-                            color: Theme.text
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(13)
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 1
+
+                            Text {
+                                Layout.fillWidth: true
+                                text: card.modelData.label
+                                color: Theme.text
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontBody
+                                font.bold: card.pending || card.hovered
+                                elide: Text.ElideRight
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                text: card.pending
+                                    ? "нажмите ещё раз — подтвердить"
+                                    : card.modelData.hint
+                                color: card.pending ? Theme.danger : Theme.textFaint
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontNano
+                                elide: Text.ElideRight
+                            }
                         }
 
-                        Item { Layout.fillWidth: true }
+                        // бейдж горячей клавиши
+                        Rectangle {
+                            Layout.preferredWidth: 26
+                            Layout.preferredHeight: 26
+                            radius: Theme.radiusS
+                            color: Theme.alpha(Theme.text, 0.07)
+                            border.width: 1
+                            border.color: card.pending ? Theme.alpha(Theme.danger, 0.5)
+                                                       : Theme.border
 
-                        Text {
-                            text: modelData.key
-                            color: root.pendingIndex === index ? Theme.danger : Theme.textFaint
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(11)
+                            Text {
+                                anchors.centerIn: parent
+                                text: card.modelData.key
+                                color: card.pending ? Theme.danger : Theme.textDim
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSmall
+                                font.bold: true
+                            }
                         }
                     }
 
                     MouseArea {
-                        id: rowMouse
+                        id: cardMouse
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: root.runAt(index)
+                        onClicked: root.runAt(card.index)
                     }
                 }
+            }
+
+            // ── подвал: подсказка по клавишам ──
+            Text {
+                Layout.fillWidth: true
+                Layout.topMargin: 2
+                text: "1–5 — выбор · клик — выполнить"
+                color: Theme.textFaint
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontNano
+                horizontalAlignment: Text.AlignHCenter
             }
         }
     }

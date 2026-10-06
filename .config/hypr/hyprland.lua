@@ -390,11 +390,13 @@ hl.bind(M .. " + S", dsp.workspace.toggle_special("scratchpad"))
 hl.bind(M .. " + SHIFT + S", dsp.window.move({ workspace = "special:scratchpad" }))
 
 -- скриншоты / перезагрузка / меню питания
--- отмена slurp (Esc) даёт пустой вывод — тогда ничего не снимаем
-hl.bind("PRINT",           dsp.exec_cmd("sh -c 'g=$(slurp) || exit 0; [ -n \"$g\" ] || exit 0; grim -g \"$g\" - | wl-copy'"))
-hl.bind(M .. " + PRINT",   dsp.exec_cmd("grim - | wl-copy"))                    -- весь экран в буфер
-hl.bind(M .. " + SHIFT + PRINT", dsp.exec_cmd("sh -c 'mkdir -p $HOME/Pictures/Screenshots && grim $HOME/Pictures/Screenshots/lunar-$(date +%Y%m%d-%H%M%S).png'"))  -- весь экран в файл
-hl.bind(M .. " + ALT + PRINT", dsp.exec_cmd("sh -c 'mkdir -p $HOME/Pictures/Screenshots && grim -g \"$(slurp)\" $HOME/Pictures/Screenshots/lunar-$(date +%Y%m%d-%H%M%S).png'"))  -- область в файл
+-- отмена slurp (Esc) даёт пустой вывод — тогда ничего не снимаем.
+-- после удачного снимка зову OSD подтверждения (qs ipc call screenshot):
+-- буферные снимки кладу во временный файл, чтобы показать превью.
+hl.bind("PRINT",           dsp.exec_cmd("sh -c 'g=$(slurp) || exit 0; [ -n \"$g\" ] || exit 0; f=/tmp/lunar-shot.png; grim -g \"$g\" \"$f\" && wl-copy < \"$f\" && qs ipc call screenshot notify \"$f\" copied'"))
+hl.bind(M .. " + PRINT",   dsp.exec_cmd("sh -c 'f=/tmp/lunar-shot.png; grim \"$f\" && wl-copy < \"$f\" && qs ipc call screenshot notify \"$f\" copied'"))  -- весь экран в буфер
+hl.bind(M .. " + SHIFT + PRINT", dsp.exec_cmd("sh -c 'mkdir -p $HOME/Pictures/Screenshots && f=$HOME/Pictures/Screenshots/lunar-$(date +%Y%m%d-%H%M%S).png && grim \"$f\" && qs ipc call screenshot notify \"$f\" saved'"))  -- весь экран в файл
+hl.bind(M .. " + ALT + PRINT", dsp.exec_cmd("sh -c 'mkdir -p $HOME/Pictures/Screenshots && f=$HOME/Pictures/Screenshots/lunar-$(date +%Y%m%d-%H%M%S).png && grim -g \"$(slurp)\" \"$f\" && qs ipc call screenshot notify \"$f\" saved'"))  -- область в файл
 hl.bind(M .. " + R",       dsp.exec_cmd("hyprctl reload"))
 hl.bind(M .. " + ESCAPE",  dsp.exec_cmd("qs ipc call power toggle"))     -- меню питания (Quickshell)
 
