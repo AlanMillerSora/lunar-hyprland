@@ -268,9 +268,9 @@ hl.layer_rule({ match = { namespace = "lunar-sidebar-right" }, blur = true, igno
 -- их как fullscreen-слои, и Hyprland блюрит весь слой, даже когда он пуст —
 -- GPU уходил с ~20% до ~54%. Стекло у оверлеев — только прозрачность и рамки.
 -- Плеер — обычное окно (Quickshell FloatingWindow): плавающее, по центру.
--- Стиль «text» как у 43PR: прямые углы и плотный фон, поэтому без скругления
--- и без полупрозрачности (стекло тут лишнее, панели-боксы рисует сам плеер).
-hl.window_rule({ match = { title = "^(Lunar Player)$" }, float = true, center = true, rounding = 0, opacity = "1.0 override 1.0 override" })
+-- Прямые углы под стиль «text», но стекло оставляю: окно полупрозрачное,
+-- панели-боксы рисует сам плеер.
+hl.window_rule({ match = { title = "^(Lunar Player)$" }, float = true, center = true, rounding = 0, opacity = "0.95 override 0.95 override" })
 
 -- Крупные модалки — обычные окна (Quickshell FloatingWindow): их можно
 -- тянуть и ресайзить, блюр им даёт прозрачность окна. Заголовки ставлю в QML.

@@ -17,7 +17,7 @@ FloatingWindow {
     id: root
 
     title: "Lunar Player"
-    color: Theme.bgSolid               // плотный фон: стиль «text» — без стекла
+    color: Theme.surfacePanel          // полупрозрачный фон — его и блюрит Hyprland
     visible: Theme.playerOpen
     minimumSize: Qt.size(720, 520)
 

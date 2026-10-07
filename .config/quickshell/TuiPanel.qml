@@ -16,7 +16,7 @@ Item {
     Rectangle {
         id: frame
         anchors.fill: parent
-        color: Theme.bgSolid
+        color: Theme.bg
         border.width: 1
         border.color: Theme.border
     }
@@ -28,7 +28,7 @@ Item {
         width: labelText.implicitWidth + 8
         height: labelText.implicitHeight
         visible: root.label !== ""
-        color: Theme.bgSolid
+        color: Theme.bg
         z: 2
     }
     Text {
