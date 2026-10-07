@@ -2,9 +2,9 @@ import QtQuick
 import QtQuick.Layouts
 
 // ════════════════════════════════════════════════════════════════
-//  PlayerQueue — страница «ОЧЕРЕДЬ»: список PlayerCore.queue.
+//  PlayerQueue — страница «ОЧЕРЕДЬ»: плотная таблица PlayerCore.queue.
 //  Клик — прыжок к треку, крестик — удалить, текущий подсвечен.
-//  Тяну строку — переставляю порядок очереди через mpv playlist-move.
+//  Тяну строку — переставляю порядок (mpv playlist-move).
 // ════════════════════════════════════════════════════════════════
 Item {
     id: root
@@ -13,13 +13,14 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 10
+        spacing: 8
 
         RowLayout {
             Layout.fillWidth: true
             spacing: Theme.space2
 
             PlayerHeader { text: "ОЧЕРЕДЬ" }
+
             Text {
                 Layout.fillWidth: true
                 text: PlayerCore.queue && PlayerCore.queue.length > 0
@@ -44,18 +45,15 @@ Item {
             model: PlayerCore.queue
             emptyText: "очередь пуста"
             highlightIndex: PlayerCore.queueIndex
-
-            // порядок очереди можно менять перетаскиванием
+            numbered: true
             reorderable: true
 
             titleFor: function(item, index) {
-                var n = (index + 1 < 10 ? " " : "") + (index + 1)
-                return n + "  " + (item && item.title ? item.title : "трек " + (index + 1))
+                return item && item.title ? item.title : "трек " + (index + 1)
             }
-            subtitleFor: function(item, index) {
-                if (!item) return ""
-                var d = item.duration > 0 ? PlayerCore.fmt(item.duration) : ""
-                return d
+            subtitleFor: function(item, index) { return "" }
+            rightTextFor: function(item, index) {
+                return item && item.duration > 0 ? PlayerCore.fmt(item.duration) : ""
             }
             rightIconFor: function(item, index) { return "󰅖" }
 

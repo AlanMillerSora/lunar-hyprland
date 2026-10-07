@@ -17,7 +17,7 @@ FloatingWindow {
     id: root
 
     title: "Lunar Player"
-    color: Theme.bg                    // плотный фон: стиль «text» — без стекла
+    color: Theme.bgSolid               // плотный фон: стиль «text» — без стекла
     visible: Theme.playerOpen
     minimumSize: Qt.size(720, 520)
 
@@ -98,14 +98,15 @@ FloatingWindow {
 
     readonly property int pageIndex: Theme.playerPage
 
-    // уход со страницы ПОИСК (индекс 2) возвращает фокус окну: иначе строка
+    // уход со страницы ПОИСК (индекс 1) возвращает фокус окну: иначе строка
     // поиска съедала бы Space/стрелки/N/P — плеер перестал бы их слушать
-    onPageIndexChanged: if (pageIndex !== 2) keyRoot.forceActiveFocus()
+    onPageIndexChanged: if (pageIndex !== 1) keyRoot.forceActiveFocus()
 
+    // «Сейчас играет» переехало в правую колонку (Sidebar), поэтому
+    // центральная таблица показывает только списки
     property var pages: [
-        { name: "СЕЙЧАС",   icon: "󰎇", source: "PlayerNowPlaying.qml" },
-        { name: "ОЧЕРЕДЬ",  icon: "󰉹", source: "PlayerQueue.qml" },
-        { name: "ПОИСК",    icon: "󰍉", source: "PlayerSearch.qml" },
+        { name: "ОЧЕРЕДЬ",   icon: "󰉹", source: "PlayerQueue.qml" },
+        { name: "ПОИСК",     icon: "󰍉", source: "PlayerSearch.qml" },
         { name: "ЛОКАЛЬНЫЕ", icon: "󰉋", source: "PlayerLibrary.qml" }
     ]
 
@@ -362,19 +363,29 @@ FloatingWindow {
                         }
                     }
                 }
+
+                // ── правая колонка: панель-бокс «Sidebar» ──
+                TuiPanel {
+                    label: "Sidebar"
+                    Layout.preferredWidth: 300
+                    Layout.fillHeight: true
+
+                    PlayerSidebar {
+                        anchors.fill: parent
+                        active: root.visible
+                    }
+                }
             }
 
             // ── нижняя панель-бокс «Playing» ──
             TuiPanel {
                 label: "Playing"
                 Layout.fillWidth: true
-                Layout.preferredHeight: 96
+                Layout.preferredHeight: 110
 
                 PlayerBar {
                     anchors.fill: parent
                     active: root.visible
-                    showProgress: root.pageIndex !== 0
-                    onExpandRequested: root.goto(0)
                 }
             }
         }

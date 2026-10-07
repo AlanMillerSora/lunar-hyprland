@@ -2,9 +2,9 @@ import QtQuick
 import QtQuick.Layouts
 
 // ════════════════════════════════════════════════════════════════
-//  PlayerSearch — страница «ПОИСК»: строка ввода + кнопка, Enter
-//  запускает PlayerCore.search. Результаты — PlayerList; клик играет
-//  (playUrls), «+» кладёт в очередь (enqueue).
+//  PlayerSearch — страница «ПОИСК»: prompt-строка + кнопка, Enter
+//  запускает PlayerCore.search. Результаты — таблица PlayerList;
+//  клик играет (playUrls), «+» кладёт в очередь (enqueue).
 // ════════════════════════════════════════════════════════════════
 Item {
     id: root
@@ -22,7 +22,7 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 10
+        spacing: 8
 
         PlayerHeader { text: "ПОИСК" }
 
@@ -32,8 +32,8 @@ Item {
 
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 38
-                radius: Theme.radius
+                Layout.preferredHeight: 36
+                radius: 0
                 color: Theme.bgCard
                 border.width: 1
                 border.color: searchInput.activeFocus ? Theme.borderAccent : Theme.border
@@ -64,6 +64,7 @@ Item {
 
                     Text {
                         anchors.fill: parent
+                        anchors.leftMargin: 0
                         verticalAlignment: Text.AlignVCenter
                         text: "что искать? (Enter)"
                         color: Theme.textFaint
@@ -85,8 +86,8 @@ Item {
 
             Rectangle {
                 Layout.preferredWidth: 104
-                Layout.preferredHeight: 38
-                radius: Theme.radius
+                Layout.preferredHeight: 36
+                radius: 0
                 color: searchMouse.containsMouse ? Theme.hoverStrong : Theme.bgCard
                 border.width: 1
                 border.color: Theme.border
@@ -121,13 +122,11 @@ Item {
             }
         }
 
-        // статус: поиск / ошибка (только поисковая — ошибки загрузки видно на «Сейчас»)
+        // статус: поиск / ошибка
         Text {
             Layout.fillWidth: true
             visible: PlayerCore.searching || PlayerCore.searchError.length > 0
-            text: PlayerCore.searching
-                ? "поиск…"
-                : PlayerCore.searchError
+            text: PlayerCore.searching ? "поиск…" : PlayerCore.searchError
             color: PlayerCore.searchError.length > 0 ? Theme.danger : Theme.textFaint
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSize(10)
@@ -149,15 +148,16 @@ Item {
                 ? "ищу…"
                 : "введи запрос и нажми Enter"
             showRight: true
+            numbered: true
 
             titleFor: function(item, index) {
                 return item && item.title ? item.title : "без названия"
             }
             subtitleFor: function(item, index) {
-                if (!item) return ""
-                var up = item.uploader || ""
-                var d = item.duration > 0 ? PlayerCore.fmt(item.duration) : ""
-                return (up + (up.length > 0 && d.length > 0 ? "  ·  " : "") + d)
+                return item && item.uploader ? item.uploader : ""
+            }
+            rightTextFor: function(item, index) {
+                return item && item.duration > 0 ? PlayerCore.fmt(item.duration) : ""
             }
             rightIconFor: function(item, index) { return "󰐕" }
 

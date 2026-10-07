@@ -4,7 +4,7 @@ import QtQuick.Layouts
 
 // ════════════════════════════════════════════════════════════════
 //  PlayerLibrary — страница «ЛОКАЛЬНЫЕ»: кнопка обновления фонотеки
-//  (PlayerCore.scanLibrary) и список PlayerCore.library. Клик играет
+//  (PlayerCore.scanLibrary) и таблица PlayerCore.library. Клик играет
 //  файл по пути. Пусто — подсказка про «обновить».
 // ════════════════════════════════════════════════════════════════
 Item {
@@ -26,7 +26,7 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 10
+        spacing: 8
 
         RowLayout {
             Layout.fillWidth: true
@@ -47,9 +47,9 @@ Item {
             }
 
             Rectangle {
-                Layout.preferredWidth: 120
-                Layout.preferredHeight: 34
-                radius: Theme.radius
+                Layout.preferredWidth: 116
+                Layout.preferredHeight: 32
+                radius: 0
                 color: PlayerCore.libraryBusy
                     ? Theme.fill
                     : (rescanMouse.containsMouse ? Theme.hoverStrong : Theme.bgCard)
@@ -101,6 +101,7 @@ Item {
             model: PlayerCore.library
             emptyText: "фонотека пуста — нажми «ОБНОВИТЬ»\n(папка: " + root.scanDir + ")"
             showRight: false
+            numbered: true
 
             titleFor: function(item, index) {
                 return item && item.name ? item.name : "файл"

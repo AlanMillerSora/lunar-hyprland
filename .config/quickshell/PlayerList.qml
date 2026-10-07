@@ -1,13 +1,12 @@
 import QtQuick
 
 // ════════════════════════════════════════════════════════════════
-//  PlayerList — переиспользуемый прокручиваемый список строк для
-//  плеера (очередь / поиск / фонотека). Разметку строки задаёт
-//  вызывающий через функции-слоты titleFor/subtitleFor/rightIconFor;
-//  клики уходят сигналами activated/rightClicked. Текущий трек
-//  подсвечивается через highlightIndex. Появление строк — мягкое.
-//  При reorderable=true строки тащатся: за порогом 8px поднимаю
-//  выбранную и по отпусканию шлю reordered(from, to).
+//  PlayerList — плотная таблица строк плеера (очередь / поиск /
+//  фонотека). Колонки: номер [номер], название+подпись, длительность
+//  справа и иконка-действие. Разметку задаёт вызывающий функциями
+//  titleFor/subtitleFor/rightTextFor/rightIconFor; клики уходят
+//  сигналами activated/rightClicked. Текущий трек — highlightIndex.
+//  При reorderable=true строки тащатся (drag за порогом 8px).
 // ════════════════════════════════════════════════════════════════
 Item {
     id: root
@@ -16,6 +15,8 @@ Item {
     property string emptyText: "пусто"
     property int rowHeight: 46
     property int highlightIndex: -1
+    // показывать колонку с номером строки
+    property bool numbered: false
     property bool showRight: true
     // тащу строки за собой: включаю только там, где порядок имеет смысл
     property bool reorderable: false
@@ -30,6 +31,7 @@ Item {
     // слоты разметки: (item, index) → текст/иконка
     property var titleFor: function(item, index) { return "" }
     property var subtitleFor: function(item, index) { return "" }
+    property var rightTextFor: function(item, index) { return "" }
     property var rightIconFor: function(item, index) { return "" }
 
     signal activated(int index)
@@ -42,7 +44,7 @@ Item {
         anchors.fill: parent
         clip: true
         model: root.model
-        spacing: 3
+        spacing: 2
         boundsBehavior: Flickable.StopAtBounds
         cacheBuffer: 400
         maximumFlickVelocity: 2400
@@ -68,7 +70,6 @@ Item {
                 root.dragTarget = -1
             }
         }
-        // длина могла не измениться — ловлю и переподстановку модели
         Connections {
             target: root
             function onModelChanged() {
@@ -85,10 +86,9 @@ Item {
 
             width: list.width
             height: root.rowHeight
-            radius: Theme.radius
+            radius: 0
 
             readonly property bool current: index === root.highlightIndex
-            // строку поднял курсором — приподнимаю её над соседями
             readonly property bool lifting: root.dragActive && root.dragFrom === index
 
             color: lifting
@@ -98,26 +98,36 @@ Item {
             border.width: (current || lifting) ? 1 : 0
             border.color: Theme.activeBorder
 
-            // поднятая строка выше остальных и чуть крупнее — «взял в руку»
             z: lifting ? 2 : 0
-            scale: lifting ? 1.02 : 1.0
 
-            // мягкое появление новых строк (у переиспользованных делегатов
-            // Component.onCompleted повторно не срабатывает — не мигают)
             property bool appeared: false
             opacity: appeared ? 1 : 0
             Component.onCompleted: appeared = true
             Behavior on opacity { NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut } }
             Behavior on color { ColorAnimation { duration: Theme.animFast } }
-            Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easeOut } }
 
-            Column {
+            // ── номер строки ──
+            Text {
+                visible: root.numbered
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.left: parent.left
                 anchors.leftMargin: 12
-                anchors.right: rightHit.left
+                width: 24
+                text: row.current ? "▸" : (index + 1)
+                color: row.current ? Theme.accent : Theme.textFaint
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize(12)
+                font.bold: row.current
+            }
+
+            // ── название + подпись ──
+            Column {
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: parent.left
+                anchors.leftMargin: root.numbered ? 42 : 12
+                anchors.right: rightArea.left
                 anchors.rightMargin: 10
-                spacing: 3
+                spacing: 2
 
                 Text {
                     width: parent.width
@@ -132,7 +142,7 @@ Item {
                     width: parent.width
                     visible: text.length > 0
                     text: root.subtitleFor(modelData, index)
-                    color: Theme.textDim
+                    color: Theme.textFaint
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(10)
                     elide: Text.ElideRight
@@ -140,17 +150,33 @@ Item {
                 }
             }
 
-            // правый слот (крестик очереди, «+» поиска)
-            Text {
-                id: rightHit
+            // ── длительность + действие ──
+            Row {
+                id: rightArea
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: parent.right
                 anchors.rightMargin: 12
-                visible: root.showRight && root.rightIconFor(modelData, index) !== ""
-                text: root.rightIconFor(modelData, index)
-                color: rightMouse.containsMouse ? Theme.danger : Theme.textFaint
-                font.family: Theme.iconFont
-                font.pixelSize: Theme.fontSize(12)
+                spacing: 14
+
+                Text {
+                    id: rightHit
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: root.showRight && root.rightTextFor(modelData, index) !== ""
+                    text: root.rightTextFor(modelData, index)
+                    color: Theme.textDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(10)
+                }
+
+                Text {
+                    id: actionHit
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: root.showRight && root.rightIconFor(modelData, index) !== ""
+                    text: root.rightIconFor(modelData, index)
+                    color: rightMouse.containsMouse ? Theme.danger : Theme.textFaint
+                    font.family: Theme.iconFont
+                    font.pixelSize: Theme.fontSize(12)
+                }
             }
 
             // клик по строке — поверх мыши строки, но ниже правой кнопки.
@@ -158,15 +184,13 @@ Item {
             MouseArea {
                 id: rowMouse
                 anchors.fill: parent
-                anchors.rightMargin: rightHit.visible ? rightHit.width + 18 : 0
+                anchors.rightMargin: rightArea.width + 18
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
 
                 property real pressY: 0
 
                 onPressed: (mouse) => {
-                    // самолечение: если прошлый драг оборвался на пересборке
-                    // модели, состояние могло залипнуть — сбрасываю
                     root.dragActive = false
                     root.dragFrom = -1
                     root.dragTarget = -1
@@ -177,7 +201,6 @@ Item {
                 onPositionChanged: (mouse) => {
                     if (!root.reorderable)
                         return
-                    // порог: мелкое дрожание остаётся кликом
                     if (!root.dragActive && Math.abs(mouse.y - pressY) < 8)
                         return
                     if (!root.dragActive) {
@@ -186,8 +209,6 @@ Item {
                     }
                     if (root.dragFrom !== index)
                         return
-                    // цель считаю по курсору в содержимом списка: contentY уже
-                    // сдвинул делегат, а rowHeight + spacing задают шаг строки
                     var inList = list.mapFromItem(row, 0, mouse.y)
                     var contentY = list.contentY + inList.y
                     var step = root.rowHeight + list.spacing
@@ -202,7 +223,6 @@ Item {
                     root.dragActive = false
                     root.dragFrom = -1
                     root.dragTarget = -1
-                    // драг кончился — гашу грядущий clicked, это не активация
                     root.justDragged = true
                     if (to >= 0 && to !== index)
                         root.reordered(index, to)
@@ -219,10 +239,10 @@ Item {
 
             MouseArea {
                 id: rightMouse
-                anchors.centerIn: rightHit
-                width: Math.max(28, rightHit.width + 16)
+                anchors.centerIn: actionHit
+                width: Math.max(28, actionHit.width + 16)
                 height: 28
-                enabled: rightHit.visible
+                enabled: actionHit.visible
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: root.rightClicked(index)

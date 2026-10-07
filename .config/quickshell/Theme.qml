@@ -34,6 +34,8 @@ QtObject {
     readonly property color _bgHoverBase: hexColor(palette.bgHover, Qt.rgba(38 / 255, 43 / 255, 54 / 255, 1))
     readonly property color _barPillBase: hexColor(palette.barPill, Qt.rgba(15 / 255, 17 / 255, 22 / 255, 1))
     property color bg: Qt.rgba(_bgBase.r, _bgBase.g, _bgBase.b, 0.72 * interfaceOpacity)
+    // плотный фон без альфы — для «текстового» плеера: панели-боксы не стекло
+    property color bgSolid: Qt.rgba(_bgBase.r, _bgBase.g, _bgBase.b, 1)
     property color bgPanel: Qt.rgba(_bgPanelBase.r, _bgPanelBase.g, _bgPanelBase.b, 0.80 * interfaceOpacity)
     property color bgCard: Qt.rgba(_bgCardBase.r, _bgCardBase.g, _bgCardBase.b, 0.62 * interfaceOpacity)
 
