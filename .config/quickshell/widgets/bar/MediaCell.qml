@@ -28,6 +28,18 @@ Cell {
         ? host.player.trackArtUrl : ""
     readonly property int cavaBars: 32
 
+    // строку и её видимую ширину отдаю общему marquee-стейту (один тикер)
+    property Binding marqueeText: Binding {
+        target: Marquee
+        property: "text"
+        value: mediaInline.host.track
+    }
+    property Binding marqueeWidth: Binding {
+        target: Marquee
+        property: "maxW"
+        value: strip.titleCap
+    }
+
     // значение полосы кавы: 20 полос источника растягиваю на cavaBars
     function bandVal(i, n) {
         var src = mediaInline.host.barValues
@@ -133,16 +145,32 @@ Cell {
                 font.pixelSize: Theme.fontSize(13)
             }
 
-            // трек: до 2/3 полосы, дальше — многоточие
-            Text {
-                id: titleText
-                width: Math.min(implicitWidth, strip.titleCap)
+            // трек: не влезает — бегущая строка, влезает — статично.
+            // Ширину задаёт Marquee, движение — общий тикер (см. Marquee.qml).
+            Item {
+                id: titleClip
+                width: Marquee.animating ? strip.titleCap : titleText.implicitWidth
+                height: titleText.implicitHeight
                 anchors.verticalCenter: parent.verticalCenter
-                elide: Text.ElideRight
-                text: mediaInline.host.track
-                color: Theme.barText
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize(12)
+                clip: Marquee.animating
+
+                Text {
+                    id: titleText
+                    x: Marquee.animating ? Marquee.x : 0
+                    text: mediaInline.host.track
+                    color: Theme.barText
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(12)
+                }
+                // вторая копия — чтобы цикл шёл без пустого провала
+                Text {
+                    visible: Marquee.animating
+                    x: Marquee.x + Marquee.textW + Marquee.gap
+                    text: mediaInline.host.track
+                    color: Theme.barText
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(12)
+                }
             }
 
             // мини-кава: длинный ряд тонких столбиков
