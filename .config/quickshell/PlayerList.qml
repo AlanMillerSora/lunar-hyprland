@@ -108,19 +108,26 @@ Item {
             Behavior on opacity { NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut } }
             Behavior on color { ColorAnimation { duration: Theme.animFast } }
 
-            // ── ведущий глиф (вместо обложки) ──
-            Text {
+            // ── ведущая «обложка» (квадрат) ──
+            Rectangle {
                 id: leadingIcon
                 visible: root.iconFor(modelData, index) !== ""
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.left: parent.left
                 anchors.leftMargin: 12
-                width: 20
-                horizontalAlignment: Text.AlignHCenter
-                text: root.iconFor(modelData, index)
-                color: row.current ? Theme.accent : Theme.textFaint
-                font.family: Theme.iconFont
-                font.pixelSize: Theme.fontSize(13)
+                width: 28
+                height: 28
+                radius: 0
+                color: Theme.bgCard
+                border.width: 1
+                border.color: Theme.border
+                Text {
+                    anchors.centerIn: parent
+                    text: root.iconFor(modelData, index)
+                    color: row.current ? Theme.accent : Theme.textDim
+                    font.family: Theme.iconFont
+                    font.pixelSize: Theme.fontSize(13)
+                }
             }
 
             // ── номер строки ──
@@ -128,7 +135,7 @@ Item {
                 visible: root.numbered
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.left: parent.left
-                anchors.leftMargin: 12 + (leadingIcon.visible ? 24 : 0)
+                anchors.leftMargin: 12 + (leadingIcon.visible ? 36 : 0)
                 width: 24
                 text: row.current ? "▸" : (index + 1)
                 color: row.current ? Theme.accent : Theme.textFaint
@@ -141,7 +148,7 @@ Item {
             Column {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.left: parent.left
-                anchors.leftMargin: 12 + (leadingIcon.visible ? 24 : 0) + (root.numbered ? 30 : 0)
+                anchors.leftMargin: 12 + (leadingIcon.visible ? 36 : 0) + (root.numbered ? 30 : 0)
                 anchors.right: rightArea.left
                 anchors.rightMargin: 10
                 spacing: 2

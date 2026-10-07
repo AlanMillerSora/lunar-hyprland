@@ -181,6 +181,85 @@ Item {
             }
         }
 
+        // ── об артисте ──
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 1
+            color: Theme.border
+            visible: PlayerCore.artist.length > 0
+        }
+        Text {
+            Layout.fillWidth: true
+            visible: PlayerCore.artist.length > 0
+            text: "About the artist"
+            color: Theme.textDim
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSize(10)
+            font.bold: true
+        }
+        Row {
+            Layout.fillWidth: true
+            visible: PlayerCore.artist.length > 0
+            spacing: 10
+
+            Rectangle {
+                width: 44
+                height: 44
+                radius: 0
+                color: Theme.bgCard
+                border.width: 1
+                border.color: Theme.border
+                Text {
+                    anchors.centerIn: parent
+                    text: "󰀄"
+                    color: Theme.textFaint
+                    font.family: Theme.iconFont
+                    font.pixelSize: Theme.fontSize(18)
+                }
+            }
+            Column {
+                spacing: 3
+                Row {
+                    spacing: 4
+                    Text {
+                        text: PlayerCore.artist
+                        color: Theme.text
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(12)
+                        font.bold: true
+                    }
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "󰄲"
+                        color: Theme.textDim
+                        font.family: Theme.iconFont
+                        font.pixelSize: Theme.fontSize(10)
+                    }
+                }
+                Text {
+                    text: "Исполнитель"
+                    color: Theme.textFaint
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(10)
+                }
+                Rectangle {
+                    width: 66
+                    height: 24
+                    radius: 0
+                    color: "transparent"
+                    border.width: 1
+                    border.color: Theme.border
+                    Text {
+                        anchors.centerIn: parent
+                        text: "Follow"
+                        color: Theme.text
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize(10)
+                    }
+                }
+            }
+        }
+
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 1

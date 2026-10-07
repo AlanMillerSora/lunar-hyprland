@@ -3,20 +3,18 @@ import QtQuick
 import QtQuick.Layouts
 
 // ════════════════════════════════════════════════════════════════
-//  PlayerLibrary — страница «ЛОКАЛЬНЫЕ»: кнопка обновления фонотеки
-//  (PlayerCore.scanLibrary) и таблица PlayerCore.library. Клик играет
-//  файл по пути. Пусто — подсказка про «обновить».
+//  PlayerLibrary — левая панель Library: заголовок, пилюли-разделы,
+//  строка «Recents», список строк с квадратными «обложками». Контент —
+//  локальная фонотека (PlayerCore.library), клик играет файл.
 // ════════════════════════════════════════════════════════════════
 Item {
     id: root
 
     property bool pageActive: false
 
-    // зашёл на страницу с пустой фонотекой — сразу сканирую, не гоняю вручную
     onPageActiveChanged: if (pageActive && !PlayerCore.libraryBusy
                              && PlayerCore.library.length === 0) root.rescan()
 
-    // смотрю только ~/Music: по всему дому find слишком тяжёл
     property string scanDir: Quickshell.env("HOME") + "/Music"
 
     function rescan() {
@@ -28,63 +26,105 @@ Item {
         anchors.fill: parent
         spacing: 8
 
+        // ── заголовок ──
         RowLayout {
             Layout.fillWidth: true
             spacing: Theme.space2
 
-            PlayerHeader { text: "БИБЛИОТЕКА" }
-
+            Text {
+                text: "󰙅"
+                color: Theme.textDim
+                font.family: Theme.iconFont
+                font.pixelSize: Theme.fontSize(13)
+            }
             Text {
                 Layout.fillWidth: true
-                text: PlayerCore.libraryBusy
-                    ? "сканирую…"
-                    : (PlayerCore.library && PlayerCore.library.length > 0
-                        ? (PlayerCore.library.length + " файл(ов)") : "")
-                color: Theme.textFaint
+                text: "Your Library"
+                color: Theme.text
                 font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize(10)
-                elide: Text.ElideRight
+                font.pixelSize: Theme.fontSize(13)
+                font.bold: true
             }
+            Text {
+                text: "＋"
+                color: Theme.textDim
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize(14)
+            }
+            Text {
+                text: "󰩬"
+                color: Theme.textDim
+                font.family: Theme.iconFont
+                font.pixelSize: Theme.fontSize(12)
+            }
+        }
+
+        // ── пилюли-разделы ──
+        Row {
+            spacing: 6
 
             Rectangle {
-                Layout.preferredWidth: 116
-                Layout.preferredHeight: 32
+                width: 82
+                height: 26
                 radius: 0
-                color: PlayerCore.libraryBusy
-                    ? Theme.fill
-                    : (rescanMouse.containsMouse ? Theme.hoverStrong : Theme.bgCard)
+                color: Theme.active
+                border.width: 1
+                border.color: Theme.borderAccent
+                Text {
+                    anchors.centerIn: parent
+                    text: "Playlists"
+                    color: Theme.text
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(11)
+                }
+            }
+            Rectangle {
+                width: 74
+                height: 26
+                radius: 0
+                color: "transparent"
                 border.width: 1
                 border.color: Theme.border
-                opacity: PlayerCore.libraryBusy ? 0.6 : 1.0
-
-                Row {
+                Text {
                     anchors.centerIn: parent
-                    spacing: Theme.space2
-                    Text {
-                        text: "󰑐"
-                        color: PlayerCore.libraryBusy ? Theme.textFaint : Theme.accent
-                        font.family: Theme.iconFont
-                        font.pixelSize: Theme.fontSize(11)
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                    Text {
-                        text: "ОБНОВИТЬ"
-                        color: PlayerCore.libraryBusy ? Theme.textDim : Theme.text
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize(10)
-                        font.letterSpacing: 1
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
+                    text: "Albums"
+                    color: Theme.textDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(11)
                 }
+            }
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: "›"
+                color: Theme.textFaint
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize(14)
+            }
+        }
 
-                MouseArea {
-                    id: rescanMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    enabled: !PlayerCore.libraryBusy
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.rescan()
-                }
+        // ── поиск / недавние / сортировка ──
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Theme.space2
+
+            Text {
+                text: "󰍉"
+                color: Theme.textFaint
+                font.family: Theme.iconFont
+                font.pixelSize: Theme.fontSize(12)
+            }
+            Text {
+                Layout.fillWidth: true
+                text: "Recents"
+                color: Theme.textDim
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize(11)
+            }
+            Text {
+                text: "☰"
+                color: Theme.textFaint
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize(12)
             }
         }
 
@@ -94,27 +134,56 @@ Item {
             color: Theme.border
         }
 
-        PlayerList {
+        // ── список ──
+        Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            model: PlayerCore.library
-            emptyText: "фонотека пуста — нажми «ОБНОВИТЬ»\n(папка: " + root.scanDir + ")"
-            showRight: false
-            numbered: true
-
-            iconFor: function(item, index) { return "󰎇" }
-            titleFor: function(item, index) {
-                return item && item.name ? item.name : "файл"
+            RowLayout {
+                anchors { left: parent.left; top: parent.top; right: parent.right }
+                spacing: Theme.space2
+                Text {
+                    text: PlayerCore.libraryBusy ? "сканирую…"
+                        : (PlayerCore.library.length + " файл(ов)")
+                    color: Theme.textFaint
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(10)
+                    Layout.fillWidth: true
+                }
+                Text {
+                    text: "↻"
+                    color: rescanMouse.containsMouse ? Theme.accent : Theme.textDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(13)
+                    MouseArea {
+                        id: rescanMouse
+                        anchors.fill: parent
+                        anchors.margins: -6
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.rescan()
+                    }
+                }
             }
-            subtitleFor: function(item, index) {
-                return item && item.path ? item.path : ""
-            }
 
-            onActivated: (index) => {
-                var item = PlayerCore.library[index]
-                if (item && item.path)
-                    PlayerCore.playUrls([item.path])
+            PlayerList {
+                anchors { left: parent.left; right: parent.right; top: parent.top; bottom: parent.bottom }
+                anchors.topMargin: 26
+
+                model: PlayerCore.library
+                emptyText: "фонотека пуста — нажми ↻ сверху\n(папка: " + root.scanDir + ")"
+                showRight: false
+                iconFor: function(item, index) { return "󰎇" }
+                titleFor: function(item, index) {
+                    return item && item.name ? item.name : "файл"
+                }
+                subtitleFor: function(item, index) { return "Файл" }
+
+                onActivated: (index) => {
+                    var item = PlayerCore.library[index]
+                    if (item && item.path)
+                        PlayerCore.playUrls([item.path])
+                }
             }
         }
     }
