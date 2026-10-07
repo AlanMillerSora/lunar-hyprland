@@ -108,10 +108,17 @@ vaapi_works() {
   return $rc
 }
 
+# Метка цветового диапазона и матрицы. Без неё wf-recorder пишет yuvj420p с
+# флагом pc (full-range), хотя сэмплы уже сжаты в 16–235: плеер верит флагу,
+# не разворачивает уровни — и картинка выходит тусклее (белое 235 вместо 255).
+# Ограниченный диапазон + BT.709 — стандарт видео: плеер разворачивает 16–235
+# обратно в полный, и запись совпадает с экраном пиксель в пиксель.
+rec_color=(-p color_range=tv -p colorspace=bt709 -p color_primaries=bt709 -p color_trc=bt709)
+
 # Параметры VAAPI-энкодера: постоянное качество (QP) + потолок битрейта.
 vaapi_params() {  # vaapi_params <render-node>
   local p="-c h264_vaapi -d $1 -p rc_mode=CQP -p qp=$rec_qp"
-  p="$p -p maxrate=${rec_bitrate}M -p buffersize=$((rec_bitrate * 2))M"
+  p="$p -p maxrate=${rec_bitrate}M -p buffersize=$((rec_bitrate * 2))M ${rec_color[*]}"
   [ "$rec_fps" != auto ] && p="$p -r $rec_fps"
   echo "$p"
 }
@@ -119,7 +126,7 @@ vaapi_params() {  # vaapi_params <render-node>
 # Параметры софт-энкодера (fallback). CRF ≈ QP − 6.
 soft_params() {
   local crf=$((rec_qp - 6)); [ "$crf" -lt 0 ] && crf=0
-  local p="-c libx264 -p preset=veryfast -p crf=$crf"
+  local p="-c libx264 -p preset=veryfast -p crf=$crf ${rec_color[*]}"
   [ "$rec_fps" != auto ] && p="$p -r $rec_fps"
   echo "$p"
 }
