@@ -27,6 +27,20 @@ PanelWindow {
     }
 
     property bool showing: false
+
+    // не держу полноэкранную поверхность замапленной, пока меню трея закрыто
+    property bool _mapped: showing
+    visible: _mapped
+    Timer {
+        id: unmapTimer
+        interval: Theme.animSlow + 60
+        onTriggered: root._mapped = false
+    }
+    onShowingChanged: {
+        if (showing) { unmapTimer.stop(); _mapped = true }
+        else unmapTimer.restart()
+    }
+
     // потолок высоты списка (и карточки) — длинный трей прокручивается
     readonly property real listMax: 380
     readonly property var items: SystemTray.items.values

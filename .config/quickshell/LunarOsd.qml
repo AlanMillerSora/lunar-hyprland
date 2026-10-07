@@ -31,6 +31,16 @@ PanelWindow {
     readonly property bool muted: (sink && sink.audio) ? sink.audio.muted : false
 
     property bool showing: false
+
+    // не держу поверхность замапленной, когда OSD скрыт
+    property bool _mapped: showing
+    visible: _mapped
+    Timer {
+        id: unmapTimer
+        interval: Theme.animSlow + 60
+        onTriggered: root._mapped = false
+    }
+
     // первый замер после старта не показываем (иначе OSD всплывал бы при
     // запуске шелла). Праймим по времени, а не по первому значению, чтобы
     // не проглотить первое реальное изменение громкости.
@@ -52,7 +62,11 @@ PanelWindow {
     // плавное заполнение делений при показе и при изменении (как в «Памяти»)
     property real shownFrac: 0
     Behavior on shownFrac { NumberAnimation { duration: Theme.anim.normal; easing.type: Theme.easeOut } }
-    onShowingChanged: shownFrac = showing ? frac : 0
+    onShowingChanged: {
+        shownFrac = showing ? frac : 0
+        if (showing) { unmapTimer.stop(); _mapped = true }
+        else unmapTimer.restart()
+    }
     onFracChanged: if (showing) shownFrac = frac
     // значение в технических скобках: [ 42% ]
     readonly property string label: muted ? "[ mute ]" : (volume < 0 ? "[ -- ]" : "[ " + volume + "% ]")
