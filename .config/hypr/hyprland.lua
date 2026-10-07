@@ -259,6 +259,10 @@ hl.window_rule({ match = { class = "eclipse-calendar" },   float = true, center 
 hl.window_rule({ match = { class = "eclipse-cheatsheet" }, float = true, center = true, rounding = 12, border_size = 0 })
 hl.window_rule({ match = { class = "eclipse-askpass" },    float = true, center = true, rounding = 12, border_size = 0 })
 
+-- Плеер (GUI-приложение lunar-tui, Qt/PySide6): плавающее по центру —
+-- на месте удалённого Quickshell-плеера. Размер задаёт само окно (resize).
+hl.window_rule({ match = { class = "^(lunar-tui)$" }, float = true, center = true, rounding = 12, opacity = "0.96 override 0.96 override" })
+
 
 -- Quickshell: единая оболочка Lunar Eclipse (панель, лаунчер, sidebar, настройки, OSD)
 hl.layer_rule({ match = { namespace = "lunar-panel" },         blur = true, ignore_alpha = 0.25 })
@@ -267,10 +271,6 @@ hl.layer_rule({ match = { namespace = "lunar-sidebar-right" }, blur = true, igno
 -- ВАЖНО: полноэкранные оверлеи (Hub, попапы) блюрить нельзя. Quickshell держит
 -- их как fullscreen-слои, и Hyprland блюрит весь слой, даже когда он пуст —
 -- GPU уходил с ~20% до ~54%. Стекло у оверлеев — только прозрачность и рамки.
--- Плеер — обычное окно (Quickshell FloatingWindow): плавающее, по центру,
--- со скруглением и стеклом; панели-боксы рисует сам плеер.
-hl.window_rule({ match = { title = "^(Lunar Player)$" }, float = true, center = true, rounding = 12, opacity = "0.95 override 0.95 override" })
-
 -- Крупные модалки — обычные окна (Quickshell FloatingWindow): их можно
 -- тянуть и ресайзить, блюр им даёт прозрачность окна. Заголовки ставлю в QML.
 -- Радиус 12 (как системный): без обводки форму читает именно угол.
@@ -416,10 +416,10 @@ hl.bind("XF86AudioLowerVolume", dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SI
 hl.bind("XF86AudioMute",        dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"))
 hl.bind("XF86AudioMicMute",     dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"))
 
--- плеер: SUPER+M открывает/закрывает окно плеера (Quickshell),
--- а XF86-клавиши отдаю eclipse-media.sh — он сам выбирает, кем рулить
--- (наш mpv-демон, иначе то, что играет, иначе первый плеер).
-hl.bind(M .. " + M",             dsp.exec_cmd("qs ipc call player toggle"))
+-- плеер: SUPER+M открывает/фокусирует терминальный Lunar TUI
+-- (Quickshell-плеер удалён), а XF86-клавиши отдаю eclipse-media.sh —
+-- он сам выбирает, кем рулить (наш mpv, иначе то, что играет).
+hl.bind(M .. " + M",             dsp.exec_cmd("~/.config/hypr/scripts/lunar-tui"))
 hl.bind("XF86AudioPlay",         dsp.exec_cmd("~/.config/hypr/scripts/eclipse-media.sh play-pause"))
 hl.bind("XF86AudioNext",         dsp.exec_cmd("~/.config/hypr/scripts/eclipse-media.sh next"))
 hl.bind("XF86AudioPrev",         dsp.exec_cmd("~/.config/hypr/scripts/eclipse-media.sh previous"))

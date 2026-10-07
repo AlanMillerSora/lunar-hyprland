@@ -3,7 +3,7 @@
 #  eclipse-media.sh <play-pause|next|previous> — медиа-клавиши.
 #
 #  Кем управлять, решаю сам, по приоритету:
-#    1) mpv-демон плеера (lunar-player, playerctl --player=mpv*), если играет;
+#    1) наш mpv (Lunar TUI, playerctl --player=mpv*), если играет;
 #    2) иначе — тот, кто реально играет (Firefox, Spotify и т.п.);
 #    3) иначе — наш mpv, даже на паузе (чтобы вернуть его);
 #    4) иначе — просто первый плеер в списке.
@@ -26,7 +26,7 @@ players="$(playerctl --list-all 2>/dev/null || true)"
 # ничего не играет/не зарегистрировано — молча выходим (клавиша не должна шуметь)
 [ -n "$players" ] || exit 0
 
-# «наш» плеер: mpv-демон плеера (имя в playerctl начинается с mpv)
+# «наш» плеер: mpv Lunar TUI (имя в playerctl начинается с mpv)
 own="$(printf '%s\n' "$players" | grep -m1 '^mpv' || true)"
 
 # статус чужого плеера читаю построчно: первое «Playing» и есть текущий

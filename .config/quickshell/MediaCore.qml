@@ -132,7 +132,7 @@ QtObject {
 
     // Очередь у MPRIS недоступна: интерфейсы TrackList/Playlist в
     // Quickshell 0.3.1 не реализованы (свойство trackList у MprisPlayer
-    // отсутствует). Свой mpv-плеер отдаёт очередь через PlayerCore —
-    // поэтому в панели показываю не «ДАЛЕЕ», а вход в полный плеер.
+    // отсутствует). Поэтому в панели показываю не «ДАЛЕЕ», а вход в
+    // терминальный плеер (Lunar TUI).
     readonly property bool queueAvailable: false
 }

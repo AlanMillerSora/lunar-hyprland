@@ -26,7 +26,7 @@
 - **Hub** — лаунчер и настройки одним окном, которое ресайзится (`SUPER + G`): Launch, System, Devices, Network, Interface, Games, Dev, Update, Media.
 - **Палитра** — один источник цвета на шелл, kitty, GTK, qt6ct, mako, btop, yazi, fastfetch, bat и KDE-схему. Пресеты **LUNAR / STEEL / ФОТО**.
 - **Обои** — живая сцена затмения на Qt Quick (фаза = номер стола) или картинка с диска; подбор — веером по `SUPER + B`.
-- **Плеер** — свой mpv-демон и окно `Lunar Player`: очередь, поиск (yt-dlp), локальная музыка, винил и cava.
+- **Плеер** — свой `Lunar Player` (Qt/PySide6): очередь, поиск (yt-dlp), локальная музыка, настоящие обложки.
 - **Задачи** — перетаскиваемая панель `Lunar Tasks` по `SUPER + Z`: список дел с автосохранением в `~/.config/lunar/todo.json`.
 - **Агент** — OpenCode в оверлее по `SUPER + A`, действия только из белого списка.
 - **Шрифт** — Roboto Mono в интерфейсе, JetBrainsMono Nerd Font для иконок.
@@ -217,7 +217,7 @@ palette.toml + templates/*.in ──> eclipse-palette.py ──┬──> ~/.cac
 
 </div>
 
-**Lunar Player** (`SUPER + M`, IPC `player`, окно `LunarPlayer.qml`) — свой mpv-демон-сервис `lunar-player.service` (on-demand, сокет `%t/lunar-player.sock`, гасится, когда плеер закрыт, ничего не играет и очередь пуста). Прямой JSON-IPC через `PlayerCore.qml`: очередь, поиск через yt-dlp, локальная `~/Music`, обложки YouTube. Страницы **Сейчас / Очередь / Поиск / Локальные**, винил, cava (`cava-player.conf`) и «лунный seek».
+**Lunar Player** (`SUPER + M`, скрипт `hypr/scripts/lunar-tui`) — плеер в духе btop: панели `Nav / Library / Main / Sidebar / Playing` с подписями в рамках. Основной интерфейс — **Qt** (`lunar/tui/lunar_qt.py`, PySide6 + `QPainter`): настоящие обложки (миниатюры в списке, большая — в сайдбаре и полосе Playing), hover, плавный seek, перерисовка по событию (в покое CPU ~0), плавающее окно (класс `lunar-tui`). Бэкенд общий — `lunar/tui/lunar_tui.py`: `mpv` по JSON IPC (play/pause/seek/volume/shuffle, автопродолжение), поиск `yt-dlp`, локальная `~/Music`. Есть и GTK-версия (`lunar_gui.py`) и чисто терминальная (`lunar_tui.py`, curses) и окно-хост 1:1 (`lunar_tui_app.py`, GTK+VTE) — запасные варианты.
 
 <div align="center">
 
@@ -377,7 +377,7 @@ cd ~/rice
 
 Системные темы и сервисы — **SDDM**, **Plymouth**, **zapret** — ставятся только по явному флагу; без них установщик трогает лишь `~/.config` и системные мелочи. Зависимости ставит `get-deps.sh` (pacman + AUR через `yay`/`paru`; если их нет — поставит `yay-bin`). Списки пакетов — декларативные: официальные в `deps/packages.txt`, AUR в `deps/aur.txt`; скрипт только читает их, отдельного списка в коде нет. Править зависимости нужно **там** (одна точка правки). Точный пин версий на rolling-Arch невозможен, поэтому для справки есть `deps/snapshot.sh` — он пишет `deps/snapshot-<дата>.txt` с `pacman -Q` (имя+версия), это не пин. После установки — перелогин в Hyprland (или `hyprctl reload`). Сам `install.sh` — тонкий оркестратор: разбор флагов и счётчик шагов, а работа разложена по `install/dotfiles.sh` (пользовательское), `install/system.sh` (root) и `install/optional.sh` (SDDM/Plymouth/zapret).
 
-Повторный запуск безопасен: прежние конфиги складываются в `~/.config-backup-<дата>/` (последние 5), аватар переносится, палитра перегенерируется. Установщик также ставит user-юниты (`lunar-homepage`, `lunar-player`, `lunar-tgproxy`), системный `lunar-cpu-performance` (CPU всегда `performance`), настраивает Wi-Fi (**iwd** для ассоциации + **systemd-networkd** для IP; `EnableNetworkConfiguration=false`, powersave для `ath12k*` выключен), root-хелперы в `/usr/libexec/lunar/` (пакет `lunar-helpers`) и узкий sudoers `/etc/sudoers.d/lunar-agent`.
+Повторный запуск безопасен: прежние конфиги складываются в `~/.config-backup-<дата>/` (последние 5), аватар переносится, палитра перегенерируется. Установщик также ставит user-юниты (`lunar-homepage`, `lunar-tgproxy`), системный `lunar-cpu-performance` (CPU всегда `performance`), настраивает Wi-Fi (**iwd** для ассоциации + **systemd-networkd** для IP; `EnableNetworkConfiguration=false`, powersave для `ath12k*` выключен), root-хелперы в `/usr/libexec/lunar/` (пакет `lunar-helpers`) и узкий sudoers `/etc/sudoers.d/lunar-agent`.
 
 <div align="center">
 
@@ -536,7 +536,7 @@ lib32-nvidia-utils
 | **Hub** | `quickshell/LunarHub.qml` | Лаунчер + настройки: оверлей-карточка (~980×640, drag/snap/ресайз, персист): Launch, System, Devices, Network, Interface, Games, Dev, Update, Media |
 | **Sidebar** | `quickshell/LunarSidebar.qml` | Слева: api-limit (лимиты OpenCode Go), заметки |
 | **Sidebar R** | `quickshell/LunarSidebarRight.qml` | Справа: календарь, запись экрана |
-| **Плеер** | `quickshell/LunarPlayer.qml`, `PlayerCore.qml`, `Player*.qml` | mpv-IPC: очередь, поиск (yt-dlp), локальная музыка, винил, cava |
+| **Плеер** | `lunar/tui/lunar_qt.py`, `hypr/scripts/lunar-tui` | Qt (PySide6): обложки, mpv-IPC, поиск (yt-dlp), локальная музыка |
 | **Агент** | `quickshell/LunarAgent.qml`, `.config/opencode/agent/lunar.md` | Оверлей OpenCode с белым списком действий |
 | **Обзор** | `quickshell/LunarOverview.qml` | Девять столов с живыми миниатюрами, drag-and-drop окон |
 | **Буфер / питание / трей / OSD** | `LunarClipboard.qml`, `LunarPower.qml`, `LunarTray.qml`, `LunarOsd.qml` | cliphist, меню питания, трей, всплывающий OSD |
@@ -545,7 +545,7 @@ lib32-nvidia-utils
 | **Тема** | `quickshell/Theme.qml` | Токены ритма и палитра; движение `anim`; настройки интерфейса (`lunar-ui.json`) |
 | **Общий слой** | `quickshell/widgets/shared/` | Единые компоненты: `Card`, `SectionHeader`, `ActionTile`, `MetricRow`, `Toggle`, `MiniBar`, `Cell`, `HoverBg`, `Anim` |
 | **Скрипты** | `hypr/scripts/eclipse-*.{sh,py}` | Палитра, обновление, бэкап, запись, Game Mode, очистка, статус, аватар, запуск, календарь, шпаргалка, лимиты, Zapret, Vencord |
-| **Юниты** | `systemd/{user,system}/` | `lunar-quickshell`, `lunar-player`, `lunar-homepage`, `lunar-tgproxy`, `lunar-cpu-performance` |
+| **Юниты** | `systemd/{user,system}/` | `lunar-quickshell`, `lunar-homepage`, `lunar-tgproxy`, `lunar-cpu-performance` |
 
 <div align="center">
 
@@ -560,7 +560,7 @@ lib32-nvidia-utils
 | `SUPER + E` | Файлы (Thunar) |
 | `SUPER + V` | Буфер обмена (cliphist) |
 | `SUPER + B` | Подбор обоев: сцена по фазам / картинки с диска |
-| `SUPER + M` | Плеер (Lunar Player / mpv) |
+| `SUPER + M` | Терминальный плеер (Lunar TUI) |
 | `SUPER + Z` | Задачи (Lunar Tasks) |
 | `SUPER + A` | Агент OpenCode |
 | `SUPER + O` | Обзор столов |

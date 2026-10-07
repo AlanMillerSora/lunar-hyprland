@@ -73,6 +73,7 @@ gammastep
 python
 python-psutil
 python-gobject
+pyside6
 pciutils
 dmidecode
 pacman-contrib

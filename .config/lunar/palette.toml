@@ -74,3 +74,30 @@ barDim       = "#9aa8bd"
 barFaint     = "#6f7d93"
 barPill      = "#0e131c"
 cursor       = "#e0e7f2"
+
+
+# ── mono: палитра 43PR (чёрный фон, белый акцент) ───────────────
+#  Оригинальные цвета 43PR/dotfiles (themes/default.toml): чёрный фон,
+#  белая шкала текста, белый акцент, сине-серый hover, зелёный ok.
+[presets.mono]
+bg           = "#000000"
+bgPanel      = "#050505"
+bgCard       = "#0d0d0d"
+bgTrack      = "#161616"
+bgHover      = "#242832"
+text         = "#ffffff"
+textSoft     = "#e6eaf2"
+textDim      = "#c2c2c2"
+textMuted    = "#8b93a7"
+textFaint    = "#4a4a4a"
+accent       = "#ffffff"
+accent2      = "#ffffff"
+danger       = "#ff003c"
+ok           = "#00ff9c"
+border       = "#151515"
+borderAccent = "#2a2a2a"
+barText      = "#ffffff"
+barDim       = "#c2c2c2"
+barFaint     = "#8b93a7"
+barPill      = "#050505"
+cursor       = "#cccccc"

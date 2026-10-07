@@ -114,7 +114,7 @@ Item {
                 }
             }
 
-            // открыть полный плеер (LunarPlayer)
+            // открыть терминальный плеер (Lunar TUI)
             Text {
                 id: openBtn
                 anchors.verticalCenter: parent.verticalCenter

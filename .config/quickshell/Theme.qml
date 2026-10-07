@@ -8,7 +8,7 @@ QtObject {
 
     // ── палитра ──────────────────────────────────────────────
     // Цвета приходят из ~/.cache/lunar/palette.json (генератор
-    // eclipse-palette.py, пресеты lunar/steel/photo). Если файла нет —
+    // eclipse-palette.py, пресеты lunar/steel/mono/photo). Если файла нет —
     // работают прежние значения риса: шелл не зависит от генератора.
     property var palette: ({})
 
@@ -258,7 +258,7 @@ QtObject {
             runPalette("restore")
     }
 
-    // ручной пресет из Hub (lunar/steel/photo) — через ту же очередь,
+    // ручной пресет из Hub (lunar/steel/mono/photo) — через ту же очередь,
     // что и фото, чтобы прогоны не писали палитру одновременно
     function setPreset(name) {
         if (name !== "")
@@ -276,12 +276,6 @@ QtObject {
     property int blurPasses: 3
 
     // попап громкости убран — звук живёт в панели бара (инлайн) и в Hub.
-
-    // плеер: окно открыто и активная страница. Живёт в Theme, потому что
-    // оверлей разбит на две поверхности (подложка LunarPlayer + карточка
-    // LunarPlayerCard) и им нужен общий маленький стейт.
-    property bool playerOpen: false
-    property int playerPage: 0
 
     // Радиусы: мелкое — 12, среднее — 14, крупные поверхности (Hub, сайдбары) — 18.
     // classic смягчён (этап «форма»): мягкие крупные углы как у 43PR,

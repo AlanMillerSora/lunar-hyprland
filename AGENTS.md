@@ -146,7 +146,7 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
   Драйвер NVIDIA в Arch 615 — `nvidia-open` (`nvidia-open-dkms` — для нештатных ядер;
   проприетарного `nvidia-dkms` больше нет).
 - systemd-user: `lunar-quickshell` (+`lunar-quickshell-failure`),
-  `lunar-homepage`, `lunar-player`, `lunar-tgproxy`.
+  `lunar-homepage`, `lunar-tgproxy`.
   systemd system: `zapret.service`, `cronie.service`, `lunar-cpu-performance*.service`;
   `fwupd.service` (static).
 - Пакеты, которые **не трогать** (стоят, не удалять): `noto-fonts-cjk`, `qt5-wayland`,
@@ -190,7 +190,7 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 │   ├── quickshell/
 │   │   ├── shell.qml грузит: LunarWallpaper, LunarPanel, LunarHub, LunarWallpapers,
 │   │   │   LunarClipboard, LunarPower, LunarAgent, LunarOverview, LunarPolkit,
-│   │   │   LunarPlayer, LunarSidebar, LunarSidebarRight, LunarNotifications, LunarOsd, LunarTray
+│   │   │   LunarSidebar, LunarSidebarRight, LunarNotifications, LunarOsd, LunarTray
 │   │   ├── Lunar*.qml, LunarWallpaperScene.qml, preview.qml, Slider.qml, Theme.qml,
 │   │   │   AppModel.qml, HudCorners.qml, NotifModel.qml (синглтон: демон уведомлений)
 │   │   ├── widgets/shared/ (ActionButton, Cell, HoverBg, MiniBar — общий слой),
@@ -236,7 +236,8 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 
 - Палитра — из `~/.cache/lunar/palette.json` (пишет `eclipse-palette.py` из `lunar/palette.toml`).
   Пресеты: **lunar** (по умолчанию, холодный монохром), **steel** (серо-синий
-  с акцентом), **photo** (`--from-image`: цвет считается с обоев). В `Theme.qml` цвета
+  с акцентом), **mono** (чистый чёрно-бело-серый, мотив 43PR),
+  **photo** (`--from-image`: цвет считается с обоев). В `Theme.qml` цвета
   читаются через `hexColor()`: палитра пишет `#RRGGBBAA`, а Qt ждёт `#AARRGGBB`.
 - Палитра — **серая лестница** по образцу 43PR, а не «белое на чёрном»: поверхности
   `bg→bgPanel→bgCard→bgTrack→bgHover` поднимаются мягкими ступенями, текст
@@ -482,17 +483,21 @@ sudo mkinitcpio -P                                                 # сборк�
 
 ## 9. Lunar Player, окна, стекло и зерно (1.76–1.79)
 
-**Плеер.** `PlayerCore.qml` (синглтон) — прямой JSON IPC к mpv: юнит `lunar-player.service`
-(on-demand; `ExecStopPost` чистит сокет), поиск через `yt-dlp`, локальная `~/Music`, очередь,
-обложки YouTube. UI — окно `LunarPlayer.qml` (`FloatingWindow`, хоткей `SUPER+M`, IPC `player`):
-страницы СЕЙЧАС/ОЧЕРЕДЬ/ПОИСК/ЛОКАЛЬНЫЕ, винил, cava, «лунный seek»; вспомогательные —
-`PlayerNowPlaying/PlayerQueue/PlayerSearch/PlayerLibrary/PlayerList/PlayerBar.qml`, конфиг cava —
-`cava-player.conf`. Демон гашу, когда плеер закрыт, ничего не играет и очередь пуста
-(`maybeStopDaemon`). Грабли сокета — issue #1180 Quickshell (первый неудачный коннект навсегда):
-держу `test -S` → `LazyLoader` + пересоздание, иначе Socket «застревает». Ошибки
-`PeerClosed/ConnectionRefused` при остановке mpv — норма (юнит теперь сам убирает сокет).
+**Плеер — Lunar Player.** Quickshell-плеер удалён целиком: `LunarPlayer.qml`,
+`PlayerCore.qml`, `Player*.qml`, `TuiPanel.qml`, юнит `lunar-player.service` и
+`cava-player.conf` снесены, `Theme.playerOpen/playerPage` убраны, `SUPER+M` больше
+не `qs ipc call player`. Вместо него — `lunar/tui/`:
+- `lunar_qt.py` — **основной GUI на Qt (PySide6)**: тот же вид панелей, но настоящие
+  обложки, hover, плавности; перерисовка по событию (в покое CPU ~0); бэкенд из
+  `lunar_tui.py`. Зависимость — пакет `pyside6` (в `deps/packages.txt`);
+- `lunar_gui.py` — та же версия на GTK3 + Cairo (запасная);
+- `lunar_tui.py` — терминальная версия (curses) и общий бэкенд (`Mpv`/yt-dlp/локальные);
+- `lunar_tui_app.py` — окно-хост 1:1 (GTK + VTE), запасной вариант.
+Запуск — `hypr/scripts/lunar-tui` (открыть/фокус/закрыть окно класса `lunar-tui`);
+плавающее окно по центру (`window_rule class=lunar-tui`, float + center). Удалённый Quickshell-плеер можно вернуть из
+бэкапа при сносе или из истории git, если понадобится.
 
-**Оверлеи — обычные окна.** Буфер, питание, агент и плеер — `FloatingWindow`:
+**Оверлеи — обычные окна.** Буфер, питание и агент — `FloatingWindow`:
 Hyprland сам двигает/тянет за края/блюрит/скругляет (`window_rule` по заголовку «Lunar …»).
 Слоями остались панель, сайдбары, обзор столов и мелкие попапы (OSD/громкость/медиа/трей).
 Клик «мимо» окна не закрывает — закрытие Esc/хоткеем/IPC.

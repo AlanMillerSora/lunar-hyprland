@@ -38,7 +38,6 @@ ShellRoot {
     LunarAgent {}
     LunarOverview {}
     LunarPolkit {}
-    LunarPlayer {}
     Todo {}
     LunarSidebar {}
     LunarSidebarRight {}

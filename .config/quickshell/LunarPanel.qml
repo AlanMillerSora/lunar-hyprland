@@ -630,7 +630,8 @@ PanelWindow {
     Process { id: recordProc; running: false }
 
     function openPlayer() {
-        quitProc.command = ["qs", "ipc", "call", "player", "toggle"]
+        // полный плеер — терминальный Lunar TUI (Quickshell-плеер удалён)
+        quitProc.command = ["bash", "-lc", "exec \"$HOME/.config/hypr/scripts/lunar-tui\""]
         quitProc.running = true
     }
     Process { id: quitProc; running: false }

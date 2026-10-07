@@ -365,6 +365,7 @@ Item {
                         model: [
                             { id: "lunar", name: "LUNAR" },
                             { id: "steel", name: "STEEL" },
+                            { id: "mono",  name: "МОНО" },
                             { id: "photo", name: "ФОТО" }
                         ]
 
@@ -407,7 +408,7 @@ Item {
                 Text {
                     width: parent.width
                     text: Theme.palette.preset === "photo"
-                        ? "цвет взят с обоев · выбери LUNAR/STEEL, чтобы вернуть готовую палитру"
+                        ? "цвет взят с обоев · выбери LUNAR/STEEL/МОНО, чтобы вернуть готовую палитру"
                         : (Theme.palette.preset
                             ? "текущая: " + Theme.palette.preset
                               + " · цвета идут в шелл, kitty, GTK, qt6ct, mako, btop, yazi"
