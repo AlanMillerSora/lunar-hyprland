@@ -48,7 +48,7 @@ QtObject {
     property var items: []        // единый список для панели бара
     property var history: []      // история: свежие впереди
     property bool dnd: false
-    property int menuSize: 100    // масштаб оверлея, 60..200
+    property int menuSize: 125   // масштаб оверлея, 60..200
     property string pos: "tr"     // угол: tr | br | tl | bl
     property int maxHistory: 100
     property var expandedId: -1   // развёрнутое в панели бара
