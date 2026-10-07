@@ -29,6 +29,14 @@ PanelWindow {
     mask: Region { item: root.showing ? backdrop : null }
 
     property bool showing: false
+    // не держу полноэкранную поверхность замапленной, когда обзор скрыт
+    property bool _mapped: showing
+    visible: _mapped
+    Timer {
+        id: unmapTimer
+        interval: Theme.animSlow + 60
+        onTriggered: root._mapped = false
+    }
     property int cols: 3
     property int rows: 3
     property real gap: 12
@@ -60,8 +68,12 @@ PanelWindow {
 
     onShowingChanged: {
         if (showing) {
+            unmapTimer.stop()
+            _mapped = true
             Theme.activeOverlay = "overview"
             refreshGeo()
+        } else {
+            unmapTimer.restart()
         }
     }
     Connections {

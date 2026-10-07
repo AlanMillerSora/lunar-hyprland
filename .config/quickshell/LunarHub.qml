@@ -33,6 +33,17 @@ PanelWindow {
 
     property bool showing: false
 
+    // Не держу полноэкранную поверхность замапленной, когда Hub скрыт:
+    // иначе компоситор переливает лишний слой 3440×1440 каждый кадр
+    // (особенно заметно при смене столов). Задержка — на анимацию закрытия.
+    property bool _mapped: showing
+    visible: _mapped
+    Timer {
+        id: unmapTimer
+        interval: Theme.animSlow + 60
+        onTriggered: root._mapped = false
+    }
+
     // Обычный ресайз карточки идёт чистой ЛКМ и от этих биндов не зависит.
     // Хак ниже лишь оставляет SUPER+ЛКМ/ПКМ живыми для карточки: пока Hub
     // открыт, снимаю бинды окна, иначе Hyprland съедает событие. Клавиши не
@@ -47,10 +58,13 @@ PanelWindow {
     // (через Theme.activeOverlay, в одном процессе — плавно)
     onShowingChanged: {
         if (showing) {
+            unmapTimer.stop()
+            _mapped = true
             Theme.activeOverlay = "hub"
             Theme.setModal("hub", true)
             hubMouseOff.running = true
         } else {
+            unmapTimer.restart()
             Theme.setModal("hub", false)
             dragging = false
             hubMouseOn.running = true

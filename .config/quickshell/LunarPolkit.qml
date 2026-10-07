@@ -22,6 +22,18 @@ PanelWindow {
     WlrLayershell.namespace: "lunar-polkit"
 
     property bool showing: false
+    // не держу полноэкранную поверхность замапленной, когда диалог скрыт
+    property bool _mapped: showing
+    visible: _mapped
+    Timer {
+        id: unmapTimer
+        interval: Theme.animSlow + 60
+        onTriggered: root._mapped = false
+    }
+    onShowingChanged: {
+        if (showing) { unmapTimer.stop(); _mapped = true }
+        else unmapTimer.restart()
+    }
 
     PolkitAgent {
         id: polkit

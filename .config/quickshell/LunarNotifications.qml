@@ -30,6 +30,25 @@ PanelWindow {
 
     property bool panelOpen: false
 
+    // Держу поверхность замапленной только когда есть панель или всплывашки:
+    // без этого компоситор переливает пустой слой 3440×1440 каждый кадр.
+    property bool _mapped: panelOpen || NotifModel.count > 0
+    visible: _mapped
+    Timer {
+        id: unmapTimer
+        interval: Theme.animSlow + 60
+        onTriggered: root._mapped = false
+    }
+    function refreshMap() {
+        if (panelOpen || NotifModel.count > 0) { unmapTimer.stop(); _mapped = true }
+        else unmapTimer.restart()
+    }
+    onPanelOpenChanged: refreshMap()
+    Connections {
+        target: NotifModel
+        function onCountChanged() { root.refreshMap() }
+    }
+
     anchors { top: true; bottom: true; left: true; right: true }
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore

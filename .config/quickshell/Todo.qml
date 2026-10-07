@@ -31,6 +31,19 @@ PanelWindow {
 
     readonly property string statePath: Quickshell.env("HOME") + "/.config/quickshell/state/todo-state.json"
 
+    // не держу полноэкранную поверхность замапленной, когда меню Todo скрыто
+    property bool _mapped: showing
+    visible: _mapped
+    Timer {
+        id: unmapTimer
+        interval: Theme.animSlow + 60
+        onTriggered: root._mapped = false
+    }
+    onShowingChanged: {
+        if (showing) { unmapTimer.stop(); _mapped = true }
+        else unmapTimer.restart()
+    }
+
     anchors { top: true; bottom: true; left: true; right: true }
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore

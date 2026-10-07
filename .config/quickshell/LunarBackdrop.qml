@@ -27,6 +27,22 @@ PanelWindow {
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
     WlrLayershell.namespace: "lunar-backdrop"
 
+    // не держу полноэкранную поверхность замапленной, когда подложка не нужна
+    property bool _mapped: Theme.backdropOn
+    visible: _mapped
+    Timer {
+        id: unmapTimer
+        interval: Theme.animSlow + 60
+        onTriggered: root._mapped = false
+    }
+    Connections {
+        target: Theme
+        function onBackdropOnChanged() {
+            if (Theme.backdropOn) { unmapTimer.stop(); root._mapped = true }
+            else unmapTimer.restart()
+        }
+    }
+
     // пустая маска — ни одной кликабельной области, клики идут сквозь
     mask: Region {}
 
