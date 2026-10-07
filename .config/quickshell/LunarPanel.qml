@@ -417,9 +417,9 @@ PanelWindow {
         target: Theme
         function onTrayVisibleChanged() { root.refreshTray() }
     }
-    // маркер телеметрии держу всё время, пока жив бар: систем-остров
-    // показывает CPU/RAM/GPU, а eclipse-status.sh кэширует GPU-замер на
-    // 10 с — nvidia-smi в горячий путь (опрос раз в 3 с) не попадает
+    // маркер ~/.cache/lunar/tele бару больше не нужен (телеметрию ведёт
+    // lunar-statsd, GPU читает через NVML), но его читает eclipse-status.sh
+    // в контексте агента — держу, пока жив бар
     Component.onCompleted: { root.syncPos(); root.refreshTray(); root.setTeleMark(true) }
 
     Process { id: trayPanelProc; running: false }
@@ -486,6 +486,50 @@ PanelWindow {
     property string netKind: "off"      // eth | wifi | off
     property string kbLayout: "EN"
     property string kbDevice: ""
+
+    // раскладка — событийно из Hyprland (socket2 activelayout), без опроса.
+    // Иначе ярлык в баре ждал следующего тика статуса (до 3 с).
+    function layoutCode(name) {
+        var n = String(name || "").toLowerCase()
+        if (n.indexOf("russian") >= 0 || n === "ru") return "RU"
+        if (n.indexOf("english") >= 0 || n === "us" || n === "en") return "EN"
+        return String(name || "").substring(0, 2).toUpperCase()
+    }
+    Connections {
+        target: Hyprland
+        function onRawEvent(ev) {
+            if (ev.name !== "activelayout")
+                return
+            var data = String(ev.data)
+            var ci = data.indexOf(",")
+            if (ci > 0) {
+                root.kbDevice = data.substring(0, ci)
+                root.kbLayout = root.layoutCode(data.substring(ci + 1))
+            }
+        }
+    }
+    // начальная раскладка/устройство — один раз при старте (дальше события)
+    Process {
+        id: kbInit
+        running: true
+        command: ["hyprctl", "devices", "-j"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    var d = JSON.parse(text)
+                    var ks = d.keyboards || []
+                    var k = null
+                    for (var i = 0; i < ks.length; i++)
+                        if (ks[i].main) { k = ks[i]; break }
+                    if (!k && ks.length > 0) k = ks[0]
+                    if (k) {
+                        root.kbDevice = k.name
+                        root.kbLayout = root.layoutCode(k.active_keymap)
+                    }
+                } catch (e) { /* не JSON — оставляю дефолт */ }
+            }
+        }
+    }
     // DND и число активных уведомлений — из нашего демона (NotifModel),
     // а не из makoctl в eclipse-status.sh
     readonly property bool dnd: NotifModel.dnd
@@ -503,72 +547,79 @@ PanelWindow {
     readonly property int focusedPhase:
         (root.focusedWs && root.focusedWs.id > 0) ? root.focusedWs.id : 0
 
+    // ── телеметрия: C-сборщик lunar-statsd ─────────────────────
+    // Один долгоживущий процесс, читает /proc/hwmon/NVML напрямую без
+    // форков, печатает строку на тик (1 с). Раскладка сюда не входит —
+    // она приходит событиями Hyprland выше.
     Process {
-        id: statusProc
-        running: false
-        command: ["bash", "-c", "~/.config/hypr/scripts/eclipse-status.sh"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                var rxRaw = -1, txRaw = -1
-                var gotData = false
-                var parts = text.trim().split("\u001f")
-                for (var i = 0; i < parts.length; i++) {
-                    var kv = parts[i].split("=")
-                    if (kv.length !== 2)
-                        continue
-                    var k = kv[0], v = kv[1]
-                    if (k === "net") {
-                        // сигнал не показываем — только вид подключения
-                        root.netKind = v.indexOf("wifi:") === 0 ? "wifi" : v
-                    } else if (k === "kb") {
-                        root.kbLayout = v
-                    } else if (k === "kbdev") {
-                        root.kbDevice = v
-                    } else if (k === "gm") {
-                        root.gameMode = (v === "1")
-                    } else if (k === "pp") {
-                        root.cpuGovernor = v
-                    } else if (k === "rec") {
-                        root.recording = (v === "1")
-                    } else if (k === "cpu") {
-                        SysInfo.cpu = Math.round(parseFloat(v) || 0)
-                        gotData = true
-                    } else if (k === "ctemp") {
-                        SysInfo.cpuTemp = Math.round(parseFloat(v) || 0)
-                    } else if (k === "ram") {
-                        SysInfo.ram = Math.round(parseFloat(v) || 0)
-                        gotData = true
-                    } else if (k === "rtot") {
-                        SysInfo.ramTotal = parseInt(v) || 0
-                    } else if (k === "gpu") {
-                        // есть только в режиме телеметрии (иначе пусто)
-                        SysInfo.gpu = (v === "") ? -1 : (Math.round(parseFloat(v) || 0))
-                    } else if (k === "gput") {
-                        SysInfo.gpuTemp = (v === "") ? -1 : (Math.round(parseFloat(v) || 0))
-                    } else if (k === "rx") {
-                        rxRaw = parseFloat(v) || 0
-                    } else if (k === "tx") {
-                        txRaw = parseFloat(v) || 0
-                    }
-                }
-
-                // скорость сети: дельта сырых счётчиков (получаю их в одной
-                // строке статуса — отдельный опрос не нужен)
-                if (rxRaw >= 0)
-                    SysInfo.feedNet(rxRaw, txRaw, Date.now())
-                // историю пополняю только по валидному замеру — иначе битый
-                // статус забивал спарклайн «полками»
-                if (gotData)
-                    SysInfo.sample()
-            }
+        id: statsProc
+        command: ["bash", Quickshell.env("HOME") + "/.config/hypr/scripts/lunar-statsd.sh",
+                  "--interval", "1"]
+        running: true
+        stdout: SplitParser {
+            onRead: function(line) { if (line) root.consumeStatus(line) }
+        }
+        // демон упал/не собрался — поднимаю заново после паузы
+        onExited: (exitCode) => {
+            if (exitCode !== 0)
+                console.warn("lunar-statsd: выход с кодом " + exitCode)
+            statsRestart.restart()
         }
     }
-
     Timer {
-        interval: 3000
-        running: true
-        repeat: true
-        onTriggered: statusProc.running = true
+        id: statsRestart
+        interval: 2000
+        repeat: false
+        onTriggered: statsProc.running = true
+    }
+
+    // разбор одной строки статуса (ключи через 0x1f)
+    function consumeStatus(line) {
+        var rxRaw = -1, txRaw = -1
+        var gotData = false
+        var parts = String(line).trim().split("\u001f")
+        for (var i = 0; i < parts.length; i++) {
+            var kv = parts[i].split("=")
+            if (kv.length !== 2)
+                continue
+            var k = kv[0], v = kv[1]
+            if (k === "net") {
+                // сигнал не показываем — только вид подключения
+                root.netKind = v.indexOf("wifi:") === 0 ? "wifi" : v
+            } else if (k === "gm") {
+                root.gameMode = (v === "1")
+            } else if (k === "pp") {
+                root.cpuGovernor = v
+            } else if (k === "rec") {
+                root.recording = (v === "1")
+            } else if (k === "cpu") {
+                SysInfo.cpu = Math.round(parseFloat(v) || 0)
+                gotData = true
+            } else if (k === "ctemp") {
+                SysInfo.cpuTemp = Math.round(parseFloat(v) || 0)
+            } else if (k === "ram") {
+                SysInfo.ram = Math.round(parseFloat(v) || 0)
+                gotData = true
+            } else if (k === "rtot") {
+                SysInfo.ramTotal = parseInt(v) || 0
+            } else if (k === "gpu") {
+                SysInfo.gpu = (v === "") ? -1 : (Math.round(parseFloat(v) || 0))
+            } else if (k === "gput") {
+                SysInfo.gpuTemp = (v === "") ? -1 : (Math.round(parseFloat(v) || 0))
+            } else if (k === "rx") {
+                rxRaw = parseFloat(v) || 0
+            } else if (k === "tx") {
+                txRaw = parseFloat(v) || 0
+            }
+        }
+
+        // скорость сети: дельта сырых счётчиков (в одной строке с остальным)
+        if (rxRaw >= 0)
+            SysInfo.feedNet(rxRaw, txRaw, Date.now())
+        // историю пополняю только по валидному замеру — иначе битый
+        // статус забивал спарклайн «полками»
+        if (gotData)
+            SysInfo.sample()
     }
 
     // По отдельному Process на каждое действие: общий процесс затирал команду,
@@ -735,8 +786,8 @@ PanelWindow {
                 Launcher.open()
                 Qt.callLater(function() { if (searchPanel) searchPanel.focusInput() })
             }
-            if (BarState.mode !== "" && BarState.mode !== "search")
-                statusProc.running = true
+            // телеметрию больше не дёргаю при открытии: lunar-statsd и так
+            // обновляет её раз в секунду
             if (BarState.mode !== "search")
                 Launcher.reset()
         }

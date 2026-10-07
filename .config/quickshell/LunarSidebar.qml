@@ -679,7 +679,7 @@ PanelWindow {
         }
     }
 
-    // CPU/RAM берём из общего SysInfo (заполняет eclipse-status.sh) —
+    // CPU/RAM берём из общего SysInfo (заполняет lunar-statsd) —
     // вместо отдельного python3/psutil в каждом сайдбаре.
     Component.onCompleted: {
         notesFile.reload()

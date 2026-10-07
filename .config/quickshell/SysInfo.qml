@@ -3,7 +3,7 @@ import QtQuick
 
 // ════════════════════════════════════════════════════════════════
 //  SysInfo — телеметрия риса одним местом: CPU/RAM/GPU с температурой и
-//  скорость сети. Заполняет eclipse-status.sh (опрос ведёт LunarPanel),
+//  скорость сети. Заполняет lunar-statsd (читает LunarPanel, тик 1 с),
 //  читают бар, «Пульт» и «Телеметрия». Плюс история для спарклайнов.
 // ════════════════════════════════════════════════════════════════
 QtObject {
@@ -21,7 +21,8 @@ QtObject {
     readonly property bool hot: cpu >= 90 || ram >= 90 || gpu >= 90
 
     // история последних замеров — для спарклайнов
-    readonly property int histMax: 40
+    // 120 точек × 1 с = 2 мин, как было при 40 точках × 3 с
+    readonly property int histMax: 120
     property var cpuHist: []
     property var ramHist: []
     property var gpuHist: []
