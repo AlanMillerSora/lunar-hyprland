@@ -272,10 +272,11 @@ hl.layer_rule({ match = { namespace = "lunar-sidebar-right" }, blur = true, igno
 -- opacity<1), общий blur включён — отдельный слой тут больше не нужен.
 hl.window_rule({ match = { title = "^(Lunar Player)$" }, float = true, center = true, rounding = 12, opacity = "0.95 override 0.95 override" })
 
--- Крупные модалки — тоже обычные окна (Quickshell FloatingWindow): их можно
+-- Крупные модалки — обычные окна (Quickshell FloatingWindow): их можно
 -- тянуть и ресайзить, блюр им даёт прозрачность окна. Заголовки ставлю в QML.
 -- Радиус 12 (как системный): без обводки форму читает именно угол.
-hl.window_rule({ match = { title = "^(Lunar Hub)$" },       float = true, center = true, rounding = 12, opacity = "0.95 override 0.95 override" })
+-- Hub — исключение: теперь layer-оверлей PanelWindow (карточку тащу/ресайзю/
+-- снапаю сам, состояние помню), window_rule по «Lunar Hub» больше не нужен.
 hl.window_rule({ match = { title = "^(Lunar Wallpapers)$" }, float = true, center = true, rounding = 12, opacity = "0.95 override 0.95 override" })
 hl.window_rule({ match = { title = "^(Lunar Clipboard)$" }, float = true, center = true, rounding = 12, opacity = "0.95 override 0.95 override" })
 hl.window_rule({ match = { title = "^(Lunar Power)$" },     float = true, center = true, rounding = 12, opacity = "0.95 override 0.95 override" })

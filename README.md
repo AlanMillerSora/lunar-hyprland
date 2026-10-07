@@ -105,7 +105,7 @@
 
 </div>
 
-Hub (`SUPER + G`, `LunarHub.qml`) — лаунчер и настройки одним окном-`FloatingWindow` (1320×820, ресайзится, запоминает размер). Слева навигация, справа страница; снизу — единый поиск. Страницы:
+Hub (`SUPER + G`, `LunarHub.qml`) — лаунчер и настройки оверлей-карточкой (как `SettingsWindow` у 43PR): `PanelWindow` слоя Overlay с прозрачным фоном и `mask`, карточка ~980×640, которую тащу за верхний грип, ресайзю за края/углы и снапаю по позициям (центр/верх/низ/бок); геометрия (`snap,x,y,w,h`) переживает рестарт в `~/.config/lunar/hub-state.json`. Фон темнит `LunarBackdrop`. Слева навигация, справа страница; единый поиск — в панели бара. Страницы:
 
 | # | Страница | Что внутри |
 |---|---|---|
@@ -533,7 +533,7 @@ lib32-nvidia-utils
 | **Обои** | `quickshell/LunarWallpaper.qml`, `LunarWallpaperScene.qml` | Сцена затмения или картинка (Qt Quick): фаза по столу 1–9, звёзды, метеоры, пыль. Превью — `preview.qml` |
 | **Панель** | `quickshell/LunarPanel.qml`, `BarState.qml` | Одна плашка по содержимому (34px): марка + фазы, центр — медиа-линия/часы, справа — сеть, погода, Game Mode, PERF, систем-остров, трей, уведомления, звук. Состав ячеек — `bar.json` |
 | **Панели режимов** | `quickshell/panels/Panel*.qml` | Тела режимов: пульт (звук), медиа, поиск, уведомления, телеметрия, погода |
-| **Hub** | `quickshell/LunarHub.qml` | Лаунчер + настройки (1320×820, ресайзится): Launch, System, Devices, Network, Interface, Games, Dev, Update, Media |
+| **Hub** | `quickshell/LunarHub.qml` | Лаунчер + настройки: оверлей-карточка (~980×640, drag/snap/ресайз, персист): Launch, System, Devices, Network, Interface, Games, Dev, Update, Media |
 | **Sidebar** | `quickshell/LunarSidebar.qml` | Слева: api-limit (лимиты OpenCode Go), заметки |
 | **Sidebar R** | `quickshell/LunarSidebarRight.qml` | Справа: календарь, запись экрана |
 | **Плеер** | `quickshell/LunarPlayer.qml`, `PlayerCore.qml`, `Player*.qml` | mpv-IPC: очередь, поиск (yt-dlp), локальная музыка, винил, cava |

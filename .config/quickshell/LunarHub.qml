@@ -1,35 +1,39 @@
-
 import Quickshell
 import Quickshell.Io
+import Quickshell.Wayland
 import Quickshell.Services.Pipewire
 import QtQuick
 import "SettingsPages"
 import "widgets/shared"
 
 // ════════════════════════════════════════════════════════════════
-//  LunarHub — настройки/лаунчер обычным окном (FloatingWindow).
-//  Hyprland сам даёт тянуть за края, двигать, блюрит (окно
-//  полупрозрачное) и скругляет — правило в hyprland.lua по
-//  заголовку «Lunar Hub». Раньше был layer-оверлей с затемнением
-//  и закрытием по клику мимо; обычное окно честнее и не гоняет
-//  лишний блюр слоя. IPC: qs ipc call hub toggle|open|close|nav N
+//  LunarHub — настройки/лаунчер оверлей-карточкой (как у 43PR).
+//  Раньше был обычным FloatingWindow: Hyprland сам блюрил и тянул
+//  его за края. Теперь — PanelWindow слоя Overlay: прозрачный фон
+//  во весь экран + mask, а «окно» — карточка, которую тащу за
+//  верхний грип, ресайзю за края/углы и прилипаю по позициям
+//  (центр/верх/низ/бок). Геометрия (snap,x,y,w,h) переживает
+//  рестарт в ~/.config/lunar/hub-state.json. Фон темнит наша
+//  LunarBackdrop (слой Bottom) — Hub лишь пишет флаг в Theme.setModal.
+//  IPC: qs ipc call hub toggle|open|close|nav N  (0..8)
 // ════════════════════════════════════════════════════════════════
-FloatingWindow {
+PanelWindow {
     id: root
 
-    title: "Lunar Hub"
-    // arch: фон окна — тот же тон, что у плашки бара (palette.barPill):
-    // меняются обои → Hub меняет цвет вместе с баром. Окно и так блюрится
-    // и скругляется Hyprland'ом.
-    color: Theme.barPill
-    visible: root.showing
-    implicitWidth: 1320
-    implicitHeight: 820
-    minimumSize: Qt.size(820, 560)
+    anchors { top: true; left: true; right: true; bottom: true }
+    color: "transparent"
+    exclusionMode: ExclusionMode.Ignore
+    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.namespace: "lunar-hub"
+    // клавиатуру беру только пока открыт (по требованию) — поиск и Esc
+    WlrLayershell.keyboardFocus: root.showing ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+
+    // кликабельно только когда открыт; mask по подложке — модалка
+    mask: Region { item: root.showing ? backdrop : null }
 
     property bool showing: false
 
-    // агент и Hub взаимоисключающие: открылся Hub — гашу агента
+    // агент/плеер и Hub взаимоисключающие: открылся Hub — гашу их
     // (через Theme.activeOverlay, в одном процессе — плавно)
     onShowingChanged: {
         if (showing) {
@@ -37,6 +41,7 @@ FloatingWindow {
             Theme.setModal("hub", true)
         } else {
             Theme.setModal("hub", false)
+            dragging = false
         }
     }
     Connections {
@@ -46,11 +51,13 @@ FloatingWindow {
         }
     }
 
-    // окно закрыли извне (не через closePanel) — снимаю флаг подложки,
-    // иначе затемнение осталось бы висеть
-    onClosed: Theme.setModal("hub", false)
-
-    function openPanel() { showing = true }
+    function openPanel() {
+        showing = true
+        Qt.callLater(function() {
+            if (root.showing)
+                cardContent.forceActiveFocus()
+        })
+    }
     function closePanel() {
         showing = false
     }
@@ -64,6 +71,12 @@ FloatingWindow {
         function open(): void { root.openPanel() }
         function close(): void { root.closePanel() }
         function nav(idx: int): void { root.selectPage(idx) }
+        // снап — удобно дёргать из тестов/скриптов
+        function snapTop(): void { root.snapTop() }
+        function snapBottom(): void { root.snapBottom() }
+        function snapLeft(): void { root.snapLeft() }
+        function snapRight(): void { root.snapRight() }
+        function snapCenter(): void { root.snapCenter() }
     }
 
     // -------------------------
@@ -267,48 +280,255 @@ FloatingWindow {
 
     function activateResult() { root.activateIndex(root.resultIndex) }
 
-    // -------------------------
-    // Содержимое (бывшая карточка — поднял её прямо в окно)
-    // -------------------------
-    Item {
-        anchors.fill: parent
-        focus: true
+    // ════════════════════════════════════════════════════════════════
+    //  Карточка: геометрия, drag, snap, ресайз, персист
+    //  (механика — по образцу SettingsWindow у 43PR, переписана под рис)
+    // ════════════════════════════════════════════════════════════════
+    property real cardMargin: 40
+    property real dragMargin: 8
+    property bool dragging: false
+    property int minCardW: 760
+    property int minCardH: 500
 
-        // клавиатура обычного окна: Esc закрывает
+    property real cardHeightCenter: root.height > 0
+        ? Math.min(640, root.height - cardMargin * 2) : 640
+    property real cardHeightSnapped: cardHeightCenter * 0.6
+    property real cardHeight: 640
+    property real cardY: root.height > 0 ? (root.height - cardHeight) / 2 : 0
+
+    property real cardWidthCenter: root.width > 0
+        ? Math.min(980, root.width - cardMargin * 2) : 980
+    property real cardWidthSnapped: cardWidthCenter * 0.85
+    property real cardHeightSideSnapped: cardHeightCenter * 1.4
+    property real cardWidth: 980
+    property real cardX: root.width > 0 ? (root.width - cardWidth) / 2 : 0
+
+    property string snapPosition: "center"
+    property real freeX: 0
+    property real freeY: 0
+    property real freeW: 0
+    property real freeH: 0
+    property bool stateReady: false
+
+    readonly property string statePath: Quickshell.env("HOME") + "/.config/lunar/hub-state.json"
+
+    function saveState() {
+        if (!root.stateReady) return
+        stateFile.setText(JSON.stringify({
+            snap: root.snapPosition,
+            x: root.freeX,
+            y: root.freeY,
+            w: root.freeW,
+            h: root.freeH
+        }))
+    }
+
+    function clampX(v) {
+        return Math.max(dragMargin, Math.min(root.width - cardWidth - dragMargin, v))
+    }
+
+    function clampY(v) {
+        return Math.max(dragMargin, Math.min(root.height - cardHeight - dragMargin, v))
+    }
+
+    function applySnap(pos) {
+        if (root.width <= 0 || root.height <= 0) return
+        switch (pos) {
+        case "top":
+            cardWidth = cardWidthCenter
+            cardHeight = cardHeightSnapped
+            cardX = (root.width - cardWidth) / 2
+            cardY = cardMargin
+            break
+        case "bottom":
+            cardWidth = cardWidthCenter
+            cardHeight = cardHeightSnapped
+            cardX = (root.width - cardWidth) / 2
+            cardY = root.height - cardHeight - cardMargin
+            break
+        case "left":
+            cardWidth = cardWidthSnapped
+            cardHeight = Math.min(cardHeightSideSnapped, root.height - cardMargin * 2)
+            cardX = cardMargin
+            cardY = (root.height - cardHeight) / 2
+            break
+        case "right":
+            cardWidth = cardWidthSnapped
+            cardHeight = Math.min(cardHeightSideSnapped, root.height - cardMargin * 2)
+            cardX = root.width - cardWidth - cardMargin
+            cardY = (root.height - cardHeight) / 2
+            break
+        case "free":
+            cardWidth = Math.max(root.minCardW,
+                Math.min(freeW > 0 ? freeW : cardWidthCenter, root.width - 2 * dragMargin))
+            cardHeight = Math.max(root.minCardH,
+                Math.min(freeH > 0 ? freeH : cardHeightCenter, root.height - 2 * dragMargin))
+            cardX = clampX(freeX)
+            cardY = clampY(freeY)
+            break
+        default: // center
+            cardHeight = cardHeightCenter
+            cardWidth = cardWidthCenter
+            cardY = (root.height - cardHeight) / 2
+            cardX = (root.width - cardWidth) / 2
+        }
+    }
+
+    function snapTo(pos) {
+        root.snapPosition = pos
+        root.applySnap(pos)
+        root.saveState()
+    }
+
+    function snapTop()    { snapTo("top") }
+    function snapBottom() { snapTo("bottom") }
+    function snapLeft()   { snapTo("left") }
+    function snapRight()  { snapTo("right") }
+    function snapCenter() { snapTo("center") }
+
+    // конец перетаскивания: фиксирую свободную позицию и запоминаю
+    function finishDrag() {
+        if (!root.dragging) return
+        root.dragging = false
+        root.snapPosition = "free"
+        root.freeX = root.cardX
+        root.freeY = root.cardY
+        root.freeW = root.cardWidth
+        root.freeH = root.cardHeight
+        root.saveState()
+    }
+
+    // конец ресайза за край/угол — то же, что drag, но размер уже задан
+    function finishResize() {
+        if (!root.dragging) return
+        root.dragging = false
+        root.snapPosition = "free"
+        root.freeX = root.cardX
+        root.freeY = root.cardY
+        root.freeW = root.cardWidth
+        root.freeH = root.cardHeight
+        root.saveState()
+    }
+
+    onWidthChanged: if (width > 0 && height > 0) applySnap(snapPosition)
+    onHeightChanged: if (width > 0 && height > 0) applySnap(snapPosition)
+
+    FileView {
+        id: stateFile
+        path: root.statePath
+        printErrors: false
+
+        onLoaded: {
+            try {
+                var s = JSON.parse(stateFile.text())
+                if (["center", "top", "bottom", "left", "right", "free"].indexOf(s.snap) >= 0) {
+                    if (typeof s.x === "number") root.freeX = s.x
+                    if (typeof s.y === "number") root.freeY = s.y
+                    if (typeof s.w === "number") root.freeW = s.w
+                    if (typeof s.h === "number") root.freeH = s.h
+                    root.snapPosition = s.snap
+                    root.applySnap(s.snap)
+                }
+            } catch (e) {
+                console.warn("hub: could not read saved state:", e)
+            }
+            root.stateReady = true
+        }
+        onLoadFailed: root.stateReady = true
+    }
+
+    // ── подложка: ловит клик «мимо» и Esc ──
+    Rectangle {
+        id: backdrop
+        anchors.fill: parent
+        color: "transparent"
+        focus: root.showing
         Keys.onEscapePressed: root.closePanel()
 
-        // architect: линия по всей длине верхней кромки
-        Rectangle {
-            visible: Theme.arch
-            anchors { left: parent.left; right: parent.right; top: parent.top }
-            height: Theme.lineThick
-            color: Theme.hairAccent
+        MouseArea {
+            anchors.fill: parent
+            onClicked: root.closePanel()
         }
-        // architect: линия по нижней кромке
-        Rectangle {
-            visible: Theme.arch
-            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-            height: Theme.line
-            color: Theme.hairAccent
+    }
+
+    // ── карточка Hub ──
+    Rectangle {
+        id: card
+        x: root.cardX
+        y: root.cardY
+        width: root.cardWidth
+        height: root.cardHeight
+        radius: Theme.radiusL
+        color: Theme.barPill
+        border.width: 1
+        border.color: Theme.arch ? Theme.hairAccent : Theme.hair
+
+        opacity: root.showing ? 1 : 0
+        visible: opacity > 0
+
+        Behavior on x {
+            enabled: !root.dragging && root.showing
+            NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut }
+        }
+        Behavior on y {
+            enabled: !root.dragging && root.showing
+            NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut }
+        }
+        Behavior on width {
+            enabled: !root.dragging
+            NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut }
+        }
+        Behavior on height {
+            enabled: !root.dragging
+            NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut }
+        }
+        Behavior on opacity {
+            NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut }
         }
 
-        // architect: визиры в полях (диагональные засечки убрал — Hub и без них
-        // держит «чертёж»: скобки HudFrame + узлы + внутренняя линия)
-        HudCrosshairs { inset: 14; arm: 7 }
-        HudNodes { inset: 7; size: 5 }
-        HudInnerFrame { variant: 3 }
+        // -------------------------
+        // Содержимое (бывшая карточка — теперь внутри оверлей-окна)
+        // -------------------------
+        Item {
+            id: cardContent
+            anchors.fill: parent
+            focus: true
 
-        // HUD-скобки (единый компонент; раньше были инлайном)
-        HudFrame {
-            always: true
-            color: Theme.accent
-            size: 40
-            thickness: 2
-            inset: 14
-            strength: 0.35
-        }
+            // клавиатура: Esc закрывает
+            Keys.onEscapePressed: root.closePanel()
 
-        Row {
+            // architect: линия по всей длине верхней кромки
+            Rectangle {
+                visible: Theme.arch
+                anchors { left: parent.left; right: parent.right; top: parent.top }
+                height: Theme.lineThick
+                color: Theme.hairAccent
+            }
+            // architect: линия по нижней кромке
+            Rectangle {
+                visible: Theme.arch
+                anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+                height: Theme.line
+                color: Theme.hairAccent
+            }
+
+            // architect: визиры в полях (диагональные засечки убрал — Hub и без них
+            // держит «чертёж»: скобки HudFrame + узлы + внутренняя линия)
+            HudCrosshairs { inset: 14; arm: 7 }
+            HudNodes { inset: 7; size: 5 }
+            HudInnerFrame { variant: 3 }
+
+            // HUD-скобки (единый компонент; раньше были инлайном)
+            HudFrame {
+                always: true
+                color: Theme.accent
+                size: 40
+                thickness: 2
+                inset: 14
+                strength: 0.35
+            }
+
+            Row {
                 anchors.fill: parent
                 anchors.margins: Theme.space6
                 anchors.bottomMargin: Theme.space6
@@ -316,9 +536,9 @@ FloatingWindow {
 
                 // ---------------- Sidebar ----------------
                 Item {
-                    // ширина сайдбара едет за окном: на минимуме (820) — 180,
-                    // на широком — до 240, но не больше 16% ширины
-                    width: Theme.clamp(root.width * 0.16, 180, 240)
+                    // ширина сайдбара едет за карточкой: на минимуме — 180,
+                    // на широкой — до 240, но не больше 16% ширины
+                    width: Theme.clamp(parent.width * 0.16, 180, 240)
                     height: parent.height
                     Column {
                         id: sidebar
@@ -477,4 +697,196 @@ FloatingWindow {
             }
 
         }
+
+        // ── верхний грип: тащу карточку, двойной клик — центр ──
+        Item {
+            id: positionHandle
+            width: 220
+            height: 22
+            z: 120
+            anchors { top: parent.top; horizontalCenter: parent.horizontalCenter }
+            anchors.topMargin: -3
+
+            MouseArea {
+                id: dragArea
+                anchors.fill: parent
+                hoverEnabled: true
+                acceptedButtons: Qt.LeftButton
+                cursorShape: root.dragging ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+
+                property real pressX: 0
+                property real pressY: 0
+                property real startX: 0
+                property real startY: 0
+                property bool moved: false
+
+                onPressed: function(mouse) {
+                    var p = dragArea.mapToItem(backdrop, mouse.x, mouse.y)
+                    pressX = p.x
+                    pressY = p.y
+                    startX = root.cardX
+                    startY = root.cardY
+                    moved = false
+                    root.dragging = true
+                }
+                onPositionChanged: function(mouse) {
+                    if (!root.dragging) return
+                    var p = dragArea.mapToItem(backdrop, mouse.x, mouse.y)
+                    moved = true
+                    root.cardX = root.clampX(startX + (p.x - pressX))
+                    root.cardY = root.clampY(startY + (p.y - pressY))
+                }
+                onReleased: {
+                    if (!root.dragging) return
+                    if (moved) root.finishDrag()
+                    else root.dragging = false
+                }
+                onCanceled: {
+                    if (!root.dragging) return
+                    if (moved) root.finishDrag()
+                    else root.dragging = false
+                }
+                onDoubleClicked: root.snapCenter()
+            }
+
+            Row {
+                anchors.centerIn: parent
+                spacing: 16
+
+                Text {
+                    text: "◀"
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 8
+                    color: Theme.textDim
+                    anchors.verticalCenter: parent.verticalCenter
+                    MouseArea { anchors.fill: parent; anchors.margins: -5; onClicked: root.snapLeft() }
+                }
+                Text {
+                    text: "▲"
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 9
+                    color: Theme.textDim
+                    anchors.verticalCenter: parent.verticalCenter
+                    MouseArea { anchors.fill: parent; anchors.margins: -5; onClicked: root.snapTop() }
+                }
+                Text {
+                    text: "●"
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 9
+                    color: Theme.textDim
+                    anchors.verticalCenter: parent.verticalCenter
+                    MouseArea { anchors.fill: parent; anchors.margins: -5; onClicked: root.snapCenter() }
+                }
+                Text {
+                    text: "▼"
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 9
+                    color: Theme.textDim
+                    anchors.verticalCenter: parent.verticalCenter
+                    MouseArea { anchors.fill: parent; anchors.margins: -5; onClicked: root.snapBottom() }
+                }
+                Text {
+                    text: "▶"
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 8
+                    color: Theme.textDim
+                    anchors.verticalCenter: parent.verticalCenter
+                    MouseArea { anchors.fill: parent; anchors.margins: -5; onClicked: root.snapRight() }
+                }
+            }
+        }
+
+        // ── ресайз за края и углы (битовая маска edges) ──
+        component ResizeHandle: MouseArea {
+            id: rh
+            property int edges: 0
+            z: 100
+            acceptedButtons: Qt.LeftButton
+            hoverEnabled: true
+            cursorShape: (rh.edges === 1 || rh.edges === 2) ? Qt.SizeHorCursor
+                       : (rh.edges === 4 || rh.edges === 8) ? Qt.SizeVerCursor
+                       : (rh.edges === 5 || rh.edges === 10) ? Qt.SizeFDiagCursor
+                       : Qt.SizeBDiagCursor
+
+            property real pressX: 0
+            property real pressY: 0
+            property real startX: 0
+            property real startY: 0
+            property real startW: 0
+            property real startH: 0
+
+            onPressed: function(mouse) {
+                var p = rh.mapToItem(backdrop, mouse.x, mouse.y)
+                pressX = p.x
+                pressY = p.y
+                startX = root.cardX
+                startY = root.cardY
+                startW = root.cardWidth
+                startH = root.cardHeight
+                root.dragging = true
+            }
+            onPositionChanged: function(mouse) {
+                if (!root.dragging) return
+                var p = rh.mapToItem(backdrop, mouse.x, mouse.y)
+                var dx = p.x - pressX
+                var dy = p.y - pressY
+                var x = startX, y = startY, w = startW, h = startH
+                if (rh.edges & 1) { x = startX + dx; w = startW - dx }
+                if (rh.edges & 2) { w = startW + dx }
+                if (rh.edges & 4) { y = startY + dy; h = startH - dy }
+                if (rh.edges & 8) { h = startH + dy }
+                if (w < root.minCardW) {
+                    if (rh.edges & 1) x = startX + startW - root.minCardW
+                    w = root.minCardW
+                }
+                if (h < root.minCardH) {
+                    if (rh.edges & 4) y = startY + startH - root.minCardH
+                    h = root.minCardH
+                }
+                if (x < root.dragMargin) { w += x - root.dragMargin; x = root.dragMargin }
+                if (y < root.dragMargin) { h += y - root.dragMargin; y = root.dragMargin }
+                if (x + w > root.width - root.dragMargin) w = root.width - root.dragMargin - x
+                if (y + h > root.height - root.dragMargin) h = root.height - root.dragMargin - y
+                root.cardX = x
+                root.cardY = y
+                root.cardWidth = w
+                root.cardHeight = h
+            }
+            onReleased: root.finishResize()
+            onCanceled: root.finishResize()
+        }
+
+        ResizeHandle {
+            edges: 1; width: 6
+            anchors { left: parent.left; leftMargin: -3; top: parent.top; topMargin: 12; bottom: parent.bottom; bottomMargin: 12 }
+        }
+        ResizeHandle {
+            edges: 2; width: 6
+            anchors { right: parent.right; rightMargin: -3; top: parent.top; topMargin: 12; bottom: parent.bottom; bottomMargin: 12 }
+        }
+        ResizeHandle {
+            edges: 4; height: 6
+            anchors { top: parent.top; topMargin: -3; left: parent.left; leftMargin: 12; right: parent.right; rightMargin: 12 }
+        }
+        ResizeHandle {
+            edges: 8; height: 6
+            anchors { bottom: parent.bottom; bottomMargin: -3; left: parent.left; leftMargin: 12; right: parent.right; rightMargin: 12 }
+        }
+        ResizeHandle {
+            edges: 5; width: 14; height: 14
+            anchors { left: parent.left; leftMargin: -5; top: parent.top; topMargin: -5 }
+        }
+        ResizeHandle {
+            edges: 6; width: 14; height: 14
+            anchors { right: parent.right; rightMargin: -5; top: parent.top; topMargin: -5 }
+        }
+        ResizeHandle {
+            edges: 9; width: 14; height: 14
+            anchors { left: parent.left; leftMargin: -5; bottom: parent.bottom; bottomMargin: -5 }
+        }
+        ResizeHandle {
+            edges: 10; width: 14; height: 14
+            anchors { right: parent.right; rightMargin: -5; bottom: parent.bottom; bottomMargin: -5 }
+        }
+    }
 }
