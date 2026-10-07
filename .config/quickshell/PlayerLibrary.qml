@@ -32,7 +32,7 @@ Item {
             spacing: Theme.space2
 
             Text {
-                text: "󰙅"
+                text: "󰉋"
                 color: Theme.textDim
                 font.family: Theme.iconFont
                 font.pixelSize: Theme.fontSize(13)
@@ -46,16 +46,16 @@ Item {
                 font.bold: true
             }
             Text {
-                text: "＋"
+                text: "+"
                 color: Theme.textDim
                 font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize(14)
+                font.pixelSize: Theme.fontSize(15)
             }
             Text {
-                text: "󰩬"
+                text: "↗"
                 color: Theme.textDim
-                font.family: Theme.iconFont
-                font.pixelSize: Theme.fontSize(12)
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize(13)
             }
         }
 
@@ -121,10 +121,10 @@ Item {
                 font.pixelSize: Theme.fontSize(11)
             }
             Text {
-                text: "☰"
+                text: "≡"
                 color: Theme.textFaint
                 font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize(12)
+                font.pixelSize: Theme.fontSize(13)
             }
         }
 
@@ -142,13 +142,32 @@ Item {
             RowLayout {
                 anchors { left: parent.left; top: parent.top; right: parent.right }
                 spacing: Theme.space2
+
+                Text {
+                    text: "󰉋"
+                    color: Theme.textDim
+                    font.family: Theme.iconFont
+                    font.pixelSize: Theme.fontSize(12)
+                }
+                Text {
+                    text: "Фонотека"
+                    color: Theme.text
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(11)
+                }
+                Text {
+                    text: "▾"
+                    color: Theme.textFaint
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(11)
+                }
+                Item { Layout.fillWidth: true }
                 Text {
                     text: PlayerCore.libraryBusy ? "сканирую…"
                         : (PlayerCore.library.length + " файл(ов)")
                     color: Theme.textFaint
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize(10)
-                    Layout.fillWidth: true
                 }
                 Text {
                     text: "↻"

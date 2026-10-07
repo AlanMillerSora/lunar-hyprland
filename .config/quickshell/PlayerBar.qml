@@ -247,6 +247,22 @@ Item {
                             }
                         }
                     }
+
+                    // правые служебные иконки (как вPlaying у Spotify)
+                    Text {
+                        text: "󰎄"
+                        color: Theme.textFaint
+                        font.family: Theme.iconFont
+                        font.pixelSize: Theme.fontSize(13)
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                    Text {
+                        text: "󰓃"
+                        color: Theme.textFaint
+                        font.family: Theme.iconFont
+                        font.pixelSize: Theme.fontSize(13)
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
                 }
             }
 
