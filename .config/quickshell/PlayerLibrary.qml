@@ -32,14 +32,7 @@ Item {
             Layout.fillWidth: true
             spacing: Theme.space2
 
-            Text {
-                text: "ЛОКАЛЬНЫЕ"
-                color: Theme.text
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize(14)
-                font.bold: true
-                font.letterSpacing: 3
-            }
+            PlayerHeader { text: "ЛОКАЛЬНЫЕ" }
 
             Text {
                 Layout.fillWidth: true

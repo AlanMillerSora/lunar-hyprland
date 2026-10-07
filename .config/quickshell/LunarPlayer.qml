@@ -17,7 +17,7 @@ FloatingWindow {
     id: root
 
     title: "Lunar Player"
-    color: Theme.surfacePanel          // полупрозрачный фон — его и блюрит Hyprland
+    color: Theme.bg                    // плотный фон: стиль «text» — без стекла
     visible: Theme.playerOpen
     minimumSize: Qt.size(720, 520)
 
@@ -221,31 +221,29 @@ FloatingWindow {
             else if (e.key === Qt.Key_P) { PlayerCore.prev(); e.accepted = true }
         }
 
-        HudNodes { inset: 6; size: 4 }
-        HudCorners { color: Theme.accent; size: 16; thickness: 1; margin: 10 }
-
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 16
-            spacing: Theme.space4
+            anchors.leftMargin: 14
+            anchors.rightMargin: 14
+            anchors.bottomMargin: 14
+            // сверху запас побольше: ярлык «Nav»/«Main» лежит на верхней
+            // кромке панели (половина выше линии) — иначе окно его подрезает
+            anchors.topMargin: 26
+            spacing: 8
 
             RowLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                spacing: Theme.space4
+                spacing: 8
 
-                // ── навигация: отдельный «остров» (язык 43PR) ──
-                Rectangle {
-                    Layout.preferredWidth: 196
+                // ── навигация: панель-бокс «Nav» ──
+                TuiPanel {
+                    label: "Nav"
+                    Layout.preferredWidth: 200
                     Layout.fillHeight: true
-                    radius: Theme.radiusL
-                    color: Theme.bgCard
-                    border.width: 1
-                    border.color: Theme.border
 
                     Column {
                         anchors.fill: parent
-                        anchors.margins: 14
                         spacing: 6
 
                         Text {
@@ -257,62 +255,56 @@ FloatingWindow {
                             font.letterSpacing: 3
                         }
 
-                        // вместо жёсткой линии-разделителя — короткий акцент
+                        // TUI-правило под заголовком: тонкая линия во всю ширину
                         Rectangle {
-                            width: 28
-                            height: 2
-                            radius: height / 2
-                            color: Theme.alpha(Theme.accent, 0.30)
+                            width: parent.width
+                            height: 1
+                            color: Theme.border
                         }
 
-                        Item { width: 1; height: 10 }
+                        Item { width: 1; height: 8 }
 
                         Repeater {
                             model: root.pages
 
-                            delegate: Rectangle {
+                            delegate: Item {
                                 required property var modelData
                                 required property int index
 
+                                readonly property bool active: root.pageIndex === index
+
                                 width: parent.width
-                                height: 44
-                                radius: Theme.radiusM
-                                color: root.pageIndex === index
-                                    ? Theme.active
-                                    : (navMouse.containsMouse ? Theme.hover : "transparent")
-                                border.width: root.pageIndex === index ? 1 : 0
-                                border.color: Theme.alpha(Theme.accent, 0.35)
+                                height: 30
 
                                 Rectangle {
-                                    visible: root.pageIndex === index
-                                    width: 3
-                                    height: parent.height - 16
-                                    radius: width / 2
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    anchors.left: parent.left
-                                    color: Theme.accent
+                                    anchors.fill: parent
+                                    radius: Theme.radiusS
+                                    color: active ? Theme.active
+                                        : (navMouse.containsMouse ? Theme.hover : "transparent")
                                 }
 
                                 Row {
                                     anchors.verticalCenter: parent.verticalCenter
                                     anchors.left: parent.left
-                                    anchors.leftMargin: 16
-                                    spacing: Theme.space3
+                                    anchors.leftMargin: 8
+                                    spacing: 8
 
                                     Text {
-                                        text: modelData.icon
-                                        font.family: Theme.iconFont
-                                        font.pixelSize: Theme.fontSize(14)
-                                        color: root.pageIndex === index ? Theme.accent : Theme.textDim
                                         anchors.verticalCenter: parent.verticalCenter
+                                        text: active ? "▸" : " "
+                                        color: Theme.accent
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: Theme.fontSize(12)
+                                        font.bold: true
                                     }
                                     Text {
-                                        text: modelData.name
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: "[" + modelData.name + "]"
+                                        color: active ? Theme.text : Theme.textDim
                                         font.family: Theme.fontFamily
                                         font.pixelSize: Theme.fontSize(12)
                                         font.letterSpacing: 1
-                                        color: root.pageIndex === index ? Theme.text : Theme.textDim
-                                        anchors.verticalCenter: parent.verticalCenter
+                                        font.bold: active
                                     }
                                 }
 
@@ -328,38 +320,43 @@ FloatingWindow {
                     }
                 }
 
-                // ── страница: Loader'ы живут постоянно, видна только текущая ──
-                Item {
-                    id: pageHost
+                // ── страница: панель-бокс «Main» ──
+                TuiPanel {
+                    label: "Main"
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    clip: true
 
-                    Repeater {
-                        model: root.pages
+                    Item {
+                        id: pageHost
+                        anchors.fill: parent
+                        clip: true
 
-                        delegate: Item {
-                            id: pageWrap
-                            required property var modelData
-                            required property int index
+                        Repeater {
+                            model: root.pages
 
-                            anchors.fill: parent
-                            visible: opacity > 0.01
-                            opacity: root.pageIndex === index ? 1 : 0
-                            Behavior on opacity {
-                                NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut }
-                            }
+                            delegate: Item {
+                                id: pageWrap
+                                required property var modelData
+                                required property int index
 
-                            Loader {
-                                id: pageLoader
                                 anchors.fill: parent
-                                source: modelData.source
-                                // страница сама решает, когда запускать cava и крутить винил
-                                onLoaded: {
-                                    if (item)
-                                        item.pageActive = Qt.binding(function() {
-                                            return root.visible && root.pageIndex === pageWrap.index
-                                        })
+                                visible: opacity > 0.01
+                                opacity: root.pageIndex === index ? 1 : 0
+                                Behavior on opacity {
+                                    NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut }
+                                }
+
+                                Loader {
+                                    id: pageLoader
+                                    anchors.fill: parent
+                                    source: modelData.source
+                                    // страница сама решает, когда запускать cava и крутить винил
+                                    onLoaded: {
+                                        if (item)
+                                            item.pageActive = Qt.binding(function() {
+                                                return root.visible && root.pageIndex === pageWrap.index
+                                            })
+                                    }
                                 }
                             }
                         }
@@ -367,12 +364,18 @@ FloatingWindow {
                 }
             }
 
-            // ── нижняя полоса ──
-            PlayerBar {
+            // ── нижняя панель-бокс «Playing» ──
+            TuiPanel {
+                label: "Playing"
                 Layout.fillWidth: true
-                active: root.visible
-                showProgress: root.pageIndex !== 0
-                onExpandRequested: root.goto(0)
+                Layout.preferredHeight: 96
+
+                PlayerBar {
+                    anchors.fill: parent
+                    active: root.visible
+                    showProgress: root.pageIndex !== 0
+                    onExpandRequested: root.goto(0)
+                }
             }
         }
     }

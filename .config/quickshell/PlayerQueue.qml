@@ -19,14 +19,7 @@ Item {
             Layout.fillWidth: true
             spacing: Theme.space2
 
-            Text {
-                text: "ОЧЕРЕДЬ"
-                color: Theme.text
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize(14)
-                font.bold: true
-                font.letterSpacing: 3
-            }
+            PlayerHeader { text: "ОЧЕРЕДЬ" }
             Text {
                 Layout.fillWidth: true
                 text: PlayerCore.queue && PlayerCore.queue.length > 0
@@ -56,7 +49,8 @@ Item {
             reorderable: true
 
             titleFor: function(item, index) {
-                return item && item.title ? item.title : "трек " + (index + 1)
+                var n = (index + 1 < 10 ? " " : "") + (index + 1)
+                return n + "  " + (item && item.title ? item.title : "трек " + (index + 1))
             }
             subtitleFor: function(item, index) {
                 if (!item) return ""

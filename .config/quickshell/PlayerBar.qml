@@ -38,12 +38,10 @@ Item {
     }
     onOverflowChanged: if (!overflow) marqueeX = 0
 
+    // рамку и фон даёт обёртка TuiPanel («Playing») — тут только контент
     Rectangle {
         anchors.fill: parent
-        radius: Theme.radiusL
-        color: Theme.bgCard
-        border.color: Theme.border
-        border.width: 1
+        color: "transparent"
 
         // клики по полосе не уходят на backdrop
         MouseArea { anchors.fill: parent; onClicked: {} }

@@ -24,14 +24,7 @@ Item {
         anchors.fill: parent
         spacing: 10
 
-        Text {
-            text: "ПОИСК"
-            color: Theme.text
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize(14)
-            font.bold: true
-            font.letterSpacing: 3
-        }
+        PlayerHeader { text: "ПОИСК" }
 
         RowLayout {
             Layout.fillWidth: true
@@ -45,10 +38,22 @@ Item {
                 border.width: 1
                 border.color: searchInput.activeFocus ? Theme.borderAccent : Theme.border
 
+                // prompt как в шелле: > запрос
+                Text {
+                    text: ">"
+                    color: Theme.accent
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize(12)
+                    font.bold: true
+                    anchors.left: parent.left
+                    anchors.leftMargin: 12
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
                 TextInput {
                     id: searchInput
                     anchors.fill: parent
-                    anchors.leftMargin: 12
+                    anchors.leftMargin: 26
                     anchors.rightMargin: 12
                     verticalAlignment: TextInput.AlignVCenter
                     color: Theme.text
