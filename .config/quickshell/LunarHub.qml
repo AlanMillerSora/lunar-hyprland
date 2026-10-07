@@ -11,7 +11,7 @@ import "widgets/shared"
 //  Раньше был обычным FloatingWindow: Hyprland сам блюрил и тянул
 //  его за края. Теперь — PanelWindow слоя Overlay: прозрачный фон
 //  во весь экран + mask, а «окно» — карточка, которую тащу за
-//  верхний грип, ресайзю за края/углы и прилипаю по позициям
+//  верхний грип, ресайзю с SUPER за края/углы и прилипаю по позициям
 //  (центр/верх/низ/бок). Геометрия (snap,x,y,w,h) переживает
 //  рестарт в ~/.config/lunar/hub-state.json. Фон темнит наша
 //  LunarBackdrop (слой Bottom) — Hub лишь пишет флаг в Theme.setModal.
@@ -33,15 +33,25 @@ PanelWindow {
 
     property bool showing: false
 
+    // Пока Hub открыт, снимаю у Hyprland бинды SUPER+ЛКМ/ПКМ: иначе они
+    // съедают событие и QML не видит ресайз карточки за край/угол. Клавиши
+    // не трогаю — хоткеи остаются живыми. Функция — в hyprland.lua.
+    Process { id: hubMouseOff; command: ["hyprctl", "eval", "lunar_hub_mouse(false)"] }
+    Process { id: hubMouseOn;  command: ["hyprctl", "eval", "lunar_hub_mouse(true)"] }
+    // страховка: если Quickshell перезапустили с открытым Hub — вернуть бинды
+    Component.onCompleted: hubMouseOn.running = true
+
     // агент/плеер и Hub взаимоисключающие: открылся Hub — гашу их
     // (через Theme.activeOverlay, в одном процессе — плавно)
     onShowingChanged: {
         if (showing) {
             Theme.activeOverlay = "hub"
             Theme.setModal("hub", true)
+            hubMouseOff.running = true
         } else {
             Theme.setModal("hub", false)
             dragging = false
+            hubMouseOn.running = true
         }
     }
     Connections {
@@ -797,6 +807,9 @@ PanelWindow {
         }
 
         // ── ресайз за края и углы (битовая маска edges) ──
+        //  Раньше Hub был обычным окном и тянулся за края с SUPER (resize_on_border).
+        //  Возвращаю то же: ресайз стартует только при зажатом SUPER (Meta). Без SUPER
+        //  отпускаю событие — клик/скролл уходят содержимому, край ничего не ловит.
         component ResizeHandle: MouseArea {
             id: rh
             property int edges: 0
@@ -816,6 +829,10 @@ PanelWindow {
             property real startH: 0
 
             onPressed: function(mouse) {
+                if (!(mouse.modifiers & Qt.MetaModifier)) {
+                    mouse.accepted = false
+                    return
+                }
                 var p = rh.mapToItem(backdrop, mouse.x, mouse.y)
                 pressX = p.x
                 pressY = p.y
