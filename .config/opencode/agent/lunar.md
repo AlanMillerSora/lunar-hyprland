@@ -1,6 +1,7 @@
 ---
 description: Встроенный агент райса Lunar Eclipse
 mode: primary
+model: opencode-go/deepseek-v4.1-flash
 tools:
   write: true
   edit: true

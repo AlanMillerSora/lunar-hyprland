@@ -392,6 +392,12 @@ FloatingWindow {
         property bool busy: false
         property bool contextOn: true
         property string status: "готов"
+        // модель для запуска: `opencode run` не берёт model из агента и
+        // создаёт сессию с дефолтом (бесплатный тариф → 403), поэтому
+        // задаю явно. Менять здесь.
+        readonly property string modelId: "opencode-go/deepseek-v4.1-flash"
+        // последний запуск завершился ошибкой провайдера/агента
+        property bool failed: false
         property string sessionId: ""
         // вопрос, ждущий сборки справки (контекст + память)
         property string pendingText: ""
@@ -426,6 +432,7 @@ FloatingWindow {
         function send(text) {
             if (text.trim() === "" || busy) return
             pendingAction = ""
+            failed = false
             messages = capHistory(messages.concat([
                 { role: "user", text: text },
                 { role: "assistant", text: "" }
@@ -459,7 +466,9 @@ FloatingWindow {
 
         function dispatch(text) {
             if (text === "") return
+            failed = false
             var cmd = "opencode run --format json --agent lunar"
+                + " --model " + modelId
             if (sessionId !== "") cmd += " --session " + shQuote(sessionId)
             cmd += " -- " + shQuote(text)
             agentProc.command = ["script", "-qefc", cmd, "/dev/null"]
@@ -656,6 +665,26 @@ FloatingWindow {
             messages = capHistory(messages.concat([{ role: "system", text: t }]))
         }
 
+        // ошибка запуска/провайдера: показываю её в пузыре ассистента,
+        // а не молчу (иначе сбой выглядел как пустой ответ)
+        function fail(msg) {
+            var t = String(msg || "").trim()
+            if (t === "") t = "неизвестная ошибка"
+            if (t.indexOf("free tier can only be used") !== -1)
+                t = "модель бесплатного тарифа недоступна при запуске из CLI — "
+                    + "задай рабочую модель (см. model в агенте lunar)."
+            t = "⚠ " + t
+            failed = true
+            status = "ошибка"
+            if (messages.length > 0 && messages[messages.length - 1].role === "assistant") {
+                var m = messages.slice()
+                m[m.length - 1] = { role: "assistant", text: t }
+                messages = capHistory(m)
+            } else {
+                systemMsg(t)
+            }
+        }
+
         function runAction() {
             var cmd = pendingAction
             if (cmd === "") return
@@ -758,11 +787,14 @@ FloatingWindow {
         onExited: (exitCode) => {
             agentWatchdog.stop()
             agent.busy = false
-            if (exitCode === 0) {
+            if (agent.failed) {
+                agent.status = "ошибка"
+            } else if (exitCode === 0) {
                 agent.status = "готов"
             } else {
                 var e = (agentErr.text || "").trim()
-                agent.status = e !== "" ? e.split("\n").pop() : ("ошибка " + exitCode)
+                agent.fail(e !== "" ? e.split("\n").pop()
+                                  : ("код выхода " + exitCode))
             }
         }
         stderr: StdioCollector { id: agentErr }
@@ -772,6 +804,12 @@ FloatingWindow {
                 line = line.replace(/\r/g, "")
                 try {
                     var ev = JSON.parse(line)
+                    if (ev.type === "error") {
+                        // сессию с ошибкой не запоминаю: следующий запрос
+                        // стартует заново, чтобы не залипнуть на битой сессии
+                        agent.fail(ev.error && ev.error.message ? ev.error.message : "")
+                        return
+                    }
                     if (ev.type === "text" && ev.part && ev.part.text !== undefined)
                         agent.appendAssistant(ev.part.text)
                     if (ev.sessionID) agent.sessionId = ev.sessionID

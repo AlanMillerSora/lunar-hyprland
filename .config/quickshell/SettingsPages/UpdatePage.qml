@@ -98,8 +98,18 @@ Item {
         // (контекст содержит заголовки окон — возможна инъекция)
         workingDirectory: Quickshell.env("HOME") + "/.local/state/lunar"
         onRunningChanged: page.agentBusy = pCtx.running || pAgent.running
+        stderr: StdioCollector { id: pAgentErr }
         stdout: StdioCollector {
-            onStreamFinished: page.agentText = text.trim()
+            onStreamFinished: {
+                var t = page.cleanAgentText(text)
+                // ошибку (провайдер/сеть) opencode пишет не в stdout —
+                // иначе сбой выглядел бы как пустой ответ
+                if (t === "") {
+                    var e = page.cleanAgentText(pAgentErr.text)
+                    if (e !== "") t = "⚠ " + e.split("\n").pop()
+                }
+                page.agentText = t
+            }
         }
     }
     // предохранитель от подвисшего opencode
@@ -114,6 +124,13 @@ Item {
     }
     function shQuote(s) {
         return "'" + String(s).replace(/'/g, "'\\''") + "'"
+    }
+    // вывод идёт через псевдо-tty (script): убираю ANSI-последовательности и \r
+    function cleanAgentText(s) {
+        return String(s || "")
+            .replace(/\r/g, "")
+            .replace(/\x1b\[[0-9;?]*[ -\/]*[@-~]/g, "")
+            .trim()
     }
     function runAgentNews() {
         if (pAgent.running || pCtx.running) return
@@ -136,7 +153,8 @@ Item {
             + "безопасность). По-русски, по делу. Если всё спокойно — так и скажи."
         // opencode подвешивается без tty — гоняю через script (как в оверлее)
         pAgent.command = ["script", "-qefc",
-            "opencode run --agent lunar -- " + shQuote(prompt), "/dev/null"]
+            "opencode run --agent lunar --model opencode-go/deepseek-v4.1-flash -- "
+                + shQuote(prompt), "/dev/null"]
         pAgent.running = true
     }
 
