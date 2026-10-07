@@ -102,12 +102,11 @@ FloatingWindow {
     // поиска съедала бы Space/стрелки/N/P — плеер перестал бы их слушать
     onPageIndexChanged: if (pageIndex !== 1) keyRoot.forceActiveFocus()
 
-    // «Сейчас играет» переехало в правую колонку (Sidebar), поэтому
-    // центральная таблица показывает только списки
+    // Центральная таблица — очередь и результаты поиска; локальная
+    // фонотека живёт в левой панели Library
     property var pages: [
-        { name: "ОЧЕРЕДЬ",   icon: "󰉹", source: "PlayerQueue.qml" },
-        { name: "ПОИСК",     icon: "󰍉", source: "PlayerSearch.qml" },
-        { name: "ЛОКАЛЬНЫЕ", icon: "󰉋", source: "PlayerLibrary.qml" }
+        { name: "ОЧЕРЕДЬ", icon: "󰉹", source: "PlayerQueue.qml" },
+        { name: "ПОИСК",   icon: "󰍉", source: "PlayerSearch.qml" }
     ]
 
     function goto(i) { Theme.playerPage = Math.max(0, Math.min(pages.length - 1, i)) }
@@ -227,136 +226,128 @@ FloatingWindow {
             anchors.leftMargin: 14
             anchors.rightMargin: 14
             anchors.bottomMargin: 14
-            // сверху запас побольше: ярлык «Nav»/«Main» лежит на верхней
-            // кромке панели (половина выше линии) — иначе окно его подрезает
-            anchors.topMargin: 26
+            // сверху запас: ярлык панели лежит на верхней кромке (половина
+            // выше линии) — иначе окно его подрезает
+            anchors.topMargin: 24
             spacing: 8
+
+            // ── верхняя полоса Nav ──
+            TuiPanel {
+                label: "Nav"
+                Layout.fillWidth: true
+                Layout.preferredHeight: 54
+
+                PlayerNavBar {
+                    anchors.fill: parent
+                    onSearch: (q) => { PlayerCore.search(q); root.goto(1) }
+                }
+            }
 
             RowLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 spacing: 8
 
-                // ── навигация: панель-бокс «Nav» ──
+                // ── левая колонка: Library (локальная фонотека) ──
                 TuiPanel {
-                    label: "Nav"
-                    Layout.preferredWidth: 200
+                    label: "Library"
+                    Layout.preferredWidth: 260
                     Layout.fillHeight: true
 
-                    Column {
+                    PlayerLibrary {
                         anchors.fill: parent
-                        spacing: 6
-
-                        Text {
-                            text: "LUNAR PLAYER"
-                            color: Theme.text
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize(Theme.fontPanelTitle)
-                            font.bold: true
-                            font.letterSpacing: 3
-                        }
-
-                        // TUI-правило под заголовком: тонкая линия во всю ширину
-                        Rectangle {
-                            width: parent.width
-                            height: 1
-                            color: Theme.border
-                        }
-
-                        Item { width: 1; height: 8 }
-
-                        Repeater {
-                            model: root.pages
-
-                            delegate: Item {
-                                required property var modelData
-                                required property int index
-
-                                readonly property bool active: root.pageIndex === index
-
-                                width: parent.width
-                                height: 30
-
-                                Rectangle {
-                                    anchors.fill: parent
-                                    radius: Theme.radiusS
-                                    color: active ? Theme.active
-                                        : (navMouse.containsMouse ? Theme.hover : "transparent")
-                                }
-
-                                Row {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    anchors.left: parent.left
-                                    anchors.leftMargin: 8
-                                    spacing: 8
-
-                                    Text {
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        text: active ? "▸" : " "
-                                        color: Theme.accent
-                                        font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSize(12)
-                                        font.bold: true
-                                    }
-                                    Text {
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        text: "[" + modelData.name + "]"
-                                        color: active ? Theme.text : Theme.textDim
-                                        font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSize(12)
-                                        font.letterSpacing: 1
-                                        font.bold: active
-                                    }
-                                }
-
-                                MouseArea {
-                                    id: navMouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: root.goto(index)
-                                }
-                            }
-                        }
+                        pageActive: root.visible
                     }
                 }
 
-                // ── страница: панель-бокс «Main» ──
+                // ── центр: Main — чипы разделов + таблица ──
                 TuiPanel {
                     label: "Main"
                     Layout.fillWidth: true
                     Layout.fillHeight: true
 
-                    Item {
-                        id: pageHost
+                    ColumnLayout {
                         anchors.fill: parent
-                        clip: true
+                        spacing: 8
 
-                        Repeater {
-                            model: root.pages
+                        // чипы разделов
+                        Row {
+                            spacing: 6
 
-                            delegate: Item {
-                                id: pageWrap
-                                required property var modelData
-                                required property int index
+                            Repeater {
+                                model: root.pages
 
-                                anchors.fill: parent
-                                visible: opacity > 0.01
-                                opacity: root.pageIndex === index ? 1 : 0
-                                Behavior on opacity {
-                                    NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut }
+                                delegate: Rectangle {
+                                    required property var modelData
+                                    required property int index
+                                    readonly property bool active: root.pageIndex === index
+
+                                    width: chipText.implicitWidth + 26
+                                    height: 28
+                                    radius: 0
+                                    color: active ? Theme.active
+                                        : (chipMouse.containsMouse ? Theme.hover : "transparent")
+                                    border.width: 1
+                                    border.color: active ? Theme.borderAccent : Theme.border
+
+                                    Text {
+                                        id: chipText
+                                        anchors.centerIn: parent
+                                        text: modelData.name
+                                        color: active ? Theme.text : Theme.textDim
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: Theme.fontSize(11)
+                                        font.letterSpacing: 1
+                                        font.bold: active
+                                    }
+
+                                    MouseArea {
+                                        id: chipMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: root.goto(index)
+                                    }
                                 }
+                            }
+                        }
 
-                                Loader {
-                                    id: pageLoader
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 1
+                            color: Theme.border
+                        }
+
+                        Item {
+                            id: pageHost
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            clip: true
+
+                            Repeater {
+                                model: root.pages
+
+                                delegate: Item {
+                                    id: pageWrap
+                                    required property var modelData
+                                    required property int index
+
                                     anchors.fill: parent
-                                    source: modelData.source
-                                    // страница сама решает, когда запускать cava и крутить винил
-                                    onLoaded: {
-                                        if (item)
-                                            item.pageActive = Qt.binding(function() {
-                                                return root.visible && root.pageIndex === pageWrap.index
-                                            })
+                                    visible: opacity > 0.01
+                                    opacity: root.pageIndex === index ? 1 : 0
+                                    Behavior on opacity {
+                                        NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut }
+                                    }
+
+                                    Loader {
+                                        anchors.fill: parent
+                                        source: modelData.source
+                                        onLoaded: {
+                                            if (item)
+                                                item.pageActive = Qt.binding(function() {
+                                                    return root.visible && root.pageIndex === pageWrap.index
+                                                })
+                                        }
                                     }
                                 }
                             }
@@ -364,7 +355,7 @@ FloatingWindow {
                     }
                 }
 
-                // ── правая колонка: панель-бокс «Sidebar» ──
+                // ── правая колонка: Sidebar ──
                 TuiPanel {
                     label: "Sidebar"
                     Layout.preferredWidth: 300
@@ -377,7 +368,7 @@ FloatingWindow {
                 }
             }
 
-            // ── нижняя панель-бокс «Playing» ──
+            // ── нижняя панель Playing ──
             TuiPanel {
                 label: "Playing"
                 Layout.fillWidth: true

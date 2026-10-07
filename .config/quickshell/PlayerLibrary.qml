@@ -32,7 +32,7 @@ Item {
             Layout.fillWidth: true
             spacing: Theme.space2
 
-            PlayerHeader { text: "ЛОКАЛЬНЫЕ" }
+            PlayerHeader { text: "БИБЛИОТЕКА" }
 
             Text {
                 Layout.fillWidth: true
@@ -103,6 +103,7 @@ Item {
             showRight: false
             numbered: true
 
+            iconFor: function(item, index) { return "󰎇" }
             titleFor: function(item, index) {
                 return item && item.name ? item.name : "файл"
             }
