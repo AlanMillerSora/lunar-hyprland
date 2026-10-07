@@ -60,7 +60,10 @@ static void nvml_open(void) {
     p_temp = (int (*)(nvmlDevice_t, int, unsigned int *))dlsym(g_nvml, "nvmlDeviceGetTemperature");
     if (!p_init || !p_handle || !p_util) return;
     if (p_init() != 0) return;
-    if (p_handle(0, &g_gpu) != 0) return;
+    if (p_handle(0, &g_gpu) != 0) {
+        if (p_shutdown) p_shutdown();
+        return;
+    }
     g_nvml_ok = 1;
 }
 
@@ -318,6 +321,8 @@ int main(int argc, char **argv) {
     // умри вместе с родителем (Quickshell): иначе при рестарте шелла
     // (KillMode=process) остаётся висеть старый демон и плодятся дубли
     prctl(PR_SET_PDEATHSIG, SIGTERM);
+    // если родитель умер раньше prctl — уходим сразу
+    if (getppid() == 1) return 0;
     setvbuf(stdout, NULL, _IOLBF, 0);
 
     const char *cache = getenv("XDG_CACHE_HOME");
@@ -365,6 +370,10 @@ int main(int argc, char **argv) {
                DELIM "rec=%d\n",
                net, cpu, ctemp, ram, rtot, rx, tx, gpu, gput, gm, pp, rec);
         fflush(stdout);
+        // родитель (Quickshell) умер или пайп закрыт — выхожу, не зависаю
+        // «потерянным» процессом даже если PDEATHSIG не успел сработать
+        if (getppid() == 1 || ferror(stdout))
+            break;
 
         if (once) break;
 
