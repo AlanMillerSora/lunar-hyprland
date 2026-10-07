@@ -162,31 +162,51 @@ def hsl_to_hex(h, s, l):
 
 
 def palette_from_image(path: Path) -> dict:
-    """Пресет из картинки: фон — тот же тон, сильно приглушённый; акцент —
-    сам доминирующий цвет, чуть поднятый по свету. Так система едет за обоями."""
+    """Пресет из картинки: тон обоев, но по нейтральной серой лестнице.
+
+    Светлота идёт ровными ступенями как у lunar, а насыщенность зажата
+    (по сути микс с серым) — иначе фотопалитра уходила в «чёрный квадрат»:
+    фон ≈ #000, текст ≈ #fff, почти без средних серых. Вторичный тон
+    (textDim/textMuted) держу сине-серым, как fg_muted у 43PR, — он и даёт
+    мягкость; акцент тоже не чистый белый."""
     r, g, b = dominant_color(path)
     h, s, _ = rgb_to_hsl(r, g, b)
-    def bg(mul_s, mul_l):
-        return hsl_to_hex(h, min(0.45, s * mul_s), mul_l)
+
+    # поверхность: тон обоев на низкой насыщенности — то же, что подмешать
+    # цвет к нейтральной ступени. Ступени совпадают с lunar.
+    def surf(light, sat_mul):
+        return hsl_to_hex(h, min(0.22, s * sat_mul), light)
+
+    # текст: почти нейтральный, только лёгкий оттенок обоев
+    def fg(light, sat=0.05):
+        return hsl_to_hex(h, min(0.14, sat), light)
+
+    # вторичный/приглушённый: тон обоев с зажатой насыщенностью — «сине-серый»
+    def muted(light, sat_mul=0.85):
+        return hsl_to_hex(h, min(0.24, max(0.10, s * sat_mul)), light)
+
     return {
-        "bg":           bg(0.90, 0.035),
-        "bgPanel":      bg(0.85, 0.055),
-        "bgCard":       bg(0.80, 0.085),
-        "bgTrack":      bg(0.70, 0.125),
-        "text":         hsl_to_hex(h, 0.08, 0.93),
-        "textDim":      hsl_to_hex(h, 0.12, 0.68),
-        "textFaint":    hsl_to_hex(h, 0.14, 0.55),
-        "accent":       hsl_to_hex(h, max(0.35, min(0.62, s * 1.15)), 0.66),
-        "accent2":      hsl_to_hex(h, max(0.28, min(0.50, s * 0.90)), 0.80),
+        "bg":           surf(0.050, 0.55),
+        "bgPanel":      surf(0.075, 0.55),
+        "bgCard":       surf(0.110, 0.50),
+        "bgTrack":      surf(0.150, 0.45),
+        "bgHover":      surf(0.200, 0.45),
+        "text":         fg(0.905),
+        "textSoft":     fg(0.760),
+        "textDim":      muted(0.600, 0.95),
+        "textMuted":    muted(0.470, 0.85),
+        "textFaint":    muted(0.360, 0.75),
+        "accent":       hsl_to_hex(h, max(0.30, min(0.48, s * 1.05)), 0.700),
+        "accent2":      hsl_to_hex(h, max(0.22, min(0.42, s * 0.85)), 0.820),
         "danger":       "#ff003c",
-        "ok":           hsl_to_hex(h, 0.08, 0.90),
+        "ok":           fg(0.800),
         "border":       "#ffffff12",
-        "borderAccent": hsl_to_hex(h, 0.50, 0.60) + "33",
-        "barText":      hsl_to_hex(h, 0.07, 0.88),
-        "barDim":       hsl_to_hex(h, 0.12, 0.68),
-        "barFaint":     hsl_to_hex(h, 0.14, 0.55),
-        "barPill":      bg(1.0, 0.10),
-        "cursor":       hsl_to_hex(h, 0.08, 0.93),
+        "borderAccent": hsl_to_hex(h, 0.40, 0.58) + "33",
+        "barText":      fg(0.860),
+        "barDim":       muted(0.620, 0.95),
+        "barFaint":     muted(0.460, 0.80),
+        "barPill":      surf(0.090, 0.55),
+        "cursor":       fg(0.905),
     }
 
 

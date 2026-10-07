@@ -22,6 +22,7 @@
 
 /* производные оттенки, которыми пользуется остальной gtk.css */
 @define-color lunar_dim {{textDim}};
+@define-color lunar_muted {{textMuted}};
 @define-color lunar_faint {{textFaint}};
 @define-color lunar_hover {{accentHoverRgba}};
 @define-color lunar_active {{bgTrack}};

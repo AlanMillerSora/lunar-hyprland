@@ -27,10 +27,12 @@ QtObject {
     // холодный уголь вместо чистого чёрного: мягче на глаз, но всё ещё монохром.
     // Базовая альфа ниже единицы — поверх стекла Hyprland панели «дышат»,
     // а ползунок прозрачности по-прежнему множит её сверху (L43).
-    readonly property color _bgBase: hexColor(palette.bg, Qt.rgba(8 / 255, 9 / 255, 13 / 255, 1))
-    readonly property color _bgPanelBase: hexColor(palette.bgPanel, Qt.rgba(12 / 255, 14 / 255, 19 / 255, 1))
-    readonly property color _bgCardBase: hexColor(palette.bgCard, Qt.rgba(18 / 255, 21 / 255, 27 / 255, 1))
-    readonly property color _barPillBase: hexColor(palette.barPill, Qt.rgba(12 / 255, 14 / 255, 19 / 255, 1))
+    readonly property color _bgBase: hexColor(palette.bg, Qt.rgba(10 / 255, 11 / 255, 15 / 255, 1))
+    readonly property color _bgPanelBase: hexColor(palette.bgPanel, Qt.rgba(15 / 255, 17 / 255, 22 / 255, 1))
+    readonly property color _bgCardBase: hexColor(palette.bgCard, Qt.rgba(21 / 255, 25 / 255, 32 / 255, 1))
+    readonly property color _bgTrackBase: hexColor(palette.bgTrack, Qt.rgba(29 / 255, 33 / 255, 41 / 255, 1))
+    readonly property color _bgHoverBase: hexColor(palette.bgHover, Qt.rgba(38 / 255, 43 / 255, 54 / 255, 1))
+    readonly property color _barPillBase: hexColor(palette.barPill, Qt.rgba(15 / 255, 17 / 255, 22 / 255, 1))
     property color bg: Qt.rgba(_bgBase.r, _bgBase.g, _bgBase.b, 0.72 * interfaceOpacity)
     property color bgPanel: Qt.rgba(_bgPanelBase.r, _bgPanelBase.g, _bgPanelBase.b, 0.80 * interfaceOpacity)
     property color bgCard: Qt.rgba(_bgCardBase.r, _bgCardBase.g, _bgCardBase.b, 0.62 * interfaceOpacity)
@@ -39,47 +41,55 @@ QtObject {
     property color border: hexColor(palette.border, Qt.rgba(1, 1, 1, 0.08))
     property color borderAccent: hexColor(palette.borderAccent, Qt.rgba(1, 1, 1, 0.16))
 
-    property color text: hexColor(palette.text, "#e8ecf2")
-    property color textDim: hexColor(palette.textDim, "#98a1ac")
-    property color textFaint: hexColor(palette.textFaint, "#7b838d")
+    // ── серая лестница текста (по образцу 43PR fg/fg_soft/fg_dim/
+    //    fg_muted/fg_faint): от мягкого белого к приглушённому. textDim —
+    //    сине-серый вторичный (fg_muted #8b93a7): он и даёт «мягкость»,
+    //    поэтому весь текст не белый. textMuted/textSoft — промежуточные
+    //    ступени, на случай акцента среднего веса.
+    property color text: hexColor(palette.text, "#e6eaf2")
+    property color textSoft: hexColor(palette.textSoft, "#c3c9d3")
+    property color textDim: hexColor(palette.textDim, "#8b93a7")
+    property color textMuted: hexColor(palette.textMuted, "#6f7787")
+    property color textFaint: hexColor(palette.textFaint, "#565d6b")
 
-    property color accent: hexColor(palette.accent, "#e8edf4")
-    property color accent2: hexColor(palette.accent2, "#e8edf4")
+    // акцент — мягкий серебристый, а не чистый белый: активные состояния
+    // читаются, но не «светят» белым по всему интерфейсу.
+    property color accent: hexColor(palette.accent, "#c9d2e2")
+    property color accent2: hexColor(palette.accent2, "#e6eaf2")
     property color danger: hexColor(palette.danger, "#ff003c")
-    property color ok: hexColor(palette.ok, "#e8edf4")   // без зелёного: «ок» — светлый
+    property color ok: hexColor(palette.ok, "#c3c9d3")   // без зелёного: «ок» — светлый
 
-    property color trackBg: hexColor(palette.bgTrack, "#181b21")
+    property color trackBg: _bgTrackBase
 
     // ── панель-бар: чуть мягче и холоднее общего текста (правил отдельно,
     //    чтобы не выцветал текст оверлеев) ──
-    readonly property color barText: hexColor(palette.barText, "#d5dce4")
-    readonly property color barDim: hexColor(palette.barDim, "#a6aeb9")
-    readonly property color barFaint: hexColor(palette.barFaint, "#7b838d")
+    readonly property color barText: hexColor(palette.barText, "#d3d9e3")
+    readonly property color barDim: hexColor(palette.barDim, "#9aa3b2")
+    readonly property color barFaint: hexColor(palette.barFaint, "#6f7787")
     // тон как у окна Hub (Theme.alpha(surfaceSolid, 0.80)); альфу бара держу
     // на уровне Hub и панелей (bgPanel 0.80) — стекло читается одинаково
     readonly property color barPill: Qt.rgba(_barPillBase.r, _barPillBase.g, _barPillBase.b, (arch ? 0.90 : 0.80) * interfaceOpacity)
-    // наведённое состояние поверхности (сайдбары/Hub): тот же тон, чуть светлее.
-    // Производная от палитры — меняются обои, меняется и он.
+    // наведённое состояние поверхности (сайдбары/Hub): следующая ступень
+    // лестницы (bgHover из палитры). Меняются обои — меняется и он.
     readonly property color barPillHover: Qt.rgba(
-        Math.min(1, _barPillBase.r + 0.045),
-        Math.min(1, _barPillBase.g + 0.045),
-        Math.min(1, _barPillBase.b + 0.045),
+        _bgHoverBase.r, _bgHoverBase.g, _bgHoverBase.b,
         (arch ? 0.93 : 0.88) * interfaceOpacity)
 
-    // ── arch-слой «островов»: подложки в НЕЙТРАЛИ (тон обоев/окна ~#171A1B),
-    //    чтобы бар читался единым тоном с системой, а не «стальным» тёмным.
+    // ── «острова» (Hub, карточки, панели): подложки теперь тоже ступень
+    //    палитры (bgCard/bgHover), а не глухой нейтрал #171A1B. Так весь
+    //    рис держит одну серую лестницу, и фотопалитра не выпадает из тона.
     //    Акцент здесь только у активного состояния (surfaceActive).
-    readonly property color surface: Qt.rgba(23 / 255, 26 / 255, 27 / 255, 0.80)
-    readonly property color surfaceSolid: Qt.rgba(23 / 255, 26 / 255, 27 / 255, 1)
-    readonly property color surfaceHover: Qt.rgba(30 / 255, 34 / 255, 35 / 255, 0.94)
+    readonly property color surface: Qt.rgba(_bgCardBase.r, _bgCardBase.g, _bgCardBase.b, 0.80)
+    readonly property color surfaceSolid: _bgCardBase
+    readonly property color surfaceHover: Qt.rgba(_bgHoverBase.r, _bgHoverBase.g, _bgHoverBase.b, 0.94)
     readonly property color surfaceActive: Qt.rgba(text.r, text.g, text.b, 0.10)
 
     // ── семантические поверхности (T20) ──────────────────────────
-    // Компонент читает роль, а не сырой токен палитры. Значения — ровно
-    // те, что стоят в прежних токенах, поэтому визуал не съезжает:
-    //   surfacePanel — подложка панелей/оверлеев (бывш. bgPanel);
-    //   surfaceCard  — подложка карточек/контролов (бывш. surface).
-    // surfaceHover/surfaceActive/surfaceSolid уже семантические — оставляю.
+    // Компонент читает роль, а не сырой токен палитры:
+    //   surfacePanel — подложка панелей/оверлеев (bgPanel);
+    //   surfaceCard  — подложка карточек/контролов (ступень bgCard).
+    // surface/surfaceHover/surfaceActive/surfaceSolid — та же серая
+    // лестница палитры, поэтому «острова» следуют за пресетом.
     readonly property color surfacePanel: bgPanel
     readonly property color surfaceCard: surface
 
