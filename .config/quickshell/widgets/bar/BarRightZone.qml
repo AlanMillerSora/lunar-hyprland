@@ -189,8 +189,11 @@ Item {
             interactive: true
             active: BarState.mode === "audio"
             accent: rightZone.host.muted ? Theme.danger : Theme.barDim
-            tip: "Звук · вывод и вход"
+            tip: "Звук · вывод и вход; колесо — громкость ±5%"
             onClicked: BarState.togglePanel("audio")
+            // колесо над звуком — громкость ±5% (нативно через PipeWire,
+            // OSD всплывает сам: трекер ловит смену volume)
+            onScrolled: (delta) => rightZone.host.bumpVol(delta > 0 ? 0.05 : -0.05)
             Component.onCompleted: rightZone.volumeCellRef = volCell
             Component.onDestruction: if (rightZone.volumeCellRef === volCell)
                 rightZone.volumeCellRef = null
@@ -242,9 +245,6 @@ Item {
                     acceptedButtons: Qt.RightButton
                     cursorShape: Qt.PointingHandCursor
                     onClicked: rightZone.host.openMixer()
-                }
-                WheelHandler {
-                    onWheel: (wheel) => rightZone.host.bumpVol(wheel.angleDelta.y > 0 ? 0.05 : -0.05)
                 }
             }
         }

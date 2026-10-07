@@ -21,8 +21,10 @@ Cell {
     interactive: true
     active: BarState.mode === "media"
     accent: host.playing ? Theme.accent : Theme.barFaint
-    tip: "Медиа — раскрыть в баре"
+    tip: "Медиа — раскрыть в баре; колесо — перемотка ±5 с"
     onClicked: clickedBubble()
+    // колесо над треком — перемотка на ±5 с (MPRIS, см. host.seekBy)
+    onScrolled: (delta) => mediaInline.host.seekBy(delta > 0 ? 5 : -5)
 
     readonly property string art: (host.player && host.player.trackArtUrl)
         ? host.player.trackArtUrl : ""

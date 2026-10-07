@@ -23,6 +23,18 @@ Item {
     // пульс капсулы при переходе на другой стол
     onFocusIdxChanged: if (root.focusIdx >= 0) capsulePulse.restart()
 
+    // колесо над фазами — соседний стол (вверх — предыдущий, вниз — следующий)
+    WheelHandler {
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+        onWheel: function (ev) {
+            var cur = root.focusIdx >= 0 ? root.focusIdx + 1 : 1
+            var next = ev.angleDelta.y > 0 ? cur - 1 : cur + 1
+            next = Math.max(1, Math.min(9, next))
+            if (next !== cur)
+                host.focusWs(next)
+        }
+    }
+
     // тонкая «орбита» за фазами — связывает индикаторы в цикл
     Rectangle {
         anchors.verticalCenter: parent.verticalCenter

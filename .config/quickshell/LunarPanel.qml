@@ -239,6 +239,17 @@ PanelWindow {
         sink.audio.volume = Math.max(0, Math.min(1, sink.audio.volume + d))
     }
 
+    // колесо над медиа-ячейкой: перемотка на ±5 с. Пишу позицию через MPRIS
+    // seek(offset). Полосу двигаю сразу — MPRIS шлёт позицию «догоняющими»
+    // значениями, и без этого прогресс на миг откатывался бы назад.
+    function seekBy(d) {
+        if (!player || player.canSeek !== true)
+            return
+        player.seek(d)
+        var p = root.shownPos + d
+        root.shownPos = Math.max(0, root.trackLength > 0 ? Math.min(root.trackLength, p) : p)
+    }
+
     function setMicVol(v) {
         if (!src || !src.audio)
             return

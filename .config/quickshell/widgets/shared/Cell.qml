@@ -18,6 +18,9 @@ Rectangle {
     property bool active: false
     property string tip: ""
     signal clicked()
+    // колесо над ячейкой: delta = angleDelta.y (вверх +, вниз −). Ячейка сама
+    // решает, что делать (звук — громкость, медиа — перемотка), прочие молчат.
+    signal scrolled(real delta)
 
     height: Theme.barCellH
     implicitWidth: cellContent.implicitWidth + Theme.space4 * 2
@@ -60,6 +63,9 @@ Rectangle {
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: cell.clicked()
+        // колесо ловлю на самой ячейке: клики/ховеры не трогаю, а прокрутка
+        // уходит в сигнал scrolled (никаких отдельных WheelHandler поверх)
+        onWheel: (wheel) => cell.scrolled(wheel.angleDelta.y)
     }
 
     AppTooltip {
