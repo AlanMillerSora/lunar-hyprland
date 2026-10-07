@@ -66,7 +66,7 @@ Item {
             Rectangle {
                 width: 82
                 height: 26
-                radius: 0
+                radius: Theme.radius
                 color: Theme.active
                 border.width: 1
                 border.color: Theme.borderAccent
@@ -81,7 +81,7 @@ Item {
             Rectangle {
                 width: 74
                 height: 26
-                radius: 0
+                radius: Theme.radius
                 color: "transparent"
                 border.width: 1
                 border.color: Theme.border

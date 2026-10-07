@@ -284,7 +284,7 @@ FloatingWindow {
 
                                     width: chipText.implicitWidth + 26
                                     height: 28
-                                    radius: 0
+                                    radius: Theme.radius
                                     color: active ? Theme.active
                                         : (chipMouse.containsMouse ? Theme.hover : "transparent")
                                     border.width: 1

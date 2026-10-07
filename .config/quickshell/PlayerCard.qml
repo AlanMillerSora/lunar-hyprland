@@ -23,6 +23,8 @@ Item {
         id: coverBox
         anchors { left: parent.left; right: parent.right; top: parent.top }
         height: width
+        radius: Theme.radius
+        clip: true
         color: Theme.bgCard
         border.width: 1
         border.color: root.current ? Theme.accent : (hover.containsMouse ? Theme.borderAccent : Theme.border)
@@ -49,6 +51,7 @@ Item {
             anchors { left: parent.left; bottom: parent.bottom }
             height: 16
             width: badgeText.implicitWidth + 10
+            radius: Theme.radiusDot
             color: Theme.bg
             Text {
                 id: badgeText
@@ -88,6 +91,7 @@ Item {
         anchors.margins: 6
         width: 26
         height: 26
+        radius: Theme.radius
         color: actMouse.containsMouse ? Theme.accent : Theme.bg
         border.width: 1
         border.color: Theme.border

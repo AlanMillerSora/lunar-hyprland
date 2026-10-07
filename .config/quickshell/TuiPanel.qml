@@ -17,10 +17,10 @@ Item {
     readonly property int gapX: 10
     readonly property int gapW: labelText.visible ? Math.round(labelText.implicitWidth) + 12 : 0
 
-    // фон панели
+    // фон панели — чуть светлее окна, чтобы панели читались отдельно
     Rectangle {
         anchors.fill: parent
-        color: Theme.bg
+        color: Theme.bgPanel
     }
 
     // рамка: низ, лево, право

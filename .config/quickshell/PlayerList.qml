@@ -88,7 +88,7 @@ Item {
 
             width: list.width
             height: root.rowHeight
-            radius: 0
+            radius: Theme.radius
 
             readonly property bool current: index === root.highlightIndex
             readonly property bool lifting: root.dragActive && root.dragFrom === index

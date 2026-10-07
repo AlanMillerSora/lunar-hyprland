@@ -55,7 +55,7 @@ Item {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 32
-            radius: 0
+            radius: Theme.radius
             color: Theme.bgCard
             border.width: 1
             border.color: input.activeFocus ? Theme.borderAccent : Theme.border

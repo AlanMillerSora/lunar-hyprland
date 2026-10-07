@@ -73,7 +73,7 @@ Item {
                     }
                     Rectangle {
                         anchors.fill: parent
-                        radius: 0
+                        radius: Theme.radius
                         visible: PlayerCore.artUrl.length === 0 || barCover.status === Image.Error
                         color: Theme.bgCard
                         border.color: Theme.border
