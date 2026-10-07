@@ -32,7 +32,6 @@ ShellRoot {
     LunarBackdrop {}    // затемнение фона под крупными модалками (слой Bottom)
     LunarPanel {}
     LunarHub {}
-    LunarWheel {}      // радиальное меню быстрых действий (SUPER + U)
     LunarWallpapers {}
     LunarClipboard {}
     LunarPower {}
