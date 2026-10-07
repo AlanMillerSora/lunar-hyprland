@@ -241,6 +241,17 @@ if [ -d "$REPO/systemd/user" ]; then
   # quickshell НЕ включаем в автозапуск: его стартует hyprland.lua после
   # композитора (иначе юнит поднимется раньше Wayland и будет падать).
   systemctl --user disable lunar-quickshell.service 2>/dev/null || true
+  # mako больше не наш демон уведомлений (его ведёт Quickshell): гашу,
+  # выключаю и маскирую юнит. Конфиг ~/.config/mako оставлен для отката:
+  # `systemctl --user unmask mako && systemctl --user enable --now mako`.
+  if systemctl --user cat mako.service >/dev/null 2>&1; then
+    systemctl --user disable --now mako.service 2>/dev/null || true
+    systemctl --user mask mako.service 2>/dev/null \
+      && ok "mako: остановлен и замаскирован (уведомления — Quickshell)" \
+      || warn "mako.service не замаскирован"
+  else
+    say "mako не установлен — уведомления ведёт Quickshell"
+  fi
   ok "юниты поставлены (quickshell стартует из Hyprland)"
 fi
 }

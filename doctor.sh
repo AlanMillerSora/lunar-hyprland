@@ -4,7 +4,8 @@
 #
 #  Проверяю то, что чаще всего «тихо» ломается: жив ли шелл, чист ли
 #  конфиг Hyprland, поднят ли сетевой стек (iwd + systemd-networkd),
-#  демоны сессии (mako/hypridle/cliphist) и tgproxy, на месте ли палитра,
+#  демоны сессии (hypridle/cliphist), уведомления Quickshell и tgproxy,
+#  на месте ли палитра,
 #  есть ли правило sudo -n, не в restart-loop ли quickshell, нет ли дрейфа
 #  repo ↔ live и проходит ли ci-гейт.
 #
@@ -61,7 +62,7 @@ else
   printf '%s\n' "$out" | sed 's/^/       /'
 fi
 
-# 5) Демоны сессии: mako/hypridle/cliphist «тихо» отваливаются.
+# 5) Демоны сессии: hypridle/cliphist «тихо» отваливаются.
 # Нет утилиты в системе — это не провал риса, помечаю пропуском (не падаю).
 check_daemon() { # <команда> <имя процесса> <подпись>
   local cmd="$1" proc="$2" label="$3"
@@ -73,7 +74,13 @@ check_daemon() { # <команда> <имя процесса> <подпись>
     fail "$label: НЕ активен ($proc)"
   fi
 }
-check_daemon mako     mako     "mako (уведомления)"
+# уведомления ведёт Quickshell (NotifModel.qml); mako должен молчать —
+# иначе он перехватит D-Bus org.freedesktop.Notifications
+if pgrep -x mako >/dev/null 2>&1; then
+  fail "mako: запущен — конфликт с Quickshell за уведомления"
+else
+  pass "уведомления: демон в Quickshell (mako не запущен)"
+fi
 check_daemon hypridle hypridle "hypridle (простой/лок)"
 # у cliphist нет демона — буфер держат вотчеры wl-paste (text/image)
 check_daemon cliphist wl-paste "cliphist (вотчеры wl-paste)"

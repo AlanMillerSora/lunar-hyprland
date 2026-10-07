@@ -912,15 +912,6 @@ PanelWindow {
         }
     }
 
-    // обновление списка уведомлений, пока панель открыта
-    // M36: раз в 5 с вместо 2.5 с — вдвое меньше запусков listProc/modeProc
-    Timer {
-        interval: 5000
-        repeat: true
-        running: !root.collapsed
-        onTriggered: notif.load()
-    }
-
     // ─────────── локальный календарь (события + напоминания) ───────────
     // Хранилище — ~/.local/share/lunar/calendar.json (скрипт eclipse-calendar.py).
     // Сеть не нужна; CalDAV добавим отдельным этапом.
@@ -1018,111 +1009,6 @@ PanelWindow {
         running: true
         triggeredOnStart: true
         onTriggered: calReminder.running = true
-    }
-
-    QtObject {
-        id: notif
-        property var raw: []          // сырой список от mako (история + активные)
-        property var items: []        // показываемый список (без скрытых)
-        property bool dnd: false
-        property int hideBefore: -1   // «очистить»: прячем всё с id <= этого
-        property var hiddenIds: ({})  // точечно скрытые (dismiss)
-        property var expandedId: -1   // развёрнутое уведомление (клик — раскрыть)
-
-        function toggleExpand(id) {
-            expandedId = (expandedId === id) ? -1 : id
-        }
-
-        function rebuild() {
-            var out = []
-            for (var i = 0; i < raw.length; i++) {
-                var n = raw[i]
-                if (n.id <= hideBefore) continue
-                if (hiddenIds[n.id] === true) continue
-                out.push({
-                    id: n.id,
-                    app: n.app_name || "",
-                    summary: n.summary || "",
-                    body: (n.body || "").replace(/\n/g, " ")
-                })
-            }
-            items = out
-        }
-
-        function load() {
-            listProc.running = true
-            modeProc.running = true
-        }
-
-        function dismiss(id) {
-            var sid = parseInt(id)
-            if (!isFinite(sid)) return
-            hiddenIds[sid] = true
-            if (expandedId === sid) expandedId = -1
-            rebuild()
-            actionProc.command = ["bash", "-c", "makoctl dismiss -n " + sid]
-            actionProc.running = true
-        }
-
-        function clear() {
-            // mako не умеет чистить историю (`dismiss --all` её не трогает),
-            // поэтому перезапускаю mako — история и активные обнуляются.
-            // id начнутся заново, так что фильтры сбрасываю.
-            hideBefore = -1
-            hiddenIds = ({})
-            expandedId = -1
-            rebuild()
-            actionProc.command = ["bash", "-c",
-                "systemctl --user reset-failed mako.service 2>/dev/null; systemctl --user restart mako.service"]
-            actionProc.running = true
-        }
-
-        function toggleDnd() {
-            actionProc.command = ["bash", "-c", "makoctl mode -t do-not-disturb"]
-            actionProc.running = true
-        }
-    }
-
-    Process {
-        id: listProc
-        running: false
-        // история mako (ограничена max-history=20) + активные, свежие сверху
-        command: ["bash", "-c", "jq -s 'add | unique_by(.id) | sort_by(.id) | reverse | .[0:20]' <(makoctl history -j 2>/dev/null || echo '[]') <(makoctl list -j 2>/dev/null || echo '[]')"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    notif.raw = JSON.parse(text)
-                    notif.rebuild()
-                } catch (e) {
-                    // L25: не затираем список уведомлений при сбое разбора
-                    console.warn("уведомления: не удалось разобрать вывод makoctl: " + e)
-                }
-            }
-        }
-    }
-
-    Process {
-        id: modeProc
-        running: false
-        command: ["bash", "-c", "makoctl mode 2>/dev/null | grep -q '^do-not-disturb$' && echo 1 || echo 0"]
-        stdout: StdioCollector {
-            onStreamFinished: notif.dnd = (text.trim() === "1")
-        }
-    }
-
-    Process {
-        id: actionProc
-        running: false
-        onExited: {
-            notif.load()
-            refreshTimer.restart()
-        }
-    }
-
-    Timer {
-        id: refreshTimer
-        interval: 250
-        onTriggered: notif.load()
     }
 
     // CPU/RAM — из общего SysInfo (см. LunarSidebar), без python3/psutil.
@@ -1223,7 +1109,6 @@ print(json.dumps(out[:200]))
     }
 
     Component.onCompleted: {
-        notif.load()
         recModel.load()
         recStatusProc.running = true
         cal.reload()

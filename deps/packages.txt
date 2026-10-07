@@ -34,7 +34,8 @@ starship
 eza
 zsh-autosuggestions
 zsh-syntax-highlighting
-mako
+# mako убран: уведомления ведёт Quickshell (NotifModel.qml). Пакет можно
+# оставить для отката — конфиг ~/.config/mako не удалён.
 firefox
 discord
 steam

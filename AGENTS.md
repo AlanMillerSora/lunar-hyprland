@@ -157,7 +157,8 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 - **polkit:** свой агент `LunarPolkit.qml` (`Quickshell.Services.Polkit`) вместо
   `polkit-kde-authentication-agent-1` (его запуск убран из `hyprland.lua`).
 - **Quickshell reload:** встроенный светлый попап о сбое заглушён
-  (`QS_NO_RELOAD_POPUP=1` в юните), ошибка идёт уведомлением mako (`shell.qml`).
+  (`QS_NO_RELOAD_POPUP=1` в юните), ошибка идёт уведомлением нашего демона
+  (`shell.qml` → `NotifModel`/`LunarNotifications`).
 - **Wi-Fi:** ассоциирует **iwd** (`iwd.service`, `/etc/iwd/main.conf`:
   `EnableNetworkConfiguration=false` + `PowerSaveDisable=ath12k*`), IP раздаёт
   **systemd-networkd** (`/etc/systemd/network/20-wlan.network`); NetworkManager
@@ -189,9 +190,9 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 │   ├── quickshell/
 │   │   ├── shell.qml грузит: LunarWallpaper, LunarPanel, LunarHub, LunarWallpapers,
 │   │   │   LunarClipboard, LunarPower, LunarAgent, LunarOverview, LunarPolkit,
-│   │   │   LunarPlayer, LunarSidebar, LunarSidebarRight, LunarOsd, LunarTray
+│   │   │   LunarPlayer, LunarSidebar, LunarSidebarRight, LunarNotifications, LunarOsd, LunarTray
 │   │   ├── Lunar*.qml, LunarWallpaperScene.qml, preview.qml, Slider.qml, Theme.qml,
-│   │   │   AppModel.qml, HudCorners.qml
+│   │   │   AppModel.qml, HudCorners.qml, NotifModel.qml (синглтон: демон уведомлений)
 │   │   ├── widgets/shared/ (ActionButton, Cell, HoverBg, MiniBar — общий слой),
 │   │   │   SettingsPages/ (страницы и секции), assets/ (+moon-phases/, crop-frame.png), pfp3.png,
 │   │   │   cava-lunar.conf, cava-lunar-wide.conf
@@ -394,7 +395,8 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 - Цвет из картинки: `eclipse-palette.py --from-image ФАЙЛ --apply` (доминирующий цвет через
   ImageMagick → фон/панель/акцент/текст; результат — пресет `photo`).
 - `cliphist delete` читает stdin: `cliphist list | grep -P '^ID\t' | cliphist delete`.
-- DND: `makoctl mode -t do-not-disturb`.
+- DND: `qs ipc call notifications dnd` (демон — `NotifModel.qml`). mako убран и
+  замаскирован, конфиг `~/.config/mako` оставлен для отката.
 - Круглая маска magick: `magick in -resize 512x512 \( -size 512x512 xc:black -fill white -draw "circle 256,256 256,2" \) -alpha off -compose CopyOpacity -composite PNG32:out`.
 - Root-хелперы риса (`/usr/libexec/lunar/`: `avatar-sync.sh`, `journal-read.sh`,
   `journal-vacuum.sh`, `svc.sh`, `update.sh`, `cpu-performance.sh`) ставит
@@ -437,7 +439,7 @@ hyprctl eval 'hl.dispatch(hl.dsp.focus({workspace=5}))'
 ```sh
 ./lunar help                                                   # точка входа: install|deps|sync|bump|ci|doctor|palette|snapshot|release|reload
 ./doctor.sh                                                    # health-check риса (шелл/конфиг/сеть/демоны/палитра/дрейф/ci)
-./lunar reload                                                 # перезагрузить рис БЕЗ приложений (hyprctl + quickshell + mako + hypridle + cliphist)
+./lunar reload                                                 # перезагрузить рис БЕЗ приложений (hyprctl + quickshell + hypridle + cliphist)
 ./install.sh [--sddm|--plymouth|--zapret|--status|--disable-sddm|--disable-plymouth|--plymouth-rescue|--no-deps|--deps-only]
 ~/.config/hypr/scripts/eclipse-palette.py                      # палитра: dry-run
 ~/.config/hypr/scripts/eclipse-palette.py --preset steel --apply

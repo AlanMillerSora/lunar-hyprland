@@ -475,8 +475,10 @@ PanelWindow {
     property string netKind: "off"      // eth | wifi | off
     property string kbLayout: "EN"
     property string kbDevice: ""
-    property bool dnd: false
-    property int notifCount: 0
+    // DND и число активных уведомлений — из нашего демона (NotifModel),
+    // а не из makoctl в eclipse-status.sh
+    readonly property bool dnd: NotifModel.dnd
+    readonly property int notifCount: NotifModel.count
     // помню прошлое число, чтобы пульс колокола шёл только на рост
     property int prevNotifCount: 0
     // не пульсирую на самые первые значения vol/track при старте шелла
@@ -511,10 +513,6 @@ PanelWindow {
                         root.kbLayout = v
                     } else if (k === "kbdev") {
                         root.kbDevice = v
-                    } else if (k === "dnd") {
-                        root.dnd = (v === "1")
-                    } else if (k === "notif") {
-                        root.notifCount = parseInt(v) || 0
                     } else if (k === "gm") {
                         root.gameMode = (v === "1")
                     } else if (k === "pp") {
@@ -566,7 +564,6 @@ PanelWindow {
     // если новое действие приходило, пока выполнялось предыдущее.
     Process { id: hubOpenProc; running: false }
     Process { id: layoutProc; running: false }
-    Process { id: dndProc; running: false }
     Process { id: gameProc; running: false }
     Process { id: recordProc; running: false }
 
@@ -592,8 +589,7 @@ PanelWindow {
     }
 
     function toggleDnd() {
-        dndProc.command = ["bash", "-c", "makoctl mode -t do-not-disturb"]
-        dndProc.running = true
+        NotifModel.toggleDnd()
     }
 
     function toggleGameMode() {

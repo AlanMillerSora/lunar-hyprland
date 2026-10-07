@@ -7,8 +7,8 @@
 #  завершает только сам шелл, не процессы из Hub. Перезапускаю ровно
 #  те демоны сессии, что поднимает hyprland.lua в hl.on("hyprland.start"):
 #    • Hyprland   — hyprctl reload (конфиг Lua);
-#    • quickshell — lunar-quickshell.service (панель, Hub, polkit, обои, OSD);
-#    • mako       — mako.service (Type=dbus, владелец уведомлений);
+#    • quickshell — lunar-quickshell.service (панель, Hub, polkit, обои, OSD,
+#      уведомления — демон внутри NotifModel.qml);
 #    • hypridle   — отдельный процесс (hl.exec_cmd("hypridle"));
 #    • cliphist   — два вотчера wl-paste (text/image).
 #
@@ -48,13 +48,14 @@ else
   err "не удалось перезапустить юнит"
 fi
 
-# ── 3. mako: уведомления (systemd, Type=dbus) ───────────────────
-step "mako: уведомления"
-systemctl --user reset-failed mako.service 2>/dev/null || true
-if systemctl --user restart mako.service 2>/dev/null; then
-  ok "mako.service перезапущен"
+# ── 3. уведомления: демон внутри Quickshell ────────────────────
+step "уведомления: внутри Quickshell (NotifModel)"
+# Отдельного демона нет: тосты/история живут в quickshell и перезапустились
+# строкой выше. mako замаскирован (для отката: systemctl --user unmask mako).
+if systemctl --user is-active --quiet mako.service 2>/dev/null; then
+  warn "mako.service всё ещё активен — уведомления может перехватывать он"
 else
-  err "mako.service не перезапустился"
+  ok "mako не запущен, уведомления ведёт Quickshell"
 fi
 
 # ── 4. hypridle: простой/лок — отдельный процесс ────────────────

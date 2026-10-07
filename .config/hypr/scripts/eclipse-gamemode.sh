@@ -123,7 +123,7 @@ gm_on() {
   hyprctl eval 'hl.config({animations = {enabled = false}})' >/dev/null 2>&1
   hyprctl eval 'hl.config({decoration = {blur = {enabled = false}}})' >/dev/null 2>&1
   hyprctl eval 'hl.config({general = {allow_tearing = true}})' >/dev/null 2>&1
-  makoctl mode -a do-not-disturb >/dev/null 2>&1
+  qs ipc call notifications dndon >/dev/null 2>&1
   pkill -STOP -x hypridle 2>/dev/null
   svc_pause
   echo 1 >"$STATE"
@@ -141,7 +141,7 @@ gm_off() {
   fi
   restore_hypr
   rm -f "$PREV_STATE"
-  makoctl mode -r do-not-disturb >/dev/null 2>&1
+  qs ipc call notifications dndoff >/dev/null 2>&1
   pkill -CONT -x hypridle 2>/dev/null
   svc_restore
   echo 0 >"$STATE"

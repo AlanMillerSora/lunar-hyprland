@@ -187,9 +187,9 @@ QtObject {
         running: false
         onExited: (exitCode) => {
             theme.paletteBusy = false
-            // приложения читают палитру сами: kitty — по USR1, mako — reload
+            // приложения читают палитру сами: kitty — по USR1
             Quickshell.execDetached(["bash", "-c",
-                "pidof kitty >/dev/null && kill -USR1 $(pidof kitty); makoctl reload 2>/dev/null; true"])
+                "pidof kitty >/dev/null && kill -USR1 $(pidof kitty); true"])
             if (theme.palettePending !== "") {
                 var next = theme.palettePending
                 theme.palettePending = ""

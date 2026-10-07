@@ -4,12 +4,13 @@
 #     net=… kb=… kbdev=… dnd=… notif=… gpu=… gput=… gm=… pp=…
 #  net  — eth | wifi | off
 #  kb   — текущая раскладка (RU/EN), kbdev — устройство
-#  dnd  — 1 если mako в режиме «не беспокоить»
-#  notif — сколько уведомлений
+#  dnd  — 1 если наш демон уведомлений в режиме «не беспокоить»
+#  notif — сколько активных уведомлений
 #  gpu/gput — загрузка и температура GPU (AMD sysfs или NVIDIA)
 #  gm   — 1 если включён Game Mode
 #  pp   — CPU governor (всегда performance; powersave убран)
-#  Без python3: JSON разбирает jq (в зависимостях), уведомления — makoctl -j.
+#  Без python3: JSON разбирает jq (в зависимостях), уведомления — файл
+#  статуса от NotifModel.qml (mako убран).
 #  GPU отдаём одним «сырым» замером, а сглаживание дёрганого gpu_busy_percent
 #  на APU делает панель (EMA) — без sleep-цикла в горячем пути.
 # ════════════════════════════════════════════════════════════════
@@ -46,12 +47,17 @@ if command -v jq >/dev/null 2>&1; then
 fi
 
 # ── уведомления ──
-mode="$(makoctl mode 2>/dev/null)"
-grep -q '^do-not-disturb$' <<<"$mode" && dnd=1 || dnd=0
-
-# makoctl -j отдаёт JSON-массив уведомлений — считаем его длину через jq
-notif="$(makoctl list -j 2>/dev/null | jq 'length' 2>/dev/null)"
-notif="${notif:-0}"
+# Источник — наш демон (NotifModel.qml) через крошечный файл статуса:
+# mako убран, а дёргать IPC ради двух чисел дорого.
+dnd=0; notif=0
+if [ -r "$HOME/.cache/lunar/notif-status" ]; then
+  while IFS='=' read -r k v; do
+    case "$k" in
+      dnd)   dnd="${v:-0}" ;;
+      count) notif="${v:-0}" ;;
+    esac
+  done < "$HOME/.cache/lunar/notif-status"
+fi
 
 # ── Game Mode / профиль питания / запись ──
 GM_FILE="$HOME/.cache/lunar/gamemode"

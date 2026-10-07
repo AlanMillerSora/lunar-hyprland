@@ -124,7 +124,7 @@ import "../widgets/shared"
                         opacity: 0.8
                     }
 
-                    // иконка приложения (монохром)
+                    // иконка приложения (монохром) или цветное превью картинки
                     Item {
                         id: notifIcon
                         anchors.left: parent.left
@@ -132,14 +132,21 @@ import "../widgets/shared"
                         anchors.verticalCenter: parent.verticalCenter
                         width: 20
                         height: 20
+                        readonly property bool hasImage: (modelData.image || "") !== ""
                         Image {
                             id: nIcon
                             anchors.fill: parent
                             visible: false
                             asynchronous: true
                             sourceSize: Qt.size(40, 40)
-                            fillMode: Image.PreserveAspectFit
+                            fillMode: Image.PreserveAspectCrop
                             source: {
+                                // превью картинки важнее иконки приложения
+                                var im = modelData.image || ""
+                                if (im !== "") {
+                                    if (im.charAt(0) === "/") return "file://" + im
+                                    return im
+                                }
                                 var ic = modelData.icon || ""
                                 if (ic === "") return ""
                                 if (ic.charAt(0) === "/") return "file://" + ic
@@ -151,9 +158,10 @@ import "../widgets/shared"
                             anchors.fill: parent
                             source: nIcon
                             visible: nIcon.status === Image.Ready
-                            saturation: -1.0
-                            brightness: 0.15
-                            contrast: 0.05
+                            // картинку не обесцвечиваю, иконку — в монохром
+                            saturation: notifIcon.hasImage ? 0.0 : -1.0
+                            brightness: notifIcon.hasImage ? 0.0 : 0.15
+                            contrast: notifIcon.hasImage ? 0.0 : 0.05
                         }
                         Text {
                             anchors.centerIn: parent
@@ -229,9 +237,11 @@ import "../widgets/shared"
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+                        acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
                         onClicked: function(m) {
                             if (m.button === Qt.MiddleButton) NotifModel.dismiss(modelData.id)
+                            else if (m.button === Qt.RightButton)
+                                NotifModel.copy(modelData.summary, modelData.body)
                             else NotifModel.toggleExpand(modelData.id)
                         }
                     }

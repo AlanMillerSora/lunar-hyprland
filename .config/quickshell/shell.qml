@@ -12,7 +12,8 @@ import QtQuick
 ShellRoot {
     // Встроенный попап Quickshell о провале перезагрузки конфига светлый и
     // не в стиле риса — глушу его. Об ошибке сообщаю обычным уведомлением
-    // (mako): оно читаемое и попадает в историю уведомлений.
+    // (наш демон, NotifModel/LunarNotifications): оно читаемое и попадает
+    // в историю уведомлений.
     Component.onCompleted: Quickshell.inhibitReloadPopup()
 
     // не спамить уведомлениями, если конфиг сыпется подряд
@@ -42,6 +43,7 @@ ShellRoot {
     Todo {}
     LunarSidebar {}
     LunarSidebarRight {}
+    LunarNotifications {}   // тосты + история уведомлений (демон — NotifModel)
     LunarOsd {}
     LunarScreenshotOsd {}
     LunarTray {}

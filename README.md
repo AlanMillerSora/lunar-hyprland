@@ -65,7 +65,7 @@
 
 Иконки столов в панели — ряд фаз луны: `01`/`09` полная, `02–04` серпы со светом слева, `05` кольцо (полное затмение), `06–08` серпы со светом справа. При наведении (или при переключении — короткий «пик») фаза показывает иконку приложения стола; новое окно на неактивном столе мигает. Приложения раскладываются по столам правилом `app_ws` в `hyprland.lua`, остальное открывается на текущем столе.
 
-Автозапуск из `hyprland.start` (тихо, идемпотентно): **Firefox** на стол 2, **Vesktop** на стол 4, **btop** (kitty `--class lunar-btop`) на стол 9. Ещё поднимаются `mako`, `hypridle`, два `wl-paste`-наблюдателя cliphist, скрипт прозрачности и курсор `Bibata-Modern-Ice`.
+Автозапуск из `hyprland.start` (тихо, идемпотентно): **Firefox** на стол 2, **Vesktop** на стол 4, **btop** (kitty `--class lunar-btop`) на стол 9. Ещё поднимаются `hypridle`, два `wl-paste`-наблюдателя cliphist, скрипт прозрачности и курсор `Bibata-Modern-Ice`. Уведомления ведёт сам Quickshell (демон в `NotifModel.qml`), отдельного mako больше нет.
 
 | Частичное | Полное | Открытая луна |
 |:---:|:---:|:---:|
@@ -86,7 +86,7 @@
 | **Пульт** | `SUPER + C` | Плашка звука: вывод и микрофон с выбором устройств и ползунками |
 | **Медиа** | `SUPER + X` | Трек, seek «лунный», транспорт, переход к полному плееру |
 | **Поиск** | `SUPER + D` | Ланчер: приложения (иконки), секции, недавние на пустом запросе, страницы Hub, действия, счёт, конверсия единиц, эмодзи, ссылки |
-| **Уведомления** | `SUPER + N` | История mako: раскрытие, dismiss, «очистить», DND |
+| **Уведомления** | `SUPER + N` | История (активные + архив): превью картинок, раскрытие, dismiss, «очистить», DND. Тост-оверлей — `LunarNotifications` |
 | **Телеметрия** | `SUPER + I` | CPU/RAM/GPU с температурой и полосой, скорость сети |
 
 | Пульт | Медиа |
@@ -197,7 +197,7 @@ palette.toml + templates/*.in ──> eclipse-palette.py ──┬──> ~/.cac
 
 Выходы — производные: в git не трекаются (`.gitignore`) и создаются генератором при установке; в `templates/` он не пишет. Источник правок — только `palette.toml` и `templates/*.in`.
 
-Пресеты — **LUNAR** (холодный монохром, по умолчанию), **STEEL** (серо-синий с акцентом), **ФОТО** (цвет считается с обоев). Выбор — **Hub → Interface**; kitty и mako перечитывают конфиг сразу, остальные — при следующем запуске.
+Пресеты — **LUNAR** (холодный монохром, по умолчанию), **STEEL** (серо-синий с акцентом), **ФОТО** (цвет считается с обоев). Выбор — **Hub → Interface**; kitty перечитывает конфиг сразу, остальные — при следующем запуске (mako замаскирован, его цвета оставлены для отката).
 
 ```bash
 ~/.config/hypr/scripts/eclipse-palette.py                          # показать план (dry-run)
@@ -271,7 +271,7 @@ palette.toml + templates/*.in ──> eclipse-palette.py ──┬──> ~/.cac
 
 </div>
 
-Локальный, без сети: клик по дню в правом сайдбаре → список событий и форма (название, время, за сколько минут напомнить). Точки на днях показывают, где есть события; напоминание приходит уведомлением mako, звук — опцией. События — в `~/.local/share/lunar/calendar.json`, логика — `hypr/scripts/eclipse-calendar.py`.
+Локальный, без сети: клик по дню в правом сайдбаре → список событий и форма (название, время, за сколько минут напомнить). Точки на днях показывают, где есть события; напоминание приходит уведомлением (его показывает демон Quickshell), звук — опцией. События — в `~/.local/share/lunar/calendar.json`, логика — `hypr/scripts/eclipse-calendar.py`.
 
 <div align="center">
 
@@ -361,7 +361,7 @@ cd ~/rice
 ```bash
 ./lunar help             # справка: install|deps|sync|bump|ci|doctor|palette|snapshot|release|reload
 ./doctor.sh              # health-check: quickshell, configerrors, iwd/networkd, демоны/tgproxy/палитра/sudo, дрейф, ci
-./lunar reload           # перезагрузить рис без приложений (Hyprland, quickshell, mako, hypridle, cliphist)
+./lunar reload           # перезагрузить рис без приложений (Hyprland, quickshell, hypridle, cliphist)
 ```
 
 Команды `lunar` дополняются в zsh: комплит `.config/zsh/completions/_lunar` (каталог добавлен в `fpath` из `~/.zshrc` до `compinit`).
@@ -511,7 +511,7 @@ lib32-nvidia-utils
 | **Firefox** | тёмный монохром, вертикальные вкладки, без рекламы/телеметрии, своя новая вкладка (`lunar/home/firefox-home.html`) |
 | **GTK 3/4** | theme `Adwaita-dark`, иконки `Tela-dark`, курсор Bibata, `@import lunar-colors.css` |
 | **qt6ct** | Fusion + `custom_palette`, своя схема (для меню трея Quickshell) |
-| **mako** | Roboto Mono, цвет из `include=colors.conf` |
+| **Уведомления** | демон Quickshell (`NotifModel.qml` + `LunarNotifications.qml`): тосты, история, DND; конфиг mako оставлен для отката |
 | **fastfetch / bat** | монохром (`logo.color`, `ansi`) |
 
 | kitty | yazi |
