@@ -274,12 +274,13 @@ hl.layer_rule({ match = { namespace = "lunar-sidebar-right" }, blur = true, igno
 -- Крупные модалки — обычные окна (Quickshell FloatingWindow): их можно
 -- тянуть и ресайзить, блюр им даёт прозрачность окна. Заголовки ставлю в QML.
 -- Радиус 12 (как системный): без обводки форму читает именно угол.
--- Hub — исключение: теперь layer-оверлей PanelWindow (карточку тащу/ресайзю/
--- снапаю сам, состояние помню), window_rule по «Lunar Hub» больше не нужен.
+-- Hub — снова обычное окно (FloatingWindow): Hyprland двигает/тянет его по
+-- SUPER, скругляет и блюрит; размер/позицию Hub помнит сам (hub-state.json).
 hl.window_rule({ match = { title = "^(Lunar Wallpapers)$" }, float = true, center = true, rounding = 12, opacity = "0.95 override 0.95 override" })
 hl.window_rule({ match = { title = "^(Lunar Clipboard)$" }, float = true, center = true, rounding = 12, opacity = "0.95 override 0.95 override" })
 hl.window_rule({ match = { title = "^(Lunar Power)$" },     float = true, center = true, rounding = 12, opacity = "0.95 override 0.95 override" })
 hl.window_rule({ match = { title = "^(Lunar Agent)$" },     float = true, center = true, rounding = 12, opacity = "0.95 override 0.95 override" })
+hl.window_rule({ match = { title = "^(Lunar Hub)$" },       float = true, center = true, rounding = 12, opacity = "0.95 override 0.95 override" })
 -- Задачи — не окно, а layer-оверлей PanelWindow (двигаю/масштабирую сам):
 -- window_rule по «Lunar Tasks» больше не нужен.
 
@@ -373,11 +374,8 @@ hl.bind(M .. " + SHIFT + DOWN",  dsp.window.move({ direction = "down" }))
 local mouseDragBind   = hl.bind(M .. " + mouse:272", dsp.window.drag(),   { mouse = true })  -- SUPER + ЛКМ
 local mouseResizeBind = hl.bind(M .. " + mouse:273", dsp.window.resize(), { mouse = true })  -- SUPER + ПКМ
 
--- Hub — layer-оверлей. Обычный ресайз карточки идёт чистой ЛКМ и от этих
--- биндов не зависит. Хак лишь оставляет SUPER+ЛКМ/ПКМ живыми для карточки:
--- пока Hub открыт, снимаю бинды окна, иначе Hyprland съедает событие.
--- Hub зовёт это через `hyprctl eval 'lunar_hub_mouse(false)'` (открыт) и
--- `... (true)` (закрыт). Клавиатурные бинды не трогаем — они остаются живыми.
+-- (оставлено на всякий: Hub снова обычное окно, SUPER+ЛКМ/ПКМ двигают и
+-- ресайзят его сами — этот хак больше не вызывается)
 function lunar_hub_mouse(enable)
   mouseDragBind:set_enabled(enable)
   mouseResizeBind:set_enabled(enable)

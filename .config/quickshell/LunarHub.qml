@@ -1,5 +1,6 @@
 import Quickshell
 import Quickshell.Io
+import Quickshell.Hyprland
 import Quickshell.Wayland
 import Quickshell.Services.Pipewire
 import QtQuick
@@ -7,69 +8,37 @@ import "SettingsPages"
 import "widgets/shared"
 
 // ════════════════════════════════════════════════════════════════
-//  LunarHub — настройки/лаунчер оверлей-карточкой (как у 43PR).
-//  Раньше был обычным FloatingWindow: Hyprland сам блюрил и тянул
-//  его за края. Теперь — PanelWindow слоя Overlay: прозрачный фон
-//  во весь экран + mask, а «окно» — карточка, которую тащу за
-//  верхний грип, ресайзю за края/углы обычной ЛКМ и прилипаю по позициям
-//  (центр/верх/низ/бок). Геометрия (snap,x,y,w,h) переживает
-//  рестарт в ~/.config/lunar/hub-state.json. Фон темнит наша
-//  LunarBackdrop (слой Bottom) — Hub лишь пишет флаг в Theme.setModal.
+//  LunarHub — настройки/лаунчер обычным окном (FloatingWindow): Hyprland
+//  сам двигает/тянет его по SUPER, блюрит и скругляет (window_rule по
+//  заголовку «Lunar Hub»). Позицию и размер помню в
+//  ~/.config/lunar/hub-state.json и восстанавливаю при открытии.
 //  IPC: qs ipc call hub toggle|open|close|nav N  (0..8)
 // ════════════════════════════════════════════════════════════════
-PanelWindow {
+FloatingWindow {
     id: root
 
-    anchors { top: true; left: true; right: true; bottom: true }
-    color: "transparent"
-    exclusionMode: ExclusionMode.Ignore
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.namespace: "lunar-hub"
-    // клавиатуру беру только пока открыт (по требованию) — поиск и Esc
-    WlrLayershell.keyboardFocus: root.showing ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
-
-    // кликабельно только когда открыт; mask по подложке — модалка
-    mask: Region { item: root.showing ? backdrop : null }
+    title: "Lunar Hub"
+    // фон даёт окно, скругление/блюр — правило Hyprland по заголовку (как у агента)
+    color: Theme.surfacePanel
+    visible: root.showing
+    minimumSize: Qt.size(root.minCardW, root.minCardH)
+    implicitWidth: 1180
+    implicitHeight: 720
 
     property bool showing: false
-
-    // Не держу полноэкранную поверхность замапленной, когда Hub скрыт:
-    // иначе компоситор переливает лишний слой 3440×1440 каждый кадр
-    // (особенно заметно при смене столов). Задержка — на анимацию закрытия.
-    property bool _mapped: showing
-    visible: _mapped
-    Timer {
-        id: unmapTimer
-        interval: Theme.animSlow + 60
-        onTriggered: root._mapped = false
-    }
-
-    // Обычный ресайз карточки идёт чистой ЛКМ и от этих биндов не зависит.
-    // Хак ниже лишь оставляет SUPER+ЛКМ/ПКМ живыми для карточки: пока Hub
-    // открыт, снимаю бинды окна, иначе Hyprland съедает событие. Клавиши не
-    // трогаю — хоткеи остаются живыми. Функция — в hyprland.lua. Если eval
-    // не сработает, ЛКМ-ресайз всё равно работает.
-    Process { id: hubMouseOff; command: ["hyprctl", "eval", "lunar_hub_mouse(false)"] }
-    Process { id: hubMouseOn;  command: ["hyprctl", "eval", "lunar_hub_mouse(true)"] }
-    // страховка: если Quickshell перезапустили с открытым Hub — вернуть бинды
-    Component.onCompleted: hubMouseOn.running = true
 
     // агент/плеер и Hub взаимоисключающие: открылся Hub — гашу их
     // (через Theme.activeOverlay, в одном процессе — плавно)
     onShowingChanged: {
         if (showing) {
-            unmapTimer.stop()
-            _mapped = true
             Theme.activeOverlay = "hub"
             Theme.setModal("hub", true)
-            hubMouseOff.running = true
         } else {
-            unmapTimer.restart()
             Theme.setModal("hub", false)
-            dragging = false
-            hubMouseOn.running = true
         }
     }
+    // окно закрыли извне (Hyprland, SUPER+Q и т.п.) — снимаю флаг
+    onClosed: showing = false
     Connections {
         target: Theme
         function onActiveOverlayChanged() {
@@ -339,14 +308,7 @@ PanelWindow {
     readonly property string statePath: Quickshell.env("HOME") + "/.config/lunar/hub-state.json"
 
     function saveState() {
-        if (!root.stateReady) return
-        stateFile.setText(JSON.stringify({
-            snap: root.snapPosition,
-            x: root.freeX,
-            y: root.freeY,
-            w: root.freeW,
-            h: root.freeH
-        }))
+        // позицию/размер ведёт Hyprland (окно по центру, как у агента)
     }
 
     function clampX(v) {
@@ -445,69 +407,23 @@ PanelWindow {
         printErrors: false
 
         onLoaded: {
-            try {
-                var s = JSON.parse(stateFile.text())
-                if (["center", "top", "bottom", "left", "right", "free"].indexOf(s.snap) >= 0) {
-                    if (typeof s.x === "number") root.freeX = s.x
-                    if (typeof s.y === "number") root.freeY = s.y
-                    if (typeof s.w === "number") root.freeW = s.w
-                    if (typeof s.h === "number") root.freeH = s.h
-                    root.snapPosition = s.snap
-                    root.applySnap(s.snap)
-                }
-            } catch (e) {
-                console.warn("hub: could not read saved state:", e)
-            }
             root.stateReady = true
         }
         onLoadFailed: root.stateReady = true
     }
 
-    // ── подложка: ловит клик «мимо» и Esc ──
-    Rectangle {
-        id: backdrop
-        anchors.fill: parent
-        color: "transparent"
-        focus: root.showing
-        Keys.onEscapePressed: root.closePanel()
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: root.closePanel()
-        }
-    }
-
     // ── карточка Hub ──
     Rectangle {
         id: card
-        x: root.cardX
-        y: root.cardY
-        width: root.cardWidth
-        height: root.cardHeight
+        anchors.fill: parent
         radius: Theme.radiusL
-        color: Theme.barPill
+        color: "transparent"          // фон даёт само окно
         border.width: 1
         border.color: Theme.arch ? Theme.hairAccent : Theme.hair
 
         opacity: root.showing ? 1 : 0
         visible: opacity > 0
 
-        Behavior on x {
-            enabled: !root.dragging && root.showing
-            NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut }
-        }
-        Behavior on y {
-            enabled: !root.dragging && root.showing
-            NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut }
-        }
-        Behavior on width {
-            enabled: !root.dragging
-            NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut }
-        }
-        Behavior on height {
-            enabled: !root.dragging
-            NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut }
-        }
         Behavior on opacity {
             NumberAnimation { duration: Theme.animMed; easing.type: Theme.easeOut }
         }
@@ -724,198 +640,6 @@ PanelWindow {
 
         }
 
-        // ── верхний грип: тащу карточку, двойной клик — центр ──
-        Item {
-            id: positionHandle
-            width: 220
-            height: 22
-            z: 120
-            anchors { top: parent.top; horizontalCenter: parent.horizontalCenter }
-            anchors.topMargin: -3
 
-            MouseArea {
-                id: dragArea
-                anchors.fill: parent
-                hoverEnabled: true
-                acceptedButtons: Qt.LeftButton
-                cursorShape: root.dragging ? Qt.ClosedHandCursor : Qt.OpenHandCursor
-
-                property real pressX: 0
-                property real pressY: 0
-                property real startX: 0
-                property real startY: 0
-                property bool moved: false
-
-                onPressed: function(mouse) {
-                    var p = dragArea.mapToItem(backdrop, mouse.x, mouse.y)
-                    pressX = p.x
-                    pressY = p.y
-                    startX = root.cardX
-                    startY = root.cardY
-                    moved = false
-                    root.dragging = true
-                }
-                onPositionChanged: function(mouse) {
-                    if (!root.dragging) return
-                    var p = dragArea.mapToItem(backdrop, mouse.x, mouse.y)
-                    moved = true
-                    root.cardX = root.clampX(startX + (p.x - pressX))
-                    root.cardY = root.clampY(startY + (p.y - pressY))
-                }
-                onReleased: {
-                    if (!root.dragging) return
-                    if (moved) root.finishDrag()
-                    else root.dragging = false
-                }
-                onCanceled: {
-                    if (!root.dragging) return
-                    if (moved) root.finishDrag()
-                    else root.dragging = false
-                }
-                onDoubleClicked: root.snapCenter()
-            }
-
-            Row {
-                anchors.centerIn: parent
-                spacing: 16
-
-                Text {
-                    text: "◀"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 8
-                    color: Theme.textDim
-                    anchors.verticalCenter: parent.verticalCenter
-                    MouseArea { anchors.fill: parent; anchors.margins: -5; onClicked: root.snapLeft() }
-                }
-                Text {
-                    text: "▲"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 9
-                    color: Theme.textDim
-                    anchors.verticalCenter: parent.verticalCenter
-                    MouseArea { anchors.fill: parent; anchors.margins: -5; onClicked: root.snapTop() }
-                }
-                Text {
-                    text: "●"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 9
-                    color: Theme.textDim
-                    anchors.verticalCenter: parent.verticalCenter
-                    MouseArea { anchors.fill: parent; anchors.margins: -5; onClicked: root.snapCenter() }
-                }
-                Text {
-                    text: "▼"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 9
-                    color: Theme.textDim
-                    anchors.verticalCenter: parent.verticalCenter
-                    MouseArea { anchors.fill: parent; anchors.margins: -5; onClicked: root.snapBottom() }
-                }
-                Text {
-                    text: "▶"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 8
-                    color: Theme.textDim
-                    anchors.verticalCenter: parent.verticalCenter
-                    MouseArea { anchors.fill: parent; anchors.margins: -5; onClicked: root.snapRight() }
-                }
-            }
-        }
-
-        // ── ресайз за края и углы (битовая маска edges) ──
-        //  Как у обычного окна: тяну край/угол ЛКМ, курсор — resize-стрелки,
-        //  размер меняется на лету и сохраняется. SUPER не обязателен (но и не
-        //  мешает). Полоса тонкая (3 px внутрь), клики по содержимому не ловит.
-        component ResizeHandle: MouseArea {
-            id: rh
-            property int edges: 0
-            z: 100
-            acceptedButtons: Qt.LeftButton
-            hoverEnabled: true
-            cursorShape: (rh.edges === 1 || rh.edges === 2) ? Qt.SizeHorCursor
-                       : (rh.edges === 4 || rh.edges === 8) ? Qt.SizeVerCursor
-                       : (rh.edges === 5 || rh.edges === 10) ? Qt.SizeFDiagCursor
-                       : Qt.SizeBDiagCursor
-
-            property real pressX: 0
-            property real pressY: 0
-            property real startX: 0
-            property real startY: 0
-            property real startW: 0
-            property real startH: 0
-
-            onPressed: function(mouse) {
-                var p = rh.mapToItem(backdrop, mouse.x, mouse.y)
-                pressX = p.x
-                pressY = p.y
-                startX = root.cardX
-                startY = root.cardY
-                startW = root.cardWidth
-                startH = root.cardHeight
-                root.dragging = true
-            }
-            onPositionChanged: function(mouse) {
-                if (!root.dragging) return
-                var p = rh.mapToItem(backdrop, mouse.x, mouse.y)
-                var dx = p.x - pressX
-                var dy = p.y - pressY
-                var x = startX, y = startY, w = startW, h = startH
-                if (rh.edges & 1) { x = startX + dx; w = startW - dx }
-                if (rh.edges & 2) { w = startW + dx }
-                if (rh.edges & 4) { y = startY + dy; h = startH - dy }
-                if (rh.edges & 8) { h = startH + dy }
-                if (w < root.minCardW) {
-                    if (rh.edges & 1) x = startX + startW - root.minCardW
-                    w = root.minCardW
-                }
-                if (h < root.minCardH) {
-                    if (rh.edges & 4) y = startY + startH - root.minCardH
-                    h = root.minCardH
-                }
-                if (x < root.dragMargin) { w += x - root.dragMargin; x = root.dragMargin }
-                if (y < root.dragMargin) { h += y - root.dragMargin; y = root.dragMargin }
-                if (x + w > root.width - root.dragMargin) w = root.width - root.dragMargin - x
-                if (y + h > root.height - root.dragMargin) h = root.height - root.dragMargin - y
-                root.cardX = x
-                root.cardY = y
-                root.cardWidth = w
-                root.cardHeight = h
-            }
-            onReleased: root.finishResize()
-            onCanceled: root.finishResize()
-        }
-
-        ResizeHandle {
-            edges: 1; width: 6
-            anchors { left: parent.left; leftMargin: -3; top: parent.top; topMargin: 12; bottom: parent.bottom; bottomMargin: 12 }
-        }
-        ResizeHandle {
-            edges: 2; width: 6
-            anchors { right: parent.right; rightMargin: -3; top: parent.top; topMargin: 12; bottom: parent.bottom; bottomMargin: 12 }
-        }
-        ResizeHandle {
-            edges: 4; height: 6
-            anchors { top: parent.top; topMargin: -3; left: parent.left; leftMargin: 12; right: parent.right; rightMargin: 12 }
-        }
-        ResizeHandle {
-            edges: 8; height: 6
-            anchors { bottom: parent.bottom; bottomMargin: -3; left: parent.left; leftMargin: 12; right: parent.right; rightMargin: 12 }
-        }
-        ResizeHandle {
-            edges: 5; width: 14; height: 14
-            anchors { left: parent.left; leftMargin: -5; top: parent.top; topMargin: -5 }
-        }
-        ResizeHandle {
-            edges: 6; width: 14; height: 14
-            anchors { right: parent.right; rightMargin: -5; top: parent.top; topMargin: -5 }
-        }
-        ResizeHandle {
-            edges: 9; width: 14; height: 14
-            anchors { left: parent.left; leftMargin: -5; bottom: parent.bottom; bottomMargin: -5 }
-        }
-        ResizeHandle {
-            edges: 10; width: 14; height: 14
-            anchors { right: parent.right; rightMargin: -5; bottom: parent.bottom; bottomMargin: -5 }
-        }
     }
 }

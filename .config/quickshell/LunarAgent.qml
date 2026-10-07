@@ -57,7 +57,8 @@ FloatingWindow {
     Connections {
         target: Theme
         function onActiveOverlayChanged() {
-            if (Theme.activeOverlay !== "agent" && root.showing) root.closePanel()
+            if (Theme.activeOverlay !== "agent" && Theme.activeOverlay !== "hub" && root.showing)
+                root.closePanel()
         }
     }
 
