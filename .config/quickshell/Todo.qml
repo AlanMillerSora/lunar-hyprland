@@ -200,7 +200,7 @@ PanelWindow {
         width: Math.round(24 * ui)
         height: width
         radius: Math.round(8 * ui)
-        color: Theme.bg
+        color: Theme.surfaceCard
         Behavior on color { ColorAnimation { duration: 120 } }
         Behavior on opacity { NumberAnimation { duration: 120 } }
 
@@ -246,7 +246,7 @@ PanelWindow {
             width: root.cardWidth
             height: panelCol.height + root.px(28)
             radius: root.px(20)
-            color: "transparent"
+            color: Theme.surfacePanel
 
             anchors.top: parent.top
             anchors.topMargin: root.topGap + root.offsetY
@@ -290,7 +290,7 @@ PanelWindow {
                         width: root.px(36)
                         height: root.px(4)
                         radius: root.px(2)
-                        color: Theme.bg
+                        color: Theme.surfaceCard
                         opacity: (dragArea.containsMouse || root.dragging) ? 1 : 0.1
                         Behavior on opacity { NumberAnimation { duration: 150 } }
                     }
@@ -342,7 +342,7 @@ PanelWindow {
                     width: parent.width
                     height: Math.max(root.rowHeight, input.contentHeight + root.px(24))
                     radius: root.px(12)
-                    color: Theme.bg
+                    color: Theme.surfaceCard
                     border.width: input.activeFocus ? 1 : 0
                     border.color: Theme.accent
                     Behavior on color { ColorAnimation { duration: 120 } }
@@ -356,7 +356,7 @@ PanelWindow {
                         anchors.leftMargin: root.px(10)
                         anchors.top: parent.top
                         anchors.topMargin: root.px(8)
-                        color: Theme.bg
+                        color: Theme.surfaceCard
 
                         Text {
                             anchors.centerIn: parent
@@ -389,7 +389,7 @@ PanelWindow {
                         font.pixelSize: root.px(12)
                         color: Theme.text
                         selectionColor: Theme.accent
-                        selectedTextColor: Theme.bg
+                        selectedTextColor: Theme.onAccent
                         wrapMode: TextEdit.Wrap
                         selectByMouse: true
                         textFormat: TextEdit.PlainText
@@ -427,7 +427,7 @@ PanelWindow {
                     verticalAlignment: Text.AlignVCenter
                     text: "Nothing to do"
                     font.pixelSize: root.px(11)
-                    color: Theme.textDim
+                    color: Theme.textFaint
                 }
 
                 ListView {
@@ -449,7 +449,7 @@ PanelWindow {
                         width: list.width
                         height: Math.max(root.rowHeight, edit.contentHeight + root.px(24))
                         radius: root.px(12)
-                        color: Theme.bg
+                        color: Theme.surfaceCard
                         border.width: edit.activeFocus ? 1 : 0
                         border.color: Theme.accent
                         Behavior on color { ColorAnimation { duration: 120 } }
@@ -472,7 +472,7 @@ PanelWindow {
                             anchors.topMargin: root.px(12)
                             color: entry.done ? Theme.accent : "transparent"
                             border.width: 1
-                            border.color: entry.done ? Theme.accent : Theme.alpha(Theme.text, 0.3)
+                            border.color: entry.done ? Theme.accent : Theme.borderAccent
                             Behavior on color { ColorAnimation { duration: 150 } }
 
                             Text {
@@ -481,7 +481,7 @@ PanelWindow {
                                 text: "✓"
                                 font.pixelSize: root.px(13)
                                 font.bold: true
-                                color: Theme.bg
+                                color: Theme.onAccent
                             }
 
                             MouseArea {
@@ -500,10 +500,9 @@ PanelWindow {
                             anchors.topMargin: root.px(12)
                             font.pixelSize: root.px(12)
                             font.strikeout: entry.done
-                            color: entry.done ? Theme.textDim : Theme.text
-                            opacity: entry.done ? 0.7 : 1
+                            color: entry.done ? Theme.textFaint : Theme.text
                             selectionColor: Theme.accent
-                            selectedTextColor: Theme.bg
+                            selectedTextColor: Theme.onAccent
                             wrapMode: TextEdit.Wrap
                             selectByMouse: true
                             textFormat: TextEdit.PlainText
