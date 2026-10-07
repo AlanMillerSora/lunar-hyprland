@@ -59,6 +59,23 @@ Item {
         }
     }
 
+    // Живой кодек записи: probe сам выбирает путь (NVENC/VAAPI/софт) и отдаёт
+    // человекочитаемое имя — показываю его в разделе ЗАПИСЬ, чтобы было видно,
+    // что настройки качества/битрейта/герцовки уходят именно в этот кодек.
+    property string recCodec: ""
+
+    Process {
+        id: recCodecProc
+        command: [Quickshell.env("HOME") + "/.config/hypr/scripts/eclipse-record.sh", "probe"]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var m = text.match(/кодек:\s*(.+)/)
+                if (m) page.recCodec = m[1].trim()
+            }
+        }
+    }
+
     onRecQpChanged: if (recReady) recAdapter.qp = recQp
     onRecBitrateChanged: if (recReady) recAdapter.bitrate = recBitrate
     onRecFpsChanged: if (recReady) recAdapter.fps = recFps
@@ -994,6 +1011,25 @@ Item {
                 spacing: 10
 
                 Row {
+                    spacing: Theme.space1
+
+                    Text {
+                        text: "КОДЕК"
+                        color: Theme.textDim
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSmall
+                    }
+
+                    Text {
+                        text: page.recCodec !== "" ? page.recCodec : "…"
+                        color: Theme.text
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSmall
+                        font.bold: true
+                    }
+                }
+
+                Row {
                     width: parent.width
                     spacing: 10
 
@@ -1129,7 +1165,7 @@ Item {
                 }
 
                 Text {
-                    text: "качество — QP (постоянное); битрейт — потолок; применяется со следующей записи"
+                    text: "качество — уровень (ниже лучше); битрейт — потолок; применяется со следующей записи"
                     color: Theme.textFaint
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontTiny

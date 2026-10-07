@@ -2,10 +2,11 @@
 # ════════════════════════════════════════════════════════════════
 #  eclipse-record.sh — запись экрана через wf-recorder.
 #
-#  Кодирование: аппаратное (VAAPI) с авто-выбором, иначе — софт.
-#    · NVIDIA — через VAAPI (libva-nvidia-driver поверх NVENC);
-#    · AMD/Intel — через VAAPI (родной драйвер);
-#    · если GPU-кодек не завёлся — падаем на libx264 (софт).
+#  Кодирование — аппаратное, с авто-выбором; софт — крайний запасной путь.
+#    · NVIDIA — NVENC (ffmpeg h264_nvenc): libva-nvidia-driver умеет только
+#      декод, поэтому VAAPI-энкода на NVIDIA нет, а NVENC есть;
+#    · AMD/Intel — VAAPI (родной драйвер);
+#    · если аппаратный кодек не завёлся — падаем на libx264 (софт).
 #
 #  Качество/битрейт/герцовку задают переключатели в Hub → Monitors
 #  (файл ~/.config/lunar/record.json). Изменения применяются со
@@ -108,14 +109,40 @@ vaapi_works() {
   return $rc
 }
 
+# NVENC (NVIDIA) проверяю пробой. libva-nvidia-driver умеет только декод,
+# поэтому VAAPI-энкода на NVIDIA нет; а NVENC (ffmpeg h264_nvenc) есть — он и
+# берёт запись, разгружая CPU. На AMD/Intel nvidia-smi нет — ветка мимо.
+nvenc_works() {
+  command -v nvidia-smi >/dev/null 2>&1 || return 1
+  local probe rc=1
+  probe="$(mktemp --suffix=.mp4)" || return 1
+  if ffmpeg -hide_banner -loglevel error -y \
+       -f lavfi -i "testsrc=duration=1:size=320x240:rate=30" \
+       -c:v h264_nvenc -frames:v 1 "$probe" >/dev/null 2>&1 && [[ -s "$probe" ]]; then
+    rc=0
+  fi
+  rm -f -- "$probe"
+  return $rc
+}
+
 # Метка цветового диапазона и матрицы. Без неё wf-recorder пишет yuvj420p с
 # флагом pc (full-range), хотя сэмплы уже сжаты в 16–235: плеер верит флагу,
 # не разворачивает уровни — и картинка выходит тусклее (белое 235 вместо 255).
 # Ограниченный диапазон + BT.709 — стандарт видео: плеер разворачивает 16–235
 # обратно в полный, и запись совпадает с экраном пиксель в пиксель.
+# NVENC по умолчанию ставит SD-матрицу bt470bg — её тоже перебиваю на bt709.
 rec_color=(-p color_range=tv -p colorspace=bt709 -p color_primaries=bt709 -p color_trc=bt709)
 
-# Параметры VAAPI-энкодера: постоянное качество (QP) + потолок битрейта.
+# Параметры NVENC: VBR с постоянным качеством (CQ) + потолок битрейта.
+# rec_qp/rec_bitrate — те же переключатели Hub → Monitors, что и для софта.
+nvenc_params() {
+  local p="-c h264_nvenc -p preset=p5 -p tune=hq -p rc=vbr -p cq=$rec_qp"
+  p="$p -p b:v=${rec_bitrate}M -p maxrate=${rec_bitrate}M -p bufsize=$((rec_bitrate * 2))M ${rec_color[*]}"
+  [ "$rec_fps" != auto ] && p="$p -r $rec_fps"
+  echo "$p"
+}
+
+# Параметры VAAPI-энкодера (AMD/Intel): постоянное качество (QP) + потолок.
 vaapi_params() {  # vaapi_params <render-node>
   local p="-c h264_vaapi -d $1 -p rc_mode=CQP -p qp=$rec_qp"
   p="$p -p maxrate=${rec_bitrate}M -p buffersize=$((rec_bitrate * 2))M ${rec_color[*]}"
@@ -131,37 +158,51 @@ soft_params() {
   echo "$p"
 }
 
-# Человекочитаемое имя выбранного пути (для notify/статуса).
-vaapi_label() {
-  if lspci 2>/dev/null | grep -qi nvidia; then
-    echo "NVENC (VAAPI)"
-  else
-    echo "GPU (VAAPI)"
-  fi
+# Какой путь берём: NVENC (NVIDIA) → VAAPI (AMD/Intel) → софт.
+pick_encoder() {
+  if nvenc_works; then echo "nvenc"; return 0; fi
+  local dev; dev="$(render_node 2>/dev/null)" || dev=""
+  if [ -n "$dev" ] && vaapi_works "$dev"; then echo "vaapi"; return 0; fi
+  echo "soft"
+}
+
+# Человекочитаемое имя пути (для notify/статуса).
+encoder_label() {
+  case "$1" in
+    nvenc) echo "NVIDIA NVENC (GPU)";;
+    vaapi) echo "GPU (VAAPI)";;
+    *)     echo "софт (libx264)";;
+  esac
+}
+
+# Параметры для выбранного пути.
+encoder_params() {  # encoder_params <kind> <render-node>
+  case "$1" in
+    nvenc) nvenc_params;;
+    vaapi) vaapi_params "$2";;
+    *)     soft_params;;
+  esac
 }
 
 start() {
   if running; then echo "уже пишу"; return 0; fi
   load_conf
   mkdir -p "$DIR"
-  local dev params=() label out
+  local dev kind label out
+  local -a params=()
   dev="$(render_node)" || dev=""
   out="$DIR/lunar-$(date +%Y%m%d-%H%M%S).mp4"
 
-  if [ -n "$dev" ] && vaapi_works "$dev"; then
-    read -r -a params <<<"$(vaapi_params "$dev")"
-    label="$(vaapi_label)"
-  else
-    read -r -a params <<<"$(soft_params)"
-    label="софт (libx264)"
-  fi
+  kind="$(pick_encoder)"
+  label="$(encoder_label "$kind")"
+  read -r -a params <<<"$(encoder_params "$kind" "$dev")"
 
   # 9>&- — не наследовать лок записью, иначе stop не сможет его взять
   setsid wf-recorder -f "$out" "${params[@]}" >/dev/null 2>&1 </dev/null 9>&- &
   sleep 0.6
   if [ -z "$(rec_pid 2>/dev/null || true)" ]; then
-    # кодек не завёлся — падаем на софт
-    label="софт (libx264)"
+    # выбранный кодек не завёлся — падаем на софт
+    kind="soft"; label="$(encoder_label "$kind")"
     read -r -a params <<<"$(soft_params)"
     setsid wf-recorder -f "$out" "${params[@]}" >/dev/null 2>&1 </dev/null 9>&- &
     sleep 0.6
@@ -209,15 +250,12 @@ toggle() { if running; then stop; else start; fi; }
 
 probe() {
   load_conf
-  local dev params=() label
+  local dev kind label
+  local -a params=()
   dev="$(render_node)" || dev=""
-  if [ -n "$dev" ] && vaapi_works "$dev"; then
-    read -r -a params <<<"$(vaapi_params "$dev")"
-    label="$(vaapi_label)"
-  else
-    read -r -a params <<<"$(soft_params)"
-    label="софт (libx264)"
-  fi
+  kind="$(pick_encoder)"
+  label="$(encoder_label "$kind")"
+  read -r -a params <<<"$(encoder_params "$kind" "$dev")"
   echo "кодек: $label"
   echo "настройки: QP $rec_qp · ${rec_bitrate} Мбит/с · герцовка $rec_fps"
   echo "параметры: ${params[*]}"
