@@ -1,6 +1,7 @@
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
 import "widgets/shared"
@@ -40,7 +41,27 @@ PanelWindow {
         calRemind.text = ""
     }
 
+    // Блюр слоя включаю только когда панель раскрыта: свёрнутая
+    // поверхность 560×1440 иначе блюрится вхолостую и грузит GPU при
+    // смене столов.
+    function applyLayerBlur(on) {
+        blurProc.command = ["hyprctl", "eval",
+            "hl.layer_rule({match = {namespace = \"lunar-sidebar-right\"}, blur = " +
+            (on ? "true" : "false") + "})"]
+        blurProc.running = true
+    }
+    Process { id: blurProc; running: false }
+    // hyprctl reload возвращает blur=true из конфига — заново гашу
+    Connections {
+        target: Hyprland
+        function onRawEvent(event) {
+            if (event.name === "configreloaded" || event.name === "config.reloaded")
+                root.applyLayerBlur(!root.collapsed)
+        }
+    }
+
     onCollapsedChanged: {
+        applyLayerBlur(!collapsed)
         if (!collapsed && !stripHover.hovered && !contentHover.hovered && !topHover.hovered)
             hideTimer.restart()
     }
@@ -1109,6 +1130,7 @@ print(json.dumps(out[:200]))
     }
 
     Component.onCompleted: {
+        applyLayerBlur(!collapsed)
         recModel.load()
         recStatusProc.running = true
         cal.reload()

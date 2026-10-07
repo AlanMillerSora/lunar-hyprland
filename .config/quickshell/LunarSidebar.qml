@@ -1,6 +1,7 @@
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
@@ -31,7 +32,27 @@ PanelWindow {
     function closePanel() { collapsed = true }
     function toggle() { collapsed = !collapsed }
 
+    // Блюр слоя включаю только когда панель раскрыта: свёрнутая
+    // поверхность 560×1440 иначе блюрится вхолостую и грузит GPU при
+    // смене столов (замер: пик переключения ~50% → ~24%).
+    function applyLayerBlur(on) {
+        blurProc.command = ["hyprctl", "eval",
+            "hl.layer_rule({match = {namespace = \"lunar-sidebar\"}, blur = " +
+            (on ? "true" : "false") + "})"]
+        blurProc.running = true
+    }
+    Process { id: blurProc; running: false }
+    // hyprctl reload возвращает blur=true из конфига — заново гашу
+    Connections {
+        target: Hyprland
+        function onRawEvent(event) {
+            if (event.name === "configreloaded" || event.name === "config.reloaded")
+                root.applyLayerBlur(!root.collapsed)
+        }
+    }
+
     onCollapsedChanged: {
+        applyLayerBlur(!collapsed)
         if (!collapsed) {
             if (tabIndex === 0) api.refresh()
             if (!pinned && !stripHover.hovered && !contentHover.hovered && !topHover.hovered) hideTimer.restart()
@@ -682,6 +703,7 @@ PanelWindow {
     // CPU/RAM берём из общего SysInfo (заполняет lunar-statsd) —
     // вместо отдельного python3/psutil в каждом сайдбаре.
     Component.onCompleted: {
+        applyLayerBlur(!collapsed)
         notesFile.reload()
         api.refresh()
     }
