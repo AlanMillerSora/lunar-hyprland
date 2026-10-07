@@ -34,6 +34,13 @@ PanelWindow {
     property var thumbSet: ({})
     property string thumbDir: Quickshell.env("HOME") + "/.cache/lunar/wall-thumbs"
 
+    // текущая картинка обоев: её индекс в полке (-1 — среди миниатюр нет)
+    property int currentIdx: -1
+    // последняя позиция листания, восстановленная из состояния (-1 — нет)
+    property int savedIndex: -1
+    property bool stateReady: false
+    readonly property string statePath: Quickshell.env("HOME") + "/.config/lunar/wallpapers-state.json"
+
     // ── веер ──
     property int visibleCount: 8
     property real zoomScale: 0.8
@@ -69,12 +76,17 @@ PanelWindow {
             root.hoverArmed = false
             if (!root.scanned)
                 wallScan.running = true
+            // сперва считаю, где текущие обои, — открываюсь сразу на них
+            root.recomputeCurrent()
             keyCatcher.forceActiveFocus()
             Qt.callLater(carousel.centerOnStart)
         } else {
             // плавный выход: гасим, окно прячем после затухания
             root.closing = true
             root.fade = 0
+            // уходя, запоминаю, где остановилось листание
+            root.saveState()
+            carousel.pendingCenter = false
             closeHide.restart()
             // закрыли до подтверждения — отменяю его
             confirmTimer.stop()
@@ -103,6 +115,8 @@ PanelWindow {
             onStreamFinished: {
                 root.walls = text.trim().split("\n").filter(function(x) { return x.length > 0 })
                 root.scanned = true
+                // полка собрана — определяю, где текущие обои
+                root.recomputeCurrent()
                 // готовлю/обновляю миниатюры — фоном, один раз
                 thumbGen.running = true
                 Qt.callLater(carousel.centerOnStart)
@@ -141,6 +155,31 @@ PanelWindow {
                 root.thumbSet = s
             }
         }
+    }
+
+    // ── позиция листания: переживает рестарт шелла ──
+    FileView {
+        id: stateFile
+        path: root.statePath
+        printErrors: false
+        onLoaded: {
+            try {
+                var s = JSON.parse(stateFile.text())
+                if (typeof s.index === "number")
+                    root.savedIndex = s.index
+            } catch (e) {
+                console.warn("wallpapers: could not read saved state:", e)
+            }
+            root.stateReady = true
+        }
+        onLoadFailed: root.stateReady = true
+    }
+
+    // текущие обои могли смениться (выбор из Hub/окна) — обновляю индекс
+    Connections {
+        target: Theme
+        function onWallpaperPathChanged() { root.recomputeCurrent() }
+        function onWallpaperModeChanged() { root.recomputeCurrent() }
     }
 
     // ── выбрать файл (вне полки) ──
@@ -204,6 +243,7 @@ PanelWindow {
         root.confirming = true
         root.commitIndex = i
         carousel.selectedIndex = i
+        carousel.scrollIndex = i
         carousel.contentX = i * carousel.step
         confirmTimer.restart()
     }
@@ -213,7 +253,39 @@ PanelWindow {
             return
         carousel.selectedIndex = Math.max(0,
             Math.min(carousel.selectedIndex + delta, root.walls.length - 1))
+        carousel.scrollIndex = carousel.selectedIndex
         carousel.contentX = carousel.selectedIndex * carousel.step
+    }
+
+    // текущая картинка обоев: сперва точный путь, иначе — по имени файла
+    // (каталог мог переехать). -1 — среди миниатюр её нет: не ломаюсь,
+    // показываю полку как есть.
+    function findCurrent() {
+        if (Theme.wallpaperMode !== "image")
+            return -1
+        var p = Theme.wallpaperPath
+        if (p === "")
+            return -1
+        var i = root.walls.indexOf(p)
+        if (i >= 0)
+            return i
+        var b = p.substring(p.lastIndexOf("/") + 1)
+        for (var j = 0; j < root.walls.length; j++)
+            if (root.walls[j].substring(root.walls[j].lastIndexOf("/") + 1) === b)
+                return j
+        return -1
+    }
+
+    function recomputeCurrent() {
+        root.currentIdx = root.findCurrent()
+    }
+
+    // запоминаю позицию листания: на неё возвращаюсь, если текущей картинки
+    // нет в полке (или показана сцена)
+    function saveState() {
+        if (!root.stateReady || root.walls.length <= 0)
+            return
+        stateFile.setText(JSON.stringify({ index: carousel.scrollIndex }))
     }
 
     // клавиши ловлю на отдельном Item — он в фокусе всегда, даже на пустой полке
@@ -231,10 +303,12 @@ PanelWindow {
             } else if (event.key === Qt.Key_Tab) {
                 carousel.selectedIndex = root.walls.length > 0
                     ? (carousel.selectedIndex + 1) % root.walls.length : 0
+                carousel.scrollIndex = carousel.selectedIndex
                 carousel.contentX = carousel.selectedIndex * carousel.step
             } else if (event.key === Qt.Key_Backtab) {
                 carousel.selectedIndex = root.walls.length > 0
                     ? ((carousel.selectedIndex - 1) % root.walls.length + root.walls.length) % root.walls.length : 0
+                carousel.scrollIndex = carousel.selectedIndex
                 carousel.contentX = carousel.selectedIndex * carousel.step
             } else if (event.key === Qt.Key_D) {
                 root.moveSel(root.visibleCount)
@@ -307,38 +381,59 @@ PanelWindow {
         transformOrigin: Item.Center
 
         property int selectedIndex: 0
+        // позиция прокрутки (центр ленты). Ведём отдельно от selectedIndex:
+        // наведение двигает выбор, но не саму ленту, а помнить надо именно ленту.
+        property int scrollIndex: 0
         property bool ready: false
+        // пока окно показывается, лента ещё не получила настоящую ширину:
+        // жду раскладки (см. centerOnStart / centerRetry), иначе считаю
+        // позицию по нулевой ширине и промахиваюсь
+        property bool pendingCenter: false
+        property int centerTries: 0
         readonly property real tileWidth: Math.max(80, width / root.visibleCount - 10)
         readonly property real step: tileWidth
         readonly property real viewportCenterX: width / 2
         readonly property real sideMargin: Math.max(0, viewportCenterX - tileWidth / 2)
         contentWidth: strip.width + 2 * sideMargin
 
-        // текущая обои: сперва точный путь, потом по имени файла (на случай
-        // переезда каталога). Если не нашли — 0, а не середина списка
-        // (середина читалась как «случайная»).
-        function currentIndex() {
-            var p = Theme.wallpaperPath
-            if (p !== "") {
-                var i = root.walls.indexOf(p)
-                if (i >= 0)
-                    return i
-                var b = p.substring(p.lastIndexOf("/") + 1)
-                for (var j = 0; j < root.walls.length; j++)
-                    if (root.walls[j].substring(root.walls[j].lastIndexOf("/") + 1) === b)
-                        return j
+        // открываюсь на текущей обои и сразу, без длинного глайда; если её
+        // нет среди миниатюр — на последней запомненной позиции листания.
+        // Ширина ленты (и tileWidth) появляется не в кадр показа окна, поэтому
+        // пока геометрия нулевая — жду (centerRetry) и не считаю позицию.
+        function centerOnStart() {
+            if (!root.showing || root.walls.length <= 0) {
+                pendingCenter = false
+                return
             }
-            return 0
+            if (width <= 0 || viewportCenterX <= 0) {
+                if (centerTries < 120) {
+                    centerTries++
+                    pendingCenter = true
+                } else {
+                    pendingCenter = false
+                }
+                return
+            }
+            pendingCenter = false
+            centerTries = 0
+            var target = root.currentIdx
+            if (target < 0)
+                target = root.savedIndex
+            target = Math.max(0, Math.min(target, root.walls.length - 1))
+            ready = false
+            selectedIndex = target
+            scrollIndex = target
+            contentX = target * step
+            ready = true
         }
 
-        // открываюсь ровно на выбранной обои и сразу, без длинного глайда
-        function centerOnStart() {
-            if (root.walls.length <= 0 || width <= 0)
-                return
-            ready = false
-            selectedIndex = Math.max(0, Math.min(currentIndex(), root.walls.length - 1))
-            contentX = selectedIndex * step
-            ready = true
+        // повторяю центрирование, пока лента не разложится
+        Timer {
+            id: centerRetry
+            interval: 16
+            repeat: true
+            running: carousel.pendingCenter
+            onTriggered: carousel.centerOnStart()
         }
 
         onWidthChanged: centerOnStart()
@@ -347,7 +442,9 @@ PanelWindow {
             if (root.walls.length <= 0)
                 return
             selectedIndex = Math.max(0, Math.min(Math.round(contentX / step), root.walls.length - 1))
+            scrollIndex = selectedIndex
             contentX = selectedIndex * step
+            root.saveState()
         }
 
         Behavior on contentX {
@@ -373,6 +470,8 @@ PanelWindow {
                     width: carousel.tileWidth
                     height: carousel.height
                     property bool active: index === carousel.selectedIndex
+                    // текущие обои (могут быть не в фокусе, пока листаю)
+                    readonly property bool isCurrent: index === root.currentIdx
 
                     readonly property real baseCenterX: carousel.sideMargin + x - carousel.contentX + width / 2
                     readonly property real distance: Math.abs(baseCenterX - carousel.viewportCenterX)
@@ -440,11 +539,38 @@ PanelWindow {
                         Rectangle {
                             z: 10
                             anchors.fill: parent
-                            visible: delegateItem.active || (root.confirming && delegateItem.index === root.commitIndex)
+                            visible: delegateItem.active || delegateItem.isCurrent
+                                || (root.confirming && delegateItem.index === root.commitIndex)
                             color: "transparent"
-                            border.width: 2
-                            border.color: (root.confirming && delegateItem.index === root.commitIndex)
+                            border.width: (delegateItem.isCurrent
+                                || (root.confirming && delegateItem.index === root.commitIndex)) ? 3 : 2
+                            border.color: (delegateItem.isCurrent
+                                || (root.confirming && delegateItem.index === root.commitIndex))
                                 ? Theme.accent : Theme.activeBorder
+                        }
+
+                        // маркер текущих обоев — акцентная плашка сверху:
+                        // даже если я ушёл листать, их видно
+                        Rectangle {
+                            z: 11
+                            visible: delegateItem.isCurrent && delegateItem.near
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.top: parent.top
+                            anchors.topMargin: Theme.space2
+                            width: curText.implicitWidth + Theme.space3
+                            height: curText.implicitHeight + Theme.space1
+                            radius: height / 2
+                            color: Theme.accent
+                            Text {
+                                id: curText
+                                anchors.centerIn: parent
+                                text: "ТЕКУЩИЕ"
+                                color: Theme.onAccent
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontMicro
+                                font.bold: true
+                                font.letterSpacing: 1
+                            }
                         }
                     }
 

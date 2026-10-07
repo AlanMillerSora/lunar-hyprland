@@ -374,8 +374,9 @@ hl.bind(M .. " + SHIFT + DOWN",  dsp.window.move({ direction = "down" }))
 local mouseDragBind   = hl.bind(M .. " + mouse:272", dsp.window.drag(),   { mouse = true })  -- SUPER + ЛКМ
 local mouseResizeBind = hl.bind(M .. " + mouse:273", dsp.window.resize(), { mouse = true })  -- SUPER + ПКМ
 
--- Hub — layer-оверлей. Пока он открыт, SUPER+ЛКМ/ПКМ должны доходить до QML
--- (там карточка ресайзится за край/угол), иначе бинд окна съедает событие.
+-- Hub — layer-оверлей. Обычный ресайз карточки идёт чистой ЛКМ и от этих
+-- биндов не зависит. Хак лишь оставляет SUPER+ЛКМ/ПКМ живыми для карточки:
+-- пока Hub открыт, снимаю бинды окна, иначе Hyprland съедает событие.
 -- Hub зовёт это через `hyprctl eval 'lunar_hub_mouse(false)'` (открыт) и
 -- `... (true)` (закрыт). Клавиатурные бинды не трогаем — они остаются живыми.
 function lunar_hub_mouse(enable)
