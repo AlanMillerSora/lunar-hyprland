@@ -211,6 +211,9 @@ class Player:
         self.pending = set()
         self.mouse = (-1, -1)
         self.hit = {}
+        self.drag_src = None
+        self.drag_dst = None
+        self.dragging = False
         self._vol0 = None
         self.load_state()
 
@@ -287,6 +290,24 @@ class Player:
                 return
             self.qindex = nxt % len(self.queue)
         self.start_track(self.queue[self.qindex])
+
+    def move_in_queue(self, src, dst):
+        if src is None or dst is None:
+            return
+        if not (0 <= src < len(self.queue)):
+            return
+        dst = max(0, min(len(self.queue) - 1, dst))
+        if src == dst:
+            return
+        tr = self.queue.pop(src)
+        self.queue.insert(dst, tr)
+        if self.qindex == src:
+            self.qindex = dst
+        elif src < self.qindex <= dst:
+            self.qindex -= 1
+        elif dst <= self.qindex < src:
+            self.qindex += 1
+        self.status_set("переставил: " + tr.get("title", "")[:30])
 
     def _local_cover(self, track):
         d = os.path.dirname(track.get("url", ""))
@@ -507,6 +528,7 @@ class Lunar(QWidget):
         self._poll.timeout.connect(self._pump)
         self._poll.start(150)
         self._hover = None
+        self._press = None
         # слежу за палитрой риса: смена темы в Hub перекрашивает плеер на лету
         self._pal_path = os.path.expanduser("~/.cache/lunar/palette.json")
         self._pal_watch = QFileSystemWatcher([self._pal_path])
@@ -729,6 +751,15 @@ class Lunar(QWidget):
             selected = i == sel and self.p.focus != "search"
             hov = inrect(self.p.mouse, rr)
             now = self.p.playing_track and tr.get("id") == self.p.playing_track.get("id")
+            if self.p.dragging and i == self.p.drag_src:
+                p.setPen(QPen(C["accent"], 1, Qt.DashLine))
+                p.setBrush(Qt.NoBrush)
+                p.drawPath(rpath(*rr, 8))
+            if self.p.dragging and self.p.drag_dst is not None \
+                    and i == self.p.drag_dst and self.p.drag_dst != self.p.drag_src:
+                ly = (ry - 2) if self.p.drag_dst > self.p.drag_src else (ry + row_h - 2)
+                p.setPen(QPen(C["accent"], 2))
+                p.drawLine(QPointF(px, ly), QPointF(x + w - 18, ly))
             if selected or hov:
                 p.setPen(Qt.NoPen)
                 p.setBrush(ACC_SOFT if selected else ACC_HOVER)
@@ -906,10 +937,39 @@ class Lunar(QWidget):
     def mouseMoveEvent(self, e):
         pos = (e.position().x() / SCALE, e.position().y() / SCALE)
         self.p.mouse = pos
+        if self._press is not None and self.p.drag_src is not None:
+            dx, dy = pos[0] - self._press[0], pos[1] - self._press[1]
+            if not self.p.dragging and (dx * dx + dy * dy) > 36:
+                self.p.dragging = True
+            if self.p.dragging:
+                self.p.drag_dst = self._row_at(pos)
         self.update()
 
+    def _row_at(self, pos):
+        for row in self.p.hit.get("rows", []):
+            rr = row[0]
+            if rr[0] <= pos[0] <= rr[0] + rr[2] and rr[1] - 6 <= pos[1] <= rr[1] + rr[3] + 6:
+                return row[1]
+        return None
+
     def mousePressEvent(self, e):
-        self.p.click(e.position().x() / SCALE, e.position().y() / SCALE)
+        pos = (e.position().x() / SCALE, e.position().y() / SCALE)
+        self._press = pos
+        self.p.drag_src = self._row_at(pos) if self.p.tab == 0 else None
+        self.p.drag_dst = self.p.drag_src
+        self.p.dragging = False
+        self.update()
+
+    def mouseReleaseEvent(self, e):
+        pos = (e.position().x() / SCALE, e.position().y() / SCALE)
+        if self.p.dragging:
+            self.p.move_in_queue(self.p.drag_src, self.p.drag_dst)
+        else:
+            self.p.click(pos[0], pos[1])
+        self._press = None
+        self.p.drag_src = None
+        self.p.drag_dst = None
+        self.p.dragging = False
         self.update()
 
     def wheelEvent(self, e):
