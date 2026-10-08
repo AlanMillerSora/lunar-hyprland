@@ -1,0 +1,154 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800" font-family="'Roboto Mono','JetBrainsMono Nerd Font',monospace">
+  <rect width="1280" height="800" fill="#0a0b0f"/>
+
+  <style>
+    .panel { fill: rgba(255,255,255,0.02); stroke: rgba(255,255,255,0.14); stroke-width:1; }
+    .lbl   { fill:#8b93a7; font-size:11px; letter-spacing:2px; }
+    .faint { fill:#565d6b; font-size:10px; }
+    .dim   { fill:#8b93a7; font-size:11px; }
+    .txt   { fill:#e6eaf2; font-size:11px; }
+    .acc   { fill:#c9d2e2; }
+    .row   { fill: rgba(255,255,255,0.05); }
+    .sel   { fill: rgba(201,210,226,0.14); }
+    .box   { fill:#151920; stroke: rgba(255,255,255,0.10); stroke-width:1; }
+    .sepline { stroke: rgba(255,255,255,0.10); stroke-width:1; }
+    .accentline { stroke:#c9d2e2; stroke-width:2; }
+  </style>
+
+  <text x="48" y="30" class="acc" font-size="16" font-weight="bold" letter-spacing="1">LUNAR PLAYER — СХЕМА ЯЗЫКА</text>
+
+  <!-- NAV -->
+  <rect class="panel" x="48" y="44" width="1184" height="52" rx="14"/>
+  <rect x="54" y="35" width="52" height="18" fill="#0a0b0f"/>
+  <text x="60" y="48" class="lbl">NAV</text>
+  <text x="66" y="78" class="faint" font-size="14">‹  ›  ⌂</text>
+  <text x="150" y="78" class="acc" font-size="14" font-weight="bold">LUNAR PLAYER</text>
+  <rect class="box" x="430" y="58" width="430" height="24" rx="6"/>
+  <text x="442" y="74" class="faint">⌕  что хочешь послушать?</text>
+  <text x="1216" y="78" class="dim" text-anchor="end">играет · 03:04</text>
+
+  <!-- LIBRARY -->
+  <rect class="panel" x="48" y="112" width="300" height="516" rx="14"/>
+  <rect x="54" y="103" width="72" height="18" fill="#0a0b0f"/>
+  <text x="60" y="116" class="lbl">LIBRARY</text>
+  <text x="64" y="142" class="dim" font-weight="bold">ТВОЯ ФОНОТЕКА</text>
+  <text x="332" y="142" class="acc" text-anchor="end">+</text>
+  <line class="sepline" x1="64" y1="152" x2="332" y2="152"/>
+  <rect class="sel" x="64" y="162" width="268" height="22" rx="6"/>
+  <text x="72" y="178" class="acc" font-size="10">♪  ОЧЕРЕДЬ</text>
+  <text x="324" y="178" class="faint" text-anchor="end">8</text>
+  <text x="72" y="206" class="dim" font-size="10">⌕  РЕЗУЛЬТАТЫ</text>
+  <text x="324" y="206" class="faint" text-anchor="end">0</text>
+  <text x="72" y="234" class="dim" font-size="10">▤  ЛОКАЛЬНЫЕ</text>
+  <text x="324" y="234" class="faint" text-anchor="end">0</text>
+  <text x="72" y="262" class="dim" font-size="10">★  ИЗБРАННОЕ</text>
+  <text x="324" y="262" class="faint" text-anchor="end">3</text>
+  <text x="64" y="300" class="faint">В ОЧЕРЕДИ</text>
+  <rect class="row" x="64" y="310" width="268" height="18" rx="4"/>
+  <text x="70" y="323" class="acc" font-size="10">♪  01  Трек</text>
+  <text x="70" y="345" class="dim" font-size="10">02  Трек</text>
+  <text x="70" y="367" class="dim" font-size="10">03  Трек</text>
+  <text x="64" y="404" class="faint">ПЛЕЙЛИСТЫ · S сохранить</text>
+  <text x="70" y="424" class="dim" font-size="10">▸  Плейлист 1</text>
+  <line class="sepline" x1="64" y1="596" x2="332" y2="596"/>
+  <text x="64" y="612" class="faint">space пауза · n/p трек</text>
+  <text x="64" y="626" class="faint">клик — играть · drag — переставить</text>
+
+  <!-- MAIN -->
+  <rect class="panel" x="364" y="112" width="552" height="516" rx="14"/>
+  <rect x="370" y="103" width="52" height="18" fill="#0a0b0f"/>
+  <text x="376" y="116" class="lbl">MAIN</text>
+  <rect class="sel" x="380" y="128" width="86" height="24" rx="7"/>
+  <text x="392" y="145" class="acc" font-size="10">ОЧЕРЕДЬ</text>
+  <text x="478" y="145" class="dim" font-size="10">ПОИСК</text>
+  <text x="536" y="145" class="dim" font-size="10">ЛОКАЛЬНЫЕ</text>
+  <text x="616" y="145" class="dim" font-size="10">ИЗБРАННОЕ</text>
+  <line class="sepline" x1="380" y1="162" x2="900" y2="162"/>
+  <text x="418" y="180" class="faint">№</text>
+  <text x="446" y="180" class="faint">НАЗВАНИЕ</text>
+  <text x="720" y="180" class="faint">ИСПОЛНИТЕЛЬ</text>
+  <text x="900" y="180" class="faint" text-anchor="end">ДЛИТ</text>
+  <line class="sepline" x1="380" y1="188" x2="900" y2="188"/>
+
+  <rect class="row" x="380" y="196" width="520" height="30" rx="6"/>
+  <rect class="box" x="386" y="200" width="22" height="22" rx="4"/>
+  <text x="420" y="216" class="faint">01</text>
+  <text x="446" y="216" class="acc">Трек — играющий</text>
+  <text x="900" y="216" class="faint" text-anchor="end">3:21</text>
+
+  <rect class="box" x="386" y="234" width="22" height="22" rx="4"/>
+  <text x="420" y="250" class="faint">02</text>
+  <text x="446" y="250" class="dim">★ Трек из избранного</text>
+  <text x="900" y="250" class="faint" text-anchor="end">4:02</text>
+
+  <rect class="box" x="386" y="268" width="22" height="22" rx="4"/>
+  <text x="420" y="284" class="faint">03</text>
+  <text x="446" y="284" class="dim">Трек</text>
+  <text x="900" y="284" class="faint" text-anchor="end">2:58</text>
+
+  <text x="446" y="330" class="faint">(в покое — «очередь пуста — найди трек в ПОИСКЕ»)</text>
+  <text x="446" y="360" class="faint">drag строки → перестановка очереди</text>
+
+  <!-- SIDEBAR -->
+  <rect class="panel" x="932" y="112" width="300" height="516" rx="14"/>
+  <rect x="938" y="103" width="72" height="18" fill="#0a0b0f"/>
+  <text x="944" y="116" class="lbl">SIDEBAR</text>
+  <text x="948" y="142" class="faint">СЕЙЧАС ИГРАЕТ</text>
+  <!-- cava -->
+  <g fill="#c9d2e2">
+    <rect x="948" y="170" width="6" height="14" rx="1"/>
+    <rect x="958" y="162" width="6" height="22" rx="1"/>
+    <rect x="968" y="154" width="6" height="30" rx="1"/>
+    <rect x="978" y="166" width="6" height="18" rx="1"/>
+    <rect x="988" y="150" width="6" height="34" rx="1"/>
+    <rect x="998" y="160" width="6" height="24" rx="1"/>
+    <rect x="1008" y="170" width="6" height="14" rx="1"/>
+    <rect x="1018" y="158" width="6" height="26" rx="1"/>
+    <rect x="1028" y="166" width="6" height="18" rx="1"/>
+    <rect x="1038" y="172" width="6" height="12" rx="1"/>
+    <rect x="1048" y="160" width="6" height="24" rx="1"/>
+    <rect x="1058" y="168" width="6" height="16" rx="1"/>
+  </g>
+  <rect class="box" x="948" y="200" width="180" height="180" rx="10"/>
+  <text x="1038" y="296" class="faint" text-anchor="middle" font-size="26">♪</text>
+  <text x="948" y="406" class="acc" font-size="14" font-weight="bold">Трек</text>
+  <text x="948" y="428" class="dim">Артист</text>
+  <text x="948" y="448" class="faint">YouTube · стрим</text>
+  <line class="sepline" x1="948" y1="466" x2="1216" y2="466"/>
+  <text x="948" y="486" class="faint">ДЕТАЛИ</text>
+  <text x="948" y="508" class="faint">Источник</text><text x="1216" y="508" class="dim" text-anchor="end">YouTube</text>
+  <text x="948" y="530" class="faint">В очереди</text><text x="1216" y="530" class="dim" text-anchor="end">1 / 8</text>
+  <text x="948" y="552" class="faint">Длительность</text><text x="1216" y="552" class="dim" text-anchor="end">3:21</text>
+
+  <!-- PLAYING -->
+  <rect class="panel" x="48" y="644" width="1184" height="112" rx="14"/>
+  <rect x="54" y="635" width="62" height="18" fill="#0a0b0f"/>
+  <text x="60" y="648" class="lbl">PLAYING</text>
+  <rect class="box" x="64" y="666" width="60" height="60" rx="8"/>
+  <text x="94" y="702" class="faint" text-anchor="middle" font-size="20">♪</text>
+  <text x="140" y="686" class="acc" font-size="14" font-weight="bold">Трек</text>
+  <text x="140" y="706" class="dim">Артист</text>
+  <!-- transport -->
+  <text x="640" y="700" class="faint" font-size="18" text-anchor="middle">⇤</text>
+  <circle cx="700" cy="694" r="18" fill="#c9d2e2"/>
+  <text x="700" y="701" fill="#0a0b0f" font-size="16" text-anchor="middle">▶</text>
+  <text x="760" y="700" class="faint" font-size="18" text-anchor="middle">⇥</text>
+  <text x="806" y="700" class="faint" font-size="16" text-anchor="middle">⇄</text>
+  <text x="846" y="700" class="faint" font-size="16" text-anchor="middle">↻</text>
+  <text x="886" y="700" class="faint" font-size="16" text-anchor="middle">☆</text>
+  <!-- volume -->
+  <text x="1216" y="678" class="faint" text-anchor="end">VOL 100%</text>
+  <rect x="1056" y="688" width="160" height="4" rx="2" fill="rgba(255,255,255,0.10)"/>
+  <rect x="1056" y="688" width="160" height="4" rx="2" fill="#c9d2e2"/>
+  <!-- seek -->
+  <text x="140" y="738" class="faint">0:42</text>
+  <line class="sepline" x1="180" y1="734" x2="1156" y2="734"/>
+  <line x1="180" y1="734" x2="470" y2="734" class="accentline"/>
+  <circle cx="470" cy="734" r="6" fill="#c9d2e2"/><circle cx="470" cy="734" r="2.5" fill="#0a0b0f"/>
+  <text x="1216" y="738" class="faint" text-anchor="end">3:21</text>
+
+  <!-- legend -->
+  <g transform="translate(48,776)">
+    <text class="faint">Слева — библиотека и очередь, в центре — список (очередь/поиск/локальные/избранное), справа — «сейчас играет» с cava, снизу — транспорт.</text>
+  </g>
+</svg>
