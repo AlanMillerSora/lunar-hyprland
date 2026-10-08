@@ -26,6 +26,7 @@ import lunar_tui as core  # noqa: E402
 
 APP_ID = "lunar-tui"
 TITLE = "Lunar Player"
+STATE = os.path.expanduser("~/.config/lunar/player-state.json")
 FONT = os.environ.get("LUNAR_TUI_FONT_FAMILY", "Roboto Mono")
 WIN_W = int(os.environ.get("LUNAR_TUI_W", "1800"))
 WIN_H = int(os.environ.get("LUNAR_TUI_H", "1060"))
@@ -201,6 +202,7 @@ class Player:
         self.status = ""
         self.status_t = 0.0
         self.shuffle = False
+        self.repeat = 0
         self.qindex = -1
         self.playing_track = None
         self.tick = 0
@@ -209,6 +211,33 @@ class Player:
         self.pending = set()
         self.mouse = (-1, -1)
         self.hit = {}
+        self._vol0 = None
+        self.load_state()
+
+    def load_state(self):
+        try:
+            with open(STATE) as f:
+                d = json.load(f)
+            self.queue = d.get("queue") or []
+            self.qindex = int(d.get("qindex", -1))
+            self.tab = int(d.get("tab", 0)) % len(self.tabs)
+            self.shuffle = bool(d.get("shuffle", False))
+            self.repeat = int(d.get("repeat", 0)) % 3
+            if d.get("volume") is not None:
+                self._vol0 = int(d["volume"])
+        except Exception:
+            pass
+
+    def save_state(self):
+        try:
+            vol = self.vol() if self._mpv_started else (self._vol0 if self._vol0 is not None else 100)
+            os.makedirs(os.path.dirname(STATE), exist_ok=True)
+            with open(STATE, "w") as f:
+                json.dump({"queue": self.queue, "qindex": self.qindex,
+                           "tab": self.tab, "shuffle": self.shuffle,
+                           "repeat": self.repeat, "volume": vol}, f)
+        except Exception:
+            pass
 
     def lists(self):
         return [self.queue, self.search_results, self.lib_local]
@@ -225,6 +254,8 @@ class Player:
             try:
                 self.mpv.start()
                 self._mpv_started = True
+                if self._vol0 is not None:
+                    self.mpv.set_volume(max(0, min(100, self._vol0)))
             except Exception:
                 pass
 
@@ -244,10 +275,17 @@ class Player:
     def next_track(self, fwd=True):
         if not self.queue:
             return
+        if self.repeat == 2 and fwd and self.qindex >= 0:      # повтор одного
+            self.start_track(self.queue[self.qindex])
+            return
         if self.shuffle:
             self.qindex = random.randrange(len(self.queue))
         else:
-            self.qindex = (self.qindex + (1 if fwd else -1)) % len(self.queue)
+            nxt = self.qindex + (1 if fwd else -1)
+            if self.repeat == 0 and fwd and nxt >= len(self.queue):   # конец без повтора
+                self.status_set("очередь закончилась")
+                return
+            self.qindex = nxt % len(self.queue)
         self.start_track(self.queue[self.qindex])
 
     def _local_cover(self, track):
@@ -280,9 +318,11 @@ class Player:
         self.pending.discard(tid)
 
     def pump(self):
+        fresh = False
         try:
             while True:
                 item = self.out.get_nowait()
+                fresh = True
                 if item[0] == "search":
                     _, res, err = item
                     self.searching = False
@@ -298,7 +338,6 @@ class Player:
                     self._load_cover(tid, path)
         except _queue.Empty:
             pass
-        fresh = False
         for ev, reason in self.mpv.drain_events():
             if ev == "end-file" and reason == "eof" and self.queue:
                 self.next_track(True)
@@ -333,10 +372,14 @@ class Player:
                 self.focus = "list"
             elif name == "Backspace":
                 self.query = self.query[:-1]
+            elif name == "space":
+                self.query += " "
             elif len(name) == 1 and name.isprintable():
                 self.query += name
             return
         if name == "Escape":
+            QApplication.quit()
+        elif name == "q":
             QApplication.quit()
         elif name == "Tab":
             self.tab = (self.tab + 1) % len(self.tabs)
@@ -364,6 +407,9 @@ class Player:
             self.next_track(False)
         elif name == "s":
             self.shuffle = not self.shuffle
+        elif name == "r":
+            self.repeat = (self.repeat + 1) % 3
+            self.status_set("повтор: " + ("выкл", "все", "один")[self.repeat])
         elif name == "m":
             self.ensure_mpv()
             self.mpv.set_mute(not self.mpv.get("mute", False))
@@ -381,6 +427,27 @@ class Player:
 
     def click(self, x, y):
         h = self.hit
+        for key, r in h.get("nav", {}).items():
+            if inrect((x, y), r):
+                if key == "home":
+                    self.tab = 0
+                    self.focus = "list"
+                    self.query = ""
+                elif key == "prev":
+                    self.tab = (self.tab - 1) % len(self.tabs)
+                else:
+                    self.tab = (self.tab + 1) % len(self.tabs)
+                return
+        if "lib_add" in h and inrect((x, y), h["lib_add"]):
+            self.lib_local = core.scan_local(core.load_config())
+            self.status_set("обновил фонотеку: " + str(len(self.lib_local)))
+            return
+        for i, r in enumerate(h.get("librows", [])):
+            if inrect((x, y), r):
+                if 0 <= i < len(self.queue):
+                    self.qindex = i
+                    self.start_track(self.queue[i])
+                return
         if "search" in h and inrect((x, y), h["search"]):
             self.focus = "search"
             return
@@ -408,6 +475,8 @@ class Player:
                     self.mpv.play_pause()
                 elif name == "shuffle":
                     self.shuffle = not self.shuffle
+                elif name == "repeat":
+                    self.repeat = (self.repeat + 1) % 3
                 return
         if "seek" in h and inrect((x, y), h["seek"]):
             dur = self.mpv.get("duration") or 0
@@ -506,11 +575,18 @@ class Lunar(QWidget):
 
     def draw_nav(self, p, g):
         x, y, w, h = g["nav"]
-        self.panel(p, g["nav"], "Nav")
+        self.panel(p, g["nav"], "[ NAV ]")
         cy = y + h / 2 - 9
-        T(p, x + 20, cy, "‹   ›   ⌂", size=13, color=C["textFaint"])
+        # навигация — живые кнопки: ‹ › листают вкладки, ⌂ возвращает к очереди
+        self.p.hit["nav"] = {}
+        for key, gl, dx in (("prev", "‹", 0), ("next", "›", 26), ("home", "⌂", 54)):
+            box = (x + 18 + dx, y + h / 2 - 15, 22, 30)
+            self.p.hit["nav"][key] = box
+            hov = inrect(self.p.mouse, box)
+            T(p, box[0] + 3, cy, gl, size=13,
+              color=C["accent"] if hov else C["textFaint"])
         T(p, x + 96, cy - 1, "LUNAR PLAYER", size=14, color=C["accent"], bold=True)
-        sw = min(560, w - 560)
+        sw = max(120, min(560, w - 560))
         sx = x + (w - sw) / 2
         sh, sy = 30, y + (h - 30) / 2
         p.setPen(QPen(C["borderAccent"] if self.p.focus == "search" else C["border"], 1))
@@ -534,10 +610,13 @@ class Lunar(QWidget):
 
     def draw_library(self, p, g):
         x, y, w, h = g["lib"]
-        self.panel(p, g["lib"], "Library")
+        self.panel(p, g["lib"], "[ LIBRARY ]")
         px, py = x + 18, y + 18
-        T(p, px, py, "ТВОЯ ФОНОТЕКА", size=12, color=C["textDim"], bold=True)
-        T(p, x + w - 30, py - 2, "+", size=16, color=C["accent"])
+        T(p, px, py, "[ ТВОЯ ФОНОТЕКА ]", size=12, color=C["textDim"], bold=True)
+        add_box = (x + w - 44, py - 6, 26, 26)
+        self.p.hit["lib_add"] = add_box
+        T(p, x + w - 30, py - 2, "+", size=16,
+          color=C["accent"] if inrect(self.p.mouse, add_box) else C["textDim"])
         py += 30
         p.setPen(QPen(SEP, 1))
         p.drawLine(QPointF(px, py), QPointF(x + w - 18, py))
@@ -565,24 +644,32 @@ class Lunar(QWidget):
               color=C["accent"] if sel else C["textFaint"], align="right", width=28)
             py += 34
         py += 12
-        T(p, px, py, "В ОЧЕРЕДИ", size=11, color=C["textFaint"])
+        T(p, px, py, "[ В ОЧЕРЕДИ ]", size=11, color=C["textFaint"])
         py += 22
         hint_y = y + h - 96
         avail = int((hint_y - py) / 26)
+        self.p.hit["librows"] = []
         for i, tr in enumerate(self.p.queue[:max(0, avail)]):
             cur = i == self.p.qindex
-            txt = (f"{'♪ ' if cur else ''}{i + 1:02d}  {tr.get('title', '')}")
-            T(p, px, py, txt, size=11, color=C["accent"] if cur else C["textDim"], width=w - 40)
+            rr = (px, py, w - 36, 24)
+            self.p.hit["librows"].append(rr)
+            hov = inrect(self.p.mouse, rr)
+            if hov and not cur:
+                p.setPen(Qt.NoPen)
+                p.setBrush(ACC_HOVER)
+                p.drawPath(rpath(*rr, 6))
+            txt = (f"{'♪ ' if cur else ''}[{i + 1:02d}]  {tr.get('title', '')}")
+            T(p, px + 4, py, txt, size=11, color=C["accent"] if cur else C["textDim"], width=w - 40)
             py += 26
         p.setPen(QPen(SEP, 1))
         p.drawLine(QPointF(px, hint_y), QPointF(x + w - 18, hint_y))
-        for i, hh in enumerate(["space пауза · n/p трек", "←/→ ±5с · a очередь",
+        for i, hh in enumerate(["space пауза · n/p трек · r повтор", "←/→ ±5с · s шаффл",
                                 "клик по строке — играть", "q выход · / поиск"]):
             T(p, px, hint_y + 10 + i * 18, hh, size=10, color=C["textFaint"])
 
     def draw_main(self, p, g):
         x, y, w, h = g["main"]
-        self.panel(p, g["main"], "Main")
+        self.panel(p, g["main"], "[ MAIN ]")
         px, py = x + 18, y + 16
         self.p.hit["tabs"] = []
         cx = px
@@ -606,7 +693,7 @@ class Lunar(QWidget):
         list_, ti = self.p.current()
         right = x + w - 18
         dur_w, art_w, th = 52, (200 if w > 500 else 0), 24
-        num_x, title_x = px + 40, px + 64
+        num_x, title_x = px + 34, px + 76
         dur_x = right - dur_w
         art_x = (dur_x - art_w - 14) if art_w else dur_x
         T(p, num_x, py, "№", size=10, color=C["textDim"])
@@ -652,7 +739,7 @@ class Lunar(QWidget):
                 p.drawPath(rpath(px, ry + 6, 3, row_h - 16, 1.5))
             self.cover(p, px + 8, ry + 4, th, th, 6, self.p.covers.get(tr.get("id")), small=True)
             mid = ry + (row_h - 4) / 2 - 9
-            T(p, num_x, mid, f"{i + 1:02d}", size=11, color=C["textFaint"])
+            T(p, num_x, mid, f"[{i + 1:02d}]", size=11, color=C["textFaint"])
             tcol = C["accent"] if now else (C["text"] if selected else C["textDim"])
             T(p, title_x, mid, tr.get("title", ""), size=12, color=tcol, bold=bool(now or selected),
               width=max(40, (art_x if art_w else dur_x) - 14 - title_x))
@@ -665,9 +752,9 @@ class Lunar(QWidget):
 
     def draw_sidebar(self, p, g):
         x, y, w, h = g["side"]
-        self.panel(p, g["side"], "Sidebar")
+        self.panel(p, g["side"], "[ SIDEBAR ]")
         px, py = x + 18, y + 18
-        T(p, px, py, "СЕЙЧАС ИГРАЕТ", size=11, color=C["textFaint"])
+        T(p, px, py, "[ СЕЙЧАС ИГРАЕТ ]", size=11, color=C["textFaint"])
         tr = self.p.playing_track
         if tr and self.p.playing():
             self.eq(p, x + w - 64, py - 4, C["accent"])
@@ -689,7 +776,7 @@ class Lunar(QWidget):
         p.setPen(QPen(SEP, 1))
         p.drawLine(QPointF(px, py), QPointF(x + w - 18, py))
         py += 10
-        T(p, px, py, "ДЕТАЛИ", size=11, color=C["textFaint"])
+        T(p, px, py, "[ ДЕТАЛИ ]", size=11, color=C["textFaint"])
         py += 22
         if tr:
             rows = [("Источник", "YouTube" if tr.get("source") == "yt" else "файл"),
@@ -703,7 +790,7 @@ class Lunar(QWidget):
 
     def draw_playing(self, p, g):
         x, y, w, h = g["play"]
-        self.panel(p, g["play"], "Playing")
+        self.panel(p, g["play"], "[ PLAYING ]")
         px, py = x + 18, y + 18
         tr = self.p.playing_track
         playing = self.p.playing()
@@ -732,11 +819,13 @@ class Lunar(QWidget):
         p.drawEllipse(QRectF(*play_box))
         centred(play_box, "▮▮" if playing else "▶", 20, qcol("bg"))
         for name, gl, dx, size in (("prev", "⇤", -86, 20), ("next", "⇥", 50, 20),
-                                   ("shuffle", "⇄", 92, 18)):
+                                   ("shuffle", "⇄", 92, 18), ("repeat", "↻", 132, 18)):
             box = (ccx + dx - 14, py + 22, 28, 28)
             self.p.hit["btn"][name] = box
             hov = inrect(self.p.mouse, box)
-            c = C["accent"] if (hov or (name == "shuffle" and self.p.shuffle)) else C["textFaint"]
+            on = (name == "shuffle" and self.p.shuffle) or \
+                 (name == "repeat" and self.p.repeat)
+            c = C["accent"] if (hov or on) else C["textFaint"]
             centred(box, gl, size, c)
         vw = 160
         vx = x + w - 36 - vw
@@ -753,8 +842,8 @@ class Lunar(QWidget):
         ry = py + cov + 22
         dur = self.p.mpv.get("duration") or (tr.get("duration") if tr else 0)
         pos = self.p.mpv.get("time-pos") or 0
-        lt, rt = core.fmt_time(pos), core.fmt_time(dur)
-        lw = 46
+        lt, rt = f"[ {core.fmt_time(pos)} ]", f"[ {core.fmt_time(dur)} ]"
+        lw = 66
         bar_x, bar_w = px + lw, w - 36 - 2 * lw
         T(p, px, ry - 8, lt, size=11, color=C["textFaint"])
         T(p, x + w - 36 - lw, ry - 8, rt, size=11, color=C["textFaint"], align="right", width=lw)
@@ -764,13 +853,18 @@ class Lunar(QWidget):
         frac = min(1.0, (pos / dur) if dur else 0.0)
         p.setBrush(C["accent"])
         p.drawPath(rpath(bar_x, ry + 1, max(0.0, bar_w * frac), 4, 2))
+        # риски шкалы — язык «чертёж»
+        p.setPen(QPen(SEP, 1))
+        for i in range(1, 10):
+            tx = bar_x + bar_w * i / 10.0
+            p.drawLine(QPointF(tx, ry + 7), QPointF(tx, ry + 11))
         # бегунок: акцентный кружок с тёмной сердцевиной
         p.drawEllipse(QPointF(bar_x + bar_w * frac, ry + 3), 6, 6)
         p.setBrush(C["bg"])
         p.drawEllipse(QPointF(bar_x + bar_w * frac, ry + 3), 2.5, 2.5)
         self.p.hit["seek"] = (bar_x, ry - 8, bar_w, 20)
         msg = self.p.status if (self.p.status and time.time() - self.p.status_t < 5) else \
-            "q выход · / поиск · space пауза · n/p трек · клик по строке — играть"
+            "q выход · / поиск · space пауза · n/p трек · s шаффл · r повтор"
         T(p, px, y + h - 20, msg, size=10,
           color=C["textDim"] if self.p.status and time.time() - self.p.status_t < 5 else C["textFaint"],
           width=w - 36)
@@ -857,6 +951,10 @@ def main():
     signal.signal(signal.SIGTERM, lambda *_: app.quit())
 
     def bye():
+        try:
+            w.p.save_state()
+        except Exception:
+            pass
         try:
             w.p.mpv.stop()
         except Exception:
