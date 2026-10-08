@@ -13,7 +13,9 @@ import os
 import queue as _queue
 import random
 import signal
+import subprocess
 import sys
+import threading
 import time
 
 from PySide6.QtCore import QFileSystemWatcher, QPointF, QRectF, Qt, QTimer
@@ -209,6 +211,8 @@ class Player:
         self.out = _queue.Queue()
         self.covers = {}
         self.pending = set()
+        self.cava = []
+        self._cava = None
         self.mouse = (-1, -1)
         self.hit = {}
         self.drag_src = None
@@ -264,6 +268,7 @@ class Player:
 
     def start_track(self, track, source=None):
         self.ensure_mpv()
+        self.start_cava()
         if source is not None:
             self.queue = list(source)
             try:
@@ -374,6 +379,42 @@ class Player:
     def set_vol(self, v):
         self.ensure_mpv()
         self.mpv.set_volume(max(0, min(100, v)))
+
+    def start_cava(self):
+        if self._cava is not None:
+            return
+        conf = os.path.expanduser("~/.config/lunar/tui/cava.conf")
+        if not os.path.exists(conf):
+            return
+        try:
+            self._cava = subprocess.Popen(
+                ["cava", "-p", conf], stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
+        except Exception:
+            self._cava = None
+            return
+        threading.Thread(target=self._cava_read, args=(self._cava,), daemon=True).start()
+
+    def _cava_read(self, proc):
+        try:
+            for line in proc.stdout:
+                vals = [int(v) for v in line.split() if v.isdigit()]
+                if vals:
+                    self.cava = vals
+        except Exception:
+            pass
+
+    def stop_cava(self):
+        proc, self._cava = self._cava, None
+        if proc and proc.poll() is None:
+            try:
+                proc.terminate()
+                proc.wait(timeout=1)
+            except Exception:
+                try:
+                    proc.kill()
+                except Exception:
+                    pass
 
     def do_search(self):
         q = self.query.strip()
@@ -548,7 +589,7 @@ class Lunar(QWidget):
 
     def _tick(self):
         self.p.tick += 1
-        if self.p.playing() or self.p.searching:
+        if self.p.playing() or self.p.searching or self.p.cava:
             self.update()
 
     # ── геометрия (логические единицы; отрисовка масштабируется) ──
@@ -787,9 +828,11 @@ class Lunar(QWidget):
         px, py = x + 18, y + 18
         T(p, px, py, "[ СЕЙЧАС ИГРАЕТ ]", size=11, color=C["textFaint"])
         tr = self.p.playing_track
-        if tr and self.p.playing():
-            self.eq(p, x + w - 64, py - 4, C["accent"])
-        py += 24
+        py += 20
+        strip_h = 26
+        if not self.draw_cava(p, px, py, w - 36, strip_h, C["accent"]) and tr and self.p.playing():
+            self.eq(p, x + w - 64, py, C["accent"])
+        py += strip_h + 12
         cs = min(w - 36, 300)
         self.cover(p, x + (w - cs) / 2, py, cs, cs, 12, self.p.covers.get(tr.get("id")) if tr else None)
         py += cs + 16
@@ -925,6 +968,20 @@ class Lunar(QWidget):
         p.setBrush(Qt.NoBrush)
         p.drawPath(path)
 
+    def draw_cava(self, p, x, y, w, h, color):
+        vals = self.p.cava
+        if not vals:
+            return False
+        n = len(vals)
+        gap = 2
+        bw = max(1.0, (w - gap * (n - 1)) / n)
+        p.setPen(Qt.NoPen)
+        p.setBrush(color)
+        for i, v in enumerate(vals):
+            bh = max(1.0, h * min(1.0, v / 1000.0))
+            p.drawRect(QRectF(x + i * (bw + gap), y + h - bh, bw, bh))
+        return True
+
     def eq(self, p, x, y, color):
         frames = [[6, 12, 8], [12, 8, 14], [8, 14, 6], [14, 6, 10]]
         f = frames[self.p.tick // 3 % len(frames)]
@@ -1013,6 +1070,10 @@ def main():
     def bye():
         try:
             w.p.save_state()
+        except Exception:
+            pass
+        try:
+            w.p.stop_cava()
         except Exception:
             pass
         try:
