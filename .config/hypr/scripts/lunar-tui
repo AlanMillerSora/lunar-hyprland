@@ -1,47 +1,21 @@
 #!/usr/bin/env bash
 # ════════════════════════════════════════════════════════════════════════
-#  lunar-tui — открыть/скрыть терминальный плеер Lunar (замена удалённому
-#  Quickshell-плееру). Зовётся по SUPER+M (hyprland.lua) и из панели бара
-#  (LunarPanel.openPlayer).
-#
-#  Логика: окно уже открыто → фокус (если оно в фокусе — закрыть);
-#  иначе запустить плеер в kitty с отдельным классом lunar-tui.
+#  lunar-tui — показать/убрать в фон окно-плеер Lunar (Qt, PySide6).
+#  SUPER+M: приложение уже живо → шлю USR1 (свернуть/развернуть окно);
+#  иначе — запускаю. В фоне музыка продолжает играть (окно лишь скрыто).
 # ════════════════════════════════════════════════════════════════════════
 set -u
-CLASS="lunar-tui"
-PLAYER="$HOME/.config/lunar/tui/lunar_tui.py"
 APP="$HOME/.config/lunar/tui/lunar_qt.py"
-LEGACY="$HOME/.config/lunar/tui/lunar_gui.py"
+PIDF="/tmp/lunar-tui.pid"
 
-[ -f "$PLAYER" ] || { echo "lunar-tui: нет $PLAYER" >&2; exit 1; }
-[ -f "$APP" ]    || { echo "lunar-tui: нет $APP" >&2; exit 1; }
+[ -f "$APP" ] || { echo "lunar-tui: нет $APP" >&2; exit 1; }
 
-have_hypr() { command -v hyprctl >/dev/null 2>&1; }
-
-exists() {
-  have_hypr || return 1
-  hyprctl clients -j 2>/dev/null | python3 -c '
-import sys, json
-d = json.load(sys.stdin)
-sys.exit(0 if any((c.get("class") or "") == "lunar-tui" for c in d) else 1)' 2>/dev/null
-}
-focused() {
-  have_hypr || return 1
-  hyprctl activewindow -j 2>/dev/null | python3 -c '
-import sys, json
-d = json.load(sys.stdin)
-cls = d.get("class") if isinstance(d, dict) else None
-sys.exit(0 if cls == "lunar-tui" else 1)' 2>/dev/null
-}
-
-if exists; then
-  if focused; then
-    hyprctl dispatch closewindow "class:$CLASS" >/dev/null 2>&1
-  else
-    hyprctl dispatch focuswindow "class:$CLASS" >/dev/null 2>&1
+if [ -f "$PIDF" ]; then
+  pid="$(cat "$PIDF" 2>/dev/null || true)"
+  if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+    kill -USR1 "$pid" 2>/dev/null       # свернуть/развернуть
+    exit 0
   fi
-  exit 0
 fi
 
-# окно ещё не открыто — запускаю Qt-приложение (PySide6, настоящие обложки)
 exec python3 "$APP" "$@"

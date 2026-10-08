@@ -134,8 +134,8 @@ C = {k: qcol(k) for k in DEFAULT_PALETTE}
 C["bg"] = qcol("bg")
 # семантические цвета: чёткие акцентные тона поверх единого стекла
 ACC = C["accent"]
-BORDER = qcol("text", 0.34)        # рамки панелей — белые
-SEP = qcol("text", 0.18)           # разделители — белые
+BORDER = qcol("text", 0.5)         # рамки панелей — белые
+SEP = qcol("text", 0.22)           # разделители — белые
 ACC_TAB = qcol("accent", 0.22)     # активная вкладка
 ACC_SOFT = qcol("accent", 0.14)    # выделенная строка
 ACC_HOVER = qcol("accent", 0.08)   # наведение
@@ -149,8 +149,8 @@ def reload_palette():
     C = {k: qcol(k) for k in DEFAULT_PALETTE}
     C["bg"] = qcol("bg")
     ACC = C["accent"]
-    BORDER = qcol("text", 0.34)
-    SEP = qcol("text", 0.18)
+    BORDER = qcol("text", 0.5)
+    SEP = qcol("text", 0.22)
     ACC_TAB = qcol("accent", 0.22)
     ACC_SOFT = qcol("accent", 0.14)
     ACC_HOVER = qcol("accent", 0.08)
@@ -219,6 +219,9 @@ def scaled_pm(pm, w, h):
         return _pm_cache[key]
     s = pm.scaled(max(1, w), max(1, h), Qt.KeepAspectRatioByExpanding,
                   Qt.SmoothTransformation)
+    # центр-кроп ровно w×h — иначе картинку плющит
+    if s.width() > w or s.height() > h:
+        s = s.copy((s.width() - w) // 2, (s.height() - h) // 2, w, h)
     if len(_pm_cache) > 400:
         _pm_cache.clear()
     _pm_cache[key] = s
@@ -375,7 +378,16 @@ class Player:
         self.mpv.pause(True)
         self.want_cover(self.playing_track)
         if self._pos0 > 2:
-            QTimer.singleShot(900, lambda: self.mpv.seek_abs(self._pos0))
+            # жду, пока mpv загрузит файл, и встаю на сохранённую позицию
+            self._rt = QTimer()
+            self._rt.setInterval(400)
+
+            def _try_seek():
+                if (self.mpv.get("duration") or 0) > 0:
+                    self.mpv.seek_abs(self._pos0)
+                    self._rt.stop()
+            self._rt.timeout.connect(_try_seek)
+            self._rt.start()
 
     def start_track(self, track, source=None):
         self.ensure_mpv()
@@ -709,6 +721,7 @@ class Lunar(QWidget):
         self._poll.start(150)
         self._hover = None
         self._press = None
+        self._vol_drag = False
         # слежу за палитрой риса: смена темы в Hub перекрашивает плеер на лету
         self._pal_path = os.path.expanduser("~/.cache/lunar/palette.json")
         self._pal_watch = QFileSystemWatcher([self._pal_path])
@@ -994,6 +1007,8 @@ class Lunar(QWidget):
     def draw_sidebar(self, p, g):
         x, y, w, h = g["side"]
         self.panel(p, g["side"], "Sidebar")
+        p.save()
+        p.setClipRect(QRectF(x, y, w, h))       # ничего не улетает за панель
         px, py = x + 18, y + 18
         T(p, px, py, "СЕЙЧАС ИГРАЕТ", size=11, color=C["textFaint"])
         tr = self.p.playing_track
@@ -1002,7 +1017,9 @@ class Lunar(QWidget):
         if not self.draw_cava(p, px, py, w - 36, strip_h, C["accent"]) and tr and self.p.playing():
             self.eq(p, x + w - 64, py, C["accent"])
         py += strip_h + 12
-        cs = min(w - 36, 300)
+        # обложка подстраивается под остаток высоты панели
+        reserve = 24 + 22 + 26 + 12 + 10 + 22 + (4 * 22 if tr else 0) + 18
+        cs = int(max(120, min(w - 36, 300, (y + h - 18) - py - reserve)))
         self.cover(p, x + (w - cs) / 2, py, cs, cs, 12, self.p.covers.get(tr.get("id")) if tr else None)
         py += cs + 16
         if tr:
@@ -1030,6 +1047,7 @@ class Lunar(QWidget):
                 T(p, px, py, k, size=11, color=C["textFaint"])
                 T(p, px + 120, py, v, size=11, color=C["textDim"], width=w - 36 - 120)
                 py += 22
+        p.restore()
 
     def draw_playing(self, p, g):
         x, y, w, h = g["play"]
@@ -1040,10 +1058,11 @@ class Lunar(QWidget):
         cov = 84
         self.cover(p, px, py, cov, cov, 8, self.p.covers.get(tr.get("id")) if tr else None)
         tx = px + cov + 18
+        tw_ = max(120, (x + w / 2) - 44 - tx)     # не залезаю под кнопку play
         T(p, tx, py + 8, tr.get("title", "") if tr else "ничего не играет", size=15,
-          color=C["accent"], bold=True, width=w * 0.4)
+          color=C["accent"], bold=True, width=tw_)
         if tr:
-            T(p, tx, py + 34, tr.get("artist", ""), size=12, color=C["textDim"], width=w * 0.4)
+            T(p, tx, py + 34, tr.get("artist", ""), size=12, color=C["textDim"], width=tw_)
             T(p, tx, py + 56, "YouTube" if tr.get("source") == "yt" else "файл",
               size=11, color=C["textFaint"])
         self.p.hit["btn"] = {}
@@ -1170,6 +1189,11 @@ class Lunar(QWidget):
     def mouseMoveEvent(self, e):
         pos = (e.position().x() / SCALE, e.position().y() / SCALE)
         self.p.mouse = pos
+        if self._vol_drag:
+            self.p.click(pos[0], pos[1])
+            self._pick_cursor(pos)
+            self.update()
+            return
         if self._press is not None and self.p.drag_src is not None:
             dx, dy = pos[0] - self._press[0], pos[1] - self._press[1]
             if not self.p.dragging and (dx * dx + dy * dy) > 36:
@@ -1196,6 +1220,23 @@ class Lunar(QWidget):
             hit = inrect(pos, h["vol"])
         self.setCursor(Qt.PointingHandCursor if hit else Qt.ArrowCursor)
 
+    def toggle_visible(self):
+        # показать / убрать в фон (SUPER+M через лаунчер)
+        if self.isVisible():
+            self.p.save_state()
+            self.hide()
+        else:
+            self.show()
+            self.raise_()
+            self.activateWindow()
+            self.setFocus()
+
+    def closeEvent(self, e):
+        # закрытие окна = фон (музыка играет); полный выход — q/Esc
+        e.ignore()
+        self.p.save_state()
+        self.hide()
+
     def _row_at(self, pos):
         for row in self.p.hit.get("rows", []):
             rr = row[0]
@@ -1205,6 +1246,11 @@ class Lunar(QWidget):
 
     def mousePressEvent(self, e):
         pos = (e.position().x() / SCALE, e.position().y() / SCALE)
+        if "vol" in self.p.hit and inrect(pos, self.p.hit["vol"]):
+            self._vol_drag = True
+            self.p.click(pos[0], pos[1])
+            self.update()
+            return
         self._press = pos
         self.p.drag_src = self._row_at(pos) if self.p.tab == 0 else None
         self.p.drag_dst = self.p.drag_src
@@ -1213,6 +1259,7 @@ class Lunar(QWidget):
 
     def mouseReleaseEvent(self, e):
         pos = (e.position().x() / SCALE, e.position().y() / SCALE)
+        self._vol_drag = False
         if self.p.dragging:
             self.p.move_in_queue(self.p.drag_src, self.p.drag_dst)
         else:
@@ -1224,7 +1271,11 @@ class Lunar(QWidget):
         self.update()
 
     def wheelEvent(self, e):
-        self.p.key("Up" if e.angleDelta().y() > 0 else "Down")
+        pos = (e.position().x() / SCALE, e.position().y() / SCALE)
+        if "vol" in self.p.hit and inrect(pos, self.p.hit["vol"]):
+            self.p.set_vol(self.p.vol() + (5 if e.angleDelta().y() > 0 else -5))
+        else:
+            self.p.key("Up" if e.angleDelta().y() > 0 else "Down")
         self.update()
 
     def keyPressEvent(self, e):
@@ -1257,10 +1308,17 @@ def main():
     app = QApplication(sys.argv)
     app.setApplicationName(APP_ID)
     app.setDesktopFileName(APP_ID)     # → app_id окна на Wayland (для window_rule)
-    app.setQuitOnLastWindowClosed(True)
+    app.setQuitOnLastWindowClosed(False)   # закрытие окна уводит в фон, а не выходит
     w = Lunar()
     w.show()
     w.setFocus()
+
+    pidfile = "/tmp/lunar-tui.pid"
+    try:
+        with open(pidfile, "w") as f:
+            f.write(str(os.getpid()))
+    except OSError:
+        pass
 
     # чтобы Python-обработчики сигналов срабатывали при живом Qt-loop
     sig_timer = QTimer()
@@ -1268,6 +1326,7 @@ def main():
     sig_timer.start(200)
     signal.signal(signal.SIGINT, lambda *_: app.quit())
     signal.signal(signal.SIGTERM, lambda *_: app.quit())
+    signal.signal(signal.SIGUSR1, lambda *_: QTimer.singleShot(0, w.toggle_visible))
 
     def bye():
         try:
@@ -1285,6 +1344,10 @@ def main():
         try:
             w.p.mpv.stop()
         except Exception:
+            pass
+        try:
+            os.remove(pidfile)
+        except OSError:
             pass
     app.aboutToQuit.connect(bye)
     app.exec()
