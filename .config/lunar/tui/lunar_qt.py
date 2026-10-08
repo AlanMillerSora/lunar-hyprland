@@ -12,6 +12,7 @@ import math
 import os
 import queue as _queue
 import random
+import re
 import signal
 import subprocess
 import sys
@@ -19,12 +20,46 @@ import threading
 import time
 
 from PySide6.QtCore import QFileSystemWatcher, QPointF, QRectF, Qt, QTimer
-from PySide6.QtGui import (QColor, QFont, QFontMetrics, QPainter, QPainterPath,
-                           QPen, QPixmap)
+from PySide6.QtGui import (QColor, QFont, QFontMetrics, QGuiApplication, QPainter,
+                           QPainterPath, QPen, QPixmap)
 from PySide6.QtWidgets import QApplication, QWidget
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import lunar_tui as core  # noqa: E402
+
+URL_RE = re.compile(r"^https?://", re.I)
+
+
+def yt_from_url(url, out):
+    """Раскрываю ссылку через yt-dlp: одиночное видео или весь плейлист.
+    Результат кладу в out как ("loadurl", треки, ошибка)."""
+    def run():
+        args = ["yt-dlp", "--flat-playlist", "--quiet", "--no-warnings",
+                "--ignore-config", "--socket-timeout", "10",
+                "--playlist-end", "200", "--print",
+                "%(id)s\t%(title)s\t%(duration)s\t%(uploader)s\t%(ie_key)s", url]
+        res, err = [], ""
+        try:
+            pr = subprocess.run(args, capture_output=True, text=True, timeout=120)
+            for line in pr.stdout.splitlines():
+                parts = (line.split("\t") + ["", "", "", "", ""])[:5]
+                vid = parts[0].strip()
+                if not vid:
+                    continue
+                res.append({"id": vid, "title": parts[1].strip() or url,
+                            "artist": parts[3].strip() or "YouTube",
+                            "duration": core.parse_sec(parts[2]),
+                            "url": f"https://www.youtube.com/watch?v={vid}",
+                            "source": "yt"})
+            if not res:
+                # не разобрал (не YouTube/прямая ссылка) — играю саму ссылку
+                res = [{"id": url, "title": url, "artist": "", "duration": 0,
+                        "url": url, "source": "url"}]
+        except Exception as e:                       # noqa: BLE001
+            err = str(e)
+        out.put(("loadurl", res, err))
+
+    threading.Thread(target=run, daemon=True).start()
 
 APP_ID = "lunar-tui"
 TITLE = "Lunar Player"
@@ -413,6 +448,18 @@ class Player:
                         self.status_set(f"найдено: {len(res)}")
                     else:
                         self.status_set("поиск: " + (err or "пусто"))
+                elif item[0] == "loadurl":
+                    _, res, err = item
+                    self.searching = False
+                    if res:
+                        self.queue = list(res)
+                        self.tab = 0
+                        self.sel[0] = 0
+                        self.qindex = 0
+                        self.start_track(res[0])
+                        self.status_set(f"загружено: {len(res)}")
+                    else:
+                        self.status_set("ссылка: " + (err or "не разобрал"))
                 elif item[0] == "art":
                     _, tid, path = item
                     self._load_cover(tid, path)
@@ -477,8 +524,12 @@ class Player:
             return
         self.searching = True
         self.search_results = []
-        self.status_set("ищу: " + q[:30] + "…")
-        core.yt_search(q, self.out)
+        if URL_RE.match(q):
+            self.status_set("открываю ссылку…")
+            yt_from_url(q, self.out)
+        else:
+            self.status_set("ищу: " + q[:30] + "…")
+            core.yt_search(q, self.out)
 
     def key(self, name):
         if self.focus == "search":
@@ -838,7 +889,7 @@ class Lunar(QWidget):
 
         list_, ti = self.p.current()
         right = x + w - 18
-        dur_w, art_w, th = 52, (200 if w > 500 else 0), 24
+        dur_w, art_w, th = 68, (200 if w > 500 else 0), 24
         num_x, title_x = px + 40, px + 64
         dur_x = right - dur_w
         art_x = (dur_x - art_w - 14) if art_w else dur_x
@@ -968,44 +1019,51 @@ class Lunar(QWidget):
               size=11, color=C["textFaint"])
         self.p.hit["btn"] = {}
         ccx = x + w / 2
+        cy = py + 34                     # общий вертикальный центр кнопок
 
-        def centred(box, glyph, size, color):
-            bx_, by_, bw_, bh_ = box
-            gw = TW(p, glyph, size)
-            T(p, bx_ + (bw_ - gw) / 2, by_ + bh_ / 2 - size * 0.72, glyph, size=size, color=color)
+        def centred(cx, gl, size, color):
+            f = font_for(size)
+            fm = QFontMetrics(f)
+            gw = fm.horizontalAdvance(gl)
+            p.setFont(f)
+            p.setPen(color)
+            p.drawText(QPointF(cx - gw / 2, cy + (fm.ascent() - fm.descent()) / 2), gl)
 
-        # play/pause — залитый акцентом круг
-        play_box = (ccx - 24, py + 10, 48, 48)
+        def button(name, cx, size, gl, on=False):
+            b = (cx - 15, cy - 15, 30, 30)
+            self.p.hit["btn"][name] = b
+            centred(cx, gl, size,
+                    C["accent"] if (inrect(self.p.mouse, b) or on) else C["textFaint"])
+
+        # play/pause — залитый акцентом круг по центру
+        play_box = (ccx - 24, cy - 24, 48, 48)
         self.p.hit["btn"]["play"] = play_box
         p.setPen(Qt.NoPen)
         p.setBrush(C["accent"])
         p.drawEllipse(QRectF(*play_box))
-        centred(play_box, "▮▮" if playing else "▶", 20, qcol("bg"))
-        for name, gl, dx, size in (("prev", "⇤", -86, 20), ("next", "⇥", 50, 20),
-                                   ("shuffle", "⇄", 92, 18), ("repeat", "↻", 132, 18)):
-            box = (ccx + dx - 14, py + 22, 28, 28)
-            self.p.hit["btn"][name] = box
-            hov = inrect(self.p.mouse, box)
-            on = (name == "shuffle" and self.p.shuffle) or \
-                 (name == "repeat" and self.p.repeat)
-            c = C["accent"] if (hov or on) else C["textFaint"]
-            centred(box, gl, size, c)
-        fav_box = (ccx + 172 - 14, py + 22, 28, 28)
-        self.p.hit["btn"]["fav"] = fav_box
-        isf = self.p.is_fav(tr)
-        centred(fav_box, "★" if isf else "☆", 18,
-                C["accent"] if (isf or inrect(self.p.mouse, fav_box)) else C["textFaint"])
+        centred(ccx, "▮▮" if playing else "▶", 20, qcol("bg"))
+        # симметрично вокруг play
+        button("prev", ccx - 64, 20, "⇤")
+        button("next", ccx + 64, 20, "⇥")
+        button("shuffle", ccx - 124, 18, "⇄", self.p.shuffle)
+        button("repeat", ccx + 124, 18, "↻", self.p.repeat > 0)
+        # громкость справа + избранное рядом
         vw = 160
         vx = x + w - 36 - vw
         vol = self.p.vol()
         muted = self.p.mpv.get("mute", False)
+        fav = (vx - 40, cy - 15, 30, 30)
+        self.p.hit["btn"]["fav"] = fav
+        isf = self.p.is_fav(tr)
+        centred(vx - 25, "★" if isf else "☆", 18,
+                C["accent"] if (isf or inrect(self.p.mouse, fav)) else C["textFaint"])
         p.setPen(Qt.NoPen)
         p.setBrush(TRACK_OFF)
-        p.drawPath(rpath(vx, py + 33, vw, 4, 2))
+        p.drawPath(rpath(vx, cy - 2, vw, 4, 2))
         p.setBrush(C["textFaint"] if muted else C["accent"])
-        p.drawPath(rpath(vx, py + 33, vw * ((0 if muted else vol) / 100.0), 4, 2))
-        self.p.hit["vol"] = (vx, py + 24, vw, 22)
-        T(p, vx, py + 8, "MUTE" if muted else f"VOL {vol}%", size=10,
+        p.drawPath(rpath(vx, cy - 2, vw * ((0 if muted else vol) / 100.0), 4, 2))
+        self.p.hit["vol"] = (vx, cy - 12, vw, 24)
+        T(p, vx, cy - 28, "MUTE" if muted else f"VOL {vol}%", size=10,
           color=C["textFaint"], align="right", width=vw)
         ry = py + cov + 22
         dur = self.p.mpv.get("duration") or (tr.get("duration") if tr else 0)
@@ -1123,6 +1181,14 @@ class Lunar(QWidget):
         self.update()
 
     def keyPressEvent(self, e):
+        # Ctrl+V — вставить ссылку/текст в строку поиска
+        if e.key() == Qt.Key_V and (e.modifiers() & Qt.ControlModifier):
+            txt = QGuiApplication.clipboard().text().strip()
+            if txt:
+                self.p.focus = "search"
+                self.p.query = ((self.p.query + " " + txt).strip())
+            self.update()
+            return
         name = e.key()
         mapping = {
             Qt.Key_Escape: "Escape", Qt.Key_Tab: "Tab", Qt.Key_Return: "Return",
