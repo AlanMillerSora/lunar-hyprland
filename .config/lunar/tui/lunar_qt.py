@@ -29,6 +29,7 @@ import lunar_tui as core  # noqa: E402
 APP_ID = "lunar-tui"
 TITLE = "Lunar Player"
 STATE = os.path.expanduser("~/.config/lunar/player-state.json")
+FAV = os.path.expanduser("~/.config/lunar/player-fav.json")
 FONT = os.environ.get("LUNAR_TUI_FONT_FAMILY", "Roboto Mono")
 WIN_W = int(os.environ.get("LUNAR_TUI_W", "1800"))
 WIN_H = int(os.environ.get("LUNAR_TUI_H", "1060"))
@@ -195,9 +196,9 @@ class Player:
         self.lib_local = core.scan_local(core.load_config())
         self.queue = []
         self.search_results = []
-        self.tabs = ["ОЧЕРЕДЬ", "ПОИСК", "ЛОКАЛЬНЫЕ"]
+        self.tabs = ["ОЧЕРЕДЬ", "ПОИСК", "ЛОКАЛЬНЫЕ", "ИЗБРАННОЕ"]
         self.tab = 0
-        self.sel = [0, 0, 0]
+        self.sel = [0, 0, 0, 0]
         self.focus = "list"
         self.query = ""
         self.searching = False
@@ -219,7 +220,10 @@ class Player:
         self.drag_dst = None
         self.dragging = False
         self._vol0 = None
+        self.favorites = []
+        self.playlists = []
         self.load_state()
+        self.load_fav()
 
     def load_state(self):
         try:
@@ -246,8 +250,58 @@ class Player:
         except Exception:
             pass
 
+    def load_fav(self):
+        try:
+            with open(FAV) as f:
+                d = json.load(f)
+            self.favorites = d.get("favorites") or []
+            self.playlists = d.get("playlists") or []
+        except Exception:
+            pass
+
+    def save_fav(self):
+        try:
+            os.makedirs(os.path.dirname(FAV), exist_ok=True)
+            with open(FAV, "w") as f:
+                json.dump({"favorites": self.favorites, "playlists": self.playlists}, f)
+        except Exception:
+            pass
+
+    def is_fav(self, track):
+        tid = track.get("id") if track else None
+        return bool(tid) and any(t.get("id") == tid for t in self.favorites)
+
+    def toggle_fav(self, track):
+        if not track or not track.get("id"):
+            self.status_set("нечего добавлять в избранное")
+            return
+        if self.is_fav(track):
+            self.favorites = [t for t in self.favorites if t.get("id") != track.get("id")]
+            self.status_set("убрал из избранного")
+        else:
+            self.favorites.append(track)
+            self.status_set("в избранное: " + track.get("title", "")[:30])
+        self.save_fav()
+
+    def save_playlist(self):
+        if not self.queue:
+            self.status_set("очередь пуста — нечего сохранять")
+            return
+        name = "Плейлист " + str(len(self.playlists) + 1)
+        self.playlists.append({"name": name, "tracks": list(self.queue)})
+        self.save_fav()
+        self.status_set("сохранил: " + name)
+
+    def load_playlist(self, i):
+        if 0 <= i < len(self.playlists):
+            pl = self.playlists[i]
+            self.queue = list(pl.get("tracks") or [])
+            self.qindex = -1
+            self.tab = 0
+            self.status_set("загрузил: " + pl.get("name", ""))
+
     def lists(self):
-        return [self.queue, self.search_results, self.lib_local]
+        return [self.queue, self.search_results, self.lib_local, self.favorites]
 
     def current(self):
         return self.lists()[self.tab], self.tab
@@ -472,6 +526,12 @@ class Player:
         elif name == "r":
             self.repeat = (self.repeat + 1) % 3
             self.status_set("повтор: " + ("выкл", "все", "один")[self.repeat])
+        elif name == "f":
+            lst, ti = self.current()
+            tr = lst[self.sel[ti]] if (lst and self.sel[ti] < len(lst)) else self.playing_track
+            self.toggle_fav(tr)
+        elif name == "S":
+            self.save_playlist()
         elif name == "m":
             self.ensure_mpv()
             self.mpv.set_mute(not self.mpv.get("mute", False))
@@ -510,6 +570,10 @@ class Player:
                     self.qindex = i
                     self.start_track(self.queue[i])
                 return
+        for r, idx in h.get("pl", []):
+            if inrect((x, y), r):
+                self.load_playlist(idx)
+                return
         if "search" in h and inrect((x, y), h["search"]):
             self.focus = "search"
             return
@@ -539,6 +603,8 @@ class Player:
                     self.shuffle = not self.shuffle
                 elif name == "repeat":
                     self.repeat = (self.repeat + 1) % 3
+                elif name == "fav":
+                    self.toggle_fav(self.playing_track)
                 return
         if "seek" in h and inrect((x, y), h["seek"]):
             dur = self.mpv.get("duration") or 0
@@ -686,7 +752,8 @@ class Lunar(QWidget):
         py += 8
         items = [("♪", "ОЧЕРЕДЬ", len(self.p.queue)),
                  ("⌕", "РЕЗУЛЬТАТЫ", len(self.p.search_results)),
-                 ("▤", "ЛОКАЛЬНЫЕ", len(self.p.lib_local))]
+                 ("▤", "ЛОКАЛЬНЫЕ", len(self.p.lib_local)),
+                 ("★", "ИЗБРАННОЕ", len(self.p.favorites))]
         self.p.hit["lib"] = []
         for i, (ic, nm, cnt) in enumerate(items):
             rr = (px, py, w - 36, 30)
@@ -710,9 +777,11 @@ class Lunar(QWidget):
         T(p, px, py, "[ В ОЧЕРЕДИ ]", size=11, color=C["textFaint"])
         py += 22
         hint_y = y + h - 96
-        avail = int((hint_y - py) / 26)
+        pl_n = min(len(self.p.playlists), 4) if self.p.playlists else 0
+        q_bottom = hint_y - (18 * pl_n + 24 if pl_n else 0)
+        avail = max(0, int((q_bottom - py) / 26))
         self.p.hit["librows"] = []
-        for i, tr in enumerate(self.p.queue[:max(0, avail)]):
+        for i, tr in enumerate(self.p.queue[:avail]):
             cur = i == self.p.qindex
             rr = (px, py, w - 36, 24)
             self.p.hit["librows"].append(rr)
@@ -721,13 +790,27 @@ class Lunar(QWidget):
                 p.setPen(Qt.NoPen)
                 p.setBrush(ACC_HOVER)
                 p.drawPath(rpath(*rr, 6))
-            txt = (f"{'♪ ' if cur else ''}[{i + 1:02d}]  {tr.get('title', '')}")
+            star = "★ " if self.p.is_fav(tr) else ""
+            txt = (f"{'♪ ' if cur else ''}{star}[{i + 1:02d}]  {tr.get('title', '')}")
             T(p, px + 4, py, txt, size=11, color=C["accent"] if cur else C["textDim"], width=w - 40)
             py += 26
+        self.p.hit["pl"] = []
+        if pl_n:
+            py2 = q_bottom + 6
+            T(p, px, py2, "[ ПЛЕЙЛИСТЫ ] · S сохранить", size=11, color=C["textFaint"])
+            yy = py2 + 20
+            for i in range(len(self.p.playlists) - pl_n, len(self.p.playlists)):
+                pl = self.p.playlists[i]
+                rr = (px, yy, w - 36, 18)
+                self.p.hit["pl"].append((rr, i))
+                hov = inrect(self.p.mouse, rr)
+                T(p, px + 4, yy, "▸ " + pl.get("name", ""), size=10,
+                  color=C["accent"] if hov else C["textDim"], width=w - 40)
+                yy += 18
         p.setPen(QPen(SEP, 1))
         p.drawLine(QPointF(px, hint_y), QPointF(x + w - 18, hint_y))
         for i, hh in enumerate(["space пауза · n/p трек · r повтор", "←/→ ±5с · s шаффл",
-                                "клик по строке — играть", "q выход · / поиск"]):
+                                "клик — играть · drag — переставить", "f избранное · S плейлист"]):
             T(p, px, hint_y + 10 + i * 18, hh, size=10, color=C["textFaint"])
 
     def draw_main(self, p, g):
@@ -813,7 +896,8 @@ class Lunar(QWidget):
             mid = ry + (row_h - 4) / 2 - 9
             T(p, num_x, mid, f"[{i + 1:02d}]", size=11, color=C["textFaint"])
             tcol = C["accent"] if now else (C["text"] if selected else C["textDim"])
-            T(p, title_x, mid, tr.get("title", ""), size=12, color=tcol, bold=bool(now or selected),
+            star = "★ " if self.p.is_fav(tr) else ""
+            T(p, title_x, mid, star + tr.get("title", ""), size=12, color=tcol, bold=bool(now or selected),
               width=max(40, (art_x if art_w else dur_x) - 14 - title_x))
             if art_w:
                 T(p, art_x, mid, tr.get("artist", ""), size=11, color=C["textFaint"], width=art_w)
@@ -901,6 +985,11 @@ class Lunar(QWidget):
                  (name == "repeat" and self.p.repeat)
             c = C["accent"] if (hov or on) else C["textFaint"]
             centred(box, gl, size, c)
+        fav_box = (ccx + 172 - 14, py + 22, 28, 28)
+        self.p.hit["btn"]["fav"] = fav_box
+        isf = self.p.is_fav(tr)
+        centred(fav_box, "★" if isf else "☆", 18,
+                C["accent"] if (isf or inrect(self.p.mouse, fav_box)) else C["textFaint"])
         vw = 160
         vx = x + w - 36 - vw
         vol = self.p.vol()
@@ -938,7 +1027,7 @@ class Lunar(QWidget):
         p.drawEllipse(QPointF(bar_x + bar_w * frac, ry + 3), 2.5, 2.5)
         self.p.hit["seek"] = (bar_x, ry - 8, bar_w, 20)
         msg = self.p.status if (self.p.status and time.time() - self.p.status_t < 5) else \
-            "q выход · / поиск · space пауза · n/p трек · s шаффл · r повтор"
+            "q выход · / поиск · space пауза · n/p трек · s шаффл · r повтор · f избранное"
         T(p, px, y + h - 20, msg, size=10,
           color=C["textDim"] if self.p.status and time.time() - self.p.status_t < 5 else C["textFaint"],
           width=w - 36)
@@ -1070,6 +1159,10 @@ def main():
     def bye():
         try:
             w.p.save_state()
+        except Exception:
+            pass
+        try:
+            w.p.save_fav()
         except Exception:
             pass
         try:
