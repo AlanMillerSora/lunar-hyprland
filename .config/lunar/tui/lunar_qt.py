@@ -93,6 +93,9 @@ def _truthy(v):
     return str(v).strip().lower() not in ("", "0", "false", "no", "off")
 
 
+BW = _truthy(os.environ.get("LUNAR_TUI_BW", "1"))   # чёрно-белый режим плеера
+
+
 def load_palette():
     if _truthy(os.environ.get("LUNAR_TUI_MONO", "0")):
         return dict(MONO_PALETTE)          # принудительный монохром
@@ -119,6 +122,9 @@ def qcol(key, a=1.0):
             a = a * int(h[6:8], 16) / 255.0
     except (ValueError, IndexError):
         r = g = b = 255
+    if BW:                                   # ч/б: любой цвет → серая ступень
+        gr = int(0.299 * r + 0.587 * g + 0.114 * b)
+        r = g = b = gr
     c = QColor(r, g, b)
     c.setAlphaF(max(0.0, min(1.0, a)))
     return c
@@ -128,8 +134,8 @@ C = {k: qcol(k) for k in DEFAULT_PALETTE}
 C["bg"] = qcol("bg")
 # семантические цвета: чёткие акцентные тона поверх единого стекла
 ACC = C["accent"]
-BORDER = qcol("accent", 0.20)      # рамки панелей
-SEP = qcol("accent", 0.12)         # разделители внутри панелей
+BORDER = qcol("text", 0.34)        # рамки панелей — белые
+SEP = qcol("text", 0.18)           # разделители — белые
 ACC_TAB = qcol("accent", 0.22)     # активная вкладка
 ACC_SOFT = qcol("accent", 0.14)    # выделенная строка
 ACC_HOVER = qcol("accent", 0.08)   # наведение
@@ -143,8 +149,8 @@ def reload_palette():
     C = {k: qcol(k) for k in DEFAULT_PALETTE}
     C["bg"] = qcol("bg")
     ACC = C["accent"]
-    BORDER = qcol("accent", 0.20)
-    SEP = qcol("accent", 0.12)
+    BORDER = qcol("text", 0.34)
+    SEP = qcol("text", 0.18)
     ACC_TAB = qcol("accent", 0.22)
     ACC_SOFT = qcol("accent", 0.14)
     ACC_HOVER = qcol("accent", 0.08)
@@ -257,6 +263,7 @@ class Player:
         self._vol0 = None
         self.favorites = []
         self.playlists = []
+        self._pos0 = 0.0
         self.load_state()
         self.load_fav()
 
@@ -271,17 +278,21 @@ class Player:
             self.repeat = int(d.get("repeat", 0)) % 3
             if d.get("volume") is not None:
                 self._vol0 = int(d["volume"])
+            self._pos0 = float(d.get("pos") or 0)
+            if 0 <= self.qindex < len(self.queue):
+                self.playing_track = self.queue[self.qindex]
         except Exception:
             pass
 
     def save_state(self):
         try:
             vol = self.vol() if self._mpv_started else (self._vol0 if self._vol0 is not None else 100)
+            pos = (self.mpv.get("time-pos") or 0) if self._mpv_started else self._pos0
             os.makedirs(os.path.dirname(STATE), exist_ok=True)
             with open(STATE, "w") as f:
                 json.dump({"queue": self.queue, "qindex": self.qindex,
                            "tab": self.tab, "shuffle": self.shuffle,
-                           "repeat": self.repeat, "volume": vol}, f)
+                           "repeat": self.repeat, "volume": vol, "pos": pos}, f)
         except Exception:
             pass
 
@@ -354,6 +365,17 @@ class Player:
                     self.mpv.set_volume(max(0, min(100, self._vol0)))
             except Exception:
                 pass
+
+    def resume(self):
+        """Продолжить с того места, где остановился — пауза на сохранённой позиции."""
+        if not self.playing_track:
+            return
+        self.ensure_mpv()
+        self.mpv.load(self.playing_track["url"])
+        self.mpv.pause(True)
+        self.want_cover(self.playing_track)
+        if self._pos0 > 2:
+            QTimer.singleShot(900, lambda: self.mpv.seek_abs(self._pos0))
 
     def start_track(self, track, source=None):
         self.ensure_mpv()
@@ -691,6 +713,9 @@ class Lunar(QWidget):
         self._pal_path = os.path.expanduser("~/.cache/lunar/palette.json")
         self._pal_watch = QFileSystemWatcher([self._pal_path])
         self._pal_watch.fileChanged.connect(self._pal_changed)
+        self._save_ctr = 0
+        # продолжить с прошлого места (пауза на сохранённой позиции)
+        QTimer.singleShot(700, self.p.resume)
 
     def _pal_changed(self, _p):
         reload_palette()
@@ -708,6 +733,10 @@ class Lunar(QWidget):
         self.p.tick += 1
         if self.p.playing() or self.p.searching or self.p.cava:
             self.update()
+        # раз в ~10с сохраняю «где остановился»
+        self._save_ctr += 1
+        if self._save_ctr % 110 == 0:
+            self.p.save_state()
 
     # ── геометрия (логические единицы; отрисовка масштабируется) ──
     def onscreen(self):
@@ -1147,7 +1176,25 @@ class Lunar(QWidget):
                 self.p.dragging = True
             if self.p.dragging:
                 self.p.drag_dst = self._row_at(pos)
+        self._pick_cursor(pos)
         self.update()
+
+    def _pick_cursor(self, pos):
+        h = self.p.hit
+        hit = ("search" in h and inrect(pos, h["search"]))
+        if not hit:
+            hit = any(inrect(pos, r) for r in h.get("tabs", []))
+        if not hit:
+            hit = any(inrect(pos, r) for r in h.get("lib", []))
+        if not hit:
+            hit = self._row_at(pos) is not None
+        if not hit:
+            hit = any(inrect(pos, r) for r in h.get("btn", {}).values())
+        if not hit and "seek" in h:
+            hit = inrect(pos, h["seek"])
+        if not hit and "vol" in h:
+            hit = inrect(pos, h["vol"])
+        self.setCursor(Qt.PointingHandCursor if hit else Qt.ArrowCursor)
 
     def _row_at(self, pos):
         for row in self.p.hit.get("rows", []):
