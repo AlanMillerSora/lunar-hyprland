@@ -704,7 +704,7 @@ class Lunar(QWidget):
 
     def draw_nav(self, p, g):
         x, y, w, h = g["nav"]
-        self.panel(p, g["nav"], "[ NAV ]")
+        self.panel(p, g["nav"], "Nav")
         cy = y + h / 2 - 9
         # навигация — живые кнопки: ‹ › листают вкладки, ⌂ возвращает к очереди
         self.p.hit["nav"] = {}
@@ -739,9 +739,9 @@ class Lunar(QWidget):
 
     def draw_library(self, p, g):
         x, y, w, h = g["lib"]
-        self.panel(p, g["lib"], "[ LIBRARY ]")
+        self.panel(p, g["lib"], "Library")
         px, py = x + 18, y + 18
-        T(p, px, py, "[ ТВОЯ ФОНОТЕКА ]", size=12, color=C["textDim"], bold=True)
+        T(p, px, py, "ТВОЯ ФОНОТЕКА", size=12, color=C["textDim"], bold=True)
         add_box = (x + w - 44, py - 6, 26, 26)
         self.p.hit["lib_add"] = add_box
         T(p, x + w - 30, py - 2, "+", size=16,
@@ -774,7 +774,7 @@ class Lunar(QWidget):
               color=C["accent"] if sel else C["textFaint"], align="right", width=28)
             py += 34
         py += 12
-        T(p, px, py, "[ В ОЧЕРЕДИ ]", size=11, color=C["textFaint"])
+        T(p, px, py, "В ОЧЕРЕДИ", size=11, color=C["textFaint"])
         py += 22
         hint_y = y + h - 96
         pl_n = min(len(self.p.playlists), 4) if self.p.playlists else 0
@@ -791,13 +791,13 @@ class Lunar(QWidget):
                 p.setBrush(ACC_HOVER)
                 p.drawPath(rpath(*rr, 6))
             star = "★ " if self.p.is_fav(tr) else ""
-            txt = (f"{'♪ ' if cur else ''}{star}[{i + 1:02d}]  {tr.get('title', '')}")
+            txt = (f"{'♪ ' if cur else ''}{star}{i + 1:02d}  {tr.get('title', '')}")
             T(p, px + 4, py, txt, size=11, color=C["accent"] if cur else C["textDim"], width=w - 40)
             py += 26
         self.p.hit["pl"] = []
         if pl_n:
             py2 = q_bottom + 6
-            T(p, px, py2, "[ ПЛЕЙЛИСТЫ ] · S сохранить", size=11, color=C["textFaint"])
+            T(p, px, py2, "ПЛЕЙЛИСТЫ · S сохранить", size=11, color=C["textFaint"])
             yy = py2 + 20
             for i in range(len(self.p.playlists) - pl_n, len(self.p.playlists)):
                 pl = self.p.playlists[i]
@@ -815,7 +815,7 @@ class Lunar(QWidget):
 
     def draw_main(self, p, g):
         x, y, w, h = g["main"]
-        self.panel(p, g["main"], "[ MAIN ]")
+        self.panel(p, g["main"], "Main")
         px, py = x + 18, y + 16
         self.p.hit["tabs"] = []
         cx = px
@@ -839,7 +839,7 @@ class Lunar(QWidget):
         list_, ti = self.p.current()
         right = x + w - 18
         dur_w, art_w, th = 52, (200 if w > 500 else 0), 24
-        num_x, title_x = px + 34, px + 76
+        num_x, title_x = px + 40, px + 64
         dur_x = right - dur_w
         art_x = (dur_x - art_w - 14) if art_w else dur_x
         T(p, num_x, py, "№", size=10, color=C["textDim"])
@@ -856,9 +856,14 @@ class Lunar(QWidget):
             T(p, px, py + 6, "⌕  ищу в YouTube…", size=12, color=C["accent"])
             list_ = []
         if not list_:
-            msg = ("нажми / и введи запрос" if self.p.tab == 1
-                   else ("очередь пуста — найди трек в ПОИСКЕ" if self.p.tab == 0
-                         else "нет локальных файлов"))
+            if self.p.tab == 1:
+                msg = "нажми / и введи запрос"
+            elif self.p.tab == 0:
+                msg = "очередь пуста — найди трек в ПОИСКЕ"
+            elif self.p.tab == 3:
+                msg = "в избранном пусто — жми f на треке"
+            else:
+                msg = "нет локальных файлов"
             T(p, px, py + 6, msg, size=12, color=C["textFaint"])
             return
 
@@ -894,7 +899,7 @@ class Lunar(QWidget):
                 p.drawPath(rpath(px, ry + 6, 3, row_h - 16, 1.5))
             self.cover(p, px + 8, ry + 4, th, th, 6, self.p.covers.get(tr.get("id")), small=True)
             mid = ry + (row_h - 4) / 2 - 9
-            T(p, num_x, mid, f"[{i + 1:02d}]", size=11, color=C["textFaint"])
+            T(p, num_x, mid, f"{i + 1:02d}", size=11, color=C["textFaint"])
             tcol = C["accent"] if now else (C["text"] if selected else C["textDim"])
             star = "★ " if self.p.is_fav(tr) else ""
             T(p, title_x, mid, star + tr.get("title", ""), size=12, color=tcol, bold=bool(now or selected),
@@ -908,9 +913,9 @@ class Lunar(QWidget):
 
     def draw_sidebar(self, p, g):
         x, y, w, h = g["side"]
-        self.panel(p, g["side"], "[ SIDEBAR ]")
+        self.panel(p, g["side"], "Sidebar")
         px, py = x + 18, y + 18
-        T(p, px, py, "[ СЕЙЧАС ИГРАЕТ ]", size=11, color=C["textFaint"])
+        T(p, px, py, "СЕЙЧАС ИГРАЕТ", size=11, color=C["textFaint"])
         tr = self.p.playing_track
         py += 20
         strip_h = 26
@@ -934,7 +939,7 @@ class Lunar(QWidget):
         p.setPen(QPen(SEP, 1))
         p.drawLine(QPointF(px, py), QPointF(x + w - 18, py))
         py += 10
-        T(p, px, py, "[ ДЕТАЛИ ]", size=11, color=C["textFaint"])
+        T(p, px, py, "ДЕТАЛИ", size=11, color=C["textFaint"])
         py += 22
         if tr:
             rows = [("Источник", "YouTube" if tr.get("source") == "yt" else "файл"),
@@ -948,7 +953,7 @@ class Lunar(QWidget):
 
     def draw_playing(self, p, g):
         x, y, w, h = g["play"]
-        self.panel(p, g["play"], "[ PLAYING ]")
+        self.panel(p, g["play"], "Playing")
         px, py = x + 18, y + 18
         tr = self.p.playing_track
         playing = self.p.playing()
@@ -1005,8 +1010,8 @@ class Lunar(QWidget):
         ry = py + cov + 22
         dur = self.p.mpv.get("duration") or (tr.get("duration") if tr else 0)
         pos = self.p.mpv.get("time-pos") or 0
-        lt, rt = f"[ {core.fmt_time(pos)} ]", f"[ {core.fmt_time(dur)} ]"
-        lw = 66
+        lt, rt = core.fmt_time(pos), core.fmt_time(dur)
+        lw = 46
         bar_x, bar_w = px + lw, w - 36 - 2 * lw
         T(p, px, ry - 8, lt, size=11, color=C["textFaint"])
         T(p, x + w - 36 - lw, ry - 8, rt, size=11, color=C["textFaint"], align="right", width=lw)
@@ -1016,11 +1021,6 @@ class Lunar(QWidget):
         frac = min(1.0, (pos / dur) if dur else 0.0)
         p.setBrush(C["accent"])
         p.drawPath(rpath(bar_x, ry + 1, max(0.0, bar_w * frac), 4, 2))
-        # риски шкалы — язык «чертёж»
-        p.setPen(QPen(SEP, 1))
-        for i in range(1, 10):
-            tx = bar_x + bar_w * i / 10.0
-            p.drawLine(QPointF(tx, ry + 7), QPointF(tx, ry + 11))
         # бегунок: акцентный кружок с тёмной сердцевиной
         p.drawEllipse(QPointF(bar_x + bar_w * frac, ry + 3), 6, 6)
         p.setBrush(C["bg"])
